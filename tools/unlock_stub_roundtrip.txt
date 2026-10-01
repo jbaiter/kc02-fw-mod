@@ -1,0 +1,7 @@
+0x020d9000	b.sw	b.sw -0x4(r1),r9	fc4fe1d7
+0x020d9004	b.addi	b.addi r1,r1,-0x8	f8ff219c
+0x020d9008	l.jal	l.jal 0x0204abc8	f0c6fd07
+0x020d900c	l.jal	l.jal 0x020130bc	2ce8fc07
+0x020d9010	b.addi	b.addi r1,r1,0x8	0800219c
+0x020d9014	b.lwz	b.lwz r9,-0x4(r1)	fcff2185
+0x020d9018	l.jr	l.jr r9	00480044

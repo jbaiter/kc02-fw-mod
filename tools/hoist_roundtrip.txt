@@ -1,0 +1,13 @@
+# KC02 per-frame USB/BOT hoist round-trip dump (throwaway Ghidra project)
+# 1) 36-byte RAM trampoline at 0x020d9200
+0x020d9200	b.sw	b.sw -0x8(r1),r2	f817e1d7
+0x020d9204	b.sw	b.sw -0x4(r1),r9	fc4fe1d7
+0x020d9208	b.addi	b.addi r1,r1,-0x8	f8ff219c
+0x020d920c	l.jal	l.jal 0x0204d0a8	a7cffd07
+0x020d9210	b.addi	b.addi r1,r1,0x8	0800219c
+0x020d9214	b.lwz	b.lwz r2,-0x8(r1)	f8ff4184
+0x020d9218	b.lwz	b.lwz r9,-0x4(r1)	fcff2185
+0x020d921c	b.sw	b.sw -0x4(r1),r9	fc4fe1d7
+0x020d9220	l.j	l.j 0x02000408	7a9cfc03
+# 2) 4-byte code patch word at 0x02000404
+0x02000404	l.j	l.j 0x020d9200	7f630300

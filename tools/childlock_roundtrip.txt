@@ -1,0 +1,28 @@
+# KC02 child-lock round-trip dump (throwaway Ghidra project)
+# 1) 52-byte adult-gate RAM trampoline at 0x020d9400
+0x020d9400	b.movhi	b.movhi r6,0x20d	0d02c018
+0x020d9404	b.ori	b.ori r6,r6,0x9480	8094c6a8
+0x020d9408	b.lbz	b.lbz r7,0x0(r6)	0000e68c
+0x020d940c	b.sfnei	b.sfnei r7,0x0	000027bc
+0x020d9410	b.bnf	b.bnf 0x020d941c	0300000c
+0x020d9414	b.sb	b.sb 0x0(r6),r0	000006d8
+0x020d9418	l.j	l.j 0x020d9428	04000000
+0x020d941c	b.lbz	b.lbz r7,0x1(r6)	0100e68c
+0x020d9420	b.sfnei	b.sfnei r7,0x0	000027bc
+0x020d9424	b.bnf	b.bnf 0x020d9430	0300000c
+0x020d9428	b.sw	b.sw -0x4(r1),r9	fc4fe1d7
+0x020d942c	l.j	l.j 0x02009f0c	b8c2fc03
+0x020d9430	l.jr	l.jr r9	00480044
+# 2) 24-byte UP-tap RAM trampoline at 0x020d9440
+0x020d9440	b.movhi	b.movhi r6,0x20d	0d02c018
+0x020d9444	b.ori	b.ori r6,r6,0x9480	8094c6a8
+0x020d9448	b.addi	b.addi r7,r0,0x1	0100e09c
+0x020d944c	b.sb	b.sb 0x0(r6),r7	003806d8
+0x020d9450	b.sw	b.sw -0xc(r1),r18	f497e1d7
+0x020d9454	l.j	l.j 0x02009894	10c1fc03
+# 3) 4-byte patched boot-mode word at 0x020004ac
+0x020004ac	b.addi	b.addi r3,r0,0x3	0300609c
+# 4) 4-byte patched menu-gate handler word at 0x02009f08
+0x02009f08	l.j	l.j 0x020d9400	3e3d0300
+# 5) 4-byte patched UP-handler word at 0x02009890
+0x02009890	l.j	l.j 0x020d9440	ec3e0300
