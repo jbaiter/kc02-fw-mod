@@ -1,0 +1,12 @@
+0x020d8000	b.sw	b.sw -0x8(r1),r2	f817e1d7
+0x020d8004	b.sw	b.sw -0x4(r1),r9	fc4fe1d7
+0x020d8008	b.addi	b.addi r1,r1,-0x8	f8ff219c
+0x020d800c	b.ori	b.ori r2,r3,0x0	000043a8
+0x020d8010	b.ori	b.ori r3,r5,0x0	000065a8
+0x020d8014	b.ori	b.ori r5,r4,0x0	0000a4a8
+0x020d8018	b.ori	b.ori r4,r2,0x0	000082a8
+0x020d801c	l.jal	l.jal 0x0203d38c	dc94fd07
+0x020d8020	b.addi	b.addi r1,r1,0x8	0800219c
+0x020d8024	b.lwz	b.lwz r2,-0x8(r1)	f8ff4184
+0x020d8028	b.lwz	b.lwz r9,-0x4(r1)	fcff2185
+0x020d802c	l.jr	l.jr r9	00480044

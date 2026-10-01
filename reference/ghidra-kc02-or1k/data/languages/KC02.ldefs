@@ -1,0 +1,9 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<language_definitions>
+  <language processor="KC02 OpenRISC" endian="little" size="32"
+            variant="nodelay" version="1.0" slafile="OpenRISC.sla"
+            processorspec="OpenRISC.pspec" id="KC02:LE:32:nodelay">
+    <description>KC02 provisional OpenRISC-compatible core, no delay slots</description>
+    <compiler name="KC02 provisional ABI" spec="OpenRISC.cspec" id="default" />
+  </language>
+</language_definitions>

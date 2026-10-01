@@ -1,0 +1,212 @@
+# KC02 firmware symbol manifest - replayable annotations for the Ghidra project.
+#
+# FORMAT (one record per line, TAB-separated, 4 columns):
+#
+#   <addr-hex>\t<kind>\t<name>\t<comment text>
+#
+#   kind = fun      -> rename the FUNCTION at <addr> to <name>; add <comment> as a
+#                      PLATE comment (function header).
+#   kind = label    -> create a LABEL named <name> at <addr>; add <comment> as an
+#                      EOL comment.
+#   kind = comment  -> add a comment at <addr>; column 3 is the comment type
+#                      (EOL | PRE | PLATE | REPEATABLE) and column 4 is the text.
+#
+# Blank lines and lines starting with '#' are ignored.  Column 4 may be empty.
+# Re-apply to a fresh cache with:  python3 tools/ghidra_symbols.py --apply
+# (see that script's --help; it drives analyzeHeadless on a COPY of the cache).
+#
+# Addresses are CPU addresses in the KC02 application mapping
+# (CPU = 0x02000000 + file_offset - 0x2600).
+#
+# Every comment states CONFIRMED (listing evidence) or INFERRED.
+# Owner: kc02-fw-mod.  Do not renumber; append new records at the end.
+
+# ===========================================================================
+# UI: state renderer dispatcher + renderer table
+# ===========================================================================
+02004944	fun	ui_render_dispatch	UI state renderer dispatcher: state==7 -> FUN_0203a590(0); state 0..5 -> ui_state_renderer_table[state](); state>5 -> -1. CONFIRMED (listing 0x02004944-0x020049A4).
+020049a8	fun	ui_state_set	Stores r3 into ui_state_var (0x020d4173) and calls ui_render_dispatch. CONFIRMED (0x020049C0 sb 0x7(r4),r3 with r4=0x020d416c).
+0207b908	label	ui_state_renderer_table	Data table @0x0207B908. SIX u32 entries: [0]=ui_render_state_0 [1]=..1 [2]=..2 [3]=..3 [4]=..4 [5]=..5. CONFIRMED. NOTE: 0x0207B920 is NOT a continuation of this table - it is ui_settings_handler_table (a different table that happens to be adjacent); its 0x02006Dxx words are ui_settings_dispatch case bodies, not renderers.
+0200411c	fun	ui_render_state_0	State 0 renderer = CAMERA (still-photo viewfinder). Matches main-menu item 0 -> mode 3. INFERRED identity (from mode 3 enter selecting state 0 + legacy labels in tools/KC02Labels.java); CONFIRMED that it is renderer slot 0. Layers: gfx_get_screen_size; gfx_set_layer_mode(1); gfx_layer_setup(1,2,0,0,w,h,1); FUN_020517e0 (OSD/icons).
+02003e74	fun	ui_render_state_1	State 1 renderer = VIDEO RECORD. INFERRED identity; CONFIRMED slot 1. Layers: gfx_set_layer_mode(1); gfx_layer_setup(1,3,0,0,w,h,1); gfx_layer_setup(0,2,0,0,w,h,1).
+02003ef0	fun	ui_render_state_2	State 2 renderer = AUDIO PLAYER (music). INFERRED identity; CONFIRMED slot 2. Split layout: gfx_layer_setup(1,3,0,0,w,h,1) + gfx_layer_setup(0,2,((w-160)&~7),0x14,(w-that),0x78,1).
+02003f90	fun	ui_render_state_3	State 3 renderer = PLAYBACK. INFERRED identity; CONFIRMED slot 3. 160x120 side panel at y=0x14: gfx_layer_setup(1,2,(w-160),0x14,0xa0,0x78,..) + gfx_layer_setup(0,3,0,0,w,h,..).
+02004014	fun	ui_render_state_4	State 4 renderer = GAMES. INFERRED identity; CONFIRMED slot 4. Two half-width layers: gfx_layer_setup(1,3,0,0,w>>1,h,1) + gfx_layer_setup(0,2,0,0,w>>1,h,1).
+02004098	fun	ui_render_state_5	State 5 renderer = SETTINGS MENU. INFERRED identity; CONFIRMED slot 5. gfx_layer_setup(1,3,w>>1,0,w>>1,h,1) + gfx_layer_setup(0,2,0,0,w>>1,h,1).
+0203a11c	fun	gfx_layer_setup	Layer/plane setup. Args r3=layer r4=type r5=x r6=y r7=w r8=h [stack]=flag. CONFIRMED by all six renderer call sites.
+0203a570	fun	gfx_set_layer_mode	Selects the active layer/plane mode (arg r3). CONFIRMED (called by every renderer).
+0203a734	fun	gfx_get_screen_size	w,h = *(r3),*(r4) screen size query. CONFIRMED (every renderer calls it first).
+# ===========================================================================
+# UI: application mode machine (mode records: enter/frame/exit)
+# ===========================================================================
+02008188	fun	ui_mode_machine_walker	App mode machine. Outer loop while (ui_mode_pending != 0xb): run active rec +0x0c (exit), then load rec = ui_mode_table[pending], run rec +0x08 (enter), then inner loop while (pending > 0xb i.e. == 0xc idle): call ui_frame_hook (0x020082A4 l.jal 0x02000404) then rec +0x10 (frame). Frame dispatch site = 0x020082A4/0x020082A8..0x020082BC. CONFIRMED (full listing 0x02008188-0x020082F2).
+02008108	fun	ui_mode_request	Request app mode: if mode<=0xb and ui_mode_pending!=1 then *(ui_mode_table[mode]+4)=arg, ui_mode_previous=ui_mode_current, and if mode!=0xb ui_mode_pending=mode (0xb is the quit sentinel). CONFIRMED (0x02008108-0x02008187).
+02008070	fun	ui_mode_table_register	ui_mode_table[mode]=record (no-op if mode>=0xc). CONFIRMED.
+020080c8	fun	ui_mode_get_current	Returns ui_mode_current (0x020ccd54). CONFIRMED.
+02000000	fun	ui_mode_table_init	Registers the ten stock mode records into ui_mode_table: indices 1,2,3,4,5,10,6,7,8,9 (index 0 and 11 are never set). CONFIRMED (0x02000000-0x020000BB, ten l.jal 0x02008070).
+020000bc	fun	sys_app_init	Early app init: calls ui_mode_table_init (0x020000F4), FUN_020217E4, registers tasks 0x02021824 / 0x020482F4 / 0x0200EEF4. CONFIRMED (0x020000BC-0x020003FF).
+0200046c	fun	ui_app_task	The UI task. Boot: sys_app_init, ui_settings_apply_all, FUN_02002418 (fw-upgrade task - DANGEROUS), FUN_020450D0, then initial mode = 10 if usb_sense_state==2 else 6 (0x02000494-0x020004B0), ui_mode_request(that,..), key_hook_install_system(0x020c2a64), USB re-enumerate, and finally l.jal ui_mode_machine_walker at 0x02000528. Returns 2 when the walker exits. CONFIRMED (0x0200046C-0x02000543).
+02000404	fun	ui_frame_hook	PER-FRAME HOOK (the hoist patch site). Called exactly once per UI frame in EVERY mode from ui_mode_machine_walker @0x020082A4 - its ONLY caller. Body: FUN_0202BC7C; usb_sense_task(1); key_event_dispatch(); FUN_0205B8C4(0). Entry instruction at 0x02000404 is the stock `b.sw -0x4(r1),r9` (fc4fe1d7); the USB/BOT hoist replaces it with `l.j 0x020d9200`. CONFIRMED.
+# --- mode records (12-entry table ui_mode_table @0x020ccd5c) ----------------
+# layout: +0x00 name ptr, +0x04 arg, +0x08 enter, +0x0c exit, +0x10 frame,
+#         +0x14/+0x18 per-mode data (key-hook list ptr or mode-private data),
+#         +0x1c..+0x24 mode-private data.  CONFIRMED for all ten records.
+020ccd5c	label	ui_mode_table	RAM array of 12 u32 mode-record pointers, built at boot by ui_mode_table_init. CONFIRMED. Live values after boot: [1]=0x020c3334 [2]=0x020c33b0 [3]=0x020c2ad4 [4]=0x020c2f90 [5]=0x020c4ef0 [6]=0x020c4c18 [7]=0x020c4e1c [8]=0x020c64fc [9]=0x020c5408 [10]=0x020c339c (0 and 11 NULL).
+020ccd50	label	ui_mode_pending	Pending mode request: 0xc = idle/running, 0xb = quit the mode machine, 1 = nothing may change modes. CONFIRMED.
+020ccd54	label	ui_mode_current	Currently executing mode index. CONFIRMED.
+020ccd58	label	ui_mode_active_rec	Pointer to the ACTIVE mode record (RAM slot the hoist/unlock patches prefer). CONFIRMED.
+020ccd4c	label	ui_mode_previous	Mode that was current before the last successful ui_mode_request ("return to previous mode" slot). CONFIRMED (0x02008150-0x02008168).
+020c3334	label	ui_mode_rec_1_power_off	Mode 1 "Power Off". enter=0x0200c658 exit=0 frame=0. CONFIRMED.
+020c33b0	label	ui_mode_rec_2_video_record	Mode 2 "Video Recorde[r]". enter=0x0200dfe8 exit=0x0200d860 frame=0x0200d620. CONFIRMED.
+020c2ad4	label	ui_mode_rec_3_photo_capture	Mode 3 "Photo Encode" = the CAMERA (still capture). enter=0x020082f4 exit=0x020083c8 frame=0x020084a0; enter renders ui_state 0 (camera). CONFIRMED for the record; camera identity INFERRED from enter+menu mapping.
+020c2f90	label	ui_mode_rec_4_playback	Mode 4 "Play Back". enter=0x0200aff4 exit=0x0200ab04 frame=0x0200b06c. CONFIRMED.
+020c4ef0	label	ui_mode_rec_5_audio_player	Mode 5 "Audio Player". enter=0x020146d4 exit=0x02014714 frame=0x02014738. CONFIRMED.
+020c4c18	label	ui_mode_rec_6_main_menu	Mode 6 "Main menu". enter=0x020130e4 exit=0x020130d0 frame=0x020130bc (frame is a NO-OP stub). enter calls ui_render_dispatch(7) then ui_object_start(0x020c4c2c). CONFIRMED.
+020c4e1c	label	ui_mode_rec_7_game_menu	Mode 7 "Game menu". enter=0x02013aa0 exit=0x02013a8c frame=0x02013a78. CONFIRMED.
+020c64fc	label	ui_mode_rec_8_game	Mode 8 "Game". enter=0x02020530 exit=0x0201f020 frame=0x020201f8. CONFIRMED.
+020c5408	label	ui_mode_rec_9_settings_menu	Mode 9 "Setting menu". enter=0x02015db4 exit=0x02015da0 frame=0x02015d8c. CONFIRMED.
+020c339c	label	ui_mode_rec_10_usb_device	Mode 10 "usb device" = the USB lock screen. enter=0x0200d498 exit=0x0200d450 frame=0x0200d588. Its +0x14/+0x18 slots hold leftover mode-2 data, not key-hook lists - mode 10's enter installs its own list 0x020c3354. CONFIRMED.
+# --- mode 10 (USB lock screen) internals -----------------------------------
+0200d498	fun	ui_mode10_usb_enter	Mode 10 enter. DAT_020ccd8c=1; FUN_020041b0; ui_render_dispatch(7); FUN_02006f88(0x60/0x61); waits on FUN_020524a0; usb_select_mode(0 or 1); key_hook_install_primary(0x020c3354). CONFIRMED (0x0200d498-0x0200d54C).
+0200d450	fun	ui_mode10_usb_exit	Mode 10 exit. DAT_020ccd8c=0; FUN_0204a9a4 (powers the USB interface DOWN); FUN_020403ec; FUN_02034ee4; FUN_02004588(1). CONFIRMED (0x0200d450-0x0200d494).
+0200d588	fun	ui_mode10_usb_frame	Mode 10 frame - the ONLY stock caller of bot_service_wrapper. `ret = bot_service_wrapper(); if (ret) { hal_sense_read(...); ui_mode_request(0xb, ret); }`. Calls bot_service_wrapper at 0x0200D598. CONFIRMED (0x0200d588-0x0200D5E0).
+0200d550	fun	ui_mode10_key_common	Mode 10 key hook for event 0x27 (live). Returns 0 unless (r4==1 && payload!=0) then FUN_02058ACC. CONFIRMED.
+0200d5e4	fun	ui_mode10_key_event2	Mode 10 key hook for event 0x2 (live). Gates on usb_sense_state (0x020d416e). CONFIRMED.
+0200d3d8	fun	ui_mode10_key_noop	One of five identical `return 0` stubs (0x0200d3d8/0x0200d3f0/0x0200d408/0x0200d420/0x0200d438) that swallow every camera button while mode 10 is active. CONFIRMED.
+020c3354	label	ui_mode10_key_hooks	Mode-10 key-hook list (id,handler pairs, terminated by id>=0x2e or handler==0) installed by ui_mode10_usb_enter via key_hook_install_primary. Events 1,2,0xa,0x1a,0x1b,0x1c,0x23,0x27. CONFIRMED.
+0200d620	fun	ui_mode2_video_frame	Mode 2 (Video Recorder) frame; drives FUN_020562E4/FUN_02056304 and the recording file handle at 0x020c33c4. CONFIRMED.
+020082f4	fun	ui_mode3_photo_enter	Mode 3 (camera) enter: ui_render_dispatch(0) (= ui_render_state_0 camera), ui_object_start(0x020c2b40) which installs the camera key hooks. CONFIRMED.
+020083c8	fun	ui_mode3_photo_exit	Mode 3 exit. CONFIRMED (0x020083C8-0x0200849C).
+020084a0	fun	ui_mode3_photo_frame	Mode 3 frame; shutter/capture state machine keyed on 0x020d41c8 (0x5c) and 0x020d41c5 (0x59). CONFIRMED (0x020084A0-0x02008524).
+020130e4	fun	ui_mode6_menu_enter	Mode 6 (Main menu) enter: FUN_02034EE4(0), ui_render_dispatch(7), ui_object_start(0x020c4c2c,0). CONFIRMED.
+020130d0	fun	ui_mode6_menu_exit	Mode 6 exit (no-op stub). CONFIRMED.
+020130bc	fun	ui_mode6_menu_frame	Mode 6 frame (no-op stub - the menu draws itself via its UI object). CONFIRMED.
+# ===========================================================================
+# UI: settings item dispatcher (NOT part of the state renderer table)
+# ===========================================================================
+02006c74	fun	ui_settings_dispatch	Settings item dispatcher. id = r3; computes r14=id-7; rejects id<7 or id>0x23; else tail-calls ui_settings_handler_table[id-7]. CONFIRMED (0x02006C90-0x02006CB8).
+0207b920	label	ui_settings_handler_table	Data table @0x0207B920: 0x1d (29) u32 handler pointers indexed by (settings_id - 7), ids 7..0x23. This is the table whose 0x02006Dxx words sit just after ui_state_renderer_table. Live handlers: id7=0x02006d58 id0xd=0x02006ccc id0xe=0x02006d00 id0xf=0x02006ce0 id0x12=0x02006cbc id0x14=0x02006d10 id0x15=0x02006cf8 id0x16=0x02006d60 id0x17=0x02006d6c id0x1c=0x02006dc0 id0x21=0x02006d78 id0x22=0x02006d90 id0x23=0x02006da8; everything else = ui_settings_handler_default. CONFIRMED.
+02006dec	fun	ui_settings_apply_all	Boot loop: for id in 0..0x23 call ui_settings_dispatch(id). CONFIRMED (0x02006DEC-0x02006E24).
+02006dd4	fun	ui_settings_handler_default	Shared return/default handler for settings ids with no action. CONFIRMED.
+020064b4	fun	ui_settings_get	Settings value getter (r3=id -> value). INFERRED: called with the settings id at 0x02006C94 and with 8 by sys_key_activity_autopoweroff (auto-power-off timeout). CONFIRMED as a getter call site; the id->field mapping is INFERRED.
+# ===========================================================================
+# Key input path
+# ===========================================================================
+020ccc8c	label	key_hook_table_primary	Per-mode key/event handler table (0x2e u32 slots) filled by key_hook_install_primary. CONFIRMED (cleared/installed by FUN_02007880; indexed by FUN_020079B4).
+020ccbd4	label	key_hook_table_system	System key/event handler table (0x2e u32 slots) filled by key_hook_install_system. Installed ONCE at boot from 0x020c2a64 and not per mode. CONFIRMED.
+020c2a4c	label	key_hook_list_default	Default (id,handler) list used by key_hook_install_primary: only events 0x2 and 0x3 (both `return 0`). CONFIRMED.
+020c2a64	label	key_hook_list_system	System (id,handler) list installed at boot by ui_app_task: events 1,2,3,0xa,0x1a,0x1b,0x1c,0x21,0x22,0x23,0x24,0x26,0x28. CONFIRMED.
+02007880	fun	key_hook_install_primary	Clears key_hook_table_primary, installs key_hook_list_default, then overlays the caller's list. CONFIRMED.
+02007938	fun	key_hook_install_system	Clears key_hook_table_system and installs the caller's list. CONFIRMED.
+020079b4	fun	key_event_dispatch	Called every frame by ui_frame_hook. Pops one event (key_event_queue_pop), and if id<0x2e calls BOTH key_hook_table_primary[id] and key_hook_table_system[id] with (FUN_0202A1B0(), 1, &payload). Early-outs on ids 0x1a..0x2d with payload!=0 and on FUN_020111A0 (ui_modal_is_open) / modes 4 and 5. CONFIRMED (decompiled).
+0202173c	fun	key_event_queue_pop	Generic ring-queue pop: (r3=&queue, r4=&status) -> event word. Event word = (payload<<16) | id. CONFIRMED.
+02021700	fun	key_event_queue_push	Generic ring-queue push: (r3=&queue, r4=event word). CONFIRMED.
+020217cc	fun	key_event_queue_count	Returns queue occupancy (byte +1 of the queue struct). CONFIRMED.
+020d41e0	label	key_event_queue	The key/UI event ring buffer used by key_event_dispatch (queue struct embedded at 0x020d41e0; +0 size, +1 head, +2 tail, +4 buffer). CONFIRMED via FUN_0202173C/DAT_020d41e0.
+02002e0c	fun	key_adc_init	"ad-key" driver init function pointer (from the driver struct at 0x020c2644). INFERRED role (struct field is CONFIRMED).
+02003a60	fun	key_adc_handler	"ad-key" driver handler function pointer (from the driver struct at 0x020c2644). INFERRED role (struct field is CONFIRMED).
+020c2644	label	key_adc_driver_struct	ADC button driver struct: name "ad-key" @+0x00, init 0x02002e0c @+0x0c, handler 0x02003a60 @+0x10, more callbacks 0x02002eb4/0x020032d8 @+0x24/+0x28, threshold pairs from +0x48. CONFIRMED (raw image bytes; matches docs/FIRMWARE_NOTES.md).
+020c2680	label	key_adc_threshold_table	ADC resistor-ladder button table. 7 entries of 8 bytes = [u32 reserved][u16 key_id][u16 adc_center]: OK=0x1a/386, RIGHT=0x1e/776, LEFT=0x1d/252, UP=0x1b/657, DOWN=0x1c/510, POWER=0x24/12. CONFIRMED (raw image bytes). NOTE: docs/FIRMWARE_NOTES.md quotes these as FILE offsets 0x0C4C80.. - as CPU addresses they are 0x020C2680..0x020C26BB.
+02012304	fun	ui_object_start	Generic UI-object start: installs key hooks from obj[+0x00] via key_hook_install_primary (call site 0x020123AC) and starts the UI node at obj[+0x08]. CONFIRMED for the key-hook part.
+020c4c2c	label	ui_main_menu_object	Main-menu UI object passed to ui_object_start by ui_mode6_menu_enter. obj[+0x00]=0x020c4c3c (its key-hook list = mode 6 rec +0x14), obj[+0x04]=0x020c4c9c (empty), obj[+0x08]=0. CONFIRMED.
+020c2b40	label	ui_mode3_object	Camera (mode 3) UI object. obj[+0x00]=0x020c2b50 (camera key-hook list), obj[+0x04]=0x020c2bd0 (empty), obj[+0x08]=0. CONFIRMED.
+020c4434	label	ui_overlay_object	Overlay UI object installed by the system event-0x3 handler (0x02007E5C) and by the camera UP key. CONFIRMED (call sites); purpose INFERRED (modal/overlay widget).
+02007ee4	fun	key_event_usb_connect	System handler for event 0x2 (USB). If usb_sense_state==2 -> ui_mode_request(10, 1) at 0x02007F5C. CONFIRMED.
+0200cce8	fun	sys_key_activity_autopoweroff	"key activity + idle auto power-off": arg!=0 resets the countdown (called by every global key handler); else accumulates DAT_020ccdcc += 500 and calls ui_mode_request(1) (Power Off) when the ui_settings_get(8) timeout elapses. CONFIRMED (decompiled).
+0200c8d0	fun	usb_sense_mode_machine	USB sense/mode state machine driven by usb_sense_task. Connect (reg 0x20000002 != 0) -> usb_sense_state 0->1, usb_select_mode(0) (pure MSD 0219:3280), posts event (2,1); host BOT driven -> 1->2, posts event (2,2). Reg 0x20000003 -> sys_power_source_state; 0 -> ui_mode_request(1). CONFIRMED (decompiled).
+0200d2c0	fun	usb_sense_task	10-tick (rate-limited) task that calls usb_sense_mode_machine; also called per frame with arg 1 from ui_frame_hook. CONFIRMED.
+02002a4c	fun	hal_sense_read	HAL register read: (r3=reg, r4=value or &out, r5). Used for USB sense regs 0x20000002/0x20000003 and for MMIO writes (e.g. reg 0x02000004/0x02000011 in mode 3). CONFIRMED call sites.
+02007da8	fun	key_event_idle_timeout	System handler for event 0xa: decrements DAT_020ccd48 / DAT_020ccd44 and calls ui_mode_request(1) (Power Off) when either hits zero. CONFIRMED.
+# ===========================================================================
+# Transitions (key -> action -> destination)
+# ===========================================================================
+0200a4bc	fun	key_mode3_ok	Camera (mode 3) OK key (id 0x1a/0x23). Long state machine over 0x020d41c7 (0x5b) with capture timing via FUN_02021894/FUN_020218B4. CONFIRMED.
+02009de0	fun	key_mode3_left	Camera LEFT (id 0x1d): toggles 0x020d41cb (0x5f) and advances 0x020d41c7 (0x5b) to 7; calls FUN_02009d5c + FUN_02008d98. CONFIRMED.
+02009f6c	fun	key_mode3_right	Camera RIGHT (id 0x1e): cycles 0x020cd98 0/1/2 and writes MMIO reg 0x02000011, then FUN_02008f0c. CONFIRMED.
+02009e70	fun	key_mode3_event01_overlay	Camera (mode 3) handler for event id 0x01 (NOT 0x1b): ui_object_start(0x020c4434, 2|3) opens the overlay/OSD object, reading the layer byte 0x020d4170 and using MMIO 0x81000059/0x5a/0x9e. CONFIRMED (0x02009E70-0x02009F04). An earlier revision mislabelled this as the UP handler; the mode-3 hook list binds id 0x1b to key_mode3_up_handler 0x02009890.
+02009568	fun	key_mode3_down	Camera DOWN (id 0x1c). CONFIRMED (dispatch target from the mode-3 hook list).
+02009f08	fun	key_mode3_power_request_menu	Camera (mode 3) POWER/MENU handler: the mode-3 hook list 0x020C2B50 binds event id 0x24 (POWER) to 0x02009F08 (pair at 0x020C2B98/0x020C2B9C). Body requests ui_mode_request(6) at 0x02009F30 when the dispatch flag is 1 and the payload word at *(r5) is non-zero -> **this is the camera's "back / go to menu" action**. `child-lock` replaces the entry word `b.sw -0x4(r1),r9` (fc4fe1d7) with `l.j 0x020d9400` (the adult gate stub), which re-executes it and, on the pass path, returns to 0x02009F0C. CONFIRMED (0x02009F08-0x02009F68).
+02013938	fun	key_mode6_ok_select	Main-menu OK (ids 0x1a/0x23): reads the selected-item index ui_main_menu_index and requests the mapped mode - 0->3 camera, 1->2 video, 2->5 audio, 3->4 playback, 4->7 game menu, 5->9 settings. CONFIRMED (0x02013988-0x020139F0 switch + ui_mode_request calls at 0x020139AC/0x020139F0).
+02013714	fun	key_mode6_right	Main-menu RIGHT (id 0x1e): ui_main_menu_index += 1 with wrap past 4 -> 0. CONFIRMED.
+0201379c	fun	key_mode6_left	Main-menu LEFT (id 0x1d): ui_main_menu_index -= 1 with wrap below 0 -> 5. CONFIRMED.
+02013828	fun	key_mode6_down	Main-menu DOWN (id 0x1c): index moves by +3/-3 -> the menu is a 3x2 grid of six items. CONFIRMED (0x02013858-0x0201386C).
+020138b0	fun	key_mode6_up	Main-menu UP (id 0x1b): the vertical half of the 3x2 grid navigation. CONFIRMED (dispatch target).
+02013a14	fun	key_mode6_event1f_playback	Main-menu handler for event 0x1f: ui_mode_request(4) (Play Back) at 0x02013A58. CONFIRMED.
+# ===========================================================================
+# Runtime globals (BSS at runtime - the image bytes at these addresses are the
+# compressed asset tail, NOT initial values; do not read them as data)
+# ===========================================================================
+020d4173	label	ui_state_var	Current UI state (0..7), read by ui_render_dispatch and written by ui_state_set and by mode enter/frame code. CONFIRMED (0x020049A8 `sb 0x7(r4),r3` with r4=0x020d416c).
+020d41d3	label	ui_main_menu_index	Selected main-menu item (0..5) for the 3x2 grid; drives the mode selected by key_mode6_ok_select. CONFIRMED.
+020d416e	label	usb_sense_state	USB sense state: 0 = idle, 1 = connected, 2 = host is driving BOT. CONFIRMED (usb_sense_mode_machine).
+020d416c	label	sys_power_source_state	Power/charge sense byte from reg 0x20000003; 0 -> ui_mode_request(1) (power off). CONFIRMED.
+020cced0	label	ui_menu_cursor_blink	Main-menu cursor animation state (toggled by the event-0x9 handler 0x02013698). CONFIRMED.
+020cced4	label	ui_menu_cursor_tick	Last-cursor-animation tick timestamp. CONFIRMED.
+# ===========================================================================
+# USB/BOT service path (hoisted every frame by usb-hoist)
+# ===========================================================================
+0204abc8	fun	bot_service_wrapper	BOT/MSC service wrapper: bot_service_once(); if(0) display_jpeg_feed() (the panel/JPEG pump is compiled out - cosmetic). Stock reachable ONLY from ui_mode10_usb_frame @0x0200D598. CONFIRMED.
+0204d0a8	fun	bot_service_once	Complete BOT service: bot_cbw_ready() -> parser 0x0204CE08 -> dispatcher 0x0204CBB8. This is what usb-hoist calls every UI frame in every mode. CONFIRMED.
+0204d014	fun	bot_cbw_ready	Polls the USB status SPRs (0xa058 bit0 / 0xa064 / 0xa060) for a waiting CBW. CONFIRMED.
+02021648	fun	usb_reenumerate	USB re-enumeration trigger. CONFIRMED.
+0204a964	fun	usb_select_mode	USB configuration selector (0 = pure MSD 0219:3280, 1 = webcam-only, 2 = UVC+MSD composite). CONFIRMED.
+02002418	fun	fw_upgrade_task_DANGEROUS_erase_program	FIRMWARE UPGRADE TASK: opens DestBin.bin, ERASES and PROGRAMS flash. FORBIDDEN TARGET - must stay unreachable from every tool/patch. Called from ui_app_task (0x02000488) and 0x02002860. CONFIRMED.
+0203d584	fun	spi_sector_erase_DANGEROUS	4 KB SPI sector erase. FORBIDDEN target - must stay unreachable. CONFIRMED.
+0203d454	fun	spi_page_program_DANGEROUS	SPI page program. FORBIDDEN target - must stay unreachable. CONFIRMED.
+0203d4e8	fun	spi_write_DANGEROUS	SPI write (page program). FORBIDDEN target - must stay unreachable. Reached from the update path at 0x020026DC. CONFIRMED.
+0203d25c	fun	spi_wren	SPI write-enable. FORBIDDEN target - must stay unreachable. CONFIRMED.
+0203d38c	fun	spi_read	SPI read (r3=flash offset, r4=dest, r5=count); the read-only shim target. CONFIRMED (verified in the earlier pass).
+0202b058	fun	dcache_clean_range	D-cache clean helper used as the write callback for every poke. CONFIRMED.
+# ===========================================================================
+# Per-frame USB/BOT hoist (TASK A) - RAM stub, not in the image
+# ===========================================================================
+020d9200	comment	EOL	RAM scratch: 36-byte hoist trampoline written by `tools/kc02_usb.py usb-hoist`. Sequence: `b.sw -0x8(r1),r2; b.sw -0x4(r1),r9; b.addi r1,r1,-8; l.jal bot_service_once(0x0204d0a8); b.addi r1,r1,8; b.lwz r2,-8(r1); b.lwz r9,-4(r1); b.sw -0x4(r1),r9; l.j 0x02000408`. Not part of the firmware image (zero at boot). CONFIRMED by Ghidra round-trip (tools/hoist_roundtrip.txt).
+# ===========================================================================
+# Child-friendly lock (TASK B) - boot-to-camera + adult-only Main menu
+# (`tools/kc02_usb.py child-lock`, see docs/UI_STATE_MACHINE.md §7.1)
+# ===========================================================================
+02009890	fun	key_mode3_up_handler	Camera (mode 3) UP handler: the mode-3 hook list 0x020C2B50 binds event id 0x1b (UP, ad-key table 0x020c2680) to 0x02009890 (pair at 0x020C2B68/0x020C2B6C) and NOT to 0x02009E70. Entry instruction is the stock `b.sw -0xc(r1),r18` (f497e1d7); `child-lock` replaces it with `l.j 0x020d9440` (the arm stub) which re-executes it and returns to 0x02009894. CONFIRMED (hook-list bytes + 0x02009890-0x02009B9C listing); its behaviour beyond the entry was not re-traced.
+020004ac	comment	EOL	ui_app_task initial-mode select, else branch: stock `b.addi r3,r0,0x6` (0600609c, Main menu) - the `usb_sense_state==2 -> mode 10` branch at 0x020004A0 is left untouched. `child-lock` writes `b.addi r3,r0,0x3` (0300609c) here so a normal power-on boots straight into the camera (mode 3). CONFIRMED (listing 0x02000494-0x020004B8; file offset 0x2AAC).
+020d9400	comment	EOL	RAM scratch: 52-byte adult GATE trampoline written by `tools/kc02_usb.py child-lock`. Reached by `l.j` from the hijacked key_mode3_power_request_menu entry 0x02009F08 (r9 = key_event_dispatch return address). Sequence: r6 = 0x020d9480; if CHILDLOCK_SEQ!=0 -> clear it and pass; else if CHILDLOCK_FLAG==0 -> `l.jr r9` (ignore the event); pass path re-executes `b.sw -0x4(r1),r9` and `l.j 0x02009f0c`. Only r6/r7 are used; no l.jal and no stack traffic. CONFIRMED by Ghidra round-trip (tools/childlock_roundtrip.txt); not part of the firmware image (zero at boot).
+020d9440	comment	EOL	RAM scratch: 24-byte UP-TAP arm trampoline written by `tools/kc02_usb.py child-lock`. Reached by `l.j` from the hijacked key_mode3_up_handler entry 0x02009890; sets CHILDLOCK_SEQ (0x020d9480) = 1, re-executes `b.sw -0xc(r1),r18` and `l.j 0x02009894`. Arms the two-tap adult sequence: tap UP, then press POWER. CONFIRMED by Ghidra round-trip (tools/childlock_roundtrip.txt); not part of the firmware image.
+020d9480	comment	REPEATABLE	RAM byte CHILDLOCK_SEQ: 1 = "a UP tap just happened" - the gate stub consumes it (clears it) when it lets one POWER press through. Written by the arm stub at 0x020d9440, by `child-lock`, and cleared by `child-lock --restore`/adult-on/off. CONFIRMED (both stubs).
+020d9481	comment	REPEATABLE	RAM byte CHILDLOCK_FLAG: adult override. 1 = the Main menu opens on a single POWER press (skip the UP tap); 0 = gated. Set/cleared by `tools/kc02_usb.py child-lock adult-on|adult-off` (aligned word written at 0x020d9480, so the pending arm is dropped too). CONFIRMED (gate stub).
+020c2b68	comment	EOL	Mode-3 key-hook list entry (id, handler): id = 0x1b (UP), handler = 0x02009890 = key_mode3_up_handler; the handler word is at 0x020C2B6C. This is the pair `child-lock` hijacks to arm the adult sequence. CONFIRMED (raw image bytes, re-checked by `kc02_unlock.py stock-check`).
+020c2b98	comment	EOL	Mode-3 key-hook list entry (id, handler): id = 0x24 (POWER), handler = 0x02009F08 = key_mode3_power_request_menu; the handler word is at 0x020C2B9C. This is the pair `child-lock` gates. CONFIRMED (raw image bytes, re-checked by `kc02_unlock.py stock-check`).
+# --- Print/display pipeline (CONFIRMED 2026-10-01, see docs/PRINT_PIPELINE.md) ---
+02022720	fun	frame_current_get	returns [0x020cd788]; Y ptr +4, UV ptr +8, w +0x20, h +0x22
+02022434	fun	img_stylize_gradient_lut	gradient-shaded 63x63 LUT render; flag==0 flattens UV to 0x80 (grayscale); dcache-invalidate both planes
+0207c640	label	print_style_lut_63x63	file 0x7EC40, 3969 u32; out=(LUT[gy*63+gx]<<3); 31 flat-center (white) to 0 at edges = the entire print art style
+02039e44	fun	frame_submit_display_or_queue	desc+0x2a==4 -> compositor queue; else 0x0202ad98 gate
+02044560	fun	compositor_submit_rect	3-slot queue 0x020d1adc, IRQ-masked (SPR 0x18); rect blit 0x02044ce0 / direct 0x02044378
+02044ce0	fun	compositor_blit_rect	(x=+0x24,y=+0x26,w=+0x20,h=+0x22) INFERRED name
+02044378	fun	compositor_commit	direct layer commit INFERRED name
+02004840	fun	framebuffer_get	(id 1/2) 320x240 = 0x12C00 bytes
+020048f8	fun	framebuffer_submit_to_channel	gates id in {1,2}; -> output_channel_submit
+0203b6b8	fun	output_channel_submit	channel table 0x020ce9ac (2 x 32B: +0x10 ctx, +0x1c fb)
+02033c8c	fun	output_hw_program_dma	mtspr ch1 0xC844/0xC848, ch0 0xC854/0xC858 (fb / size-1); sizes from SPR 0xC83C/0xC84C
+02033e04	fun	output_hw_load_coeffs	coef block -> SPR 0xC880..0xC8B0+; default 0x020814f0; callers 0x0203AD48/0x02039448 (A/B = display vs print, INFERRED)
+02033d98	fun	output_hw_set_channel_mode	SPR 0xC85C bit-fields per channel
+020814f0	label	output_default_coeffs	Q30 identity rows + Q6 polyphase resampler taps ([-5,62,8,-1]...), NOT a dither matrix
+020ce9ac	label	output_channel_table	2 x 32B channels: +0x10 ctx ptr, +0x1c current fb
+020cd788	label	frame_current_desc	current frame descriptor pointer
+0203ad48	fun	output_hw_setup_path_a	coef loader caller (display?) INFERRED
+02039448	fun	output_hw_setup_path_b	coef loader caller (print?) INFERRED
+02004588	fun	print_page_submit_INFERRED	shutter tail call after busy-wait; paper-sense follows; internals untraced
+0200b8cc	fun	key_mode4_ev0f_paper_feed	fill fb 0x12C00 bytes with 0xF9, dcache_clean, submit ch1 (paper feed) INFERRED
+0200bdb0	fun	key_mode4_ev10_open_modal	opens modal 0x020c433c
+0200be58	fun	key_mode4_ev0e_rebuild_list	file-list UI rebuild (0x02025154/0x0202990c family)
+0200c24c	fun	key_mode4_ok_save_to_sd	save photo: file_open -> 0x0205adf0 (status 8/9/14 -> toasts 0x56/0x57/0xbb) -> close
+020c433c	label	modal_confirm_obj	+0x00 hooks 0x020c434c, +0x08 node 0x020c43a4
+020c434c	label	modal_confirm_hooks	ev 0x1a/0x23 -> 0x02011a34 confirm; 0x24 -> 0x020119c4 cancel
+02011a34	fun	modal_confirm_handler	-> 0x0200ce14 close + ui_mode_request 0x02008108 + file ops INFERRED purpose
+020d41c7	label	ui_shutter_mode	burst/self-timer select (0..6)
+020d41c5	label	ui_shutter_state	FSM gate byte
+0200b948	fun	ui_toast_message	msg ids 0x56 ok / 0x57 / 0xbb error INFERRED
+02002138	fun	filename_build	(desc fields, &out) path/name builder INFERRED
+# --- Media engine corrections (AUDIO, not print) ---
+02056f28	fun	audio_format_setup	RIFF/WAVE fmt forks 1/2/0x11/6-7 = 16/4/4/8-bit PCM/ADPCM; param blocks ARE wav fmt headers. RETRACTS earlier "print burn formatter" reading
+020525b4	fun	audio_set_volume	clamp 0..100
+020524a0	fun	media_busy_get	byte [0x020d1c44] INFERRED audio-busy (polled after SFX)
+020071c4	fun	sfx_play_asset	asset idx via 0x0205b408 SFAT lookup (e.g. #0x2c shutter jingle)
+0205b408	fun	asset_sfat_lookup	8-byte SFAT record lookup
