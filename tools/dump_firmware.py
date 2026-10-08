@@ -50,9 +50,12 @@ SHIM_ADDR, CANARY_ADDR, BUFFER_ADDR = 0x020D8000, 0x020D8080, 0x020D8100
 # SPI DMA rounds up to 16 bytes; keep every read aligned.
 SPI_CHUNK = 2048
 
-# The staging buffer ends at 0x020D8900. Beyond STAGING_LIMIT are documented
-# unlock/hoist/child-lock patches; bigger buffers need a separate owned region.
-STAGING_LIMIT = 0x020D9000
+# Upper bound for a staging transfer. The measured free span around the staging
+# buffer runs 0x020D8100-0x020D9F53 (docs/RAM_MAP_MEASURED.md in the project):
+# 0x020D9F54 upward holds live firmware globals, and 0x02103980 upward is the
+# firmware's own allocator pool. Raising this bound does not widen what may be
+# written: build_cbw still accepts only the fixed RAM_BLOBS below.
+STAGING_LIMIT = 0x020D9F54
 assert SPI_CHUNK % 16 == 0 and FLASH_SIZE % SPI_CHUNK == 0
 assert BUFFER_ADDR + SPI_CHUNK <= STAGING_LIMIT
 
@@ -197,10 +200,10 @@ def build_cbw(tag, buffer, length, direction, callback=CALLBACK_SKIP, offset=0):
     canary/SPI-read adapter. No arbitrary memory writes or calls are exposed.
     """
     # Enforce this at the transaction boundary, even with Python -O or if a
-    # caller changes SPI_CHUNK. Never overwrite the documented patch regions.
+    # caller changes SPI_CHUNK. Never leave the measured free region.
     if buffer == BUFFER_ADDR and buffer + length > STAGING_LIMIT:
         raise DumpError(
-            "Safety check: staging buffer would overlap documented patch regions at 0x020D9000."
+            "Safety check: staging buffer would exceed the verified free region at 0x020D9F54."
         )
     if direction == 0x00:
         if buffer not in RAM_BLOBS or length != len(RAM_BLOBS[buffer]):
