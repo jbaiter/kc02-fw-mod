@@ -1,0 +1,397 @@
+--- a/gcc/config/or1k/constraints.md
++++ b/gcc/config/or1k/constraints.md
+@@ -57,3 +57,8 @@
+   ""
+   (match_code "const_double"))
+ 
++(define_memory_constraint "U"
++  "A 32-bit AppoTech/Buildwin special-register access."
++  (and (match_code "mem")
++       (match_test "GET_MODE (op) == SImode && MEM_ADDR_SPACE (op) == OR1K_ADDR_SPACE_SFR && memory_address_addr_space_p (SImode, XEXP (op, 0), OR1K_ADDR_SPACE_SFR)")))
++
+--- a/gcc/config/or1k/elf.h
++++ b/gcc/config/or1k/elf.h
+@@ -28,4 +28,5 @@
+    dbxelf.h enables optional stabs debug info.
+    elfos.h sets PREFERRED_DEBUGGING_TYPE to DWARF2_DEBUG .  */
+ 
+-#define DRIVER_SELF_SPECS "%{!mno-newlib:-mnewlib}"
++#define DRIVER_SELF_SPECS "%{!mno-newlib:-mnewlib}", \
++  "%{!mbig-endian:%{!mlittle-endian:-mlittle-endian}}"
+--- a/gcc/config/or1k/or1k-protos.h
++++ b/gcc/config/or1k/or1k-protos.h
+@@ -30,6 +30,8 @@
+ extern void        or1k_expand_prologue (void);
+ extern void        or1k_expand_epilogue (void);
+ extern bool        or1k_expand_move (enum machine_mode mode, rtx operands[]);
++extern bool        or1k_sfr_memory_p (rtx);
++extern void        or1k_print_sfr_operand (FILE *, rtx, int);
+ extern const char *or1k_output_move_double (rtx *operands);
+ extern void        or1k_expand_conditional_branch (rtx               *operands,
+ 						   enum machine_mode  mode);
+--- a/gcc/config/or1k/or1k.c
++++ b/gcc/config/or1k/or1k.c
+@@ -46,6 +46,7 @@
+ #include "function.h"
+ #include "expr.h"
+ #include "toplev.h"
++#include "diagnostic-core.h"
+ #include "recog.h"
+ #include "ggc.h"
+ #include "except.h"
+@@ -553,6 +554,40 @@
+ 
+ }	/* or1k_emit_int_cmove () */
+ 
++
++/* Preserve the distinction between SPRs and ordinary RAM through reload.  */
++bool
++or1k_sfr_memory_p (rtx op)
++{
++  if (GET_CODE (op) == SUBREG)
++    op = SUBREG_REG (op);
++  return MEM_P (op) && MEM_ADDR_SPACE (op) == OR1K_ADDR_SPACE_SFR;
++}
++
++/* SPR instructions use an unsigned immediate ORed with a base register.
++   Do not encode register+displacement addresses as if this were addition.  */
++void
++or1k_print_sfr_operand (FILE *stream, rtx op, int code)
++{
++  rtx addr;
++  gcc_assert (or1k_sfr_memory_p (op) && GET_MODE (op) == SImode);
++  addr = XEXP (op, 0);
++  if (REG_P (addr))
++    {
++      if (code == 'A')
++        fputs (reg_names[REGNO (addr)], stream);
++      else
++        fputs ("0", stream);
++    }
++  else
++    {
++      gcc_assert (CONST_INT_P (addr) && IN_RANGE (INTVAL (addr), 0, 65535));
++      if (code == 'A')
++        fputs ("r0", stream);
++      else
++        output_addr_const (stream, addr);
++    }
++}
+ 
+ static void
+ or1k_print_operand_address (FILE *stream, rtx addr)
+@@ -905,6 +940,16 @@
+         }
+     }
+ 
++  if (or1k_sfr_memory_p (operands[0]))
++    {
++      /* A write to SPR_SR can change the condition flag.  Conservatively
++         clobber it for every SPR store, including computed selectors.  */
++      if (operands[1] == const0_rtx)
++        operands[1] = gen_rtx_REG (SImode, 0);
++      emit_insn (gen_sfr_storesi (operands[0], operands[1]));
++      return true;
++    }
++
+   if (or1k_tls_symbolic_operand (operands[1]) != TLS_MODEL_NONE)
+     {
+       or1k_legitimize_tls_address (force_reg (Pmode, operands[0]),
+@@ -1253,6 +1298,12 @@
+ or1k_output_move_double (rtx *operands)
+ {
+   rtx xoperands[3];
++
++  if (or1k_sfr_memory_p (operands[0]) || or1k_sfr_memory_p (operands[1]))
++    {
++      error ("unsupported __sfr access; use an aligned 32-bit integer load/store");
++      return "l.nop";
++    }
+ 
+   switch (GET_CODE (operands[0]))
+     {
+@@ -1910,6 +1961,81 @@
+   return 0;
+ }
+ 
++/* The vendor encodes the SDK's numeric SFR address directly as the SPR
++   selector, e.g. SDBAUD == 0x9888.  Pointers retain the ordinary 32-bit size.  */
++static enum machine_mode
++or1k_addr_space_pointer_mode (addr_space_t as ATTRIBUTE_UNUSED)
++{
++  return ptr_mode;
++}
++
++static enum machine_mode
++or1k_addr_space_address_mode (addr_space_t as ATTRIBUTE_UNUSED)
++{
++  return Pmode;
++}
++
++static bool
++or1k_addr_space_legitimate_address_p (enum machine_mode mode, rtx x,
++                                     bool strict, addr_space_t as)
++{
++  if (ADDR_SPACE_GENERIC_P (as))
++    return or1k_legitimate_address_p (mode, x, strict);
++
++  gcc_assert (as == OR1K_ADDR_SPACE_SFR);
++  if (CONST_INT_P (x))
++    {
++      if (!IN_RANGE (INTVAL (x), 0, 65535))
++        error ("constant __sfr selector must be in the range 0..65535");
++      else if (mode == SImode && (INTVAL (x) & 3) != 0)
++        error ("unsupported __sfr access; use an aligned 32-bit integer load/store");
++      return IN_RANGE (INTVAL (x), 0, 65535);
++    }
++  return REG_P (x) && or1k_regnum_ok_for_base_p (REGNO (x), strict);
++}
++
++/* An SPR selector has no byte/halfword interpretation.  Prevent combine
++   from narrowing even nonvolatile 32-bit reads into ordinary byte loads.  */
++static bool
++or1k_mode_dependent_address_p (const_rtx addr ATTRIBUTE_UNUSED, addr_space_t as)
++{
++  return as == OR1K_ADDR_SPACE_SFR;
++}
++
++static rtx
++or1k_addr_space_legitimize_address (rtx x, rtx oldx,
++                                   enum machine_mode mode, addr_space_t as)
++{
++  if (ADDR_SPACE_GENERIC_P (as))
++    return or1k_legitimize_address (x, oldx, mode);
++
++  if (CONST_INT_P (x) && !IN_RANGE (INTVAL (x), 0, 65535))
++    error ("constant __sfr selector must be in the range 0..65535");
++
++  /* GCC will materialize an invalid SPR address expression in a register.
++     In particular, p + n must be computed as addition, not SPR's base OR K.  */
++  return x;
++}
++
++/* Reinterpreting a pointer between disjoint spaces otherwise merely warns
++   in GCC 4.9 and expands to zero.  Require an explicit integer-address cast.  */
++static const char *
++or1k_invalid_conversion (const_tree from, const_tree to)
++{
++  if (POINTER_TYPE_P (from) && POINTER_TYPE_P (to)
++      && TYPE_ADDR_SPACE (TREE_TYPE (from)) != TYPE_ADDR_SPACE (TREE_TYPE (to)))
++    return "cannot convert between __sfr and RAM pointers; cast via an integer address instead";
++  return NULL;
++}
++
++static void
++or1k_insert_attributes (tree decl, tree *attributes ATTRIBUTE_UNUSED)
++{
++  if (TREE_CODE (decl) == VAR_DECL
++      && TYPE_ADDR_SPACE (TREE_TYPE (decl)) == OR1K_ADDR_SPACE_SFR)
++    error ("__sfr objects require numeric SPR pointers, not storage declarations");
++}
++
+ /* -------------------------------------------------------------------------- */
+ /*!Initialize a trampoline for nested functions.
+ 
+@@ -2171,6 +2297,23 @@
+ 
+ #undef  TARGET_LEGITIMIZE_ADDRESS
+ #define TARGET_LEGITIMIZE_ADDRESS or1k_legitimize_address
++
++#undef TARGET_ADDR_SPACE_POINTER_MODE
++#define TARGET_ADDR_SPACE_POINTER_MODE or1k_addr_space_pointer_mode
++#undef TARGET_ADDR_SPACE_ADDRESS_MODE
++#define TARGET_ADDR_SPACE_ADDRESS_MODE or1k_addr_space_address_mode
++#undef TARGET_ADDR_SPACE_LEGITIMATE_ADDRESS_P
++#define TARGET_ADDR_SPACE_LEGITIMATE_ADDRESS_P or1k_addr_space_legitimate_address_p
++#undef TARGET_ADDR_SPACE_LEGITIMIZE_ADDRESS
++#define TARGET_ADDR_SPACE_LEGITIMIZE_ADDRESS or1k_addr_space_legitimize_address
++#undef TARGET_MODE_DEPENDENT_ADDRESS_P
++#define TARGET_MODE_DEPENDENT_ADDRESS_P or1k_mode_dependent_address_p
++
++/* The default subset hook keeps SPR and RAM spaces disjoint.  */
++#undef TARGET_INVALID_CONVERSION
++#define TARGET_INVALID_CONVERSION or1k_invalid_conversion
++#undef TARGET_INSERT_ATTRIBUTES
++#define TARGET_INSERT_ATTRIBUTES or1k_insert_attributes
+ 
+ #undef  TARGET_TRAMPOLINE_INIT
+ #define TARGET_TRAMPOLINE_INIT  or1k_trampoline_init
+@@ -2357,6 +2500,10 @@
+ static void
+ or1k_option_override (void)
+ {
++  /* SPR zero is valid (the SDK's SPR_VR), not a null RAM dereference.
++     GCC 4.9 lacks a per-address-space zero-address-valid hook.  */
++  flag_delete_null_pointer_checks = 0;
++
+   if (!TARGET_DELAY_ON)
+     flag_delayed_branch = FALSE;
+ }
+--- a/gcc/config/or1k/or1k.h
++++ b/gcc/config/or1k/or1k.h
+@@ -26,6 +26,11 @@
+ #define _OR1K_H_
+ 
+ #include "config/or1k/or1k-opts.h"
++
++/* AppoTech/Buildwin special-register pointers, distinct from RAM pointers.  */
++#define OR1K_ADDR_SPACE_SFR 1
++#define REGISTER_TARGET_PRAGMAS() \
++  c_register_addr_space ("__sfr", OR1K_ADDR_SPACE_SFR)
+ 
+ /* Target CPU builtins */
+ #define TARGET_CPU_CPP_BUILTINS()                       \
+@@ -64,8 +69,11 @@
+ #undef ENDFILE_SPEC
+ #define ENDFILE_SPEC "%{shared|pie:crtendS.o%s;:crtend.o%s} crtn.o%s"
+ 
++#undef ASM_SPEC
++#define ASM_SPEC "%{mbig-endian:-EB} %{mlittle-endian:-EL}"
++
+ #undef LINK_SPEC
+-#define LINK_SPEC "%{mnewlib:-entry 0x100} %{static:-static} %{shared:-shared}"
++#define LINK_SPEC "%{mbig-endian:-EB} %{mlittle-endian:-EL} %{mnewlib:-entry 0x100} %{static:-static} %{shared:-shared}"
+ 
+ /* Override previous definitions (linux.h). Newlib doesn't have a profiling
+    version of the library, but it does have a debugging version (libg.a) */
+@@ -85,10 +93,10 @@
+ #define BITS_BIG_ENDIAN 0
+ 
+ /* Define this if most significant byte of a word is the lowest numbered.  */
+-#define BYTES_BIG_ENDIAN 1
++#define BYTES_BIG_ENDIAN (TARGET_BIG_ENDIAN)
+ 
+ /* Define this if most significant word of a multiword number is numbered.  */
+-#define WORDS_BIG_ENDIAN 1
++#define WORDS_BIG_ENDIAN (TARGET_BIG_ENDIAN)
+ 
+ #define BITS_PER_WORD 32
+ #define SHORT_TYPE_SIZE 16
+@@ -579,7 +587,7 @@
+    machine.  There are three defined values: IEEE_FLOAT_FORMAT,
+    VAX_FLOAT_FORMAT, and UNKNOWN_FLOAT_FORMAT.  */
+ #define TARGET_FLOAT_FORMAT IEEE_FLOAT_FORMAT
+-#define FLOAT_WORDS_BIG_ENDIAN 1
++#define FLOAT_WORDS_BIG_ENDIAN (TARGET_BIG_ENDIAN)
+ 
+ /* A C type for declaring a variable that is used as the first argument of
+    FUNCTION_ARG and other related values. For some target machines, the type
+@@ -1098,6 +1106,8 @@
+     {									\
+       fprintf (stream, "%s", reg_names[REGNO (XEXP (x, 0))]);		\
+     }									\
++  else if (code == 'A' || code == 'B')                                   \
++    or1k_print_sfr_operand (stream, x, code);                            \
+   else if (code == '(')							\
+     {									\
+       if (TARGET_DELAY_ON && dbr_sequence_length ())                    \
+@@ -1152,8 +1162,16 @@
+     }									\
+   else if (GET_CODE (x) == REG)						\
+     fprintf (stream, "%s", reg_names[REGNO (x)]);			\
+-  else if (GET_CODE (x) == MEM)						\
+-    output_address (XEXP (x, 0));					\
++  else if (GET_CODE (x) == MEM)                                         \
++    {                                                                  \
++      if (or1k_sfr_memory_p (x))                                        \
++        {                                                              \
++          error ("unsupported __sfr access; use an aligned 32-bit integer load/store"); \
++          fputs ("0(r0)", stream);                                    \
++        }                                                              \
++      else                                                             \
++        output_address (XEXP (x, 0));                                   \
++    }                                                                  \
+   else									\
+     output_addr_const (stream, x);					\
+ }
+--- a/gcc/config/or1k/or1k.md
++++ b/gcc/config/or1k/or1k.md
+@@ -273,12 +273,32 @@
+ ;; movSI
+ ;;
+ 
++;; Special-register pointers use SPR instructions, not RAM loads/stores.
++(define_insn "*sfr_loadsi"
++  [(set (match_operand:SI 0 "register_operand" "=r")
++        (match_operand:SI 1 "or1k_sfr_operand" "U"))]
++  ""
++  "l.mfspr\t%0,%A1,%B1"
++  [(set_attr "type" "load")
++   (set_attr "length" "1")])
++
++(define_insn "sfr_storesi"
++  [(set (match_operand:SI 0 "or1k_sfr_operand" "=U")
++        (match_operand:SI 1 "register_operand" "r"))
++   (clobber (reg:CC CC_REG))]
++  ""
++  "l.mtspr\t%A0,%1,%B0"
++  [(set_attr "type" "store")
++   (set_attr "length" "1")])
++
+ (define_insn "*movsi_insn"
+   [(set (match_operand:SI 0 "nonimmediate_operand" "=r,r,r,r,r,m")
+         (match_operand:SI 1 "input_operand"       "I,K,M,r,m,r"))]
+-  "(register_operand (operands[0], SImode)
+-   || (register_operand (operands[1], SImode))
+-   || (operands[1] == const0_rtx))"
++  "!or1k_sfr_memory_p (operands[0])
++   && !or1k_sfr_memory_p (operands[1])
++   && (register_operand (operands[0], SImode)
++       || register_operand (operands[1], SImode)
++       || operands[1] == const0_rtx)"
+   "@
+   l.addi  \t%0,r0,%1\t # move immediate I
+   l.ori   \t%0,r0,%1\t # move immediate K
+--- a/gcc/config/or1k/or1k.opt
++++ b/gcc/config/or1k/or1k.opt
+@@ -19,6 +19,14 @@
+ 
+ HeaderInclude
+ config/or1k/or1k-opts.h
++
++mbig-endian
++Target Report RejectNegative Mask(BIG_ENDIAN)
++Use big-endian byte order.
++
++mlittle-endian
++Target Report RejectNegative InverseMask(BIG_ENDIAN, LITTLE_ENDIAN)
++Use little-endian byte order.
+ 
+ Variable
+ enum or1k_delay or1k_delay_selected = OR1K_DELAY_DEFAULT
+--- a/gcc/config/or1k/predicates.md
++++ b/gcc/config/or1k/predicates.md
+@@ -17,6 +17,10 @@
+ ;; You should have received a copy of the GNU General Public License
+ ;; along with GCC; see the file COPYING3.  If not see
+ ;; <http://www.gnu.org/licenses/>.
++
++(define_predicate "or1k_sfr_operand"
++  (and (match_code "mem")
++       (match_test "MEM_ADDR_SPACE (op) == OR1K_ADDR_SPACE_SFR && memory_operand (op, mode)")))
+ 
+ (define_predicate "cc_reg_operand"
+   (match_code "subreg,reg")
+@@ -56,7 +60,7 @@
+ 
+   /* Check for valid MEM forms.  */
+   if (GET_CODE (op) == MEM)
+-    return memory_address_p (mode, XEXP (op, 0));
++    return memory_address_addr_space_p (mode, XEXP (op, 0), MEM_ADDR_SPACE (op));
+ 
+   return 0;
+ })
+--- a/libgcc/config/or1k/sfp-machine.h
++++ b/libgcc/config/or1k/sfp-machine.h
+@@ -44,7 +44,11 @@
+ #define	__LITTLE_ENDIAN	1234
+ #define	__BIG_ENDIAN	4321
+ 
++#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
++#define __BYTE_ORDER __LITTLE_ENDIAN
++#else
+ #define __BYTE_ORDER __BIG_ENDIAN
++#endif
+ 
+ #define _FP_TININESS_AFTER_ROUNDING 0
+ 

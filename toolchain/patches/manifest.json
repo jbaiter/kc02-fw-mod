@@ -1,0 +1,45 @@
+{
+  "binutils": {
+    "patch": "patches/binutils-ax3292-little-endian.patch",
+    "sha256": "d6e9db2a5ecaca6ee18ddfd35657cf2de6645c641231c24453eb3d3595ca52cd",
+    "changed_files": [
+      "bfd/config.bfd",
+      "bfd/configure",
+      "bfd/configure.ac",
+      "bfd/elf32-or1k.c",
+      "bfd/targets.c",
+      "gas/config/tc-or1k.c",
+      "gas/config/tc-or1k.h",
+      "gas/configure.tgt",
+      "ld/emulparams/elf32or1k.sh",
+      "opcodes/or1k-opc.h"
+    ],
+    "applied_patch_verified": true
+  },
+  "gcc": {
+    "patch": "patches/gcc-ax3292-little-endian.patch",
+    "sha256": "e8cbe6e4abb5856f714c992dc5a533b3e079d51743230f7a53c95def379c2fb0",
+    "changed_files": [
+      "gcc/config/or1k/constraints.md",
+      "gcc/config/or1k/elf.h",
+      "gcc/config/or1k/or1k-protos.h",
+      "gcc/config/or1k/or1k.c",
+      "gcc/config/or1k/or1k.h",
+      "gcc/config/or1k/or1k.md",
+      "gcc/config/or1k/or1k.opt",
+      "gcc/config/or1k/predicates.md",
+      "libgcc/config/or1k/sfp-machine.h"
+    ],
+    "applied_patch_verified": true
+  },
+  "newlib": {
+    "patch": "patches/newlib-ax3292-little-endian.patch",
+    "sha256": "99208968abe40bdf98fd980e21bcfeb1eacbbed8ac0d9e2ab9491b4879e4c579",
+    "changed_files": [
+      "newlib/libc/include/machine/ieeefp.h",
+      "newlib/libc/include/machine/setjmp.h",
+      "newlib/libc/machine/or1k/setjmp.S"
+    ],
+    "applied_patch_verified": true
+  }
+}

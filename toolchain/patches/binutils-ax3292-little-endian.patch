@@ -1,0 +1,194 @@
+--- a/bfd/config.bfd
++++ b/bfd/config.bfd
+@@ -1174,11 +1174,13 @@
+     ;;
+ 
+   or1k-*-elf | or1k-*-linux* | or1k-*-rtems*)
+-    targ_defvec=or1k_elf32_vec
++    targ_defvec=or1k_elf32_le_vec
++    targ_selvecs=or1k_elf32_vec
+     ;;
+ 
+   or1knd-*-elf | or1knd-*-linux* | or1knd-*-rtems*)
+-    targ_defvec=or1k_elf32_vec
++    targ_defvec=or1k_elf32_le_vec
++    targ_selvecs=or1k_elf32_vec
+     ;;
+ 
+   pdp11-*-*)
+--- a/bfd/configure
++++ b/bfd/configure
+@@ -15485,7 +15485,7 @@
+     nios2_elf32_le_vec)		 tb="$tb elf32-nios2.lo elf32.lo $elf" ;;
+     ns32k_aout_pc532mach_vec)	 tb="$tb pc532-mach.lo aout-ns32k.lo" ;;
+     ns32k_aout_pc532nbsd_vec)	 tb="$tb ns32knetbsd.lo aout-ns32k.lo" ;;
+-    or1k_elf32_vec)		 tb="$tb elf32-or1k.lo elf32.lo $elf" ;;
++    or1k_elf32_vec | or1k_elf32_le_vec) tb="$tb elf32-or1k.lo elf32.lo $elf" ;;
+     pdp11_aout_vec)		 tb="$tb pdp11.lo" ;;
+     pef_vec)			 tb="$tb pef.lo" ;;
+     pef_xlib_vec)		 tb="$tb pef.lo" ;;
+--- a/bfd/configure.ac
++++ b/bfd/configure.ac
+@@ -886,7 +886,7 @@
+     nios2_elf32_le_vec)		 tb="$tb elf32-nios2.lo elf32.lo $elf" ;;
+     ns32k_aout_pc532mach_vec)	 tb="$tb pc532-mach.lo aout-ns32k.lo" ;;
+     ns32k_aout_pc532nbsd_vec)	 tb="$tb ns32knetbsd.lo aout-ns32k.lo" ;;
+-    or1k_elf32_vec)		 tb="$tb elf32-or1k.lo elf32.lo $elf" ;;
++    or1k_elf32_vec | or1k_elf32_le_vec) tb="$tb elf32-or1k.lo elf32.lo $elf" ;;
+     pdp11_aout_vec)		 tb="$tb pdp11.lo" ;;
+     pef_vec)			 tb="$tb pef.lo" ;;
+     pef_xlib_vec)		 tb="$tb pef.lo" ;;
+--- a/bfd/elf32-or1k.c
++++ b/bfd/elf32-or1k.c
+@@ -2785,6 +2785,10 @@
+       || bfd_get_flavour (obfd) != bfd_target_elf_flavour)
+     return TRUE;
+ 
++  /* A mixed-endian link would silently preserve incorrectly ordered code.  */
++  if (! _bfd_generic_verify_endian_match (ibfd, obfd))
++    return FALSE;
++
+   if (!elf_flags_init (obfd))
+     {
+       elf_flags_init (obfd) = TRUE;
+@@ -2816,6 +2820,8 @@
+ 
+ #define TARGET_BIG_SYM                  or1k_elf32_vec
+ #define TARGET_BIG_NAME                 "elf32-or1k"
++#define TARGET_LITTLE_SYM               or1k_elf32_le_vec
++#define TARGET_LITTLE_NAME              "elf32-or1kle"
+ 
+ #define elf_info_to_howto_rel           NULL
+ #define elf_info_to_howto               or1k_info_to_howto_rela
+--- a/bfd/targets.c
++++ b/bfd/targets.c
+@@ -764,6 +764,7 @@
+ extern const bfd_target ns32k_aout_pc532nbsd_vec;
+ extern const bfd_target oasys_vec;
+ extern const bfd_target or1k_elf32_vec;
++extern const bfd_target or1k_elf32_le_vec;
+ extern const bfd_target pdp11_aout_vec;
+ extern const bfd_target pef_vec;
+ extern const bfd_target pef_xlib_vec;
+@@ -1245,6 +1246,7 @@
+ #endif
+ 
+ 	&or1k_elf32_vec,
++	&or1k_elf32_le_vec,
+ 
+ 	&pdp11_aout_vec,
+ 
+--- a/gas/config/tc-or1k.c
++++ b/gas/config/tc-or1k.c
+@@ -58,8 +58,12 @@
+ #define OR1K_SHORTOPTS "m:"
+ const char * md_shortopts = OR1K_SHORTOPTS;
+ 
++enum { OPTION_LITTLE_ENDIAN = OPTION_MD_BASE, OPTION_BIG_ENDIAN };
++
+ struct option md_longopts[] =
+ {
++  {"EB", no_argument, NULL, OPTION_BIG_ENDIAN},
++  {"EL", no_argument, NULL, OPTION_LITTLE_ENDIAN},
+   {NULL, no_argument, NULL, 0}
+ };
+ size_t md_longopts_size = sizeof (md_longopts);
+@@ -67,9 +71,15 @@
+ unsigned long or1k_machine = 0; /* default */
+ 
+ int
+-md_parse_option (int c ATTRIBUTE_UNUSED, char * arg ATTRIBUTE_UNUSED)
+-{
+-  return 0;
++md_parse_option (int c, char * arg ATTRIBUTE_UNUSED)
++{
++  switch (c)
++    {
++    case OPTION_BIG_ENDIAN: target_big_endian = 1; break;
++    case OPTION_LITTLE_ENDIAN: target_big_endian = 0; break;
++    default: return 0;
++    }
++  return 1;
+ }
+ 
+ void
+@@ -112,7 +122,7 @@
+   /* Set the machine number and endian.  */
+   gas_cgen_cpu_desc = or1k_cgen_cpu_open (CGEN_CPU_OPEN_MACHS, 0,
+                                               CGEN_CPU_OPEN_ENDIAN,
+-                                              CGEN_ENDIAN_BIG,
++                                              target_big_endian ? CGEN_ENDIAN_BIG : CGEN_ENDIAN_LITTLE,
+                                               CGEN_CPU_OPEN_END);
+   or1k_cgen_init_asm (gas_cgen_cpu_desc);
+ 
+@@ -268,7 +278,10 @@
+ void
+ md_number_to_chars (char * buf, valueT val, int n)
+ {
+-  number_to_chars_bigendian (buf, val, n);
++  if (target_big_endian)
++    number_to_chars_bigendian (buf, val, n);
++  else
++    number_to_chars_littleendian (buf, val, n);
+ }
+ 
+ /* Turn a string in input_line_pointer into a floating point constant of type
+--- a/gas/config/tc-or1k.h
++++ b/gas/config/tc-or1k.h
+@@ -26,8 +26,10 @@
+ extern unsigned long or1k_machine;
+ #define TARGET_MACH (or1k_machine)
+ 
+-#define TARGET_FORMAT           "elf32-or1k"
+-#define TARGET_BYTES_BIG_ENDIAN 1
++#define TARGET_FORMAT           (target_big_endian ? "elf32-or1k" : "elf32-or1kle")
++#ifndef TARGET_BYTES_BIG_ENDIAN
++#define TARGET_BYTES_BIG_ENDIAN 0
++#endif
+ 
+ extern const char or1k_comment_chars [];
+ #define tc_comment_chars or1k_comment_chars
+--- a/gas/configure.tgt
++++ b/gas/configure.tgt
+@@ -81,7 +81,7 @@
+   mt)			cpu_type=mt endian=big ;;
+   nds32be)		cpu_type=nds32 endian=big ;;
+   nds32le)		cpu_type=nds32 endian=little ;;
+-  or1k* | or1knd*)	cpu_type=or1k endian=big ;;
++  or1k* | or1knd*)	cpu_type=or1k endian=little ;;
+   pjl*)			cpu_type=pj endian=little ;;
+   pj*)			cpu_type=pj endian=big ;;
+   powerpc*le*)		cpu_type=ppc endian=little ;;
+@@ -363,7 +363,7 @@
+   ns32k-pc532-lites*)			fmt=aout em=nbsd532 ;;
+   ns32k-*-*n*bsd*)			fmt=aout em=nbsd532 ;;
+ 
+-  or1k*-*-elf | or1k*-*-rtems*) 	fmt=elf endian=big ;;
++  or1k*-*-elf | or1k*-*-rtems*) 	fmt=elf endian=little ;;
+   or1k*-*-linux*)			fmt=elf em=linux endian=big ;;
+ 
+   pj*)					fmt=elf ;;
+--- a/ld/emulparams/elf32or1k.sh
++++ b/ld/emulparams/elf32or1k.sh
+@@ -1,7 +1,9 @@
+ SCRIPT_NAME=elf
+ MACHINE=
+ TEMPLATE_NAME=elf32
+-OUTPUT_FORMAT="elf32-or1k"
++BIG_OUTPUT_FORMAT="elf32-or1k"
++LITTLE_OUTPUT_FORMAT="elf32-or1kle"
++OUTPUT_FORMAT="$LITTLE_OUTPUT_FORMAT"
+ NOP=0x15000000
+ TEXT_START_ADDR=0x0000
+ TARGET_PAGE_SIZE=0x2000
+--- a/opcodes/or1k-opc.h
++++ b/opcodes/or1k-opc.h
+@@ -30,7 +30,7 @@
+ #undef  CGEN_DIS_HASH_SIZE
+ #define CGEN_DIS_HASH_SIZE 256
+ #undef  CGEN_DIS_HASH
+-#define CGEN_DIS_HASH(buffer, value) (((unsigned char *) (buffer))[0] >> 2)
++#define CGEN_DIS_HASH(buffer, value) ((value) >> 26)
+ 
+ /* -- */
+ /* Enum declaration for or1k instruction types.  */

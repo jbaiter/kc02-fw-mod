@@ -1,0 +1,85 @@
+--- a/newlib/libc/include/machine/ieeefp.h
++++ b/newlib/libc/include/machine/ieeefp.h
+@@ -321,7 +321,11 @@
+ #endif
+ 
+ #if defined(__or1k__) || defined(__OR1K__) || defined(__OR1KND__)
+-#define __IEEE_BIG_ENDIAN
++#if __BYTE_ORDER__ == __ORDER_LITTLE_ENDIAN__
++#define __IEEE_LITTLE_ENDIAN
++#else
++#define __IEEE_BIG_ENDIAN
++#endif
+ #endif
+ 
+ #ifdef __IP2K__
+--- a/newlib/libc/include/machine/setjmp.h
++++ b/newlib/libc/include/machine/setjmp.h
+@@ -2,7 +2,10 @@
+ _BEGIN_STD_C
+ 
+ #if defined(__or1k__) || defined(__or1knd__)
+-#define _JBLEN 31 /* 32 GPRs - r0 */
++/* setjmp.S stores SP, r2, r9, the callee-saved set and the status register at
++   byte offset 124, so the buffer must hold 32 words.  The historical value of
++   31 (124 bytes) let setjmp write 4 bytes past the declared jmp_buf. */
++#define _JBLEN 32 /* 31 GPRs + status register */
+ #define _JBTYPE unsigned long
+ #endif
+ 
+--- a/newlib/libc/machine/or1k/setjmp.S
++++ b/newlib/libc/machine/or1k/setjmp.S
+@@ -24,6 +24,19 @@
+ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+ 
++/* AX3292 SPR map note.  Generic OpenRISC puts the status register at SPR 17.
++   The AX3292 register file is grouped by SPRGROUP_* with
++   MAX_SPRS_PER_GRP_BITS == 11, and the SDK headers (ax329x.h) define
++   SPR_SR = SPRGROUP_SYS + (0x6 << 2) == 0x18 and SPR_VR == 0x0.  Stock
++   firmware reads and writes 0x18 for interrupt critical sections, and its
++   cache routines address the DC/IC groups at 0x1800/0x2000, confirming the
++   map.  SPR 17 is not defined in that map, so the legacy read/write below
++   would touch an unspecified system register.  Keep both sides consistent. */
++#define OR1K_STATUS_SPR 24
++
++#if defined(__OR1K_NODELAY__)
++.nodelay
++#endif
+ .align  4
+ .global setjmp
+ .type   setjmp,@function
+@@ -45,8 +58,8 @@
+ 	l.sw	100(r3), r26
+ 	l.sw	108(r3), r28
+ 	l.sw	116(r3), r30
+-	/* Save Status Register */
+-	l.mfspr	r13, r0, 17
++	/* Save Status Register (AX3292: SPR 0x18) */
++	l.mfspr	r13, r0, OR1K_STATUS_SPR
+ 	l.sw	124(r3), r13
+ /* Set result register to 0 and jump */
+ // Different cases for optional delay slot
+@@ -68,9 +81,11 @@
+ longjmp:
+ 
+   /* If the second argument to longjmp is zero, set return address to 1,
+-  otherwise set it to the value of the second argument */
++  otherwise set it to the value of the second argument.  The pinned revision
++  used l.sfne here, which inverts the result: a non-zero argument returned 1
++  and a zero argument returned 0.  Later upstream revisions use l.sfeq. */
+ 	l.addi	r11, r0, 1
+-	l.sfne	r4, r0
++	l.sfeq	r4, r0
+ 	l.bf	1f
+ 	l.nop
+ 	l.addi	r11, r4, 0
+@@ -78,7 +93,7 @@
+   /* Load status register */
+ 1: 
+ 	l.lwz	r15, 124(r3)
+-	l.mtspr	r0, r15, 17
++	l.mtspr	r0, r15, OR1K_STATUS_SPR
+ 
+ 	l.lwz	r1, 4(r3)
+ 	l.lwz	r2, 8(r3)
