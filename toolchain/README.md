@@ -71,7 +71,13 @@ so link with `-nostdlib` and an explicit script, as the SDK does.
 
 `export-patches.py` regenerates `patches/*.patch` from the edited sources and
 verifies that applying each patch to a pristine copy reproduces them byte-for-byte.
-`patches/manifest.json` records the file lists and patch hashes.
+`patches/manifest.json` records the file lists and patch hashes. Both scripts
+expect the build root layout (`src/`, `originals/`, `patches/`) described above, so
+run the copies here from such a tree rather than from inside this directory.
+
+The committed series was re-checked against the build tree: applying all three
+patches to pristine copies of the listed files reproduces the edited sources
+exactly.
 
 ## Validation status
 
