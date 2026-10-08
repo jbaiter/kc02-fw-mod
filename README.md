@@ -37,7 +37,7 @@ Here are some of the things and challenges I went through:
 
 | Part | Detail |
 |------|--------|
-| SoC | JieLi AC2546 (pi32 core) |
+| SoC | AppoTech/Buildwin AX3292 (OpenRISC 1000, little-endian, no delay slots) |
 | Flash | Zetta 25VQ32, 4MB SPI NOR |
 | LCD | 320x240, 2.4" IPS |
 | Sensor | H63P |
@@ -174,11 +174,31 @@ If `--sd` is passed to the build command, it copies to `/Volumes/NO NAME` (the d
 | `tools/extract_assets.py` | Extract all assets from a firmware dump using the SFAT table |
 | `tools/compare.py` | Web UI (localhost:8080) — the main workspace for theme development |
 | `tools/analyze.py` | Firmware structure analysis — find assets, map regions, detect formats |
-| `tools/pi32_disasm.py` | pi32 disassembler for the JieLi CPU core |
-| `tools/xrefdb.py` | Cross-reference database for firmware code analysis |
-| `tools/ghidra_import.py` | Import labels/comments into Ghidra for RE work |
-| `tools/ghidra_label.py` | Generate Ghidra label scripts |
-| `tools/KC02Labels.java` | Ghidra script for applying KC02-specific labels |
+| `tools/survey_ram.py` | **Read-only** RAM survey (no writes, no code execution) used to find verified-free memory |
+| `tools/test_toolchain.py` | Offline build/check and hardware execution of the compiler validation suite |
+
+### Toolchain validation suite (`tools/test_toolchain.py`)
+
+The KC02 runs an AppoTech/Buildwin **AX3292** (OpenRISC 1000, little-endian, no delay
+slots). A reconstructed GCC 4.9.1 toolchain for that core was validated against the
+device itself, and the suite that does it is checked in here. It compiles small
+freestanding C payloads, links them for a verified-free RAM region, uploads them
+over the same stock USB command the dumper uses, executes them through the USB
+read callback, and checks every returned byte.
+
+```bash
+python3 tools/test_toolchain.py build --tool-prefix <or1k-elf->   # offline
+python3 tools/test_toolchain.py check --model                     # offline
+python3 tools/test_toolchain.py run --ack-ram-execution           # camera required
+```
+
+The suite covers the calling convention, register/stack handling, `__sfr` system
+register addressing, 32/64-bit and software floating-point arithmetic, and the
+reconstructed libc/`setjmp` runtime. **160 profiles / 1200 vectors pass on
+hardware.** It never writes flash. See [`docs/TOOLCHAIN_TESTS.md`](docs/TOOLCHAIN_TESTS.md)
+for the protocol and [`docs/RAM_MAP_MEASURED.md`](docs/RAM_MAP_MEASURED.md) for the
+measured RAM map, including why the large area above `0x02103980` is the
+firmware's own allocator pool and must not be used.
 
 ### Compare UI (`tools/compare.py`)
 
@@ -275,12 +295,12 @@ python3 tools/build.py build --raw-patch 0x085010=80020000
 
 ```
 0x000000 - 0x0001FF  Header (BLDR magic, checksum, boot signature)
-0x000200 - 0x0D31FF  Executable code (pi32) — DO NOT MODIFY
+0x000200 - 0x0D31FF  Executable code (OR1K) — DO NOT MODIFY
 0x0D3200 - 0x0D350F  Asset table (SFAT) — 97 entries x 8 bytes
 0x0D3510 - 0x3FFFFF  Asset data (BMP, JPEG, WAV, raw)
 ```
 
-The asset data region (0x0D3510+) is the only safe zone for replacement. The code section contains pi32 instructions — modifying bytes there without disassembly will corrupt the firmware and potentially brick the camera.
+The asset data region (0x0D3510+) is the only safe zone for replacement. The code section contains little-endian OpenRISC (OR1K) instructions — modifying bytes there without disassembly will corrupt the firmware and potentially brick the camera.
 
 ## Recovery
 
@@ -293,9 +313,21 @@ If you brick the camera (SD update no longer works):
 
 The SD update routine lives in the app code section, not the bootloader. If code gets corrupted, the camera can't self-recover from SD — you'll need the SPI programmer.
 
+## Silicon, SDK & toolchain
+
+Early notes identified the SoC as a JieLi AC2546 with a pi32 core. That is wrong. The camera is built around the **AppoTech (Buildwin) AX3292** (AppoTech is also known as Buildwin / 建荣 / 卓荣) — the firmware itself contains the strings `AX3292`, `329X_V1.0.0` and `BuildwinMedia-Player 1.00`, and its code is little-endian **OpenRISC 1000 (OR1K) with no delay slots**, not JieLi's pi32.
+
+What that means in practice:
+
+- **Firmware format.** The BLDR header, `SFAT` asset table and `DestBin.bin` SD-update container are Buildwin's standard camera-firmware format. `DestBin.bin` is what their `MakeSPIBin.exe` produces from the linked ELF plus a resource bin, and it is exactly what the on-device updater looks for on the SD card root.
+- **The vendor SDK is semi-public.** A source drop of the SDK this firmware family is built from (`AX329x_car_sdk_release_v102`, 2022-07-11) exists at [Secret2001/0.96_screen_3292](https://github.com/Secret2001/0.96_screen_3292): application code, chip HAL (`ax32xx/`), sensor/LCD/USB drivers, `BLDRX32.S` startup code, the `ax329x.ld` linker script, prebuilt `bwlib` libraries, and the Windows image/resource tools. Its `upgrade.c` is the `DestBin.bin` SD updater, and its `uiSelfTestRes.c` renders the `AX3292` chip-ID string visible in our dump.
+- **Toolchain.** That SDK builds with the old OpenRISC fork of GCC: `or1k-elf-gcc -DOR1K_NEWCPU -mno-delay -mhard-div`, linking newlib/`libgcc` from the `no-delay` multilib (shipped by the vendor as a portable `MinGW-4.7.1` install). A stock modern `or1k-elf-gcc` will not reproduce this build: the no-delay options are gone from current GCC, and upstream binutils still cannot assemble little-endian OR1K ([binutils-gdb#8](https://github.com/openrisc/binutils-gdb/issues/8)). That toolchain has now been rebuilt: [`toolchain/`](toolchain/) carries the source patches (native LE OR1K, no-delay multilibs, the vendor `__sfr` register space) and [`docs/TOOLCHAIN_TESTS.md`](docs/TOOLCHAIN_TESTS.md) covers the suite that validates the result against the device, 160 profiles / 1200 vectors. Rebuilding the SDK image end to end is still unvalidated, so firmware work should remain asset patches plus RAM-only experiments until the boot, startup and packaging path is verified.
+
 ## Reverse Engineering
 
-The `reference/ghidra-jieli/` directory contains SLEIGH processor specifications for JieLi's pi32 and pi32v2 CPU cores (originally from [kagaimiq's ghidra-jieli](https://github.com/kagaimiq/ghidra-jieli)). These let you load the firmware into Ghidra for disassembly and analysis.
+The firmware code is little-endian OR1K without delay slots. [A teardown of a closely related AX3295B kids camera](https://habr.com/ru/articles/779626/) (same USB IDs, same `BuildwinMedia-Player` string) documents the architecture in depth — including the `BLDR` boot-cable mode (USB `1908:3319`, `BuildWin Video050Loader`) — and ships [ida-openrisc](https://github.com/ilyakurdyukov/ida-openrisc), an IDA processor module for little-endian OR1K with a no-delay toggle. For Ghidra, use an OpenRISC SLEIGH spec loaded little-endian.
+
+The `tools/pi32_disasm.py` / `xrefdb.py` / `ghidra_import.py` family and `reference/ghidra-jieli/` are early work from the "it must be JieLi pi32" days. They target the wrong instruction set and are kept for reference only (the ghidra-jieli specs' provenance is credited under License).
 
 The `docs/` directory contains detailed firmware documentation:
 - `ASSET_CATALOG.md` — all 97 assets mapped with offsets, sizes, and descriptions
