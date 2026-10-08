@@ -1,0 +1,1710 @@
+U	anon_union_554	4
+N	anon_union_554	0	uint	4	__wch
+N	anon_union_554	0	byte[4]	4	__wchb
+S	_mbstate_t	8
+M	_mbstate_t	0	int	4	__count
+M	_mbstate_t	4	anon_union_554	4	__value
+S	_Bigint	24
+M	_Bigint	0	PTR:_Bigint	4	_next
+M	_Bigint	4	int	4	_k
+M	_Bigint	8	int	4	_maxwds
+M	_Bigint	12	int	4	_sign
+M	_Bigint	16	int	4	_wds
+M	_Bigint	20	uint[1]	4	_x
+S	_on_exit_args	264
+M	_on_exit_args	0	void*[32]	128	_fnargs
+M	_on_exit_args	128	void*[32]	128	_dso_handle
+M	_on_exit_args	256	uint	4	_fntypes
+M	_on_exit_args	260	uint	4	_is_cxa
+S	_atexit	400
+M	_atexit	0	PTR:_atexit	4	_next
+M	_atexit	4	int	4	_ind
+M	_atexit	8	void*[32]	128	_fns
+M	_atexit	136	_on_exit_args	264	_on_exit_args
+S	_reent	1060
+M	_reent	0	int	4	_errno
+M	_reent	4	PTR:__FILE	4	_stdin
+M	_reent	8	PTR:__FILE	4	_stdout
+M	_reent	12	PTR:__FILE	4	_stderr
+M	_reent	16	int	4	_inc
+M	_reent	20	char[25]	25	_emergency
+M	_reent	48	int	4	_current_category
+M	_reent	52	char*	4	_current_locale
+M	_reent	56	int	4	__sdidinit
+M	_reent	60	void*	4	__cleanup
+M	_reent	64	PTR:_Bigint	4	_result
+M	_reent	68	int	4	_result_k
+M	_reent	72	PTR:_Bigint	4	_p5s
+M	_reent	76	PTR:PTR:_Bigint	4	_freelist
+M	_reent	80	int	4	_cvtlen
+M	_reent	84	char*	4	_cvtbuf
+M	_reent	88	anon_union_cb8	240	_new
+M	_reent	328	PTR:_atexit	4	_atexit
+M	_reent	332	_atexit	400	_atexit0
+M	_reent	732	PTR:void*	4	_sig_func
+M	_reent	736	_glue	12	__sglue
+M	_reent	748	__FILE[3]	312	__sf
+S	_glue	12
+M	_glue	0	PTR:_glue	4	_next
+M	_glue	4	int	4	_niobs
+M	_glue	8	PTR:__FILE	4	_iobs
+S	_rand48	14
+M	_rand48	0	ushort[3]	6	_seed
+M	_rand48	6	ushort[3]	6	_mult
+M	_rand48	12	ushort	2	_add
+S	anon_struct_b43	204
+M	anon_struct_b43	0	uint	4	_unused_rand
+M	anon_struct_b43	4	char*	4	_strtok_last
+M	anon_struct_b43	8	char[26]	26	_asctime_buf
+M	anon_struct_b43	36	__tm	36	_localtime_buf
+M	anon_struct_b43	72	int	4	_gamma_signgam
+M	anon_struct_b43	76	uint64	8	_rand_next
+M	anon_struct_b43	84	_rand48	14	_r48
+M	anon_struct_b43	100	_mbstate_t	8	_mblen_state
+M	anon_struct_b43	108	_mbstate_t	8	_mbtowc_state
+M	anon_struct_b43	116	_mbstate_t	8	_wctomb_state
+M	anon_struct_b43	124	char[8]	8	_l64a_buf
+M	anon_struct_b43	132	char[24]	24	_signal_buf
+M	anon_struct_b43	156	int	4	_getdate_err
+M	anon_struct_b43	160	_mbstate_t	8	_mbrlen_state
+M	anon_struct_b43	168	_mbstate_t	8	_mbrtowc_state
+M	anon_struct_b43	176	_mbstate_t	8	_mbsrtowcs_state
+M	anon_struct_b43	184	_mbstate_t	8	_wcrtomb_state
+M	anon_struct_b43	192	_mbstate_t	8	_wcsrtombs_state
+M	anon_struct_b43	200	int	4	_h_errno
+S	anon_struct_c74	240
+M	anon_struct_c74	0	PTR:byte[30]	120	_nextf
+M	anon_struct_c74	120	uint[30]	120	_nmalloc
+U	anon_union_cb8	240
+N	anon_union_cb8	0	anon_struct_b43	204	_reent
+N	anon_union_cb8	0	anon_struct_c74	240	_unused
+S	cookie_io_functions_t	16
+M	cookie_io_functions_t	0	void*	4	read
+M	cookie_io_functions_t	4	void*	4	write
+M	cookie_io_functions_t	8	void*	4	seek
+M	cookie_io_functions_t	12	void*	4	close
+S	div_t	8
+M	div_t	0	int	4	quot
+M	div_t	4	int	4	rem
+S	ldiv_t	8
+M	ldiv_t	0	int	4	quot
+M	ldiv_t	4	int	4	rem
+S	lldiv_t	16
+M	lldiv_t	0	int64	8	quot
+M	lldiv_t	8	int64	8	rem
+S	noc_cfg_s	96
+M	noc_cfg_s	0	uint	4	NOC_SDC0_QOS_STEP
+M	noc_cfg_s	4	uint	4	NOC_SDC0_LATENCY
+M	noc_cfg_s	8	uint	4	NOC_DE_QOS_STEP
+M	noc_cfg_s	12	uint	4	NOC_DE_LATENCY
+M	noc_cfg_s	16	uint	4	NOC_BACK_CODEC_WR2CARD_QOS_STEP
+M	noc_cfg_s	20	uint	4	NOC_BACK_CODEC_WR2CARD_LATENCY
+M	noc_cfg_s	24	uint	4	NOC_BACK_CODEC_RD_QOS_STEP
+M	noc_cfg_s	28	uint	4	NOC_BACK_CODEC_RD_LATENCY
+M	noc_cfg_s	32	uint	4	NOC_BACK_CODEC_WR2LCD_QOS_STEP
+M	noc_cfg_s	36	uint	4	NOC_BACK_CODEC_WR2LCD_LATENCY
+M	noc_cfg_s	40	uint	4	NOC_PRE_CODEC_WR2CARD_QOS_STEP
+M	noc_cfg_s	44	uint	4	NOC_PRE_CODEC_WR2CARD_LATENCY
+M	noc_cfg_s	48	uint	4	NOC_PRE_CODEC_RD_QOS_STEP
+M	noc_cfg_s	52	uint	4	NOC_PRE_CODEC_RD_LATENCY
+M	noc_cfg_s	56	uint	4	NOC_ISP_WR2CARD_QOS_STEP
+M	noc_cfg_s	60	uint	4	NOC_ISP_WR2CARD_LATENCY
+M	noc_cfg_s	64	uint	4	NOC_ISP_WR2WIFI_QOS_STEP
+M	noc_cfg_s	68	uint	4	NOC_ISP_WR2WIFI_LATENCY
+M	noc_cfg_s	72	uint	4	NOC_ISP_WR2LCD_QOS_STEP
+M	noc_cfg_s	76	uint	4	NOC_ISP_WR2LCD_LATENCY
+M	noc_cfg_s	80	uint	4	NOC_DCACHE_QOS_STEP
+M	noc_cfg_s	84	uint	4	NOC_DCACHE_LATENCY
+M	noc_cfg_s	88	uint	4	NOC_ICACHE_QOS_STEP
+M	noc_cfg_s	92	uint	4	NOC_ICACHE_LATENCY
+S	__CSI_STAT__	640
+M	__CSI_STAT__	0	uint[128]	512	csi_histbuf
+M	__CSI_STAT__	512	uint[32]	128	csi_wpbuf
+S	EXP	64
+M	EXP	0	uint	4	ylog_cal_fnum
+M	EXP	4	uint[8]	32	exp_tag
+M	EXP	36	uint	4	exp_ext_mod
+M	EXP	40	uint	4	exp_gain
+M	EXP	44	uint	4	k_br
+M	EXP	48	uint	4	exp_min
+M	EXP	52	uint	4	gain_max
+M	EXP	56	uint	4	exp_nums
+M	EXP	60	uint	4	gain_max_save
+S	HGRM	116
+M	HGRM	0	uint	4	allow_miss_dots
+M	HGRM	4	uint	4	ae_win_x0
+M	HGRM	8	uint	4	ae_win_x1
+M	HGRM	12	uint	4	ae_win_x2
+M	HGRM	16	uint	4	ae_win_x3
+M	HGRM	20	uint	4	ae_win_y0
+M	HGRM	24	uint	4	ae_win_y1
+M	HGRM	28	uint	4	ae_win_y2
+M	HGRM	32	uint	4	ae_win_y3
+M	HGRM	36	uint	4	weight_0_7
+M	HGRM	40	uint	4	weight_8_15
+M	HGRM	44	uint	4	weight_16_23
+M	HGRM	48	uint	4	weight_24
+M	HGRM	52	uint[8]	32	hgrm_centre_weight
+M	HGRM	84	uint[8]	32	hgrm_gray_weight
+S	AE	180
+M	AE	0	EXP	64	exp_adapt
+M	AE	64	HGRM	116	hgrm_adapt
+S	BLC	28
+M	BLC	0	int	4	blkl_r
+M	BLC	4	int	4	blkl_gr
+M	BLC	8	int	4	blkl_gb
+M	BLC	12	int	4	blkl_b
+M	BLC	16	byte[8]	8	blk_rate
+M	BLC	24	byte	1	step_len
+S	DDC	192
+M	DDC	0	uint	4	hot_num
+M	DDC	4	uint	4	dead_num
+M	DDC	8	uint	4	hot_th
+M	DDC	12	uint	4	dead_th
+M	DDC	16	uint	4	avg_th
+M	DDC	20	uint[8]	32	d_th_rate
+M	DDC	52	uint[8]	32	h_th_rate
+M	DDC	84	uint	4	dpc_dn_en
+M	DDC	88	uint[8]	32	indx_table
+M	DDC	120	int[8]	32	indx_adapt
+M	DDC	152	uint[7]	28	std_th
+M	DDC	180	uint	4	std_th_rate
+M	DDC	184	uint	4	ddc_step
+M	DDC	188	uint	4	ddc_class
+S	AWB	376
+M	AWB	0	uint	4	seg_mode
+M	AWB	4	uint	4	rg_start
+M	AWB	8	uint	4	rgmin
+M	AWB	12	uint	4	rgmax
+M	AWB	16	uint	4	weight_in
+M	AWB	20	uint	4	weight_mid
+M	AWB	24	uint	4	ymin
+M	AWB	28	uint	4	ymax
+M	AWB	32	uint	4	hb_rate
+M	AWB	36	uint	4	hb_class
+M	AWB	40	uint	4	hr_rate
+M	AWB	44	uint	4	hr_class
+M	AWB	48	uint	4	awb_scene_mod
+M	AWB	52	uint[5]	20	manu_awb_gain
+M	AWB	72	uint	4	yuv_mod_en
+M	AWB	76	uint[8]	32	cb_th
+M	AWB	108	uint[8]	32	cr_th
+M	AWB	140	uint[8]	32	cbcr_th
+M	AWB	172	uint	4	ycbcr_th
+M	AWB	176	uint	4	manu_rgain
+M	AWB	180	uint	4	manu_ggain
+M	AWB	184	uint	4	manu_bgain
+M	AWB	188	uint	4	rgain
+M	AWB	192	uint	4	ggain
+M	AWB	196	uint	4	bgain
+M	AWB	200	ushort[8][3]	48	seg_gain
+M	AWB	248	byte[128]	128	awb_tab
+S	CCM	24
+M	CCM	0	ushort[9]	18	ccm
+M	CCM	18	short	2	s41
+M	CCM	20	short	2	s42
+M	CCM	22	short	2	s43
+S	RGB_DGAIN	68
+M	RGB_DGAIN	0	uint[9]	36	dgain
+M	RGB_DGAIN	36	uint[8]	32	dgain_rate
+S	YGAMA	1092
+M	YGAMA	0	uint	4	br_mod
+M	YGAMA	4	uint[8]	32	gma_num
+M	YGAMA	36	uint	4	contra_num
+M	YGAMA	40	uint	4	bofst
+M	YGAMA	44	uint	4	lofst
+M	YGAMA	48	uint	4	lcpr_low
+M	YGAMA	52	uint	4	lcpr_high
+M	YGAMA	56	uint	4	lcpr_llimt
+M	YGAMA	60	uint	4	lcpr_hlimt
+M	YGAMA	64	uint	4	pad_num
+M	YGAMA	68	ushort[512]	1024	using_ygama
+S	RGB_GAMA	616
+M	RGB_GAMA	0	uint	4	br_mod
+M	RGB_GAMA	4	uint[8]	32	gam_num
+M	RGB_GAMA	36	uint[8]	32	max_oft
+M	RGB_GAMA	68	uint	4	rmin
+M	RGB_GAMA	72	uint	4	rmax
+M	RGB_GAMA	76	uint	4	gmin
+M	RGB_GAMA	80	uint	4	gmax
+M	RGB_GAMA	84	uint	4	bmin
+M	RGB_GAMA	88	uint	4	bmax
+M	RGB_GAMA	92	uint	4	fog_llimt
+M	RGB_GAMA	96	uint	4	fog_hlimt
+M	RGB_GAMA	100	uint	4	fog_dotnum
+M	RGB_GAMA	104	byte[512]	512	using_rgbgama
+S	CH	256
+M	CH	0	uint	4	stage0_en
+M	CH	4	uint	4	stage1_en
+M	CH	8	uint[6]	24	enhence
+M	CH	32	uint[6]	24	th1
+M	CH	56	uint[6]	24	th0
+M	CH	80	uint[6]	24	r_rate
+M	CH	104	uint[6]	24	g_rate
+M	CH	128	uint[6]	24	b_rate
+M	CH	152	uint[17]	68	sat
+M	CH	220	uint[8]	32	rate
+M	CH	252	uint	4	ch_step
+S	VDE	88
+M	VDE	0	uint	4	contra
+M	VDE	4	uint	4	bright_k
+M	VDE	8	uint	4	bright_oft
+M	VDE	12	uint	4	hue
+M	VDE	16	uint[9]	36	sat
+M	VDE	52	uint[8]	32	sat_rate
+M	VDE	84	uint	4	vde_step
+S	EE	50
+M	EE	0	byte	1	ee_class
+M	EE	1	byte[8]	8	ee_dn_slope
+M	EE	9	byte[8]	8	ee_sharp_slope
+M	EE	17	byte[8]	8	ee_th_adp
+M	EE	25	byte[8]	8	ee_dn_th
+M	EE	33	byte[8]	8	sharp_class
+M	EE	41	byte[8]	8	dn_class
+M	EE	49	byte	1	ee_step
+S	CCF	36
+M	CCF	0	uint	4	rate
+M	CCF	4	uint	4	ymax
+M	CCF	8	uint	4	th
+M	CCF	12	uint	4	wdc_en
+M	CCF	16	uint	4	wclass
+M	CCF	20	uint	4	wymin
+M	CCF	24	uint	4	mean_en
+M	CCF	28	uint	4	dn_class
+M	CCF	32	uint	4	ccf_en
+S	SAJ	26
+M	SAJ	0	byte[17]	17	sat
+M	SAJ	17	byte[8]	8	sat_rate
+M	SAJ	25	byte	1	saj_step
+S	MD	28
+M	MD	0	uint	4	pixel_th
+M	MD	4	uint	4	num_th
+M	MD	8	uint	4	update_cnt
+M	MD	12	uint	4	win_h_start
+M	MD	16	uint	4	win_h_end
+M	MD	20	uint	4	win_v_start
+M	MD	24	uint	4	win_v_end
+S	ISP	60
+M	ISP	0	PTR:uint	4	p_all_mod
+M	ISP	4	PTR:AE	4	p_ae
+M	ISP	8	PTR:BLC	4	p_blc
+M	ISP	12	PTR:DDC	4	p_ddc
+M	ISP	16	PTR:AWB	4	p_awb
+M	ISP	20	PTR:CCM	4	p_ccm
+M	ISP	24	PTR:RGB_DGAIN	4	p_rgb_dgain
+M	ISP	28	PTR:YGAMA	4	p_ygama
+M	ISP	32	PTR:RGB_GAMA	4	p_rgb_gama
+M	ISP	36	PTR:CH	4	p_ch
+M	ISP	40	PTR:VDE	4	p_vde
+M	ISP	44	PTR:EE	4	p_ee
+M	ISP	48	PTR:CCF	4	p_ccf
+M	ISP	52	PTR:SAJ	4	p_saj
+M	ISP	56	PTR:MD	4	p_md
+S	STAT	2240
+M	STAT	0	uint	4	picsize
+M	STAT	4	PTR:uint	4	Wp_stat
+M	STAT	8	uint	4	rmin
+M	STAT	12	uint	4	rmax
+M	STAT	16	uint	4	gmin
+M	STAT	20	uint	4	gmax
+M	STAT	24	uint	4	bmin
+M	STAT	28	uint	4	bmax
+M	STAT	32	uint	4	ymin
+M	STAT	36	uint	4	ymax
+M	STAT	40	uint	4	br
+M	STAT	44	uint	4	dr_mode
+M	STAT	48	uint	4	yloga_avg
+M	STAT	52	uint	4	yloga
+M	STAT	56	uint[32]	128	ylog_buf
+M	STAT	184	uint	4	ptsum
+M	STAT	188	uint	4	ysum
+M	STAT	192	uint[256]	1024	yhgrm_before
+M	STAT	1216	uint[256]	1024	yhgrm
+S	FIFO_CFG	16
+M	FIFO_CFG	0	ushort	2	size
+M	FIFO_CFG	4	PTR:byte	4	fifo
+M	FIFO_CFG	8	void*	4	ptx
+M	FIFO_CFG	12	void*	4	prx
+S	Rotate_Adapt	4
+M	Rotate_Adapt	0	uint	4	rotate
+S	Hvb_Adapt	24
+M	Hvb_Adapt	0	uint	4	pclk
+M	Hvb_Adapt	4	uint	4	v_len
+M	Hvb_Adapt	8	uint	4	step_val
+M	Hvb_Adapt	12	uint	4	step_max
+M	Hvb_Adapt	16	uint	4	down_fps_mode
+M	Hvb_Adapt	20	byte	1	fps
+M	Hvb_Adapt	21	byte	1	frequency
+S	COMMON	92
+M	COMMON	0	uint	4	exp_gain
+M	COMMON	4	uint	4	gain_max
+M	COMMON	8	uint	4	id
+M	COMMON	12	uint	4	mclk
+M	COMMON	16	Hvb_Adapt	24	hvb
+M	COMMON	40	ushort	2	pixelw
+M	COMMON	42	ushort	2	pixelh
+M	COMMON	44	byte	1	type
+M	COMMON	45	byte	1	hsyn
+M	COMMON	46	byte	1	vsyn
+M	COMMON	47	byte	1	rduline
+M	COMMON	48	byte	1	colrarray
+M	COMMON	49	byte	1	pclk_fir_en
+M	COMMON	50	byte	1	pclk_inv_en
+M	COMMON	51	byte	1	csi_tun
+M	COMMON	52	byte[20]	20	name
+M	COMMON	72	byte	1	exp_gain_en
+M	COMMON	73	byte	1	blk_en
+M	COMMON	74	byte	1	lsc_en
+M	COMMON	75	byte	1	ddc_en
+M	COMMON	76	byte	1	awb_en
+M	COMMON	77	byte	1	ccm_en
+M	COMMON	78	byte	1	dgain_en
+M	COMMON	79	byte	1	ygama_en
+M	COMMON	80	byte	1	rgb_gama_en
+M	COMMON	81	byte	1	ch_en
+M	COMMON	82	byte	1	vde_en
+M	COMMON	83	byte	1	ee_en
+M	COMMON	84	byte	1	cfd_en
+M	COMMON	85	byte	1	saj_en
+M	COMMON	86	byte	1	pclk_fir_class
+M	COMMON	87	byte	1	AVDD
+M	COMMON	88	byte	1	DVDD
+M	COMMON	89	byte	1	VDDIO
+M	COMMON	90	byte	1	rotate
+S	P_Fun_Adapt	12
+M	P_Fun_Adapt	0	void*	4	fp_rotate
+M	P_Fun_Adapt	4	void*	4	fp_hvblank
+M	P_Fun_Adapt	8	void*	4	fp_exp_gain_wr
+S	_Sensor_Adpt_	3164
+M	_Sensor_Adpt_	0	uint	4	typ
+M	_Sensor_Adpt_	4	uint	4	mclk
+M	_Sensor_Adpt_	8	uint	4	pclk_fir_en
+M	_Sensor_Adpt_	12	uint	4	pclk_fir_class
+M	_Sensor_Adpt_	16	uint	4	pclk_inv_en
+M	_Sensor_Adpt_	20	uint	4	csi_tun
+M	_Sensor_Adpt_	24	uint	4	pixelw
+M	_Sensor_Adpt_	28	uint	4	pixelh
+M	_Sensor_Adpt_	32	uint	4	colrarray
+M	_Sensor_Adpt_	36	uint	4	hsyn
+M	_Sensor_Adpt_	40	uint	4	vsyn
+M	_Sensor_Adpt_	44	uint	4	AVDD
+M	_Sensor_Adpt_	48	uint	4	DVDD
+M	_Sensor_Adpt_	52	uint	4	VDDIO
+M	_Sensor_Adpt_	56	Rotate_Adapt	4	rotate_adapt
+M	_Sensor_Adpt_	60	Hvb_Adapt	24	hvb_adapt
+M	_Sensor_Adpt_	84	uint	4	isp_all_mod
+M	_Sensor_Adpt_	88	AE	180	ae_adapt
+M	_Sensor_Adpt_	268	BLC	28	blc_adapt
+M	_Sensor_Adpt_	296	DDC	192	ddc_adapt
+M	_Sensor_Adpt_	488	AWB	376	awb_adapt
+M	_Sensor_Adpt_	864	CCM	24	ccm_adapt
+M	_Sensor_Adpt_	888	RGB_DGAIN	68	rgbdgain_adapt
+M	_Sensor_Adpt_	956	YGAMA	1092	ygama_adapt
+M	_Sensor_Adpt_	2048	RGB_GAMA	616	rgbgama_adapt
+M	_Sensor_Adpt_	2664	CH	256	ch_adapt
+M	_Sensor_Adpt_	2920	VDE	88	vde_adapt
+M	_Sensor_Adpt_	3008	EE	50	ee_adapt
+M	_Sensor_Adpt_	3060	CCF	36	cfd_adapt
+M	_Sensor_Adpt_	3096	SAJ	26	saj_adapt
+M	_Sensor_Adpt_	3124	MD	28	md_adapt
+M	_Sensor_Adpt_	3152	P_Fun_Adapt	12	p_fun_adapt
+S	_Sensor_Ident_	72
+M	_Sensor_Ident_	0	void*	4	sensor_struct_addr
+M	_Sensor_Ident_	4	uint	4	sensor_struct_size
+M	_Sensor_Ident_	8	void*	4	sensor_init_tab_adr
+M	_Sensor_Ident_	12	uint	4	sensor_init_tab_size
+M	_Sensor_Ident_	16	void*	4	rgb_gamma_tab_adr
+M	_Sensor_Ident_	20	uint	4	rgb_gamma_tab_size
+M	_Sensor_Ident_	24	void*	4	ygamma_tab_adr
+M	_Sensor_Ident_	28	uint	4	ygamma_tab_size
+M	_Sensor_Ident_	32	void*	4	lsc_tab_adr
+M	_Sensor_Ident_	36	uint	4	lsc_tab_size
+M	_Sensor_Ident_	40	uint	4	awb_tab_size
+M	_Sensor_Ident_	44	byte[20]	20	sensor_name
+M	_Sensor_Ident_	64	byte	1	id
+M	_Sensor_Ident_	65	byte	1	w_cmd
+M	_Sensor_Ident_	66	byte	1	r_cmd
+M	_Sensor_Ident_	67	byte	1	addr_num
+M	_Sensor_Ident_	68	byte	1	data_num
+M	_Sensor_Ident_	70	ushort	2	id_reg
+S	SNSER	20
+M	SNSER	0	byte	1	online
+M	SNSER	4	uint	4	pclk
+M	SNSER	8	uint	4	iclk
+M	SNSER	12	PTR:_Sensor_Ident_	4	p_sensor_ident
+M	SNSER	16	PTR:_Sensor_Adpt_	4	p_sensor_cmd
+S	_Sensor_Header_	64
+M	_Sensor_Header_	0	uint	4	header_items_addr
+M	_Sensor_Header_	4	uint	4	header_items_total_size
+M	_Sensor_Header_	8	uint	4	header_item_size
+M	_Sensor_Header_	12	uint[13]	52	align
+S	frame_s	48
+M	frame_s	0	PTR:frame_s	4	next
+M	frame_s	4	PTR:byte	4	y_addr
+M	frame_s	8	PTR:byte	4	uv_addr
+M	frame_s	12	PTR:byte	4	_y_addr
+M	frame_s	16	PTR:byte	4	_uv_addr
+M	frame_s	20	void*	4	priv_func
+M	frame_s	24	uint	4	buf_size
+M	frame_s	28	uint	4	data_size
+M	frame_s	32	ushort	2	w
+M	frame_s	34	ushort	2	h
+M	frame_s	36	ushort	2	posX
+M	frame_s	38	ushort	2	posY
+M	frame_s	40	ushort	2	stride
+M	frame_s	42	byte	1	scan_mode
+M	frame_s	43	byte	1	id
+M	frame_s	44	byte	1	pip_sta
+M	frame_s	45	byte	1	buf_sta
+M	frame_s	46	byte	1	frame_type
+S	disp_frames_s	152
+M	disp_frames_s	0	frame_s[3]	144	_frames
+M	disp_frames_s	144	PTR:frame_s	4	freelist
+M	disp_frames_s	148	byte	1	frame_nums
+M	disp_frames_s	149	byte	1	frame_type
+S	disp_frames_mgr_s	760
+M	disp_frames_mgr_s	0	disp_frames_s[5]	760	types
+S	lcd_lsawtooth_t	288
+M	lcd_lsawtooth_t	0	uint[3][24]	288	anti_lsawtooth
+S	lcd_bsawtooth_t	96
+M	lcd_bsawtooth_t	0	uint[3][8]	96	anti_bsawtooth
+S	lcddev_t	588
+M	lcddev_t	0	char[32]	32	name
+M	lcddev_t	32	byte	1	lcd_bus_type
+M	lcddev_t	33	byte	1	bus_width
+M	lcddev_t	34	byte	1	bus_cmd
+M	lcddev_t	35	byte	1	red_width
+M	lcddev_t	36	byte	1	green_width
+M	lcddev_t	37	byte	1	blue_width
+M	lcddev_t	38	byte	1	scan_mode
+M	lcddev_t	39	byte	1	te_mode
+M	lcddev_t	40	byte	1	pclk_div
+M	lcddev_t	44	uint	4	lcd_data_mode
+M	lcddev_t	48	uint	4	lcd_data_mode1
+M	lcddev_t	52	ushort	2	screen_w
+M	lcddev_t	54	ushort	2	screen_h
+M	lcddev_t	56	ushort	2	video_x
+M	lcddev_t	58	ushort	2	video_y
+M	lcddev_t	60	ushort	2	video_w
+M	lcddev_t	62	ushort	2	video_h
+M	lcddev_t	64	ushort	2	osd_x
+M	lcddev_t	66	ushort	2	osd_y
+M	lcddev_t	68	ushort	2	osd_w
+M	lcddev_t	70	ushort	2	osd_h
+M	lcddev_t	72	PTR:uint[2]	4	init_table
+M	lcddev_t	76	PTR:uint[2]	4	uninit_table
+M	lcddev_t	80	uint	4	init_table_size
+M	lcddev_t	84	uint	4	uninit_table_size
+M	lcddev_t	88	byte	1	clk_per_pixel
+M	lcddev_t	89	byte	1	even_order
+M	lcddev_t	90	byte	1	odd_order
+M	lcddev_t	91	byte	1	pclk_inv
+M	lcddev_t	92	byte	1	vlw
+M	lcddev_t	93	byte	1	vbp
+M	lcddev_t	94	byte	1	vfp
+M	lcddev_t	95	byte	1	hlw
+M	lcddev_t	96	byte	1	hbp
+M	lcddev_t	97	byte	1	hfp
+M	lcddev_t	98	byte	1	de_inv
+M	lcddev_t	99	byte	1	hs_inv
+M	lcddev_t	100	byte	1	vs_inv
+M	lcddev_t	101	byte	1	spi_cpol
+M	lcddev_t	102	byte	1	spi_cpha
+M	lcddev_t	103	byte	1	spi_order
+M	lcddev_t	104	byte	1	spi_bits
+M	lcddev_t	108	uint	4	contrast
+M	lcddev_t	112	int	4	brightness
+M	lcddev_t	116	uint	4	saturation
+M	lcddev_t	120	uint	4	contra_index
+M	lcddev_t	124	uint	4	gamma_red
+M	lcddev_t	128	uint	4	gamma_green
+M	lcddev_t	132	uint	4	gamma_blue
+M	lcddev_t	136	uint[12]	48	de_ccm
+M	lcddev_t	184	uint[5]	20	de_saj
+M	lcddev_t	204	lcd_lsawtooth_t	288	lcd_lsawtooth
+M	lcddev_t	492	lcd_bsawtooth_t	96	lcd_bsawtooth
+S	lcd_common_t	36
+M	lcd_common_t	0	char[32]	32	name
+M	lcd_common_t	32	ushort	2	screen_w
+M	lcd_common_t	34	ushort	2	screen_h
+S	lcd_vde_t	12
+M	lcd_vde_t	0	uint	4	contrast
+M	lcd_vde_t	4	int	4	brightness
+M	lcd_vde_t	8	uint	4	saturation
+S	lcd_gamma_t	16
+M	lcd_gamma_t	0	uint	4	contra_index
+M	lcd_gamma_t	4	uint	4	gamma_red
+M	lcd_gamma_t	8	uint	4	gamma_green
+M	lcd_gamma_t	12	uint	4	gamma_blue
+S	usb_lcddev_t	420
+M	usb_lcddev_t	0	lcd_common_t	36	lcd_common
+M	usb_lcddev_t	36	lcd_vde_t	12	lcd_vde
+M	usb_lcddev_t	48	lcd_gamma_t	16	lcd_gamma
+M	usb_lcddev_t	64	uint[12]	48	de_ccm
+M	usb_lcddev_t	112	uint[5]	20	de_saj
+M	usb_lcddev_t	132	lcd_lsawtooth_t	288	lcd_lsawtooth
+S	lcd_buffer_s	28
+M	lcd_buffer_s	0	PTR:lcd_buffer_s	4	next
+M	lcd_buffer_s	4	uint	4	lcd_buffer_stride
+M	lcd_buffer_s	8	PTR:byte	4	p_lcd_y_buffer
+M	lcd_buffer_s	12	PTR:byte	4	p_lcd_uv_buffer
+M	lcd_buffer_s	16	PTR:byte	4	_p_lcd_y_buffer_
+M	lcd_buffer_s	20	PTR:byte	4	_p_lcd_uv_buffer_
+M	lcd_buffer_s	24	byte	1	status
+M	lcd_buffer_s	25	byte	1	id
+S	_Lcd_Header_	56
+M	_Lcd_Header_	0	uint	4	lcd_order
+M	_Lcd_Header_	4	uint	4	lcd_struct_adr
+M	_Lcd_Header_	8	uint	4	lcd_struct_len
+M	_Lcd_Header_	12	uint	4	lcd_gamma_tab_adr
+M	_Lcd_Header_	16	uint	4	lcd_gamma_tab_len
+M	_Lcd_Header_	20	uint	4	lcd_gamma_tab_unit
+M	_Lcd_Header_	24	uint	4	lcd_contra_tab_adr
+M	_Lcd_Header_	28	uint	4	lcd_contra_tab_len
+M	_Lcd_Header_	32	uint	4	lcd_contra_tab_unit
+M	_Lcd_Header_	36	uint[5]	20	align
+S	HAL_RTC_S	12
+M	HAL_RTC_S	0	ushort	2	year
+M	HAL_RTC_S	2	byte	1	month
+M	HAL_RTC_S	3	byte	1	day
+M	HAL_RTC_S	4	byte	1	hour
+M	HAL_RTC_S	5	byte	1	min
+M	HAL_RTC_S	6	byte	1	sec
+M	HAL_RTC_S	8	uint	4	totalsec
+S	SDC_STAT_S	16
+M	SDC_STAT_S	0	byte	1	busy
+M	SDC_STAT_S	1	byte	1	eVer
+M	SDC_STAT_S	2	byte	1	eCardState
+M	SDC_STAT_S	3	byte	1	bus_width
+M	SDC_STAT_S	4	uint	4	dwCap
+M	SDC_STAT_S	8	uint	4	dwRCA
+M	SDC_STAT_S	12	uint	4	dwNextLBA
+S	_TIM_FONT_	6400
+M	_TIM_FONT_	0	byte[6400]	6400	win0
+M	_TIM_FONT_	6400	byte[0]	0	win1
+M	_TIM_FONT_	6400	byte[0]	0	win2
+U	_PCMBUF_	196608
+N	_PCMBUF_	0	byte[24][8192]	196608	pcm
+N	_PCMBUF_	0	byte[24][64]	1536	uac
+S	QDT_MJP	36
+M	QDT_MJP	0	byte	1	sta
+M	QDT_MJP	1	char	1	endf
+M	QDT_MJP	4	int	4	tgl
+M	QDT_MJP	8	uint	4	fsize
+M	QDT_MJP	12	PTR:byte	4	pbuf
+M	QDT_MJP	16	uint	4	buflen
+M	QDT_MJP	20	PTR:byte	4	dribuf
+M	QDT_MJP	24	PTR:QDT_MJP	4	phead
+M	QDT_MJP	28	PTR:QDT_MJP	4	plink
+M	QDT_MJP	32	PTR:QDT_MJP	4	next
+S	QUE_J	8
+M	QUE_J	0	void*	4	pmsg
+M	QUE_J	4	PTR:QUE_J	4	next
+S	Stream_Node_S	28
+M	Stream_Node_S	0	byte	1	sta
+M	Stream_Node_S	4	PTR:byte	4	pbuf
+M	Stream_Node_S	8	uint	4	buflen
+M	Stream_Node_S	12	int	4	tsync
+M	Stream_Node_S	16	int	4	tsync_next
+M	Stream_Node_S	20	PTR:Stream_Node_S	4	last
+M	Stream_Node_S	24	PTR:Stream_Node_S	4	next
+S	Stream_Info_S	24
+M	Stream_Info_S	0	byte	1	semf
+M	Stream_Info_S	4	PTR:byte	4	sf
+M	Stream_Info_S	8	PTR:byte	4	ef
+M	Stream_Info_S	12	PTR:byte	4	pcache
+M	Stream_Info_S	16	uint	4	cachelen
+M	Stream_Info_S	20	uint	4	cacheuse
+S	Stream_Head_S	36
+M	Stream_Head_S	0	Stream_Info_S	24	c_inf
+M	Stream_Head_S	24	PTR:Stream_Node_S	4	p_qdt
+M	Stream_Head_S	28	PTR:Stream_Node_S	4	g_qdt
+M	Stream_Head_S	32	int	4	head_size
+S	EP0_REQ	8
+M	EP0_REQ	0	byte	1	bmRequestType
+M	EP0_REQ	1	byte	1	bRequest
+M	EP0_REQ	2	ushort	2	wValue
+M	EP0_REQ	4	ushort	2	wIndex
+M	EP0_REQ	6	ushort	2	wLength
+S	USB_VAR_t	28
+M	USB_VAR_t	0	PTR:byte	4	pDesc_Data
+M	USB_VAR_t	4	PTR:byte	4	pEP2_Data
+M	USB_VAR_t	8	ushort	2	yEp0_Desc_Len
+M	USB_VAR_t	10	byte	1	bSetAddress
+M	USB_VAR_t	11	byte	1	y8Ep0_State
+M	USB_VAR_t	12	byte	1	bEPin_stall
+M	USB_VAR_t	13	byte	1	bEPout_stall
+M	USB_VAR_t	16	PTR:byte	4	ep2_Data
+M	USB_VAR_t	20	uint	4	yEp2_Desc_Len
+M	USB_VAR_t	24	PTR:byte	4	ep0_buf
+S	USB_DEV	28
+M	USB_DEV	0	byte	1	connect
+M	USB_DEV	1	byte	1	type
+M	USB_DEV	2	byte	1	set_addr
+M	USB_DEV	3	byte	1	cfg_value
+M	USB_DEV	4	byte	1	cur_state
+M	USB_DEV	5	byte	1	ep0_state
+M	USB_DEV	6	byte	1	ep0_pkt
+M	USB_DEV	8	PTR:byte	4	ep0_ptr
+M	USB_DEV	12	ushort	2	ep0_len
+M	USB_DEV	14	byte	1	uvc_tx_interface
+M	USB_DEV	15	byte	1	uvc_tx_enable
+M	USB_DEV	16	byte	1	uvc_tx_enable_int
+M	USB_DEV	17	byte	1	uac_tx_interface
+M	USB_DEV	18	byte	1	uac_tx_enable
+M	USB_DEV	19	byte	1	uac_tx_enable_int
+M	USB_DEV	20	PTR:byte	4	ep0_buf
+M	USB_DEV	24	byte	1	ep1_tx_stall
+M	USB_DEV	25	byte	1	ep1_rx_stall
+M	USB_DEV	26	byte	1	ep1_pipe_stall
+S	USB_RQU	8
+M	USB_RQU	0	byte	1	rtype
+M	USB_RQU	1	byte	1	request
+M	USB_RQU	2	ushort	2	value
+M	USB_RQU	4	ushort	2	index
+M	USB_RQU	6	ushort	2	length
+S	_UAC	48
+M	_UAC	0	byte	1	buff_num
+M	_UAC	1	byte	1	ready
+M	_UAC	2	byte	1	pADCW
+M	_UAC	3	byte	1	pUSBR
+M	_UAC	4	uint	4	agcflg
+M	_UAC	8	uint[10]	40	addr_lst
+S	PROBE	8
+M	PROBE	0	uint	4	win_w
+M	PROBE	4	uint	4	win_h
+S	MSCSTACK	12
+M	MSCSTACK	0	byte	1	addr
+M	MSCSTACK	4	PTR:byte	4	buffer
+M	MSCSTACK	8	byte	1	payload
+M	MSCSTACK	9	byte	1	epbulkin
+M	MSCSTACK	10	byte	1	epbulkout
+S	CBW	32
+M	CBW	0	uint	4	cbw_signature
+M	CBW	4	uint	4	cbw_tag
+M	CBW	8	uint	4	cbw_data_xferlen
+M	CBW	12	byte	1	cbw_flag
+M	CBW	13	byte	1	cbw_lun
+M	CBW	14	byte	1	cbw_cbdlen
+M	CBW	15	byte	1	operation_code
+M	CBW	16	byte	1	reserve
+M	CBW	17	byte[4]	4	cbw_cblba
+M	CBW	21	byte	1	reserve1
+M	CBW	22	ushort	2	cbw_cblength
+M	CBW	24	byte	1	control
+M	CBW	25	byte[6]	6	reserved
+S	CSW	16
+M	CSW	0	uint	4	csw_signature
+M	CSW	4	uint	4	csw_tag
+M	CSW	8	uint	4	csw_data_residue
+M	CSW	12	byte	1	csw_status
+U	TPBLK_STRUC	64
+N	TPBLK_STRUC	0	CBW	32	cbw_val
+N	TPBLK_STRUC	0	CSW	16	csw_val
+N	TPBLK_STRUC	0	byte[64]	64	bulk_buf
+S	DISKHAL	72
+M	DISKHAL	0	byte[40]	40	inquiry
+M	DISKHAL	40	byte	1	maxlun
+M	DISKHAL	44	uint	4	cap
+M	DISKHAL	48	uint	4	slen
+M	DISKHAL	52	byte	1	online
+M	DISKHAL	56	void*	4	fp_udisk_actech
+M	DISKHAL	60	void*	4	fp_udisk_state
+M	DISKHAL	64	void*	4	fp_udisk_rd
+M	DISKHAL	68	void*	4	fp_udisk_wr
+S	ISOSTACK	16
+M	ISOSTACK	0	byte	1	addr
+M	ISOSTACK	4	PTR:byte	4	buffer
+M	ISOSTACK	8	ushort	2	payload
+M	ISOSTACK	10	byte	1	episoin
+M	ISOSTACK	11	byte	1	episoout
+M	ISOSTACK	12	byte	1	interval
+S	VIDEO_COMMIT	28
+M	VIDEO_COMMIT	0	ushort	2	bmhint
+M	VIDEO_COMMIT	2	byte	1	bFormatIndex
+M	VIDEO_COMMIT	3	byte	1	bFrameIndex
+M	VIDEO_COMMIT	4	uint	4	dwFrameInterval
+M	VIDEO_COMMIT	8	ushort	2	wKeyFrameRate
+M	VIDEO_COMMIT	10	ushort	2	wPFrameRate
+M	VIDEO_COMMIT	12	ushort	2	wCompQuality
+M	VIDEO_COMMIT	14	ushort	2	wCompWindowSize
+M	VIDEO_COMMIT	16	ushort	2	wDelay
+M	VIDEO_COMMIT	20	uint	4	dwMaxVideoFrameSize
+M	VIDEO_COMMIT	24	uint	4	dwMaxPayloadTSize
+S	UVCHAL	12
+M	UVCHAL	0	byte	1	fsynflg
+M	UVCHAL	4	void*	4	fp_uvc_receive_jframe
+M	UVCHAL	8	void*	4	fp_iso_receive_dat
+S	UVC_FSTACK	20
+M	UVC_FSTACK	0	uint	4	jUcnt
+M	UVC_FSTACK	4	byte	1	usta
+M	UVC_FSTACK	8	PTR:byte	4	jbuf
+M	UVC_FSTACK	12	uint	4	jlen
+M	UVC_FSTACK	16	byte	1	utgl
+S	QDT_BUF	32
+M	QDT_BUF	0	byte	1	sta
+M	QDT_BUF	4	PTR:byte	4	pbuf
+M	QDT_BUF	8	uint	4	buflen
+M	QDT_BUF	12	uint	4	id
+M	QDT_BUF	16	PTR:QDT_BUF	4	last
+M	QDT_BUF	20	PTR:QDT_BUF	4	next
+M	QDT_BUF	24	int	4	u_tsync
+M	QDT_BUF	28	int	4	u_tsync_next
+S	CACHE	24
+M	CACHE	0	byte	1	semf
+M	CACHE	4	PTR:byte	4	sf
+M	CACHE	8	PTR:byte	4	ef
+M	CACHE	12	PTR:byte	4	pcache
+M	CACHE	16	uint	4	cachelen
+M	CACHE	20	uint	4	cacheuse
+S	C_STACK	36
+M	C_STACK	0	CACHE	24	c_inf
+M	C_STACK	24	PTR:QDT_BUF	4	p_qdt
+M	C_STACK	28	PTR:QDT_BUF	4	g_qdt
+M	C_STACK	32	int	4	stack_size
+S	USENSR_ISP	2052
+M	USENSR_ISP	0	byte[2048]	2048	expoint
+M	USENSR_ISP	2048	int	4	exfilesize
+S	USBDEV	24
+M	USBDEV	0	ushort	2	vid
+M	USBDEV	2	ushort	2	pid
+M	USBDEV	4	byte	1	bclass
+M	USBDEV	5	byte	1	num_of_eps
+M	USBDEV	6	byte	1	id_mft
+M	USBDEV	7	byte	1	id_pdt
+M	USBDEV	8	byte	1	id1
+M	USBDEV	9	byte	1	id2
+M	USBDEV	10	byte[2]	2	ep_addr
+M	USBDEV	12	byte[2]	2	attr
+M	USBDEV	14	ushort[2]	4	pay_load
+M	USBDEV	18	ushort[2]	4	interval
+M	USBDEV	22	byte[2]	2	data1
+S	SDEV_DESC	18
+M	SDEV_DESC	0	byte	1	length
+M	SDEV_DESC	1	byte	1	descriptor_type
+M	SDEV_DESC	2	ushort	2	bcd_usb
+M	SDEV_DESC	4	byte	1	device_class
+M	SDEV_DESC	5	byte	1	device_subclass
+M	SDEV_DESC	6	byte	1	device_protocol
+M	SDEV_DESC	7	byte	1	maxpacket_size0
+M	SDEV_DESC	8	ushort	2	id_vendor
+M	SDEV_DESC	10	ushort	2	id_product
+M	SDEV_DESC	12	ushort	2	bcd_device
+M	SDEV_DESC	14	byte	1	manufacturer
+M	SDEV_DESC	15	byte	1	product
+M	SDEV_DESC	16	byte	1	serial_number
+M	SDEV_DESC	17	byte	1	num_configurations
+S	SCFG_DESC	10
+M	SCFG_DESC	0	byte	1	length
+M	SCFG_DESC	1	byte	1	type
+M	SCFG_DESC	2	ushort	2	t_length
+M	SCFG_DESC	4	byte	1	num_intf
+M	SCFG_DESC	5	byte	1	cv
+M	SCFG_DESC	6	byte	1	index
+M	SCFG_DESC	7	byte	1	attr
+M	SCFG_DESC	8	byte	1	max_power
+S	SINTF_DESC	9
+M	SINTF_DESC	0	byte	1	length
+M	SINTF_DESC	1	byte	1	type
+M	SINTF_DESC	2	byte	1	num
+M	SINTF_DESC	3	byte	1	alt_tring
+M	SINTF_DESC	4	byte	1	end_points
+M	SINTF_DESC	5	byte	1	iclass
+M	SINTF_DESC	6	byte	1	sub
+M	SINTF_DESC	7	byte	1	proto
+M	SINTF_DESC	8	byte	1	index
+S	SEP_DESC	8
+M	SEP_DESC	0	byte	1	length
+M	SEP_DESC	1	byte	1	type
+M	SEP_DESC	2	byte	1	ep_addr
+M	SEP_DESC	3	byte	1	attr
+M	SEP_DESC	4	ushort	2	pay_load
+M	SEP_DESC	6	byte	1	interval
+S	UDEV	8
+M	UDEV	0	PTR:DISKHAL	4	pudisk
+M	UDEV	4	PTR:UVCHAL	4	puvc
+S	SETUP_PKG	8
+M	SETUP_PKG	0	byte	1	mrequest
+M	SETUP_PKG	1	byte	1	request
+M	SETUP_PKG	2	ushort	2	value
+M	SETUP_PKG	4	ushort	2	index
+M	SETUP_PKG	6	ushort	2	length
+S	SETUP_TRAN	4
+M	SETUP_TRAN	0	byte	1	addr
+M	SETUP_TRAN	1	byte	1	pidphase
+M	SETUP_TRAN	2	byte	1	t_nkg
+M	SETUP_TRAN	3	byte	1	payload
+S	XXGPKG	16
+M	XXGPKG	0	byte	1	addr
+M	XXGPKG	1	byte	1	pid
+M	XXGPKG	2	byte	1	payload
+M	XXGPKG	4	ushort	2	len
+M	XXGPKG	8	PTR:byte	4	buffer
+M	XXGPKG	12	byte	1	epbulkin
+M	XXGPKG	13	byte	1	epbulkout
+S	USB_VA	3
+M	USB_VA	0	byte	1	max_lun
+M	USB_VA	1	byte	1	cbw_lun
+M	USB_VA	2	byte	1	usb_enum_sta
+U	SETUPPKT	8
+N	SETUPPKT	0	SETUP_PKG	8	setup
+N	SETUPPKT	0	byte[8]	8	set_pkt
+S	sensor_cmd_t	16
+M	sensor_cmd_t	0	byte	1	w_cmd
+M	sensor_cmd_t	1	byte	1	r_cmd
+M	sensor_cmd_t	2	byte	1	id
+M	sensor_cmd_t	3	byte	1	addr_num
+M	sensor_cmd_t	4	byte	1	data_num
+M	sensor_cmd_t	6	ushort	2	id_reg
+M	sensor_cmd_t	8	PTR:ushort[2]	4	init
+M	sensor_cmd_t	12	byte	1	mclk
+S	EX_MAND	28
+M	EX_MAND	0	PTR:byte	4	code
+M	EX_MAND	4	uint	4	clen
+M	EX_MAND	8	uint	4	inram
+M	EX_MAND	12	PTR:uint[2]	4	pfun
+M	EX_MAND	16	uint	4	npfun
+M	EX_MAND	20	uint	4	iensor
+M	EX_MAND	24	PTR:sensor_cmd_t	4	psensor
+S	__FIFO_USB__	3296
+M	__FIFO_USB__	0	byte[64]	64	ep0_fifo
+M	__FIFO_USB__	64	byte[528]	528	msc_txfifo
+M	__FIFO_USB__	592	byte[528]	528	msc_rxfifo
+M	__FIFO_USB__	1120	byte[128]	128	uac_txfifo
+M	__FIFO_USB__	1248	byte[2048]	2048	uvc_txfifo
+S	__RAM_USE__	9664
+M	__RAM_USE__	0	_TIM_FONT_	6400	tminf_font
+M	__RAM_USE__	6400	byte[64]	64	ep0_buf
+M	__RAM_USE__	6464	byte[512]	512	msc_txbuf
+M	__RAM_USE__	6976	byte[512]	512	msc_rxbuf
+M	__RAM_USE__	7488	byte[128]	128	uac_txbuf
+M	__RAM_USE__	7616	byte[1][2048]	2048	uvc_txbuf
+S	FATFS	568
+M	FATFS	0	byte	1	fs_type
+M	FATFS	1	byte	1	pdrv
+M	FATFS	2	byte	1	n_fats
+M	FATFS	3	byte	1	wflag
+M	FATFS	4	byte	1	fsi_flag
+M	FATFS	6	ushort	2	id
+M	FATFS	8	ushort	2	n_rootdir
+M	FATFS	10	ushort	2	csize
+M	FATFS	12	PTR:ushort	4	lfnbuf
+M	FATFS	16	PTR:byte	4	dirbuf
+M	FATFS	20	uint	4	last_clst
+M	FATFS	24	uint	4	free_clst
+M	FATFS	28	uint	4	n_fatent
+M	FATFS	32	uint	4	fsize
+M	FATFS	36	uint	4	volbase
+M	FATFS	40	uint	4	fatbase
+M	FATFS	44	uint	4	dirbase
+M	FATFS	48	uint	4	database
+M	FATFS	52	uint	4	winsect
+M	FATFS	56	byte[512]	512	win
+S	FFOBJID	40
+M	FFOBJID	0	PTR:FATFS	4	fs
+M	FFOBJID	4	ushort	2	id
+M	FFOBJID	6	byte	1	attr
+M	FFOBJID	7	byte	1	stat
+M	FFOBJID	8	uint	4	sclust
+M	FFOBJID	12	uint64	8	objsize
+M	FFOBJID	20	uint	4	n_cont
+M	FFOBJID	24	uint	4	n_frag
+M	FFOBJID	28	uint	4	c_scl
+M	FFOBJID	32	uint	4	c_size
+M	FFOBJID	36	uint	4	c_ofs
+S	FIL	580
+M	FIL	0	FFOBJID	40	obj
+M	FIL	40	byte	1	flag
+M	FIL	41	byte	1	err
+M	FIL	44	uint64	8	fptr
+M	FIL	52	uint	4	clust
+M	FIL	56	uint	4	sect
+M	FIL	60	uint	4	dir_sect
+M	FIL	64	PTR:byte	4	dir_ptr
+M	FIL	68	byte[512]	512	buf
+S	DIR	76
+M	DIR	0	FFOBJID	40	obj
+M	DIR	40	uint	4	dptr
+M	DIR	44	uint	4	clust
+M	DIR	48	uint	4	sect
+M	DIR	52	PTR:byte	4	dir
+M	DIR	56	byte[12]	12	fn
+M	DIR	68	uint	4	blk_ofs
+M	DIR	72	char*	4	pat
+S	FILINFO	284
+M	FILINFO	0	uint64	8	fsize
+M	FILINFO	8	ushort	2	fdate
+M	FILINFO	10	ushort	2	ftime
+M	FILINFO	12	byte	1	fattrib
+M	FILINFO	13	char[13]	13	altname
+M	FILINFO	26	char[256]	256	fname
+S	R_ICON_S	24
+M	R_ICON_S	0	uint	4	r_id
+M	R_ICON_S	4	PTR:ushort	4	r_data
+M	R_ICON_S	8	uint	4	timeout
+M	R_ICON_S	12	ushort	2	r_width
+M	R_ICON_S	14	ushort	2	r_height
+M	R_ICON_S	16	uint	4	r_tcolor
+M	R_ICON_S	20	uint	4	r_name
+S	R_STRING_S	16
+M	R_STRING_S	0	uint	4	r_id
+M	R_STRING_S	4	char*	4	string
+M	R_STRING_S	8	ushort	2	width
+M	R_STRING_S	10	ushort	2	height
+M	R_STRING_S	12	uint	4	r_name
+S	X_MSG_S	8
+M	X_MSG_S	0	byte	1	stat
+M	X_MSG_S	1	byte	1	len
+M	X_MSG_S	2	byte	1	oput
+M	X_MSG_S	3	byte	1	iput
+M	X_MSG_S	4	PTR:uint	4	msg
+S	X_Work_S	16
+M	X_Work_S	0	int	4	counter
+M	X_Work_S	4	uint	4	reload
+M	X_Work_S	8	void*	4	work
+M	X_Work_S	12	void*	4	prit
+U	MEDIA_U	4
+N	MEDIA_U	0	int	4	fd
+N	MEDIA_U	0	uint	4	buff
+S	Media_Res_S	4
+M	Media_Res_S	0	ushort	2	width
+M	Media_Res_S	2	ushort	2	height
+S	Media_Pos_S	4
+M	Media_Pos_S	0	short	2	x
+M	Media_Pos_S	2	short	2	y
+S	Media_S	8
+M	Media_S	0	ushort	2	type
+M	Media_S	2	short	2	rev
+M	Media_S	4	MEDIA_U	4	src
+S	AVIINDEXENTRY	16
+M	AVIINDEXENTRY	0	uint	4	ckid
+M	AVIINDEXENTRY	4	uint	4	dwFlags
+M	AVIINDEXENTRY	8	uint	4	dwChunkOffset
+M	AVIINDEXENTRY	12	uint	4	dwChunkLength
+S	AVIMAINHEADER	64
+M	AVIMAINHEADER	0	uint	4	fcc
+M	AVIMAINHEADER	4	uint	4	cb
+M	AVIMAINHEADER	8	uint	4	dwMicroSecPerFrame
+M	AVIMAINHEADER	12	uint	4	dwMaxBytesPerSec
+M	AVIMAINHEADER	16	uint	4	dwPaddingGranularity
+M	AVIMAINHEADER	20	uint	4	dwFlags
+M	AVIMAINHEADER	24	uint	4	dwTotalFrames
+M	AVIMAINHEADER	28	uint	4	dwInitialFrames
+M	AVIMAINHEADER	32	uint	4	dwStreams
+M	AVIMAINHEADER	36	uint	4	dwSuggestedBufferSize
+M	AVIMAINHEADER	40	uint	4	dwWidth
+M	AVIMAINHEADER	44	uint	4	dwHeight
+M	AVIMAINHEADER	48	uint[4]	16	dwReserved
+S	anon_struct_5b65	8
+M	anon_struct_5b65	0	short	2	left
+M	anon_struct_5b65	2	short	2	top
+M	anon_struct_5b65	4	short	2	right
+M	anon_struct_5b65	6	short	2	bottom
+S	AVISTREAMHEADER	64
+M	AVISTREAMHEADER	0	uint	4	fcc
+M	AVISTREAMHEADER	4	uint	4	cb
+M	AVISTREAMHEADER	8	uint	4	fccType
+M	AVISTREAMHEADER	12	uint	4	fccHandler
+M	AVISTREAMHEADER	16	uint	4	dwFlags
+M	AVISTREAMHEADER	20	ushort	2	wPriority
+M	AVISTREAMHEADER	22	ushort	2	wLanguage
+M	AVISTREAMHEADER	24	uint	4	dwInitialFrames
+M	AVISTREAMHEADER	28	uint	4	dwScale
+M	AVISTREAMHEADER	32	uint	4	dwRate
+M	AVISTREAMHEADER	36	uint	4	dwStart
+M	AVISTREAMHEADER	40	uint	4	dwLength
+M	AVISTREAMHEADER	44	uint	4	dwSuggestedBufferSize
+M	AVISTREAMHEADER	48	uint	4	dwQuality
+M	AVISTREAMHEADER	52	uint	4	dwSampleSize
+M	AVISTREAMHEADER	56	anon_struct_5b65	8	rcFrame
+S	tagBITMAPINFOHEADER	40
+M	tagBITMAPINFOHEADER	0	uint	4	biSize
+M	tagBITMAPINFOHEADER	4	uint	4	biWidth
+M	tagBITMAPINFOHEADER	8	uint	4	biHeight
+M	tagBITMAPINFOHEADER	12	ushort	2	biPlanes
+M	tagBITMAPINFOHEADER	14	ushort	2	biBitCount
+M	tagBITMAPINFOHEADER	16	uint	4	biCompression
+M	tagBITMAPINFOHEADER	20	uint	4	biSizeImage
+M	tagBITMAPINFOHEADER	24	uint	4	biXPelsPerMeter
+M	tagBITMAPINFOHEADER	28	uint	4	biYPelsPerMeter
+M	tagBITMAPINFOHEADER	32	uint	4	biClrUsed
+M	tagBITMAPINFOHEADER	36	uint	4	biClrImportant
+S	WAVEFORMATEX	20
+M	WAVEFORMATEX	0	ushort	2	wFormatTag
+M	WAVEFORMATEX	2	ushort	2	nChannels
+M	WAVEFORMATEX	4	uint	4	nSamplesPerSec
+M	WAVEFORMATEX	8	uint	4	nAvgBytesPerSec
+M	WAVEFORMATEX	12	ushort	2	nBlockAlign
+M	WAVEFORMATEX	14	ushort	2	wBitsPerSample
+M	WAVEFORMATEX	16	ushort	2	cbSize
+S	CHUNK	8
+M	CHUNK	0	uint	4	dwFourCC
+M	CHUNK	4	uint	4	dwSize
+S	LIST	12
+M	LIST	0	uint	4	fcc
+M	LIST	4	uint	4	cb
+M	LIST	8	uint	4	fcctype
+S	BITMAPAUDIODC	136
+M	BITMAPAUDIODC	0	uint[34]	136	rv
+S	WAVEDECPR	8
+M	WAVEDECPR	0	uint[2]	8	rv
+S	AVIFILEHEADER	484
+M	AVIFILEHEADER	0	LIST	12	riff
+M	AVIFILEHEADER	12	LIST	12	hdrl
+M	AVIFILEHEADER	24	AVIMAINHEADER	64	avih
+M	AVIFILEHEADER	88	LIST	12	strl_v
+M	AVIFILEHEADER	100	AVISTREAMHEADER	64	strh_v
+M	AVIFILEHEADER	164	CHUNK	8	strf_v
+M	AVIFILEHEADER	172	tagBITMAPINFOHEADER	40	bitmapinfo
+M	AVIFILEHEADER	212	CHUNK	8	strd_v
+M	AVIFILEHEADER	220	BITMAPAUDIODC	136	bitmapvideodc
+M	AVIFILEHEADER	356	LIST	12	strl_a
+M	AVIFILEHEADER	368	AVISTREAMHEADER	64	strh_a
+M	AVIFILEHEADER	432	CHUNK	8	strf_a
+M	AVIFILEHEADER	440	WAVEFORMATEX	20	wavinfo
+M	AVIFILEHEADER	460	CHUNK	8	strd_a
+M	AVIFILEHEADER	468	WAVEDECPR	8	wavedcpr
+M	AVIFILEHEADER	476	CHUNK	8	junk
+S	IDX_H	16
+M	IDX_H	0	uint	4	rsv0
+M	IDX_H	4	uint	4	rsv1
+M	IDX_H	8	uint	4	fcc
+M	IDX_H	12	uint	4	cb
+S	IDX_A	16
+M	IDX_A	0	uint	4	dwchunkid
+M	IDX_A	4	uint	4	dwflags
+M	IDX_A	8	uint	4	dwoffset
+M	IDX_A	12	uint	4	dwsize
+S	AVI_ENCODER_OP_S	24
+M	AVI_ENCODER_OP_S	0	void*	4	init
+M	AVI_ENCODER_OP_S	4	void*	4	uninit
+M	AVI_ENCODER_OP_S	8	void*	4	parse
+M	AVI_ENCODER_OP_S	12	void*	4	encode
+M	AVI_ENCODER_OP_S	16	void*	4	end
+M	AVI_ENCODER_OP_S	20	void*	4	service
+S	ENCODER_S	48
+M	ENCODER_S	0	byte	1	type
+M	ENCODER_S	1	byte	1	status
+M	ENCODER_S	2	byte	1	state
+M	ENCODER_S	3	byte	1	rev2
+M	ENCODER_S	4	int	4	fhandle
+M	ENCODER_S	8	uint	4	ofset
+M	ENCODER_S	12	uint	4	size
+M	ENCODER_S	16	uint	4	dwIdexlen
+M	ENCODER_S	20	uint	4	framecnt
+M	ENCODER_S	24	uint	4	oldOffset
+M	ENCODER_S	28	uint	4	oldSize
+M	ENCODER_S	32	int	4	alignsize
+M	ENCODER_S	36	PTR:AVI_ENCODER_OP_S	4	encoder
+M	ENCODER_S	40	void*	4	write
+M	ENCODER_S	44	void*	4	prit
+S	AVI_DECODER_OP_S	20
+M	AVI_DECODER_OP_S	0	void*	4	init
+M	AVI_DECODER_OP_S	4	void*	4	decode
+M	AVI_DECODER_OP_S	8	void*	4	gettime
+M	AVI_DECODER_OP_S	12	void*	4	dfast
+M	AVI_DECODER_OP_S	16	void*	4	service
+S	DECODE_Q_S	8
+M	DECODE_Q_S	0	byte	1	in
+M	DECODE_Q_S	1	byte	1	out
+M	DECODE_Q_S	2	byte	1	cnt
+M	DECODE_Q_S	3	byte	1	busy
+M	DECODE_Q_S	4	PTR:AVIINDEXENTRY	4	stack
+S	DECODEER_S	480
+M	DECODEER_S	0	char	1	status
+M	DECODEER_S	1	char	1	type
+M	DECODEER_S	2	short	2	framestep
+M	DECODEER_S	4	ushort	2	width
+M	DECODEER_S	6	ushort	2	height
+M	DECODEER_S	8	int	4	fhandle
+M	DECODEER_S	12	int	4	frameIdx
+M	DECODEER_S	16	int	4	videoIdx
+M	DECODEER_S	20	uint	4	aviflag
+M	DECODEER_S	24	uint	4	framecnt
+M	DECODEER_S	28	uint	4	frametime
+M	DECODEER_S	32	uint	4	auds_samplerate
+M	DECODEER_S	36	uint	4	vids_entrys
+M	DECODEER_S	40	uint	4	vids_offset
+M	DECODEER_S	44	uint	4	auds_entrys
+M	DECODEER_S	48	uint	4	auds_offset
+M	DECODEER_S	52	uint	4	vids_index
+M	DECODEER_S	56	uint	4	auds_index
+M	DECODEER_S	60	uint	4	vids_count
+M	DECODEER_S	64	uint	4	auds_count
+M	DECODEER_S	68	uint	4	vids_movioffset
+M	DECODEER_S	72	uint	4	auds_movioffset
+M	DECODEER_S	76	uint	4	idx1_offset
+M	DECODEER_S	80	uint	4	idx1_length
+M	DECODEER_S	84	uint	4	movi_offset
+M	DECODEER_S	88	uint	4	movi_size
+M	DECODEER_S	92	uint	4	idx1_cache_offset
+M	DECODEER_S	96	uint	4	idx1_cache_length
+M	DECODEER_S	100	uint	4	idx1_cache_cnt
+M	DECODEER_S	104	PTR:uint	4	idx1_cache
+M	DECODEER_S	108	void*	4	read
+M	DECODEER_S	112	int	4	audiolframe
+M	DECODEER_S	116	int	4	videolframe
+M	DECODEER_S	120	AVIINDEXENTRY	16	idx1
+M	DECODEER_S	136	AVIINDEXENTRY[15]	240	vidsIdx1Stack
+M	DECODEER_S	376	AVIINDEXENTRY[5]	80	audsIdx1Stack
+M	DECODEER_S	456	DECODE_Q_S	8	vidsIdx1Q
+M	DECODEER_S	464	DECODE_Q_S	8	audsIdx1Q
+M	DECODEER_S	472	PTR:AVI_DECODER_OP_S	4	decoder
+M	DECODEER_S	476	void*	4	prit
+S	AVI_IX_HEADER_S	32
+M	AVI_IX_HEADER_S	0	uint	4	fcc
+M	AVI_IX_HEADER_S	4	uint	4	cb
+M	AVI_IX_HEADER_S	8	ushort	2	wLongsPerEntry
+M	AVI_IX_HEADER_S	10	byte	1	bIndexSubType
+M	AVI_IX_HEADER_S	11	byte	1	bIndexType
+M	AVI_IX_HEADER_S	12	uint	4	nEntriesInUse
+M	AVI_IX_HEADER_S	16	uint	4	dwChunkId
+M	AVI_IX_HEADER_S	20	uint64	8	qwBaseOffset
+M	AVI_IX_HEADER_S	28	uint	4	dwReserved3
+S	AVI_IX_S	8
+M	AVI_IX_S	0	uint	4	dwOffset
+M	AVI_IX_S	4	uint	4	dwSize
+S	AVI_INDX_S	16
+M	AVI_INDX_S	0	uint64	8	qwOffset
+M	AVI_INDX_S	8	uint	4	dwSize
+M	AVI_INDX_S	12	uint	4	dwDuration
+S	AVISUPERINDEXHEAD	24
+M	AVISUPERINDEXHEAD	0	ushort	2	wLongsPerEntry
+M	AVISUPERINDEXHEAD	2	byte	1	bIndexSubType
+M	AVISUPERINDEXHEAD	3	byte	1	bIndexType
+M	AVISUPERINDEXHEAD	4	uint	4	nEntriesInUse
+M	AVISUPERINDEXHEAD	8	uint	4	dwChunkId
+M	AVISUPERINDEXHEAD	12	uint[3]	12	dwReserved
+S	VIDEO_FIELD_DESC	32
+M	VIDEO_FIELD_DESC	0	uint	4	CompressedBMHeight
+M	VIDEO_FIELD_DESC	4	uint	4	CompressedBMWidth
+M	VIDEO_FIELD_DESC	8	uint	4	ValidBMHeight
+M	VIDEO_FIELD_DESC	12	uint	4	ValidBMWidth
+M	VIDEO_FIELD_DESC	16	uint	4	ValidBMXOffset
+M	VIDEO_FIELD_DESC	20	uint	4	ValidBMYOffset
+M	VIDEO_FIELD_DESC	24	uint	4	VideoXOffsetInT
+M	VIDEO_FIELD_DESC	28	uint	4	VideoYValidStartLine
+S	VideoPropHeader	68
+M	VideoPropHeader	0	uint	4	VideoFormatToken
+M	VideoPropHeader	4	uint	4	VideoStandard
+M	VideoPropHeader	8	uint	4	dwVerticalRefreshRate
+M	VideoPropHeader	12	uint	4	dwHTotalInT
+M	VideoPropHeader	16	uint	4	dwVTotalInLines
+M	VideoPropHeader	20	uint	4	dwFrameAspectRatio
+M	VideoPropHeader	24	uint	4	dwFrameWidthInPixels
+M	VideoPropHeader	28	uint	4	dwFrameHeightInLines
+M	VideoPropHeader	32	uint	4	nbFieldPerFrame
+M	VideoPropHeader	36	VIDEO_FIELD_DESC	32	FieldInfo
+S	ODMLExtendedAVIHeader	256
+M	ODMLExtendedAVIHeader	0	uint	4	OpenDML_Header
+M	ODMLExtendedAVIHeader	4	uint	4	size
+M	ODMLExtendedAVIHeader	8	uint	4	dwTotalFrames
+M	ODMLExtendedAVIHeader	12	uint[61]	244	dwFuture
+S	AVIXMOVILIST	24
+M	AVIXMOVILIST	0	LIST	12	riff
+M	AVIXMOVILIST	12	LIST	12	movi
+S	ODMLAVIFILEHEADER	56084
+M	ODMLAVIFILEHEADER	0	LIST	12	riff
+M	ODMLAVIFILEHEADER	12	LIST	12	hdrl
+M	ODMLAVIFILEHEADER	24	AVIMAINHEADER	64	avih
+M	ODMLAVIFILEHEADER	88	LIST	12	strl_v
+M	ODMLAVIFILEHEADER	100	AVISTREAMHEADER	64	strh_v
+M	ODMLAVIFILEHEADER	164	CHUNK	8	strf_v
+M	ODMLAVIFILEHEADER	172	tagBITMAPINFOHEADER	40	bitmapinfo
+M	ODMLAVIFILEHEADER	212	CHUNK	8	sector1_junk
+M	ODMLAVIFILEHEADER	220	byte[259]	259	sector1fill
+M	ODMLAVIFILEHEADER	480	CHUNK	8	sidx_v
+M	ODMLAVIFILEHEADER	488	AVISUPERINDEXHEAD	24	vsupindxh
+M	ODMLAVIFILEHEADER	512	AVI_INDX_S[1695]	27120	vindx
+M	ODMLAVIFILEHEADER	27632	CHUNK	8	sector2_junk
+M	ODMLAVIFILEHEADER	27640	byte[8]	8	sector2fill
+M	ODMLAVIFILEHEADER	27648	CHUNK	8	c_vprp
+M	ODMLAVIFILEHEADER	27656	VideoPropHeader	68	vprp
+M	ODMLAVIFILEHEADER	27724	CHUNK	8	sector3_junk
+M	ODMLAVIFILEHEADER	27732	byte[428]	428	sector3fill
+M	ODMLAVIFILEHEADER	28160	LIST	12	strl_a
+M	ODMLAVIFILEHEADER	28172	AVISTREAMHEADER	64	strh_a
+M	ODMLAVIFILEHEADER	28236	CHUNK	8	strf_a
+M	ODMLAVIFILEHEADER	28244	WAVEFORMATEX	20	wavinfo
+M	ODMLAVIFILEHEADER	28264	CHUNK	8	sector4_junk
+M	ODMLAVIFILEHEADER	28272	byte[367]	367	sector4fill
+M	ODMLAVIFILEHEADER	28640	CHUNK	8	sidx_a
+M	ODMLAVIFILEHEADER	28648	AVISUPERINDEXHEAD	24	asupindxh
+M	ODMLAVIFILEHEADER	28672	AVI_INDX_S[1695]	27120	aindx
+M	ODMLAVIFILEHEADER	55792	CHUNK	8	sector5_junk
+M	ODMLAVIFILEHEADER	55800	byte[8]	8	sector5fill
+M	ODMLAVIFILEHEADER	55808	LIST	12	obml
+M	ODMLAVIFILEHEADER	55820	ODMLExtendedAVIHeader	256	strodml
+M	ODMLAVIFILEHEADER	56076	CHUNK	8	junk
+S	AVI_VIDS_S	512
+M	AVI_VIDS_S	0	LIST	12	riff
+M	AVI_VIDS_S	12	LIST	12	hdrl
+M	AVI_VIDS_S	24	AVIMAINHEADER	64	avih
+M	AVI_VIDS_S	88	LIST	12	strl_v
+M	AVI_VIDS_S	100	AVISTREAMHEADER	64	strh_v
+M	AVI_VIDS_S	164	CHUNK	8	strf_v
+M	AVI_VIDS_S	172	tagBITMAPINFOHEADER	40	bitmapinfo
+M	AVI_VIDS_S	212	CHUNK	8	sector1_junk
+M	AVI_VIDS_S	220	byte[259]	259	sector1fill
+M	AVI_VIDS_S	480	CHUNK	8	sidx_v
+M	AVI_VIDS_S	488	AVISUPERINDEXHEAD	24	vsupindxh
+S	AVI_AUDS_S	512
+M	AVI_AUDS_S	0	LIST	12	strl_a
+M	AVI_AUDS_S	12	AVISTREAMHEADER	64	strh_a
+M	AVI_AUDS_S	76	CHUNK	8	strf_a
+M	AVI_AUDS_S	84	WAVEFORMATEX	20	wavinfo
+M	AVI_AUDS_S	104	CHUNK	8	sector4_junk
+M	AVI_AUDS_S	112	byte[367]	367	sector4fill
+M	AVI_AUDS_S	480	CHUNK	8	sidx_a
+M	AVI_AUDS_S	488	AVISUPERINDEXHEAD	24	asupindxh
+S	AVIX_SECTOR	512
+M	AVIX_SECTOR	0	AVIXMOVILIST	24	Avix
+M	AVIX_SECTOR	24	CHUNK	8	junk
+M	AVIX_SECTOR	32	byte[480]	480	junkfill
+S	AVI_MOVI_S	512
+M	AVI_MOVI_S	0	LIST	12	obml
+M	AVI_MOVI_S	12	ODMLExtendedAVIHeader	256	strodml
+M	AVI_MOVI_S	268	CHUNK	8	junk
+M	AVI_MOVI_S	276	byte[224]	224	junkfill
+M	AVI_MOVI_S	500	LIST	12	list_movi
+S	AVI_VPRP_S	512
+M	AVI_VPRP_S	0	CHUNK	8	c_vprp
+M	AVI_VPRP_S	8	VideoPropHeader	68	vprp
+M	AVI_VPRP_S	76	CHUNK	8	sector3_junk
+M	AVI_VPRP_S	84	byte[428]	428	sector3fill
+S	ODML_OP_S	58648
+M	ODML_OP_S	0	AVI_VIDS_S	512	vidsheader
+M	ODML_OP_S	512	AVI_AUDS_S	512	audsheader
+M	ODML_OP_S	1024	AVI_VPRP_S	512	vprpheader
+M	ODML_OP_S	1536	AVI_INDX_S[1695]	27120	vidsindxtable
+M	ODML_OP_S	28656	CHUNK	8	sector2_junk
+M	ODML_OP_S	28664	byte[8]	8	sector2fill
+M	ODML_OP_S	28672	AVI_INDX_S[1695]	27120	audsindxtable
+M	ODML_OP_S	55792	CHUNK	8	sector5_junk
+M	ODML_OP_S	55800	byte[8]	8	sector5fill
+M	ODML_OP_S	55808	byte[512]	512	vidsmemPool
+M	ODML_OP_S	56320	byte[512]	512	audsmemPool
+M	ODML_OP_S	56832	AVI_MOVI_S	512	moviheader
+M	ODML_OP_S	57344	AVIX_SECTOR	512	avix_1sect
+M	ODML_OP_S	57856	uint	4	vidsheadersector
+M	ODML_OP_S	57860	uint	4	audsheadersector
+M	ODML_OP_S	57864	uint	4	vprpheadersector
+M	ODML_OP_S	57868	uint	4	vidsindxcount
+M	ODML_OP_S	57872	uint	4	audsindxcount
+M	ODML_OP_S	57876	uint	4	vidsindxsector
+M	ODML_OP_S	57880	uint	4	audsindxsector
+M	ODML_OP_S	57884	uint	4	vidssupercount
+M	ODML_OP_S	57888	uint	4	audssupercount
+M	ODML_OP_S	57892	uint[128]	512	headercluster
+M	ODML_OP_S	58404	PTR:AVI_IX_S	4	vidsixtable
+M	ODML_OP_S	58408	PTR:AVI_IX_S	4	audsixtable
+M	ODML_OP_S	58412	uint	4	vidsixcount
+M	ODML_OP_S	58416	uint	4	audsixcount
+M	ODML_OP_S	58420	uint	4	movisector
+M	ODML_OP_S	58424	uint	4	vframecnt
+M	ODML_OP_S	58428	uint	4	aframecnt
+M	ODML_OP_S	58432	uint	4	movioffset
+M	ODML_OP_S	58436	uint	4	lastAVIXOffset
+M	ODML_OP_S	58440	uint	4	lastAVIXSize
+M	ODML_OP_S	58444	int	4	AVIXnum
+M	ODML_OP_S	58448	AVIXMOVILIST[6]	144	movlist
+M	ODML_OP_S	58592	uint[6]	24	moviofest
+M	ODML_OP_S	58616	uint[6]	24	avix_sector
+M	ODML_OP_S	58640	uint	4	audsSize
+M	ODML_OP_S	58644	uint	4	qwOffset
+S	uiRect	8
+M	uiRect	0	short	2	x0
+M	uiRect	2	short	2	x1
+M	uiRect	4	short	2	y0
+M	uiRect	6	short	2	y1
+U	anon_union_6f89	4
+N	anon_union_6f89	0	void*	4	p
+N	anon_union_6f89	0	uint	4	v
+S	winMsg	16
+M	winMsg	0	msgId	4	id
+M	winMsg	4	void*	4	hWin
+M	winMsg	8	void*	4	hSrc
+M	winMsg	12	anon_union_6f89	4	parameter
+S	winObj	40
+M	winObj	0	uiRect	8	rect
+M	winObj	8	uiRect	8	invalidRect
+M	winObj	16	byte	1	bgColor
+M	winObj	18	ushort	2	style
+M	winObj	20	char*	4	name
+M	winObj	24	void*	4	cb
+M	winObj	28	void*	4	parent
+M	winObj	32	void*	4	child
+M	winObj	36	void*	4	next
+S	widgetCreateInfor	40
+M	widgetCreateInfor	0	void*	4	widgetCreate
+M	widgetCreateInfor	4	ushort	2	id
+M	widgetCreateInfor	6	short	2	x0
+M	widgetCreateInfor	8	short	2	y0
+M	widgetCreateInfor	10	ushort	2	width
+M	widgetCreateInfor	12	ushort	2	height
+M	widgetCreateInfor	14	ushort	2	style
+M	widgetCreateInfor	16	byte	1	bgColor
+M	widgetCreateInfor	20	uint	4	image
+M	widgetCreateInfor	24	byte	1	imageAlign
+M	widgetCreateInfor	28	uint	4	str
+M	widgetCreateInfor	32	byte	1	strAlign
+M	widgetCreateInfor	33	byte	1	fontColor
+M	widgetCreateInfor	34	byte	1	font
+M	widgetCreateInfor	36	void*	4	private
+S	strInfor	3
+M	strInfor	0	byte	1	font
+M	strInfor	1	byte	1	strAlign
+M	strInfor	2	byte	1	fontColor
+S	selectInfor	8
+M	selectInfor	0	byte	1	color
+M	selectInfor	4	uint	4	image
+S	widgetObj	48
+M	widgetObj	0	winObj	40	win
+M	widgetObj	40	ushort	2	id
+M	widgetObj	44	widgetType	4	type
+S	buttonObj	64
+M	buttonObj	0	widgetObj	48	widget
+M	buttonObj	48	uint	4	image
+M	buttonObj	52	byte	1	imageAlign
+M	buttonObj	56	uint	4	str
+M	buttonObj	60	byte	1	font
+M	buttonObj	61	byte	1	strAlign
+M	buttonObj	62	byte	1	fontColor
+S	frameWinObj	128
+M	frameWinObj	0	winObj	40	win
+M	frameWinObj	40	void*	4	cb
+M	frameWinObj	44	void*[20]	80	widgetHandle
+M	frameWinObj	124	void*	4	prvate
+S	imageIconObj	56
+M	imageIconObj	0	widgetObj	48	widget
+M	imageIconObj	48	uint	4	image
+M	imageIconObj	52	byte	1	imageAlign
+M	imageIconObj	53	byte	1	visible
+S	stringIconObj	56
+M	stringIconObj	0	widgetObj	48	widget
+M	stringIconObj	48	uint	4	str
+M	stringIconObj	52	byte	1	font
+M	stringIconObj	53	byte	1	strAlign
+M	stringIconObj	54	byte	1	fontColor
+M	stringIconObj	55	byte	1	visible
+S	rectObj	52
+M	rectObj	0	widgetObj	48	widget
+M	rectObj	48	byte	1	color
+M	rectObj	49	byte	1	selectColor
+M	rectObj	50	byte	1	select
+S	rowItemInfor	8
+M	rowItemInfor	0	ushort	2	itemWidth
+M	rowItemInfor	2	ushort	2	itemGap
+M	rowItemInfor	4	ushort	2	firstItemGap
+M	rowItemInfor	6	byte	1	itemSum
+S	itemManageObj	352
+M	itemManageObj	0	widgetObj	48	widget
+M	itemManageObj	48	void*[50]	200	item
+M	itemManageObj	248	ushort	2	itemHeight
+M	itemManageObj	250	ushort	2	itemGap
+M	itemManageObj	252	ushort	2	firstItemGap
+M	itemManageObj	254	rowItemInfor[10]	80	row
+M	itemManageObj	334	byte	1	itemSum
+M	itemManageObj	336	void*	4	getRes
+M	itemManageObj	340	void*	4	getResEx
+M	itemManageObj	344	uint	4	resSum
+M	itemManageObj	348	uint	4	currentRes
+S	menuItemObj	72
+M	menuItemObj	0	widgetObj	48	widget
+M	menuItemObj	48	uint	4	image
+M	menuItemObj	52	uint	4	selectImage
+M	menuItemObj	56	byte	1	color
+M	menuItemObj	57	byte	1	selectColor
+M	menuItemObj	60	void*	4	hImage
+M	menuItemObj	64	void*	4	hStr
+M	menuItemObj	68	byte	1	select
+S	menuOptionObj	68
+M	menuOptionObj	0	widgetObj	48	widget
+M	menuOptionObj	48	uint	4	image
+M	menuOptionObj	52	uint	4	selectImage
+M	menuOptionObj	56	byte	1	color
+M	menuOptionObj	57	byte	1	selectColor
+M	menuOptionObj	60	void*	4	hStr
+M	menuOptionObj	64	byte	1	select
+S	progressBarObj	56
+M	progressBarObj	0	widgetObj	48	widget
+M	progressBarObj	48	byte	1	color
+M	progressBarObj	52	uint	4	percentage
+S	menuItemExObj	80
+M	menuItemExObj	0	widgetObj	48	widget
+M	menuItemExObj	48	uint	4	image
+M	menuItemExObj	52	uint	4	selectImage
+M	menuItemExObj	56	byte	1	color
+M	menuItemExObj	57	byte	1	selectColor
+M	menuItemExObj	60	void*	4	hImage
+M	menuItemExObj	64	void*	4	hStr
+M	menuItemExObj	68	void*	4	hSelImage
+M	menuItemExObj	72	void*	4	hSelStr
+M	menuItemExObj	76	byte	1	select
+S	AUDIO_RARG_S	16
+M	AUDIO_RARG_S	0	byte	1	src_type
+M	AUDIO_RARG_S	1	byte	1	tar_type
+M	AUDIO_RARG_S	2	byte	1	channel
+M	AUDIO_RARG_S	3	byte	1	looprec
+M	AUDIO_RARG_S	4	uint	4	looptime
+M	AUDIO_RARG_S	8	uint	4	samplerate
+M	AUDIO_RARG_S	12	void*	4	callback
+S	Audio_ARG_S	16
+M	Audio_ARG_S	0	byte	1	type
+M	Audio_ARG_S	1	byte	1	channel
+M	Audio_ARG_S	2	ushort	2	samplerate
+M	Audio_ARG_S	4	uint	4	size
+M	Audio_ARG_S	8	Media_S	8	media
+S	G_Sensor_OP_S	28
+M	G_Sensor_OP_S	0	char[12]	12	name
+M	G_Sensor_OP_S	12	void*	4	init
+M	G_Sensor_OP_S	16	void*	4	readxyz
+M	G_Sensor_OP_S	20	void*	4	ioctrl
+M	G_Sensor_OP_S	24	int	4	prity
+S	Scaler_Para_S	8
+M	Scaler_Para_S	0	ushort	2	width
+M	Scaler_Para_S	2	ushort	2	heigth
+M	Scaler_Para_S	4	PTR:byte	4	data
+S	ProgressBar_OP_S	20
+M	ProgressBar_OP_S	0	void*	4	open
+M	ProgressBar_OP_S	4	void*	4	close
+M	ProgressBar_OP_S	8	void*	4	show
+M	ProgressBar_OP_S	12	void*	4	progress
+M	ProgressBar_OP_S	16	void*	4	ioctrl
+S	LAYOUT_VIEW_S	12
+M	LAYOUT_VIEW_S	0	ushort	2	view_type
+M	LAYOUT_VIEW_S	2	ushort	2	view_visiable
+M	LAYOUT_VIEW_S	4	uint	4	view_resid
+M	LAYOUT_VIEW_S	8	short	2	view_x
+M	LAYOUT_VIEW_S	10	short	2	view_y
+S	VIEW_S	48
+M	VIEW_S	0	byte	1	view_type
+M	VIEW_S	1	byte	1	view_stat
+M	VIEW_S	2	byte	1	view_visiable
+M	VIEW_S	3	byte	1	view_savestat
+M	VIEW_S	4	byte	1	font
+M	VIEW_S	5	byte	1	style
+M	VIEW_S	6	byte	1	update
+M	VIEW_S	7	byte	1	rev
+M	VIEW_S	8	ushort	2	rotate
+M	VIEW_S	10	ushort	2	zoom
+M	VIEW_S	12	short	2	view_x
+M	VIEW_S	14	short	2	view_y
+M	VIEW_S	16	short	2	view_ex
+M	VIEW_S	18	short	2	view_ey
+M	VIEW_S	20	short	2	draw_x
+M	VIEW_S	22	short	2	draw_y
+M	VIEW_S	24	ushort	2	view_width
+M	VIEW_S	26	ushort	2	view_height
+M	VIEW_S	28	uint	4	fill_color
+M	VIEW_S	32	uint	4	boarder_color
+M	VIEW_S	36	uint	4	view_resid
+M	VIEW_S	40	uint	4	view_ctrl
+M	VIEW_S	44	void*	4	prit
+S	MAX_WAV_S	68
+M	MAX_WAV_S	0	uint	4	filesize
+M	MAX_WAV_S	4	ushort	2	fmtcode
+M	MAX_WAV_S	6	ushort	2	channel
+M	MAX_WAV_S	8	uint	4	samplerate
+M	MAX_WAV_S	12	uint	4	bitrate
+M	MAX_WAV_S	16	ushort	2	blocksize
+M	MAX_WAV_S	18	ushort	2	samplesize
+M	MAX_WAV_S	20	ushort	2	cbsize
+M	MAX_WAV_S	22	ushort	2	samplepreblock
+M	MAX_WAV_S	24	ushort	2	cofnum
+M	MAX_WAV_S	28	uint[7]	28	coftable
+M	MAX_WAV_S	56	uint	4	factsize
+M	MAX_WAV_S	60	uint	4	datasize
+M	MAX_WAV_S	64	uint	4	dataoffset
+S	WAV_INFO_S	12
+M	WAV_INFO_S	0	ushort	2	type
+M	WAV_INFO_S	2	ushort	2	channel
+M	WAV_INFO_S	4	uint	4	samplerate
+M	WAV_INFO_S	8	uint	4	totaltime
+S	USER_WAV_S	16
+M	USER_WAV_S	0	ushort	2	channel
+M	USER_WAV_S	2	ushort	2	type
+M	USER_WAV_S	4	uint	4	samplerate
+M	USER_WAV_S	8	uint	4	outbufferlen
+M	USER_WAV_S	12	uint	4	outbufferaddr
+S	VIDEO_ARG_S	24
+M	VIDEO_ARG_S	0	byte	1	fps
+M	VIDEO_ARG_S	1	byte	1	sync_fps
+M	VIDEO_ARG_S	2	byte	1	audio
+M	VIDEO_ARG_S	3	byte	1	timestramp
+M	VIDEO_ARG_S	4	byte	1	looprecord
+M	VIDEO_ARG_S	5	byte	1	quality
+M	VIDEO_ARG_S	6	byte	1	fastwr
+M	VIDEO_ARG_S	7	byte	1	syncwr
+M	VIDEO_ARG_S	8	byte	1	ftype
+M	VIDEO_ARG_S	12	uint	4	rectime
+M	VIDEO_ARG_S	16	Media_Res_S	4	resolution
+M	VIDEO_ARG_S	20	void*	4	callback
+S	Video_Ctrl_S	148
+M	Video_Ctrl_S	0	byte	1	stat
+M	Video_Ctrl_S	1	char	1	tinfo
+M	Video_Ctrl_S	2	byte	1	tfont
+M	Video_Ctrl_S	3	byte	1	fCounter
+M	Video_Ctrl_S	4	byte	1	fStart
+M	Video_Ctrl_S	5	byte	1	fastwr
+M	Video_Ctrl_S	6	byte	1	syncValue
+M	Video_Ctrl_S	7	byte	1	syncCounter
+M	Video_Ctrl_S	8	ushort	2	ftime
+M	Video_Ctrl_S	10	ushort	2	tCounter
+M	Video_Ctrl_S	12	uint	4	avihead
+M	Video_Ctrl_S	16	int	4	space
+M	Video_Ctrl_S	20	int	4	filesize
+M	Video_Ctrl_S	24	uint	4	videoRecordAudioCnt
+M	Video_Ctrl_S	28	uint	4	videoRecordSync
+M	Video_Ctrl_S	32	uint	4	videoRecordTimeCounter
+M	Video_Ctrl_S	36	uint	4	videoFrameSize
+M	Video_Ctrl_S	40	uint	4	dbg_fps_n_cnt
+M	Video_Ctrl_S	44	uint	4	dbg_fps_c_time
+M	Video_Ctrl_S	48	uint	4	dbg_fps_e_cnt
+M	Video_Ctrl_S	52	uint	4	dbg_fps_s_cnt
+M	Video_Ctrl_S	56	int	4	aviFd
+M	Video_Ctrl_S	60	int	4	idxFd
+M	Video_Ctrl_S	64	int	4	fencoder
+M	Video_Ctrl_S	68	PTR:byte	4	idx1
+M	Video_Ctrl_S	72	PTR:byte	4	audio
+M	Video_Ctrl_S	76	PTR:X_Work_S	4	videoSync
+M	Video_Ctrl_S	80	VIDEO_ARG_S	24	arg
+M	Video_Ctrl_S	104	byte	1	mjpBStart
+M	Video_Ctrl_S	105	byte	1	insertframe
+M	Video_Ctrl_S	106	byte	1	restart_flag
+M	Video_Ctrl_S	107	byte	1	firstframe
+M	Video_Ctrl_S	108	int	4	dropframecount
+M	Video_Ctrl_S	112	byte	1	mjpbuff_full
+M	Video_Ctrl_S	113	byte	1	mjpA_write_first
+M	Video_Ctrl_S	114	byte	1	mjp_last_write
+M	Video_Ctrl_S	115	byte	1	write_flag
+M	Video_Ctrl_S	116	byte	1	looptime
+M	Video_Ctrl_S	117	byte	1	usensor_in
+M	Video_Ctrl_S	120	uint	4	jframe_cnt
+M	Video_Ctrl_S	124	int	4	u_tsync_old
+M	Video_Ctrl_S	128	uint	4	abchangetime
+M	Video_Ctrl_S	132	uint	4	iframe_ctr
+M	Video_Ctrl_S	136	uint	4	icnt_control
+M	Video_Ctrl_S	140	int	4	photo
+M	Video_Ctrl_S	144	int	4	photoFd
+S	VIDEO_PARG_S	20
+M	VIDEO_PARG_S	0	ushort	2	rotate
+M	VIDEO_PARG_S	2	ushort	2	firstframe
+M	VIDEO_PARG_S	4	Media_Res_S	4	tar
+M	VIDEO_PARG_S	8	Media_Pos_S	4	pos
+M	VIDEO_PARG_S	12	Media_S	8	media
+S	Image_ARG_S	24
+M	Image_ARG_S	0	byte	1	type
+M	Image_ARG_S	1	byte	1	wait
+M	Image_ARG_S	2	byte	1	fit
+M	Image_ARG_S	3	byte	1	rev
+M	Image_ARG_S	4	PTR:byte	4	yout
+M	Image_ARG_S	8	PTR:byte	4	uvout
+M	Image_ARG_S	12	Media_S	8	media
+M	Image_ARG_S	20	Media_Res_S	4	target
+S	LOG_S	8
+M	LOG_S	0	byte	1	state
+M	LOG_S	1	byte	1	rev
+M	LOG_S	2	ushort	2	index
+M	LOG_S	4	char*	4	cache
+S	RES_NAME_S	8
+M	RES_NAME_S	0	uint	4	index_h
+M	RES_NAME_S	4	uint	4	index_l
+S	FILE_MANAGER_S	72
+M	FILE_MANAGER_S	0	void*	4	init
+M	FILE_MANAGER_S	4	void*	4	uninit
+M	FILE_MANAGER_S	8	void*	4	create
+M	FILE_MANAGER_S	12	void*	4	destory
+M	FILE_MANAGER_S	16	void*	4	count
+M	FILE_MANAGER_S	20	void*	4	name
+M	FILE_MANAGER_S	24	void*	4	find
+M	FILE_MANAGER_S	28	void*	4	add
+M	FILE_MANAGER_S	32	void*	4	del_name
+M	FILE_MANAGER_S	36	void*	4	del_index
+M	FILE_MANAGER_S	40	void*	4	del_all
+M	FILE_MANAGER_S	44	void*	4	scan_start
+M	FILE_MANAGER_S	48	void*	4	scan_end
+M	FILE_MANAGER_S	52	void*	4	flush
+M	FILE_MANAGER_S	56	void*	4	rename
+M	FILE_MANAGER_S	60	void*	4	print
+M	FILE_MANAGER_S	64	void*	4	drity
+M	FILE_MANAGER_S	68	void*	4	index
+S	Board_Node_S	24
+M	Board_Node_S	0	char[12]	12	name
+M	Board_Node_S	12	void*	4	init
+M	Board_Node_S	16	void*	4	ioctrl
+M	Board_Node_S	20	uint	4	prit
+S	System_Ctrl_S	92
+M	System_Ctrl_S	0	byte	1	powerflag
+M	System_Ctrl_S	1	byte	1	battery
+M	System_Ctrl_S	2	byte	1	t_usb
+M	System_Ctrl_S	3	byte	1	usb
+M	System_Ctrl_S	4	byte	1	usensor
+M	System_Ctrl_S	5	byte	1	sdcard
+M	System_Ctrl_S	6	byte	1	g_lock
+M	System_Ctrl_S	7	byte	1	f_keysound
+M	System_Ctrl_S	8	byte	1	f_update
+M	System_Ctrl_S	9	byte	1	pip_mode
+M	System_Ctrl_S	10	byte	1	crop_level
+M	System_Ctrl_S	11	byte	1	astern
+M	System_Ctrl_S	12	byte	1	usensorshow
+M	System_Ctrl_S	13	byte	1	bfolder
+M	System_Ctrl_S	14	char	1	bfd_battery
+M	System_Ctrl_S	15	char	1	bfd_usb
+M	System_Ctrl_S	16	char	1	bfd_sdcard
+M	System_Ctrl_S	17	char	1	bfd_gsensor
+M	System_Ctrl_S	18	char	1	bfd_ir
+M	System_Ctrl_S	19	char	1	bfd_led
+M	System_Ctrl_S	20	char	1	bfd_lcd
+M	System_Ctrl_S	21	char	1	bfd_key
+M	System_Ctrl_S	22	char	1	bfd_usensor
+M	System_Ctrl_S	24	int	4	t_screensave
+M	System_Ctrl_S	28	uint	4	t_remain
+M	System_Ctrl_S	32	uint	4	t_rec
+M	System_Ctrl_S	36	uint	4	t_mrec
+M	System_Ctrl_S	40	uint	4	t_ir_auto
+M	System_Ctrl_S	44	uint	4	powerOnTime
+M	System_Ctrl_S	48	int	4	file_index
+M	System_Ctrl_S	52	int	4	file_type
+M	System_Ctrl_S	56	int	4	jpg_list
+M	System_Ctrl_S	60	int	4	avi_list
+M	System_Ctrl_S	64	int	4	wav_list
+M	System_Ctrl_S	68	int	4	avia_list
+M	System_Ctrl_S	72	int	4	avib_list
+M	System_Ctrl_S	76	uint	4	sd_freesize
+M	System_Ctrl_S	80	uint	4	fs_clustsize
+M	System_Ctrl_S	84	uint	4	t_wait
+M	System_Ctrl_S	88	PTR:X_MSG_S	4	sysQ
+S	msgDealInfor	8
+M	msgDealInfor	0	uint	4	msgId
+M	msgDealInfor	4	void*	4	func
+S	sysTask	20
+M	sysTask	0	char*	4	name
+M	sysTask	4	uint	4	arg
+M	sysTask	8	void*	4	taskOpen
+M	sysTask	12	void*	4	taskClose
+M	sysTask	16	void*	4	taskService
+S	menuOption	8
+M	menuOption	0	uint	4	image
+M	menuOption	4	uint	4	str
+S	menuItem	20
+M	menuItem	0	uint	4	configId
+M	menuItem	4	uint	4	image
+M	menuItem	8	uint	4	str
+M	menuItem	12	uint	4	optionSum
+M	menuItem	16	PTR:menuOption	4	pOption
+S	menuPage	20
+M	menuPage	0	uint	4	unselectImage
+M	menuPage	4	uint	4	selectImage
+M	menuPage	8	uint	4	str
+M	menuPage	12	uint	4	itemSum
+M	menuPage	16	PTR:menuItem	4	pItem
+S	menu	12
+M	menu	0	uint	4	curPage
+M	menu	4	uint	4	pageSum
+M	menu	8	PTR:menuPage	4	pPage
+S	uiWin	16
+M	uiWin	0	PTR:msgDealInfor	4	msgDeal
+M	uiWin	4	PTR:widgetCreateInfor	4	widgetInfor
+M	uiWin	8	void*	4	handle
+M	uiWin	12	byte	1	repeateOpenSupport

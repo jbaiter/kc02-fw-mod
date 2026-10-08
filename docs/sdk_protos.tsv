@@ -1,0 +1,990 @@
+0x02000680	managerInit	int	void	int managerInit(void)	ax32_platform_demo/inc/resource_manager.h
+0x020009C4	managerLockFileExt	int	int,int	int managerLockFileExt(int exp,int index)	ax32_platform_demo/inc/resource_manager.h
+0x02000A6C	managerUnlockFileExt	int	int,int	int managerUnlockFileExt(int exp,int index)	ax32_platform_demo/inc/resource_manager.h
+0x02000B18	managerCheckLock	int	char *	int managerCheckLock(char *name)	ax32_platform_demo/inc/resource_manager.h
+0x02000BDC	managerFlush	int	int	int managerFlush(int exp)	ax32_platform_demo/inc/resource_manager.h
+0x02000C48	managerDelFileByIndex	int	int,int	int managerDelFileByIndex(int exp,int index)	ax32_platform_demo/inc/resource_manager.h
+0x02000D58	managerDelFileAll	int	int	int managerDelFileAll(int exp)	ax32_platform_demo/inc/resource_manager.h
+0x02000E3C	managerScanStart	int	int	int managerScanStart(int exp)	ax32_platform_demo/inc/resource_manager.h
+0x02000EA4	managerScanEnd	int	int	int managerScanEnd(int exp)	ax32_platform_demo/inc/resource_manager.h
+0x02000F64	explorerListHook	int	char *,char *	int explorerListHook(char *name1,char *name2)	ax32_platform_demo/inc/explorer.h
+0x0200117C	managerSpaceCheck	int	int,char *,int	int managerSpaceCheck(int exp,char *dir,int remain_space)	ax32_platform_demo/inc/resource_manager.h
+0x02001540	manangerCheckFileType	int	char *	int manangerCheckFileType(char *name)	ax32_platform_demo/inc/resource_manager.h
+0x020017A0	managerAddFile	int	int,char *,char *	int managerAddFile(int exp,char *path,char *name)	ax32_platform_demo/inc/resource_manager.h
+0x02001844	managerAddFileEx	int	int,char *	int managerAddFileEx(int exp,char *fullname)	ax32_platform_demo/inc/resource_manager.h
+0x020018A4	managerRenameExt	int	int,int,char *,char *	int managerRenameExt(int exp,int index,char *path,char *newname)	ax32_platform_demo/inc/resource_manager.h
+0x02001944	managerRename	int	int,char *,char *,char *	int managerRename(int exp,char *path,char *odlname,char *newname)	ax32_platform_demo/inc/resource_manager.h
+0x02001A04	managerUnlockFile	int	char *	int managerUnlockFile(char *name)	ax32_platform_demo/inc/resource_manager.h
+0x02001AC4	managerDelFileByName	int	int,char *	int managerDelFileByName(int exp,char *name)	ax32_platform_demo/inc/resource_manager.h
+0x02001C20	managerDelFileByFullName	int	int,char *	int managerDelFileByFullName(int exp,char *fullname)	ax32_platform_demo/inc/resource_manager.h
+0x02001DA0	managerFileNameCreater	char *	int,char *,char *	char *managerFileNameCreater(int exp,char *suffix,char *fpath)	ax32_platform_demo/inc/resource_manager.h
+0x02001FB4	managerFileScan	int	int,char *	int managerFileScan(int exp,char *dir)	ax32_platform_demo/inc/resource_manager.h
+0x02002138	manangerGetFileFullPathName	char *	int,int,int *	char *manangerGetFileFullPathName(int exp,int index,int *ftype)	ax32_platform_demo/inc/resource_manager.h
+0x020021EC	manangerGetFileName	char *	int,int	char *manangerGetFileName(int exp,int index)	ax32_platform_demo/inc/resource_manager.h
+0x02002284	manangerFindFileAndDel	char *	int,int *,int	char *manangerFindFileAndDel(int exp,int *index,int type)	ax32_platform_demo/inc/resource_manager.h
+0x020029A8	boardOpen	int	char *	int boardOpen(char *name)	ax32_platform_demo/inc/board.h
+0x02002A4C	boardIoctrl	int	int,INT32U,INT32U	int boardIoctrl(int fd,INT32U op,INT32U para)	ax32_platform_demo/inc/board.h
+0x02002AD4	boardNameIoctrl	int	char *,INT32U,INT32U	int boardNameIoctrl(char *name,INT32U op,INT32U para)	ax32_platform_demo/inc/board.h
+0x02003B4C	userConfigSave	s32_t	void	extern s32_t userConfigSave(void)	ax32_platform_demo/inc/config.h
+0x02003C0C	userConfigReset	s32_t	void	extern s32_t userConfigReset(void)	ax32_platform_demo/inc/config.h
+0x02003D44	userConfigInitial	s32_t	void	extern s32_t userConfigInitial(void)	ax32_platform_demo/inc/config.h
+0x02003DF8	configSet	void	u8_t,u32_t	extern void configSet(u8_t configId,u32_t value)	ax32_platform_demo/inc/config.h
+0x02003E34	configGet	u32_t	u8_t	extern u32_t configGet(u8_t configId)	ax32_platform_demo/inc/config.h
+0x020041B0	dispLayerUninit	int	INT8U	int dispLayerUninit(INT8U layer)	ax32_platform_demo/inc/display.h
+0x0200420C	dispLayerGetResolution	int	INT8U,INT16U *,INT16U *	int dispLayerGetResolution(INT8U layer,INT16U *width,INT16U *height)	ax32_platform_demo/inc/display.h
+0x020042E0	dispLayerSetResolution	int	INT8U,INT16U,INT16U	int dispLayerSetResolution(INT8U layer,INT16U width,INT16U height)	ax32_platform_demo/inc/display.h
+0x020043CC	dispLayerSetRotate	int	INT8U,INT8U	int dispLayerSetRotate(INT8U layer,INT8U rotate)	ax32_platform_demo/inc/display.h
+0x02004400	dispRatioResolutionCalculate	int	INT8U,INT16U *,INT16U *	int dispRatioResolutionCalculate(INT8U ratio,INT16U *width,INT16U *height)	ax32_platform_demo/inc/display.h
+0x020044D8	dispLayerSetRatio	int	INT8U,INT8U	int dispLayerSetRatio(INT8U layer,INT8U ratio)	ax32_platform_demo/inc/display.h
+0x02004588	dispLayerInit	int	INT8U	int dispLayerInit(INT8U layer)	ax32_platform_demo/inc/display.h
+0x020047B4	dispLayerShow	int	INT8U,INT32U,INT16U,INT16U,INT8U	int dispLayerShow(INT8U layer,INT32U addr,INT16U width,INT16U height,INT8U rotate)	ax32_platform_demo/inc/display.h
+0x020047F8	dispLayerGetFrame	void *	INT8U	void *dispLayerGetFrame(INT8U layer)	ax32_platform_demo/inc/display.h
+0x02004880	dispLayerFreeFrame	s32	INT8U,void *	s32 dispLayerFreeFrame(INT8U layer,void * frame)	ax32_platform_demo/inc/display.h
+0x02005CE0	fontGetStringInfo	int	INT8U,INT16U *,INT16U *	int fontGetStringInfo(INT8U num,INT16U *width,INT16U *height)	ax32_platform_demo/inc/font.h
+0x02005D90	fontDrawString	int	INT8U *,INT8U,INT16S,INT16S,INT16U,INT8U	int fontDrawString(INT8U *dest,INT8U num,INT16S x,INT16S y,INT16U width,INT8U color)	ax32_platform_demo/inc/font.h
+0x02006244	iconInit	int	void	int iconInit(void)	ax32_platform_demo/inc/icon.h
+0x02006290	iconGetSize	int	int,INT16U *,INT16U *	int iconGetSize(int num,INT16U *width,INT16U *height)	ax32_platform_demo/inc/icon.h
+0x02006334	iconGetData	int	int,INT8U *,int	int iconGetData(int num,INT8U *buffer,int len)	ax32_platform_demo/inc/icon.h
+0x020063D0	iconGetAddr	int	int	int iconGetAddr(int num)	ax32_platform_demo/inc/icon.h
+0x02006DEC	configSystem	void	void	void configSystem(void)	ax32_platform_demo/inc/config.h
+0x02007880	msgFuncRegister	void	msgDealInfor*	void msgFuncRegister(msgDealInfor* infor)	ax32_platform_demo/application.h
+0x02007938	unshieldedMsgFuncRegister	void	msgDealInfor*	void unshieldedMsgFuncRegister(msgDealInfor* infor)	ax32_platform_demo/application.h
+0x02007B78	msgDealByMsgInfor	void	msgDealInfor*,uint32,void*,uint32,uint32*	void msgDealByMsgInfor(msgDealInfor* infor,uint32 msgType,void* handle,uint32 parameNum,uint32* parame)	ax32_platform_demo/application.h
+0x02007FE8	taskInit	void	void	void taskInit(void)	ax32_platform_demo/taskManage.h
+0x0200F08C	intToString	int	char*,uint8,uint32	int intToString(char* str,uint8 len,uint32 data)	ax32_platform_demo/application.h
+0x020111A0	menuIsOpen	bool	void	bool menuIsOpen(void)	ax32_platform_demo/application.h
+0x020122D4	uiParentDealMsg	void	winHandle,uint32	void uiParentDealMsg(winHandle handle,uint32 parentMsg)	ax32_platform_demo/uiWin.h
+0x020124DC	windowIsOpen	bool	uiWin*	bool windowIsOpen(uiWin* winInfor)	ax32_platform_demo/uiWin.h
+0x02021418	XMboxDestory	void	XMbox *	void XMboxDestory(XMbox *mbox)	xos/xmbox.h
+0x02021450	XMboxPost	INT32S	XMbox *,MSG_T *	INT32S XMboxPost(XMbox *mbox,MSG_T *msg)	xos/xmbox.h
+0x020214A4	XMboxPend	MSG_T *	XMbox *,INT8U *	MSG_T *XMboxPend(XMbox *mbox,INT8U *err)	xos/xmbox.h
+0x02021540	XMsgQCreate	XMsgQ *	MSG_T *,INT8U	XMsgQ *XMsgQCreate(MSG_T *queue,INT8U len)	xos/xmsgq.h
+0x020215D0	XMsgQDestory	void	XMsgQ *	void XMsgQDestory(XMsgQ *mque)	xos/xmsgq.h
+0x02021608	XMsgQFlush	void	XMsgQ *	void XMsgQFlush(XMsgQ *mque)	xos/xmsgq.h
+0x02021648	XMsgQPost	INT32S	XMsgQ *,MSG_T *	INT32S XMsgQPost(XMsgQ *mque,MSG_T *msg)	xos/xmsgq.h
+0x020216C0	XMsgQPostFront	INT32S	XMsgQ *,MSG_T *	INT32S XMsgQPostFront(XMsgQ *mque,MSG_T *msg)	xos/xmsgq.h
+0x0202173C	XMsgQPend	MSG_T *	XMsgQ *,INT8U *	MSG_T *XMsgQPend(XMsgQ *mque,INT8U *err)	xos/xmsgq.h
+0x020217CC	XMsgQCheck	INT32S	XMsgQ *	INT32S XMsgQCheck(XMsgQ *mque)	xos/xmsgq.h
+0x020217E4	XOSInit	void	void	void XOSInit(void)	xos/xos.h
+0x02021824	XOSTickService	void	void	void XOSTickService(void)	xos/xos.h
+0x02021894	XOSTimeGet	INT32U	void	INT32U XOSTimeGet(void)	xos/xos.h
+0x020218B4	XOSTimeDly	void	INT32U	void XOSTimeDly(INT32U dely)	xos/xos.h
+0x020218F0	XOSRandom	INT32U	void	INT32U XOSRandom(void)	xos/xos.h
+0x02021910	XWorkInit	void	void	void XWorkInit(void)	xos/xwork.h
+0x02021950	XWorkCreate	XWork_T *	INT32U,void (*)()	XWork_T *XWorkCreate(INT32U ticks,void (*func)(void ))	xos/xwork.h
+0x020219DC	XWorkDestory	int	XWork_T *	int XWorkDestory(XWork_T *xwork)	xos/xwork.h
+0x02021A0C	XWorkService	void	void	void XWorkService(void)	xos/xwork.h
+0x02025364	frameWinCreate	winHandle	int16,int16,uint16,uint16,winHandle,uint16,winCB	winHandle frameWinCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,uint16 style,winCB cb)	sUI/frameWin.h
+0x020253C8	frameWinCreateIndirect	winHandle	widgetCreateInfor*,winHandle,winCB	winHandle frameWinCreateIndirect(widgetCreateInfor* infor,winHandle parent,winCB cb)	sUI/frameWin.h
+0x020255C0	imageIconCreate	winHandle	int16,int16,uint16,uint16,winHandle,uint16,uint16	winHandle imageIconCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,uint16 style,uint16 id)	sUI/imageIcon.h
+0x0202566C	imageIconCreateIndirect	winHandle	widgetCreateInfor*,winHandle,winCB	winHandle imageIconCreateIndirect(widgetCreateInfor* infor,winHandle parent,winCB cb)	sUI/imageIcon.h
+0x020256E8	itemManageCreate	winHandle	int16,int16,uint16,uint16,winHandle,uint16,uint16	winHandle itemManageCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,uint16 style,uint16 id)	sUI/itemManage.h
+0x0202576C	itemManageCreateIndirect	winHandle	widgetCreateInfor*,winHandle,winCB	winHandle itemManageCreateIndirect(widgetCreateInfor* infor,winHandle parent,winCB cb)	sUI/itemManage.h
+0x020257E0	itemManageSetItemHeight	uint32	winHandle,uint16	uint32 itemManageSetItemHeight(winHandle hitemManage,uint16 itemHeight)	sUI/itemManage.h
+0x02025A6C	itemManageSetHeightAvgGap	uint32	winHandle,uint16	uint32 itemManageSetHeightAvgGap(winHandle hitemManage,uint16 itemHeight)	sUI/itemManage.h
+0x02025D14	itemManageSetColumnSum	uint32	winHandle,uint8,uint16,uint16	uint32 itemManageSetColumnSum(winHandle hitemManage,uint8 rowNum,uint16 itemSum,uint16 itemWidth)	sUI/itemManage.h
+0x02025E64	itemManageSetColumnSumWithGap	uint32	winHandle,uint8,uint16,uint16,uint16	uint32 itemManageSetColumnSumWithGap(winHandle hitemManage,uint8 rowNum,uint16 itemSum,uint16 itemWidth,uint16 gap)	sUI/itemManage.h
+0x02025FE0	itemManageSetColumnMargin	uint32	winHandle,uint8,uint16,uint16	uint32 itemManageSetColumnMargin(winHandle hitemManage,uint8 rowNum,uint16 itemSum,uint16 margin)	sUI/itemManage.h
+0x02026110	itemManageCreateItem	void	winHandle,itemCreateFunc,getResInfor,uint32	void itemManageCreateItem(winHandle hitemManage,itemCreateFunc func,getResInfor getRes,uint32 resItemSum)	sUI/itemManage.h
+0x020262AC	itemManageSetResInforFuncEx	void	winHandle,getResInforEx	void itemManageSetResInforFuncEx(winHandle hitemManage,getResInforEx getResEx)	sUI/itemManage.h
+0x02026304	itemManageSetCurItem	void	winHandle,uint32	void itemManageSetCurItem(winHandle hitemManage,uint32 itemResNum)	sUI/itemManage.h
+0x02026600	itemManageUpdateRes	void	winHandle,uint32,uint32	void itemManageUpdateRes(winHandle hitemManage,uint32 resItemSum,uint32 curResItem)	sUI/itemManage.h
+0x020266B8	itemManageUpdateAllitem	void	winHandle	void itemManageUpdateAllitem(winHandle hitemManage)	sUI/itemManage.h
+0x0202671C	itemManageUpdateCurItem	void	winHandle	void itemManageUpdateCurItem(winHandle hitemManage)	sUI/itemManage.h
+0x020268C0	itemManageNextItem	void	winHandle	void itemManageNextItem(winHandle hitemManage)	sUI/itemManage.h
+0x02026930	itemManagePreItem	void	winHandle	void itemManagePreItem(winHandle hitemManage)	sUI/itemManage.h
+0x02026AAC	itemManageGetCurrentItem	uint32	winHandle	uint32 itemManageGetCurrentItem(winHandle hitemManage)	sUI/itemManage.h
+0x02026B10	itemManageSetCharInfor	void	winHandle,charFont,uint8,uiColor	void itemManageSetCharInfor(winHandle hitemManage,charFont font,uint8 strAlign,uiColor fontColor)	sUI/itemManage.h
+0x02027234	menuItemCreate	winHandle	int16,int16,uint16,uint16,winHandle,uint16,uint16	winHandle menuItemCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,uint16 style,uint16 id)	sUI/menuItem.h
+0x020272DC	itemCreateMenuItem	winHandle	int16,int16,uint16,uint16	winHandle itemCreateMenuItem(int16 x0,int16 y0,uint16 width,uint16 height)	sUI/menuItem.h
+0x020276F0	menuItemExCreate	winHandle	int16,int16,uint16,uint16,winHandle,uint16,uint16	winHandle menuItemExCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,uint16 style,uint16 id)	sUI/menuItemEx.h
+0x020277A0	itemCreateMenuItemEx	winHandle	int16,int16,uint16,uint16	winHandle itemCreateMenuItemEx(int16 x0,int16 y0,uint16 width,uint16 height)	sUI/menuItemEx.h
+0x02027AEC	menuOptionCreate	winHandle	int16,int16,uint16,uint16,winHandle,uint16,uint16	winHandle menuOptionCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,uint16 style,uint16 id)	sUI/menuOption.h
+0x02027B90	itemCreatemenuOption	winHandle	int16,int16,uint16,uint16	winHandle itemCreatemenuOption(int16 x0,int16 y0,uint16 width,uint16 height)	sUI/menuOption.h
+0x02027DD0	progressBarCreate	winHandle	int16,int16,uint16,uint16,winHandle,uint16,uint16	winHandle progressBarCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,uint16 style,uint16 id)	sUI/progressBar.h
+0x02027E54	progressBarCreateIndirect	winHandle	widgetCreateInfor*,winHandle,winCB	winHandle progressBarCreateIndirect(widgetCreateInfor* infor,winHandle parent,winCB cb)	sUI/progressBar.h
+0x02028008	rectCreate	winHandle	int16,int16,uint16,uint16,winHandle,uint16,uint16	winHandle rectCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,uint16 style,uint16 id)	sUI/rect.h
+0x0202808C	rectCreateIndirect	winHandle	widgetCreateInfor*,winHandle,winCB	winHandle rectCreateIndirect(widgetCreateInfor* infor,winHandle parent,winCB cb)	sUI/rect.h
+0x0202861C	tipsCreate	winHandle	int16,int16,uint16,uint16,winHandle,uint16,uint16	winHandle tipsCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,uint16 style,uint16 id)	sUI/tips.h
+0x020286A8	tipsCreateIndirect	winHandle	widgetCreateInfor*,winHandle,winCB	winHandle tipsCreateIndirect(widgetCreateInfor* infor,winHandle parent,winCB cb)	sUI/tips.h
+0x02028730	uiHeapInit	void	uint8*,uint32	void uiHeapInit(uint8* addr,uint32 size)	sUI/uiAlloc.h
+0x02028768	uiAlloc	winHandle	uint32	winHandle uiAlloc(uint32 size)	sUI/uiAlloc.h
+0x02028860	uiFree	void	winHandle	void uiFree(winHandle handle)	sUI/uiAlloc.h
+0x02028960	uiHeapInfor	void	uint32	void uiHeapInfor(uint32 n)	sUI/uiAlloc.h
+0x02028988	heapAllocTest	void	void	void heapAllocTest(void)	sUI/uiAlloc.h
+0x0202899C	widgetProc	bool	winMsg*	bool widgetProc(winMsg* msg)	sUI/widget.h
+0x020289E8	widgetSetType	void	winHandle,widgetType	void widgetSetType(winHandle hWin,widgetType type)	sUI/widget.h
+0x02028A18	widgetGetType	widgetType	winHandle	widgetType widgetGetType(winHandle hWin)	sUI/widget.h
+0x02028A4C	widgetGetId	uint16	winHandle	uint16 widgetGetId(winHandle hWin)	sUI/widget.h
+0x02028A84	widgetSetId	void	winHandle,uint16	void widgetSetId(winHandle hWin,uint16 id)	sUI/widget.h
+0x02028B04	winSendMsg	void	winHandle,winMsg*	void winSendMsg(winHandle handle,winMsg* msg)	sUI/winManage.h
+0x02028B44	winSendMsgNoData	void	winHandle,msgId	void winSendMsgNoData(winHandle handle,msgId id)	sUI/winManage.h
+0x02028B6C	winSendMsgToParent	void	winHandle,winMsg*	void winSendMsgToParent(winHandle handle,winMsg* msg)	sUI/winManage.h
+0x02028B9C	winSendMsgToParentNoData	void	winHandle,msgId	void winSendMsgToParentNoData(winHandle handle,msgId id)	sUI/winManage.h
+0x02028BC4	winOverlapping	bool	uiRect*,uiRect*	bool winOverlapping(uiRect* rect1,uiRect* rect2)	sUI/winManage.h
+0x02028C28	winContain	bool	uiRect*,uiRect*	bool winContain(uiRect* parent,uiRect* child)	sUI/winManage.h
+0x02028D20	winCreate	winHandle	int16,int16,uint16,uint16,winHandle,winCB,uint32,uint16	winHandle winCreate(int16 x0,int16 y0,uint16 width,uint16 height,winHandle parent,winCB cb,uint32 size,uint16 style)	sUI/winManage.h
+0x02028D78	winDestroy	void	winHandle*	void winDestroy(winHandle* hWin)	sUI/winManage.h
+0x0202901C	winTouch	winHandle	uiRect*	winHandle winTouch(uiRect* rect)	sUI/winManage.h
+0x02029428	winSetbgColor	void	winHandle,uiColor	void winSetbgColor(winHandle hWin,uiColor bgColor)	sUI/winManage.h
+0x020297E4	winSetfgColor	void	winHandle,uiColor	void winSetfgColor(winHandle hWin,uiColor bgColor)	sUI/winManage.h
+0x0202984C	winSetVisible	void	winHandle,bool	void winSetVisible(winHandle hWin,bool visible)	sUI/winManage.h
+0x020298D0	winIsVisible	bool	winHandle	bool winIsVisible(winHandle hWin)	sUI/winManage.h
+0x0202990C	winSetResid	void	winHandle,resID	void winSetResid(winHandle hWin,resID id)	sUI/winManage.h
+0x0202993C	winSetItemSelResid	void	winHandle,resID	void winSetItemSelResid(winHandle hWin,resID id)	sUI/winManage.h
+0x0202996C	winSetStrInfor	void	winHandle,charFont,uint8,uiColor	void winSetStrInfor(winHandle hWin,charFont font,uint8 strAlign,uiColor fontColor)	sUI/winManage.h
+0x02029A08	winSetSelectInfor	void	winHandle,uiColor,resID	void winSetSelectInfor(winHandle hWin,uiColor color,resID image)	sUI/winManage.h
+0x02029A38	winSetUnselectInfor	void	winHandle,uiColor,resID	void winSetUnselectInfor(winHandle hWin,uiColor color,resID image)	sUI/winManage.h
+0x02029A68	winChangeNotify	void	winHandle	void winChangeNotify(winHandle hWin)	sUI/winManage.h
+0x0202A03C	winGetRelativePos	void	winHandle,uiRect*	void winGetRelativePos(winHandle hWin,uiRect* pos)	sUI/winManage.h
+0x0202A0CC	winGetPos	void	winHandle,uiRect*	void winGetPos(winHandle hWin,uiRect* pos)	sUI/winManage.h
+0x0202A110	winUpdate	void	winHandle	void winUpdate(winHandle hWin)	sUI/winManage.h
+0x0202A180	winSetPorgressRate	void	winHandle,uint32	void winSetPorgressRate(winHandle hWin,uint32 rate)	sUI/winManage.h
+0x0202A2DC	winSetName	void	winHandle,char*	void winSetName(winHandle hWin,char* name)	sUI/winManage.h
+0x0202A2FC	winIntersection	void	uiRect*,uiRect*,uiRect*	void winIntersection(uiRect* out,uiRect* win1,uiRect* win2)	sUI/winManage.h
+0x0202A3B0	winUpdateAllResId	void	void	void winUpdateAllResId(void)	sUI/winManage.h
+0x0202A414	winDestroyDeskTopChildWin	void	void	void winDestroyDeskTopChildWin(void)	sUI/winManage.h
+0x0202AD98	ax32xx_intEnable	void	u8,u8	void ax32xx_intEnable(u8 irqNum,u8 en)	ax32xx/inc/ax32xx_int.h
+0x0202ADE0	ax32xx_int_priority	void	u8,u8	void ax32xx_int_priority(u8 irqNum,u8 level)	ax32xx/inc/ax32xx_int.h
+0x0202AE28	ax32xx_intInit	void	void	void ax32xx_intInit(void)	ax32xx/inc/ax32xx_int.h
+0x0202AF6C	ax32xx_sysCpuMsDelay	void	int	void ax32xx_sysCpuMsDelay(int dtime)	ax32xx/inc/ax32xx_sys.h
+0x0202AFA8	ax32xx_sysCpuNopDelay	void	int	void ax32xx_sysCpuNopDelay(int dtime)	ax32xx/inc/ax32xx_sys.h
+0x0202AFD0	ax32xx_sysDcacheInit	void	void	void ax32xx_sysDcacheInit(void)	ax32xx/inc/ax32xx_sys.h
+0x0202B014	ax32xx_sysIcacheInit	void	void	void ax32xx_sysIcacheInit(void)	ax32xx/inc/ax32xx_sys.h
+0x0202B058	ax32xx_sysDcacheWback	void	u32,u32	void ax32xx_sysDcacheWback(u32 addr, u32 size)	ax32xx/inc/ax32xx_sys.h
+0x0202B0D4	ax32xx_sysDcacheFlush	void	u32,u32	void ax32xx_sysDcacheFlush(u32 addr, u32 size)	ax32xx/inc/ax32xx_sys.h
+0x0202B150	ax32xx_sysDcacheInvalid	void	u32,u32	void ax32xx_sysDcacheInvalid(u32 addr, u32 size)	ax32xx/inc/ax32xx_sys.h
+0x0202B284	ax32xx_sysLDOSet	void	u8,u8,u8	void ax32xx_sysLDOSet(u8 ldo,u8 sel,u8 en)	ax32xx/inc/ax32xx_sys.h
+0x0202B468	ax32xx_sysClkSet	void	u8,u8	void ax32xx_sysClkSet(u8 clk_type,u8 en)	ax32xx/inc/ax32xx_sys.h
+0x0202B4C4	ax32xx_sysReset	void	u8,u8	void ax32xx_sysReset(u8 rst_type,u8 en)	ax32xx/inc/ax32xx_sys.h
+0x0202B504	ax32xx_sys_dma_memdown	void	void	void ax32xx_sys_dma_memdown(void)	ax32xx/inc/ax32xx_sys.h
+0x0202B568	ax32xx_sys_dma_memkick	void	void *,void *,int	void ax32xx_sys_dma_memkick(void *dst, void *src, int cnt)	ax32xx/inc/ax32xx_sys.h
+0x0202B62C	ax32xx_mcpy_gram2ufifo	void	void *,void *,int	void ax32xx_mcpy_gram2ufifo(void *dst, void *src, int cnt)	ax32xx/inc/ax32xx_sys.h
+0x0202B68C	ax32xx_mcpy1_sdram2gram	void	void *,void *,int	void ax32xx_mcpy1_sdram2gram(void *dst, void *src, int cnt)	ax32xx/inc/ax32xx_sys.h
+0x0202B730	ax32xx_sysInit	void	u32 *,u32 *	void ax32xx_sysInit(u32 *saddr,u32 *eaddr)	ax32xx/inc/ax32xx_sys.h
+0x0202B8F4	ax32xx_sysUninit	void	void	void ax32xx_sysUninit(void)	ax32xx/inc/ax32xx_sys.h
+0x0202B9B4	ax32xx_dmaNocCfg	void	noc_cfg_t *	void ax32xx_dmaNocCfg(noc_cfg_t * p_cfg)	ax32xx/inc/ax32xx_dma.h
+0x0202BBDC	ax32xx_dmaNocDefault	void	void	void ax32xx_dmaNocDefault(void)	ax32xx/inc/ax32xx_dma.h
+0x0202BC04	ax32xx_dmaChannelEnable	void	u8,u8	void ax32xx_dmaChannelEnable(u8 channel,u8 en)	ax32xx/inc/ax32xx_dma.h
+0x0202BC4C	ax32xx_wdtEnable	void	u8	void ax32xx_wdtEnable(u8 en)	ax32xx/inc/ax32xx_wdt.h
+0x0202BC68	ax32xx_wdtTimeSet	void	u8	void ax32xx_wdtTimeSet(u8 wdt_time)	ax32xx/inc/ax32xx_wdt.h
+0x0202BCB0	ax32xx_wdtReset	void	void	void ax32xx_wdtReset(void)	ax32xx/inc/ax32xx_wdt.h
+0x0202BCCC	ax32xx_gpioSFRSet	void	u8,u8	void ax32xx_gpioSFRSet(u8 type,u8 group)	ax32xx/inc/ax32xx_gpio.h
+0x0202BF10	ax32xx_gpioDirSet	void	u8,u32,u8	void ax32xx_gpioDirSet(u8 ch,u32 pin,u8 dir)	ax32xx/inc/ax32xx_gpio.h
+0x0202BFB4	ax32xx_gpioPullSet	void	u8,u32,u8	void ax32xx_gpioPullSet(u8 ch,u32 pin,u8 pull)	ax32xx/inc/ax32xx_gpio.h
+0x0202C080	ax32xx_gpioDrvSet	void	u8,u32,u8	void ax32xx_gpioDrvSet(u8 ch,u32 pin,u8 drv)	ax32xx/inc/ax32xx_gpio.h
+0x0202C110	ax32xx_gpioDataSet	void	u8,u32,u8	void ax32xx_gpioDataSet(u8 ch,u32 pin,u8 data)	ax32xx/inc/ax32xx_gpio.h
+0x0202C19C	ax32xx_gpioDataGrounpSet	void	u8,u32,u32	void ax32xx_gpioDataGrounpSet(u8 ch,u32 pin,u32 data)	ax32xx/inc/ax32xx_gpio.h
+0x0202C218	ax32xx_gpioDataGet	u8	u8,u32	u8 ax32xx_gpioDataGet(u8 ch,u32 pin)	ax32xx/inc/ax32xx_gpio.h
+0x0202C29C	ax32xx_gpioMapSet	void	u8,u32,u8	void ax32xx_gpioMapSet(u8 ch,u32 pin,u8 map)	ax32xx/inc/ax32xx_gpio.h
+0x0202C32C	ax32xx_gpioDigitalSet	void	u8,u32,u8	void ax32xx_gpioDigitalSet(u8 ch,u32 pin,u8 digital)	ax32xx/inc/ax32xx_gpio.h
+0x0202C3BC	ax32xx_gpioHystersisSet	void	u8,u32,u8	void ax32xx_gpioHystersisSet(u8 ch,u32 pin,u8 hystersis)	ax32xx/inc/ax32xx_gpio.h
+0x0202C44C	ax32xx_gpioLedPull	void	u8,u32,u8	void ax32xx_gpioLedPull(u8 ch,u32 pin,u8 pull)	ax32xx/inc/ax32xx_gpio.h
+0x0202C518	ax32xx_gpioLedInit	void	u8,u8,u8	void ax32xx_gpioLedInit(u8 led,u8 pull,u8 soft)	ax32xx/inc/ax32xx_gpio.h
+0x0202C5A8	ax32xx_gpioINTCheck	u8	u8	u8 ax32xx_gpioINTCheck(u8 int_no)	ax32xx/inc/ax32xx_gpio.h
+0x0202C5E0	ax32xx_gpioINTClear	void	u8	void ax32xx_gpioINTClear(u8 int_no)	ax32xx/inc/ax32xx_gpio.h
+0x0202C608	ax32xx_gpioINTInit	void	u8,u8,void (*)()	void ax32xx_gpioINTInit(u8 int_no,u8 trigger,void (*isr)(void))	ax32xx/inc/ax32xx_gpio.h
+0x0202C738	ax32xx_gpioIRQHandler	void	void	void ax32xx_gpioIRQHandler(void)	ax32xx/inc/ax32xx_gpio.h
+0x0202C7D4	ax32xx_uart0IRQHandler	void	void	void ax32xx_uart0IRQHandler(void)	ax32xx/inc/ax32xx_uart.h
+0x0202C824	ax32xx_uart0IOCfg	void	u8	void ax32xx_uart0IOCfg(u8 en)	ax32xx/inc/ax32xx_uart.h
+0x0202C8C4	ax32xx_uart0Init	void	u32,void (*)(u8)	void ax32xx_uart0Init(u32 baudrate,void (*isr)(u8 data))	ax32xx/inc/ax32xx_uart.h
+0x0202C938	ax32xx_uart0SendByte	void	u8	void ax32xx_uart0SendByte(u8 data)	ax32xx/inc/ax32xx_uart.h
+0x0202C978	ax32xx_timer0IRQHandler	void	void	void ax32xx_timer0IRQHandler(void)	ax32xx/inc/ax32xx_timer.h
+0x0202C9BC	ax32xx_timer1IRQHandler	void	void	void ax32xx_timer1IRQHandler(void)	ax32xx/inc/ax32xx_timer.h
+0x0202CA00	ax32xx_timer2IRQHandler	void	void	void ax32xx_timer2IRQHandler(void)	ax32xx/inc/ax32xx_timer.h
+0x0202CA44	ax32xx_timer3IRQHandler	void	void	void ax32xx_timer3IRQHandler(void)	ax32xx/inc/ax32xx_timer.h
+0x0202CA88	ax32xx_timerISRRegister	s32	u8,void (*)()	s32 ax32xx_timerISRRegister(u8 timer,void (*isr)(void))	ax32xx/inc/ax32xx_timer.h
+0x0202CACC	ax32xx_timerStart	s32	u8,u32,void (*)()	s32 ax32xx_timerStart(u8 timer,u32 frq,void (*isr)(void))	ax32xx/inc/ax32xx_timer.h
+0x0202CBC8	ax32xx_timerStop	s32	u8	s32 ax32xx_timerStop(u8 timer)	ax32xx/inc/ax32xx_timer.h
+0x0202CC98	ax32xx_timerEnable	s32	u8	s32 ax32xx_timerEnable(u8 timer)	ax32xx/inc/ax32xx_timer.h
+0x0202CD24	ax32xx_timerDisable	s32	u8	s32 ax32xx_timerDisable(u8 timer)	ax32xx/inc/ax32xx_timer.h
+0x0202CDC8	ax32xx_timerTickStart	s32	void	s32 ax32xx_timerTickStart(void)	ax32xx/inc/ax32xx_timer.h
+0x0202CDFC	ax32xx_timerTickStop	s32	void	s32 ax32xx_timerTickStop(void)	ax32xx/inc/ax32xx_timer.h
+0x0202CE1C	ax32xx_timerTickCount	u32	void	u32 ax32xx_timerTickCount(void)	ax32xx/inc/ax32xx_timer.h
+0x0202CE38	ax32xx_mjpegATimeinfoEnable	void	u8,u8	void ax32xx_mjpegATimeinfoEnable(u8 layer,u8 en)	ax32xx/inc/ax32xx_tminf.h
+0x0202CEA4	ax32xx_mjpegBTimeinfoEnable	void	u8,u8	void ax32xx_mjpegBTimeinfoEnable(u8 layer,u8 en)	ax32xx/inc/ax32xx_tminf.h
+0x0202CF10	ax32xx_mjpegATimeinfoColor	void	u32,u32,u32	void ax32xx_mjpegATimeinfoColor(u32 y,u32 u,u32 v)	ax32xx/inc/ax32xx_tminf.h
+0x0202CF5C	ax32xx_mjpegBTimeinfoColor	void	u32,u32,u32	void ax32xx_mjpegBTimeinfoColor(u32 y,u32 u,u32 v)	ax32xx/inc/ax32xx_tminf.h
+0x0202CFB8	ax32xx_mjpegATimeinfoSize	void	u8,u32,u32	void ax32xx_mjpegATimeinfoSize(u8 layer,u32 width,u32 height)	ax32xx/inc/ax32xx_tminf.h
+0x0202D014	ax32xx_mjpegBTimeinfoSize	void	u8,u32,u32	void ax32xx_mjpegBTimeinfoSize(u8 layer,u32 width,u32 height)	ax32xx/inc/ax32xx_tminf.h
+0x0202D09C	ax32xx_mjpegATimeinfoPos	void	u8,s32,s32	void ax32xx_mjpegATimeinfoPos(u8 layer,s32 x,s32 y)	ax32xx/inc/ax32xx_tminf.h
+0x0202D0F8	ax32xx_mjpegBTimeinfoPos	void	u8,s32,s32	void ax32xx_mjpegBTimeinfoPos(u8 layer,s32 x,s32 y)	ax32xx/inc/ax32xx_tminf.h
+0x0202D180	ax32xx_mjpegATimeinfoAddr	void	u8,u32	void ax32xx_mjpegATimeinfoAddr(u8 layer,u32 addr)	ax32xx/inc/ax32xx_tminf.h
+0x0202D1C4	ax32xx_mjpegBTimeinfoAddr	void	u8,u32	void ax32xx_mjpegBTimeinfoAddr(u8 layer,u32 addr)	ax32xx/inc/ax32xx_tminf.h
+0x0202D234	ax32xx_recfg_mjpb_tminf	void	void	void ax32xx_recfg_mjpb_tminf(void)	ax32xx/inc/ax32xx_tminf.h
+0x0202D2A0	ax32xx_spi0Init	void	u32,u8	void ax32xx_spi0Init(u32 u32SPIBaud,u8 bus_mode)	ax32xx/inc/ax32xx_spi.h
+0x0202D4C0	ax32xx_spi0SendByte	void	u8	void ax32xx_spi0SendByte(u8 byte)	ax32xx/inc/ax32xx_spi.h
+0x0202D514	ax32xx_spi0RecvByte	u8	void	u8 ax32xx_spi0RecvByte(void)	ax32xx/inc/ax32xx_spi.h
+0x0202D568	ax32xx_spi0Send0	void	void *,u32	void ax32xx_spi0Send0(void *pDataBuf,u32 u32DataLen)	ax32xx/inc/ax32xx_spi.h
+0x0202D620	ax32xx_spi0Recv0	void	void *,u32	void ax32xx_spi0Recv0(void *pDataBuf,u32 u32DataLen)	ax32xx/inc/ax32xx_spi.h
+0x0202D6D8	ax32xx_spi0CS0Config	void	u8	void ax32xx_spi0CS0Config(u8 level)	ax32xx/inc/ax32xx_spi.h
+0x0202D71C	spi1_pin_config	void	u8	void spi1_pin_config(u8 bus)	ax32xx/inc/ax32xx_spi.h
+0x0202D7EC	hal_spi1Init	void	u32,u8	void hal_spi1Init(u32 u32SPIBaud,u8 bus_mode)	ax32xx/inc/ax32xx_spi.h
+0x0202D864	spi1_send_byte	void	u8	void spi1_send_byte(u8 u8Data)	ax32xx/inc/ax32xx_spi.h
+0x0202D8D4	spi1_receive_byte	u8	void	u8 spi1_receive_byte(void)	ax32xx/inc/ax32xx_spi.h
+0x0202D91C	spi1_recevie_dma	BOOL	u8 *,u32	BOOL spi1_recevie_dma(u8 *pDataBuf,u32 u32DataLen)	ax32xx/inc/ax32xx_spi.h
+0x0202D9B4	spi1_send_dma	BOOL	u8 *,u32	BOOL spi1_send_dma(u8 *pDataBuf,u32 u32DataLen)	ax32xx/inc/ax32xx_spi.h
+0x0202DA50	spi1_enable	void	bool	void spi1_enable(bool enable)	ax32xx/inc/ax32xx_spi.h
+0x0202DA94	ax32xx_rtcWriteByte	void	u8	void ax32xx_rtcWriteByte(u8 byte)	ax32xx/inc/ax32xx_rtc.h
+0x0202DAE4	ax32xx_rtcReadByte	u8	void	u8 ax32xx_rtcReadByte(void)	ax32xx/inc/ax32xx_rtc.h
+0x0202DB48	ax32xx_rtcRamRead	void	u8,u8 *,u8	void ax32xx_rtcRamRead(u8 addr,u8 *buffer,u8 len)	ax32xx/inc/ax32xx_rtc.h
+0x0202DBE4	ax32xx_rtcRamWrite	void	u8,u8 *,u8	void ax32xx_rtcRamWrite(u8 addr,u8 *buffer,u8 len)	ax32xx/inc/ax32xx_rtc.h
+0x0202DC80	ax32xx_rtcDataRead	void	u8,u8 *,u8	void ax32xx_rtcDataRead(u8 cmd,u8 *buffer,u8 len)	ax32xx/inc/ax32xx_rtc.h
+0x0202DD08	ax32xx_rtcDataWrite	void	u8,u8 *,u8	void ax32xx_rtcDataWrite(u8 cmd,u8 *buffer,u8 len)	ax32xx/inc/ax32xx_rtc.h
+0x0202DF68	ax32xx_rtcIRQHandler	void	void	void ax32xx_rtcIRQHandler(void)	ax32xx/inc/ax32xx_rtc.h
+0x0202E028	ax32xx_rtcSencodEnable	void	u8,void (*)()	void ax32xx_rtcSencodEnable(u8 en,void (*callback)(void))	ax32xx/inc/ax32xx_rtc.h
+0x0202E0A4	ax32xx_rtcAlamEnable	void	u8,void (*)()	void ax32xx_rtcAlamEnable(u8 en,void (*callback)(void))	ax32xx/inc/ax32xx_rtc.h
+0x0202E18C	ax32xx_rtcAlamSet	void	u32	void ax32xx_rtcAlamSet(u32 value)	ax32xx/inc/ax32xx_rtc.h
+0x0202E1D4	ax32xx_rtcGet	u32	void	u32 ax32xx_rtcGet(void)	ax32xx/inc/ax32xx_rtc.h
+0x0202E228	ax32xx_rtcSet	void	u32	void ax32xx_rtcSet(u32 value)	ax32xx/inc/ax32xx_rtc.h
+0x0202E270	ax32xx_WKOEnable	void	u8	void ax32xx_WKOEnable(u8 en)	ax32xx/inc/ax32xx_rtc.h
+0x0202E2CC	ax32xx_VDDGSENEnable	void	u8	void ax32xx_VDDGSENEnable(u8 en)	ax32xx/inc/ax32xx_rtc.h
+0x0202E33C	ax32xx_WKI0InputEnable	void	u8	void ax32xx_WKI0InputEnable(u8 en)	ax32xx/inc/ax32xx_rtc.h
+0x0202E3AC	ax32xx_WKI1InputEnable	void	u8	void ax32xx_WKI1InputEnable(u8 en)	ax32xx/inc/ax32xx_rtc.h
+0x0202E41C	ax32xx_WKI1Read	u8	void	u8 ax32xx_WKI1Read(void)	ax32xx/inc/ax32xx_rtc.h
+0x0202E440	ax32xx_WKI0Read	u8	void	u8 ax32xx_WKI0Read(void)	ax32xx/inc/ax32xx_rtc.h
+0x0202E464	ax32xx_WKI1WakeupEnable	void	u8	void ax32xx_WKI1WakeupEnable(u8 en)	ax32xx/inc/ax32xx_rtc.h
+0x0202E5CC	ax32xx_WKI1WakeupTriger	void	u8	void ax32xx_WKI1WakeupTriger(u8 en)	ax32xx/inc/ax32xx_rtc.h
+0x0202E61C	ax32xx_WKI1CleanPending	void	void	void ax32xx_WKI1CleanPending(void)	ax32xx/inc/ax32xx_rtc.h
+0x0202E658	ax32xx_rtcBatDecEnable	void	u8	void ax32xx_rtcBatDecEnable(u8 en)	ax32xx/inc/ax32xx_rtc.h
+0x0202E6C8	ax32xx_rtcSenHVEnable	void	u8	void ax32xx_rtcSenHVEnable(u8 en)	ax32xx/inc/ax32xx_rtc.h
+0x0202E738	ax32xx_mdEnable	void	u8	void ax32xx_mdEnable(u8 en)	ax32xx/inc/ax32xx_md.h
+0x0202E7A0	ax32xx_mdEnable_check	BOOL	void	BOOL ax32xx_mdEnable_check(void)	ax32xx/inc/ax32xx_md.h
+0x0202E7C0	ax32xx_mdInit	void	u8,u8,u8	void ax32xx_mdInit(u8 pixel,u8 num,u8 cnt)	ax32xx/inc/ax32xx_md.h
+0x0202E808	ax32xx_mdXPos	void	u16,u16	void ax32xx_mdXPos(u16 start,u16 end)	ax32xx/inc/ax32xx_md.h
+0x0202E82C	ax32xx_mdYPos	void	u16,u16	void ax32xx_mdYPos(u16 start,u16 end)	ax32xx/inc/ax32xx_md.h
+0x0202EE5C	ax32xx_iic1Init	void	u32	void ax32xx_iic1Init(u32 baudrate)	ax32xx/inc/ax32xx_iic.h
+0x0202EF1C	ax32xx_iic1Uninit	void	void	void ax32xx_iic1Uninit(void)	ax32xx/inc/ax32xx_iic.h
+0x0202EF80	ax32xx_iic1Start	void	void	void ax32xx_iic1Start(void)	ax32xx/inc/ax32xx_iic.h
+0x0202EF9C	ax32xx_iic1Stop	void	void	void ax32xx_iic1Stop(void)	ax32xx/inc/ax32xx_iic.h
+0x0202EFFC	ax32xx_iic1RecvACK	u8	void	u8 ax32xx_iic1RecvACK(void)	ax32xx/inc/ax32xx_iic.h
+0x0202F024	ax32xx_iic1SendACK	void	void	void ax32xx_iic1SendACK(void)	ax32xx/inc/ax32xx_iic.h
+0x0202F048	ax32xx_iic1SendByte	void	u8	void ax32xx_iic1SendByte(u8 byte)	ax32xx/inc/ax32xx_iic.h
+0x0202F0B8	ax32xx_iic1RecvByte	u8	void	u8 ax32xx_iic1RecvByte(void)	ax32xx/inc/ax32xx_iic.h
+0x0202F174	ax32xx_dacIRQHandler	void	void	void ax32xx_dacIRQHandler(void)	ax32xx/inc/ax32xx_dac.h
+0x0202F248	ax32xx_dacSampleRateSet	void	u32	void ax32xx_dacSampleRateSet(u32 sample_rate)	ax32xx/inc/ax32xx_dac.h
+0x0202F2B8	ax32xx_dacEnable	void	u8	void ax32xx_dacEnable(u8 en)	ax32xx/inc/ax32xx_dac.h
+0x0202F33C	ax32xx_dacVolumeSet	void	u16	void ax32xx_dacVolumeSet(u16 volume)	ax32xx/inc/ax32xx_dac.h
+0x0202F3B4	ax32xx_dacBufferSet	void	u32,u32	void ax32xx_dacBufferSet(u32 obuf_addr,u32 obuf_size)	ax32xx/inc/ax32xx_dac.h
+0x0202F3D4	ax32xx_dacBufferFlush	void	u32	void ax32xx_dacBufferFlush(u32 obuf_size)	ax32xx/inc/ax32xx_dac.h
+0x0202F3F4	ax32xx_dacReset	void	void	void ax32xx_dacReset(void)	ax32xx/inc/ax32xx_dac.h
+0x0202F418	ax32xx_dacStart	void	u32,u32	void ax32xx_dacStart(u32 obuf_addr,u32 obuf_size)	ax32xx/inc/ax32xx_dac.h
+0x0202F494	ax32xx_dacStop	void	void	void ax32xx_dacStop(void)	ax32xx/inc/ax32xx_dac.h
+0x0202F4C4	ax32xx_dacISRRegister	void	void (*)(u8)	void ax32xx_dacISRRegister(void (*isr)(u8 flag))	ax32xx/inc/ax32xx_dac.h
+0x0202F4E4	ax32xx_dacHPSet	void	u8,u32	void ax32xx_dacHPSet(u8 en,u32 level)	ax32xx/inc/ax32xx_dac.h
+0x0202F658	ax32xx_dacInit	void	void	void ax32xx_dacInit(void)	ax32xx/inc/ax32xx_dac.h
+0x0202F7A0	ax32xx_adcEnable	void	u8,u8	void ax32xx_adcEnable(u8 ch,u8 en)	ax32xx/inc/ax32xx_adc.h
+0x0202F808	ax32xx_adcSetBaudrate	void	u32	void ax32xx_adcSetBaudrate(u32 baudrate)	ax32xx/inc/ax32xx_adc.h
+0x0202F838	ax32xx_adcConverStart	void	void	void ax32xx_adcConverStart(void)	ax32xx/inc/ax32xx_adc.h
+0x0202F85C	ax32xx_adcRead	u16	void	u16 ax32xx_adcRead(void)	ax32xx/inc/ax32xx_adc.h
+0x0202F8B4	ax32xx_auadcIRQHandler	void	void	void ax32xx_auadcIRQHandler(void)	ax32xx/inc/ax32xx_auadc.h
+0x0202F944	ax32xx_auadcHalfIRQRegister	void	void (*)()	void ax32xx_auadcHalfIRQRegister(void (*isr)(void))	ax32xx/inc/ax32xx_auadc.h
+0x0202F964	ax32xx_auadcEndIRQRegister	void	void (*)()	void ax32xx_auadcEndIRQRegister(void (*isr)(void))	ax32xx/inc/ax32xx_auadc.h
+0x0202F984	ax32xx_auadcEnable	void	u8	void ax32xx_auadcEnable(u8 en)	ax32xx/inc/ax32xx_auadc.h
+0x0202FA7C	ax32xx_auadcAGCEnable	void	u8	void ax32xx_auadcAGCEnable(u8 en)	ax32xx/inc/ax32xx_auadc.h
+0x0202FB0C	ax32xx_auadcGainSet	void	u8,u8,u8,u8	void ax32xx_auadcGainSet(u8 again, u8 again_mute,u8 again_max, u8 again_min)	ax32xx/inc/ax32xx_auadc.h
+0x0202FB88	ax32xx_auadcBufferSet	void	u32,u32	void ax32xx_auadcBufferSet(u32 addr,u32 len)	ax32xx/inc/ax32xx_auadc.h
+0x0202FBE8	ax32xx_auadcInit	void	void	void ax32xx_auadcInit(void)	ax32xx/inc/ax32xx_auadc.h
+0x0202FC8C	ax32xx_auadcSetSampleSet	void	int	void ax32xx_auadcSetSampleSet(int sample_rate)	ax32xx/inc/ax32xx_auadc.h
+0x0202FD70	agc_gain_mnt	void	void	void agc_gain_mnt(void)	ax32xx/inc/ax32xx_auadc.h
+0x0202FD84	ax32xx_ispModeSet	void	u32,u8	void ax32xx_ispModeSet(u32 mode,u8 en)	ax32xx/inc/ax32xx_isp.h
+0x0202FDC0	isp_BLC_cfg	void	U32,u32,int,int,int,int	void isp_BLC_cfg(U32 smooth_th, u32 smooth_c,int blkl_gb,int blkl_gr,int blkl_r,int blkl_b)	ax32xx/inc/ax32xx_isp.h
+0x0202FE14	isp_LSC_cfg	void	void *	void isp_LSC_cfg(void *p_lsc_tab)	ax32xx/inc/ax32xx_isp.h
+0x0202FE4C	isp_DDC_cfg	void	u32,u32,u32,u32,u32,u32,u32,u32,u32*,u32,u32 *	void isp_DDC_cfg(u32 dpc_dn_en,u32 hot_num,u32 dead_num,u32 hot_th,u32 dead_th,u32 avg_th, u32 d_th_rate,u32 h_th_rate,u32* std_th,u32 std_th_rate,u32 *indx_table)	ax32xx/inc/ax32xx_isp.h
+0x0202FFBC	isp_AWB_GAIN_adj	void	u32,u32,u32	void isp_AWB_GAIN_adj(u32 Kb, u32 Kg, u32 Kr)	ax32xx/inc/ax32xx_isp.h
+0x0202FFF0	isp_whtpnt_stat_cfg	void	u8 *,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32 *,u32 *,u32 *	void isp_whtpnt_stat_cfg(u8 *p_wp_tab,u32 seg_mode,u32 rgmin,u32 rgmax,u32 weight_in,u32 weight_mid,u32 ymin,u32 ymax, u32 hb_rate,u32 hb_class,u32 hr_rate,u32 hr_class,u32 yuv_mod_en, u32 rg_start, u32 ycbcr_th, u32 *cb_th, u32 *cr_th, u32 *cbcr_th)	ax32xx/inc/ax32xx_isp.h
+0x02030258	isp_CCM_cfg	void	u16 *,short,short,short	void isp_CCM_cfg(u16 *ccm,short s41,short s42,short s43)	ax32xx/inc/ax32xx_isp.h
+0x02030310	isp_RGB_DGAIN_adj	void	u32,u32,u32,u32,u32,u32,u32,u32,u32	void isp_RGB_DGAIN_adj(u32 dgain0,u32 dgain1,u32 dgain2,u32 dgain3,u32 dgain4,u32 dgain5,u32 dgain6,u32 dgain7,u32 dgain8)	ax32xx/inc/ax32xx_isp.h
+0x0203039C	isp_hist_stat_cfg	void	u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32 *	void isp_hist_stat_cfg(u32 win_x0,u32 win_x1,u32 win_x2,u32 win_x3,u32 win_y0,u32 win_y1, u32 win_y2,u32 win_y3,u32 weight0_7,u32 weight8_15,u32 weight16_23,u32 weight24,u32 *p_csi_hist)	ax32xx/inc/ax32xx_isp.h
+0x0203041C	isp_GAMMA_cfg	void	u16*,u8,u8*,u32,u32,u32 *,u32 *,u32	void isp_GAMMA_cfg(u16* p_ygama,u8 mod,u8* p_contra,u32 ymin, u32 ymax,u32 *p_fog_y_low,u32 *p_fog_y_high, u32 pad_num)	ax32xx/inc/ax32xx_isp.h
+0x0203058C	isp_RGB_gam_cfg	void	u8 *,u8,u32,u32,u32,u32,u32,u32,u32	void isp_RGB_gam_cfg(u8 *p_rgbgam,u8 mod,u32 max_oft,u32 rmin,u32 rmax,u32 gmin,u32 gmax,u32 bmin,u32 bmax)	ax32xx/inc/ax32xx_isp.h
+0x02030710	isp_CH_cfg	void	u32,u32,u32*,u32*,u32*,u32*,u32*,u32*,u32*	void isp_CH_cfg(u32 stage1_en,u32 stage0_en,u32*p_enhence,u32*p_th1,u32*p_th0,u32*p_r_rate,u32*p_g_rate,u32*p_b_rate,u32*p_sat)	ax32xx/inc/ax32xx_isp.h
+0x02030A6C	isp_VDE_cfg	void	u32,u32,u32,u32,u32*	void isp_VDE_cfg(u32 contra,u32 bright_oft, u32 bright_k, u32 hue,u32*p_sat)	ax32xx/inc/ax32xx_isp.h
+0x02030B3C	isp_EE_cfg	void	u8,u8,u8,u8,u8,u8	void isp_EE_cfg(u8 ee_dn_th,u8 ee_dn_slope,u8 ee_sharp_slope,u8 ee_th_adp,u8 sharp_class,u8 dn_class)	ax32xx/inc/ax32xx_isp.h
+0x02030DB0	isp_CCF_cfg	void	u32,u32,u32,u32,u32,u32,u32,u32,u32	void isp_CCF_cfg(u32 ccf_ccf_en,u32 ccf_wdc_en, u32 ccf_wclass, u32 ccf_rate, u32 ccf_wymin,u32 ccf_ymax,u32 ccf_mean_en,u32 ccf_th,u32 dn_class)	ax32xx/inc/ax32xx_isp.h
+0x02030EE8	isp_SAJ_cfg	void	u8,u8,u8,u8,u8,u8,u8,u8,u8,u8,u8,u8,u8,u8,u8,u8,u8	void isp_SAJ_cfg(u8 sj_sr0, u8 sj_sr1, u8 sj_sr2, u8 sj_sr3, u8 sj_sr4, u8 sj_sr5, u8 sj_sr6,u8 sj_sr7, u8 sj_sr8, u8 sj_sr9, u8 sj_sr10, u8 sj_sr11, u8 sj_sr12, u8 sj_sr13,u8 sj_sr14, u8 sj_sr15, u8 sj_sr16)	ax32xx/inc/ax32xx_isp.h
+0x02030FE8	isp_kick_stat	void	void	void isp_kick_stat(void)	ax32xx/inc/ax32xx_isp.h
+0x02031018	isp_stat_en	void	bool,bool	void isp_stat_en(bool en_ae, bool en_wpt)	ax32xx/inc/ax32xx_isp.h
+0x0203105C	stat_cp_kick_st	void	void	void stat_cp_kick_st(void)	ax32xx/inc/ax32xx_isp.h
+0x02031080	stat_cp_done	void	void	void stat_cp_done(void)	ax32xx/inc/ax32xx_isp.h
+0x020310B0	isp_model_cfg	void	u32,u32	void isp_model_cfg(u32 model_num,u32 val)	ax32xx/inc/ax32xx_isp.h
+0x02031410	_usb_bulk_tx	bool	u8,u32,u16,u16	bool _usb_bulk_tx(u8 epx, u32 adr, u16 len,u16 blkszie)	ax32xx/inc/ax32xx_usb.h
+0x0203154C	_usb_bulk_rx	bool	u8,u32,u16,u16	bool _usb_bulk_rx(u8 epx, u32 adr, u16 len,u16 blkszie)	ax32xx/inc/ax32xx_usb.h
+0x02031658	_usb_iso_kick	bool	u8,u32,u16	bool _usb_iso_kick(u8 epx, u32 adr, u16 len)	ax32xx/inc/ax32xx_usb.h
+0x02031748	_iso_wait_txdown	bool	u8	bool _iso_wait_txdown(u8 epx)	ax32xx/inc/ax32xx_usb.h
+0x020318B8	usb_burst_reset	void	void	void usb_burst_reset(void)	ax32xx/inc/ax32xx_usb.h
+0x02031950	usb_phyreset_as_typeb	void	void	void usb_phyreset_as_typeb(void)	ax32xx/inc/ax32xx_usb.h
+0x02031C0C	get_u32softcnt	u32	void	u32 get_u32softcnt(void)	ax32xx/inc/ax32xx_usb.h
+0x02031D20	ax32xx_usbCallbackRegister	void	u8,void (*)()	void ax32xx_usbCallbackRegister(u8 type,void (*callback)(void))	ax32xx/inc/ax32xx_usb.h
+0x02031FD0	usb11_registers_write	void	u8,u8	void usb11_registers_write(u8 addr, u8 reg_data)	ax32xx/inc/ax32xx_usb.h
+0x02031FFC	usb11_registers_read	u8	u8	u8 usb11_registers_read(u8 addr)	ax32xx/inc/ax32xx_usb.h
+0x02032034	usb_memcpy	void	uint8_t,uint32_t,uint32_t,uint32_t	void usb_memcpy(uint8_t dir,uint32_t dst,uint32_t src,uint32_t len)	ax32xx/inc/ax32xx_usb.h
+0x020321AC	usb11_host_reset	void	void	void usb11_host_reset(void)	ax32xx/inc/ax32xx_usb.h
+0x02032704	str_seek	u8 *	void *,const char *	u8 *str_seek(void * src,const char * obj)	ax32xx/inc/ax32xx_misc.h
+0x02032770	dec_num2str	void	u8,u8*	void dec_num2str(u8 src , u8* dest)	ax32xx/inc/ax32xx_misc.h
+0x020327B0	char_2_hex	u8	u8	u8 char_2_hex(u8 val)	ax32xx/inc/ax32xx_misc.h
+0x02032804	data_check	bool	void *,u32,u32	bool data_check(void *p_data,u32 min,u32 max)	ax32xx/inc/ax32xx_misc.h
+0x02032844	pointer_check	bool	void*	bool pointer_check(void* p_pointer)	ax32xx/inc/ax32xx_misc.h
+0x02032868	half_word_memcpy	void	void *,void *,int	void half_word_memcpy(void *dst, void *src, int size)	ax32xx/inc/ax32xx_misc.h
+0x020328A0	word_memcpy	void	void *,void *,int	void word_memcpy(void *dst, void *src, int size)	ax32xx/inc/ax32xx_misc.h
+0x020328D8	word_reg_memcpy	void	void *,u32,int	void word_reg_memcpy(void *dst, u32 src, int cnt)	ax32xx/inc/ax32xx_misc.h
+0x02032914	ax32xx_pipConfig	void	u8,u16,u16,u16,u16,bool	void ax32xx_pipConfig(u8 top_src,u16 x,u16 y,u16 jwidth,u16 jheight,bool enable)	ax32xx/inc/ax32xx_pip.h
+0x02032990	ax32xx_pipEnable	void	bool	void ax32xx_pipEnable(bool enable)	ax32xx/inc/ax32xx_pip.h
+0x020329D4	ax32xx_pipCounterReset	void	u8	void ax32xx_pipCounterReset(u8 src)	ax32xx/inc/ax32xx_pip.h
+0x02032A14	ax32xx_pipGetTopLayer	u8	void	u8 ax32xx_pipGetTopLayer(void)	ax32xx/inc/ax32xx_pip.h
+0x02032A38	ax32xx_pipGetBotLayer	u8	void	u8 ax32xx_pipGetBotLayer(void)	ax32xx/inc/ax32xx_pip.h
+0x02032BD0	ax32xx_emiIRQHandler	void	void	void ax32xx_emiIRQHandler(void)	ax32xx/inc/ax32xx_emi.h
+0x02032CCC	ax32xx_rotateISRRegiser	void	void (*)()	void ax32xx_rotateISRRegiser(void (*isr)(void))	ax32xx/inc/ax32xx_rotate.h
+0x02032CEC	ax32xx_rotateCheckBusy	u32	void	u32 ax32xx_rotateCheckBusy(void)	ax32xx/inc/ax32xx_rotate.h
+0x02032D0C	ax32xx_rotateReset	void	void	void ax32xx_rotateReset(void)	ax32xx/inc/ax32xx_rotate.h
+0x02032D58	ax32xx_rotateStart	void	u8,u32,u32,u8 *,u8 *,u32,u8 *,u8 *,u32,u8	void ax32xx_rotateStart( u8 src_mode, u32 src_width,u32 src_height, u8 *dst_y,u8 *dst_uv,u32 dst_stride, u8 *src_y,u8 *src_uv,u32 src_stride, u8 int_en)	ax32xx/inc/ax32xx_rotate.h
+0x02032E70	ax32xx_rotateWaitFrameDone	int	void	int ax32xx_rotateWaitFrameDone(void)	ax32xx/inc/ax32xx_rotate.h
+0x02032EC4	ax32xx_rotateIRQHandler	void	void	void ax32xx_rotateIRQHandler(void)	ax32xx/inc/ax32xx_rotate.h
+0x02032F14	ax32xx_rotateGetSrcYAddr	u32	void	u32 ax32xx_rotateGetSrcYAddr(void)	ax32xx/inc/ax32xx_rotate.h
+0x02032F44	ax32xx_osdcmpISRRegiser	void	void (*)(int)	void ax32xx_osdcmpISRRegiser(void (*isr)(int))	ax32xx/inc/ax32xx_osdcmp.h
+0x02032F64	ax32xx_osdcmpCheckBusy	u32	void	u32 ax32xx_osdcmpCheckBusy(void)	ax32xx/inc/ax32xx_osdcmp.h
+0x02032F88	ax32xx_osdcmpReset	void	void	void ax32xx_osdcmpReset(void)	ax32xx/inc/ax32xx_osdcmp.h
+0x02032FD4	ax32xx_osdcmpGetCompSize	u32	void	u32 ax32xx_osdcmpGetCompSize(void)	ax32xx/inc/ax32xx_osdcmp.h
+0x02032FF4	ax32xx_osdcmpKick	void	u8 *,u32,u8 *,u32,u8,u8	void ax32xx_osdcmpKick(u8 * src,u32 src_len,u8 * dst,u32 dstbuf_len,u8 reverse_en,u8 int_en)	ax32xx/inc/ax32xx_osdcmp.h
+0x020330C8	ax32xx_osdcmpWaitFrameDone	int	void	int ax32xx_osdcmpWaitFrameDone(void)	ax32xx/inc/ax32xx_osdcmp.h
+0x02033160	ax32xx_osdcmpCompOneFrame	int	u8 *,u32,u8 *,u32 *,u8	int ax32xx_osdcmpCompOneFrame(u8 * src,u32 src_len,u8 * dst,u32 * dst_len,u8 reverse_en)	ax32xx/inc/ax32xx_osdcmp.h
+0x02033268	ax32xx_osdcmpIRQHandler	void	void	void ax32xx_osdcmpIRQHandler(void)	ax32xx/inc/ax32xx_osdcmp.h
+0x020332B4	ax32xx_deWait	void	void	void ax32xx_deWait(void)	ax32xx/inc/ax32xx_osd.h
+0x02033310	ax32xx_deUpdate	void	void	void ax32xx_deUpdate(void)	ax32xx/inc/ax32xx_osd.h
+0x02033334	ax32xx_deGetUpdateStatus	u8	void	u8 ax32xx_deGetUpdateStatus(void)	ax32xx/inc/ax32xx_osd.h
+0x02033358	ax32xx_deIRQHandler	void	void	void ax32xx_deIRQHandler(void)	ax32xx/inc/ax32xx_osd.h
+0x020333B8	ax32xx_deISRRegister	void	void (*)()	void ax32xx_deISRRegister(void (*isr)(void))	ax32xx/inc/ax32xx_osd.h
+0x020333D8	ax32xx_deInit	void	u16,u16	void ax32xx_deInit(u16 width,u16 height)	ax32xx/inc/ax32xx_osd.h
+0x02033454	ax32xx_deSetBackground	void	u8,u8,u8	void ax32xx_deSetBackground(u8 red,u8 green,u8 blue)	ax32xx/inc/ax32xx_osd.h
+0x02033488	ax32xx_deSetCSC	void	u16,u16,u16	void ax32xx_deSetCSC(u16 brightness,u16 saturation,u16 contrast)	ax32xx/inc/ax32xx_osd.h
+0x020334D4	ax32xx_videoSetDither	void	u8,u8,u8	void ax32xx_videoSetDither(u8 red,u8 green,u8 blue)	ax32xx/inc/ax32xx_osd.h
+0x02033574	ax32xx_videoSetScale	void	u8,u8,u8,u8	void ax32xx_videoSetScale(u8 tap3,u8 tap2,u8 tap1,u8 tap0)	ax32xx/inc/ax32xx_osd.h
+0x020335C0	ax32xx_videoSetScaleLine	void	u16,u8	void ax32xx_videoSetScaleLine(u16 line,u8 enable)	ax32xx/inc/ax32xx_osd.h
+0x02033630	ax32xx_videoSetScanMode	void	u8	void ax32xx_videoSetScanMode(u8 scan_mode)	ax32xx/inc/ax32xx_osd.h
+0x0203367C	ax32xx_videoGetYAddr	u32	void	u32 ax32xx_videoGetYAddr(void)	ax32xx/inc/ax32xx_osd.h
+0x020336AC	ax32xx_videoGetUVAddr	u32	void	u32 ax32xx_videoGetUVAddr(void)	ax32xx/inc/ax32xx_osd.h
+0x020336DC	ax32xx_videoSetAddr	void	u32,u32,u8	void ax32xx_videoSetAddr(u32 y_addr,u32 uv_addr,u8 update)	ax32xx/inc/ax32xx_osd.h
+0x020336F8	ax32xx_videoSetStride	void	u32,u32	void ax32xx_videoSetStride(u32 ystride,u32 uvstride)	ax32xx/inc/ax32xx_osd.h
+0x0203371C	ax32xx_videoSetSize	void	u16,u16	void ax32xx_videoSetSize(u16 width,u16 height)	ax32xx/inc/ax32xx_osd.h
+0x02033754	ax32xx_videoSetPosition	void	s16,s16	void ax32xx_videoSetPosition(s16 x,s16 y)	ax32xx/inc/ax32xx_osd.h
+0x0203377C	ax32xx_videoCopyCfg	void	s16,s16,bool	void ax32xx_videoCopyCfg(s16 dst_w,s16 dst_h,bool enable)	ax32xx/inc/ax32xx_osd.h
+0x020337E4	ax32xx_videoEnable	void	u8	void ax32xx_videoEnable(u8 en)	ax32xx/inc/ax32xx_osd.h
+0x02033848	ax32xx_videoGammaRed	void	u32	void ax32xx_videoGammaRed(u32 lut)	ax32xx/inc/ax32xx_osd.h
+0x0203388C	ax32xx_videoGammaGreen	void	u32	void ax32xx_videoGammaGreen(u32 lut)	ax32xx/inc/ax32xx_osd.h
+0x020338D0	ax32xx_videoGammaBlue	void	u32	void ax32xx_videoGammaBlue(u32 lut)	ax32xx/inc/ax32xx_osd.h
+0x02033914	ax32xx_deSetGAMA	void	u32,u32,u32	void ax32xx_deSetGAMA(u32 gred,u32 ggreen,u32 gblue)	ax32xx/inc/ax32xx_osd.h
+0x02033998	ax32xx_deSet_DE_CCM	void	u32 *	void ax32xx_deSet_DE_CCM(u32 *p_ccm)	ax32xx/inc/ax32xx_osd.h
+0x02033A80	ax32xx_deSet_DE_SAJ	void	u32 *	void ax32xx_deSet_DE_SAJ(u32 *p_saj)	ax32xx/inc/ax32xx_osd.h
+0x02033AEC	ax32xx_videoGammaEnable	void	u8	void ax32xx_videoGammaEnable(u8 en)	ax32xx/inc/ax32xx_osd.h
+0x02033B30	ax32xx_osdEnable	s32	u8,u8	s32 ax32xx_osdEnable(u8 osd,u8 en)	ax32xx/inc/ax32xx_osd.h
+0x02033B9C	ax32xx_osdSetSize	s32	u8,u16,u16	s32 ax32xx_osdSetSize(u8 osd,u16 width,u16 height)	ax32xx/inc/ax32xx_osd.h
+0x02033BF0	ax32xx_osdSetPosition	s32	u8,s16,s16	s32 ax32xx_osdSetPosition(u8 osd,s16 x,s16 y)	ax32xx/inc/ax32xx_osd.h
+0x02033C44	ax32xx_osdSetPalette	s32	u8,u32	s32 ax32xx_osdSetPalette(u8 osd,u32 addr)	ax32xx/inc/ax32xx_osd.h
+0x02033C8C	ax32xx_osdSetAddr	s32	u8,u32,u32	s32 ax32xx_osdSetAddr(u8 osd,u32 addr,u32 data_len)	ax32xx/inc/ax32xx_osd.h
+0x02033D48	ax32xx_osdGetAddr	u32	u8	u32 ax32xx_osdGetAddr(u8 osd)	ax32xx/inc/ax32xx_osd.h
+0x02033D98	ax32xx_osdSetAlpha	s32	u8,u8,u8	s32 ax32xx_osdSetAlpha(u8 osd,u8 type,u8 value)	ax32xx/inc/ax32xx_osd.h
+0x02033E04	ax32xx_osdSetUpscaler	void	u16,u16,u16,u16,u32 *	void ax32xx_osdSetUpscaler(u16 src_w,u16 src_h,u16 dst_w,u16 dst_h,u32 * args)	ax32xx/inc/ax32xx_osd.h
+0x02033FCC	ax32xx_osdEncodeOneCode	u32	u8,u32,u32 *	u32 ax32xx_osdEncodeOneCode(u8 data,u32 cnt,u32 *used)	ax32xx/inc/ax32xx_osd.h
+0x0203404C	ax32xx_csiIRQHandler	void	void	void ax32xx_csiIRQHandler(void)	ax32xx/inc/ax32xx_csi.h
+0x02034224	ax32xx_csiISRRegiser	void	u8,void (*)()	void ax32xx_csiISRRegiser(u8 type,void (*isr)(void))	ax32xx/inc/ax32xx_csi.h
+0x02034260	ax32xx_csiMJPEGFrameSet	void	u32,u32,u32,u32	void ax32xx_csiMJPEGFrameSet(u32 mjpeg_y,u32 mjpeg_uv,u32 lines,u32 width)	ax32xx/inc/ax32xx_csi.h
+0x02034308	ax32xx_csihv_tomjp_dma_cfg	void	u8 *,u8 *,u16,u16	void ax32xx_csihv_tomjp_dma_cfg(u8 *Jy_buf, u8 *juv_buf, u16 line, u16 w)	ax32xx/inc/ax32xx_csi.h
+0x02034394	ax32xx_csi_only_FrameSet	void	void	void ax32xx_csi_only_FrameSet()	ax32xx/inc/ax32xx_csi.h
+0x020343B4	ax32xx_csiYUVFrameSet	void	u32,u32,u32	void ax32xx_csiYUVFrameSet(u32 yaddr0,u32 yaddr1,u32 size)	ax32xx/inc/ax32xx_csi.h
+0x020343C8	ax32xx_csiIOConfig	void	void	void ax32xx_csiIOConfig(void)	ax32xx/inc/ax32xx_csi.h
+0x02034420	ax32xx_csiInit	void	void	void ax32xx_csiInit(void)	ax32xx/inc/ax32xx_csi.h
+0x0203444C	ax32xx_csiMclkSet	void	u32	void ax32xx_csiMclkSet(u32 clk)	ax32xx/inc/ax32xx_csi.h
+0x02034558	ax32xx_csiSyncSet	void	u8,u8	void ax32xx_csiSyncSet(u8 hsync_en,u8 vsync_en)	ax32xx/inc/ax32xx_csi.h
+0x020345BC	ax32xx_csiPrioritySet	void	u8	void ax32xx_csiPrioritySet(u8 plo)	ax32xx/inc/ax32xx_csi.h
+0x02034600	ax32xx_csiTypeSet	void	u8	void ax32xx_csiTypeSet(u8 type)	ax32xx/inc/ax32xx_csi.h
+0x0203466C	ax32xx_csiModeSet	void	u32,u8	void ax32xx_csiModeSet(u32 mode,u8 en)	ax32xx/inc/ax32xx_csi.h
+0x020346A8	ax32xx_pclk_fir_Set	void	u8	void ax32xx_pclk_fir_Set(u8 en)	ax32xx/inc/ax32xx_csi.h
+0x02034710	ax32xx_pclk_analog_Set	void	u8	void ax32xx_pclk_analog_Set(u8 en)	ax32xx/inc/ax32xx_csi.h
+0x02034760	ax32xx_pclk_inv_Set	void	u8	void ax32xx_pclk_inv_Set(u8 en)	ax32xx/inc/ax32xx_csi.h
+0x020347A4	ax32xx_csi_clk_tun_Set	void	u8	void ax32xx_csi_clk_tun_Set(u8 tun)	ax32xx/inc/ax32xx_csi.h
+0x020347EC	ax32xx_csiSizeSet	void	u16,u16	void ax32xx_csiSizeSet(u16 width,u16 height)	ax32xx/inc/ax32xx_csi.h
+0x02034824	ax32xx_csiInputAddrSet	void	u32	void ax32xx_csiInputAddrSet(u32 addr)	ax32xx/inc/ax32xx_csi.h
+0x0203483C	ax32xx_csiTestModeSet	void	u16,u16,u16,u16,u16	void ax32xx_csiTestModeSet(u16 width,u16 height,u16 hsync,u16 vsync,u16 test_typ)	ax32xx/inc/ax32xx_csi.h
+0x020348A4	ax32xx_csiDvpClkDivSet	void	u16	void ax32xx_csiDvpClkDivSet(u16 clk_div_mode)	ax32xx/inc/ax32xx_csi.h
+0x020348EC	ax32xx_csiLCDFrameSet	void	u32,u32	void ax32xx_csiLCDFrameSet(u32 yaddr,u32 uvaddr)	ax32xx/inc/ax32xx_csi.h
+0x02034918	ax32xx_csiLCDDmaEnable	void	u8	void ax32xx_csiLCDDmaEnable(u8 en)	ax32xx/inc/ax32xx_csi.h
+0x020349B4	ax32xx_csiLCDDmaKick	void	void	void ax32xx_csiLCDDmaKick(void)	ax32xx/inc/ax32xx_csi.h
+0x020349F8	ax32xx_csiLCDScaler	void	u16,u16,u16,u16,u16,u16,u16,u16,u16,u32 *	void ax32xx_csiLCDScaler(u16 src_w,u16 src_h,u16 tar_w,u16 tar_h,u16 sx,u16 sy,u16 ex,u16 ey,u16 stride,u32 * anti_lsawtooth)	ax32xx/inc/ax32xx_csi.h
+0x02034BCC	ax32xx_csiScaler	void	u16,u16,u16,u16,u16,u16,u16,u16	void ax32xx_csiScaler(u16 src_w,u16 src_h,u16 tar_w,u16 tar_h,u16 sx,u16 sy,u16 ex,u16 ey)	ax32xx/inc/ax32xx_csi.h
+0x02034D4C	ax32xx_hvScaler	bool	u32,u32,u32,u32	bool ax32xx_hvScaler(u32 src_w, u32 src_h, u32 obj_w, u32 obj_h)	ax32xx/inc/ax32xx_csi.h
+0x02034E80	ax32xx_csiScalerCheck	s32	void	s32 ax32xx_csiScalerCheck(void)	ax32xx/inc/ax32xx_csi.h
+0x02034EA8	ax32xx_csiOutputSet	void	u32,u8	void ax32xx_csiOutputSet(u32 mode,u8 en)	ax32xx/inc/ax32xx_csi.h
+0x02034EE4	ax32xx_csiEnable	void	u8	void ax32xx_csiEnable(u8 en)	ax32xx/inc/ax32xx_csi.h
+0x02034F74	ax32xx_lcdSPIMode	void	u8,u8,u8,u8	void ax32xx_lcdSPIMode(u8 cpol,u8 cpha,u8 order,u8 bits)	ax32xx/inc/ax32xx_lcd.h
+0x02034FA0	ax32xx_lcdSPIInit	void	void	void ax32xx_lcdSPIInit(void)	ax32xx/inc/ax32xx_lcd.h
+0x02035050	ax32xx_lcdSPIUninit	void	void	void ax32xx_lcdSPIUninit(void)	ax32xx/inc/ax32xx_lcd.h
+0x020352F8	ax32xx_lcdMcuSendCmd16	void	u32	void ax32xx_lcdMcuSendCmd16(u32 cmd)	ax32xx/inc/ax32xx_lcd.h
+0x0203537C	ax32xx_lcdMcuSendData16	void	u32	void ax32xx_lcdMcuSendData16(u32 data)	ax32xx/inc/ax32xx_lcd.h
+0x02035400	ax32xx_lcdInit	void	void	void ax32xx_lcdInit(void)	ax32xx/inc/ax32xx_lcd.h
+0x0203544C	ax32xx_lcdIRQEnable	void	u8,u8	void ax32xx_lcdIRQEnable(u8 itype,u8 en)	ax32xx/inc/ax32xx_lcd.h
+0x02035494	ax32xx_lcdPreLineSet	void	u32	void ax32xx_lcdPreLineSet(u32 line)	ax32xx/inc/ax32xx_lcd.h
+0x020354B0	ax32xx_lcdSignalSet	void	u8,u8,u8,u8,u8,u8,u8,u8	void ax32xx_lcdSignalSet(u8 vsync,u8 inv_pclk,u8 inv_de,u8 inv_hs,u8 inv_vs,u8 en_de,u8 en_hs,u8 en_vs)	ax32xx/inc/ax32xx_lcd.h
+0x02035548	ax32xx_lcdBusWidth	void	u32	void ax32xx_lcdBusWidth(u32 width)	ax32xx/inc/ax32xx_lcd.h
+0x0203559C	ax32xx_lcdBusEnable	void	u32,u8	void ax32xx_lcdBusEnable(u32 mask,u8 en)	ax32xx/inc/ax32xx_lcd.h
+0x020355EC	ax32xx_lcdClkSet	void	u32	void ax32xx_lcdClkSet(u32 clk_div)	ax32xx/inc/ax32xx_lcd.h
+0x0203560C	ax32xx_lcdSyncSet	void	u32,u32,u32,u32	void ax32xx_lcdSyncSet(u32 hsfp,u32 hsbp,u32 vsfp,u32 vsbp)	ax32xx/inc/ax32xx_lcd.h
+0x02035630	ax32xx_lcdDESignalSet	void	u32,u32,u32,u32	void ax32xx_lcdDESignalSet(u32 defp,u32 debp,u32 destart,u32 deend)	ax32xx/inc/ax32xx_lcd.h
+0x02035654	ax32xx_lcdPositionSet	void	u32,u32	void ax32xx_lcdPositionSet(u32 x,u32 y)	ax32xx/inc/ax32xx_lcd.h
+0x02035670	ax32xx_lcdResolutionSet	void	u32,u32	void ax32xx_lcdResolutionSet(u32 width,u32 height)	ax32xx/inc/ax32xx_lcd.h
+0x0203568C	ax32xx_lcdWindowSizeSet	void	u32,u32	void ax32xx_lcdWindowSizeSet(u32 width,u32 height)	ax32xx/inc/ax32xx_lcd.h
+0x020356A8	ax32xx_lcdDataModeSet	void	u32,u32,u8,u8	void ax32xx_lcdDataModeSet(u32 mode,u32 mode1,u8 even_order,u8 odd_order)	ax32xx/inc/ax32xx_lcd.h
+0x020356EC	ax32xx_lcdClkNumberSet	void	u32	void ax32xx_lcdClkNumberSet(u32 num)	ax32xx/inc/ax32xx_lcd.h
+0x02035704	ax32xx_lcdEndLineSet	void	u32,u32	void ax32xx_lcdEndLineSet(u32 eline,u32 aline)	ax32xx/inc/ax32xx_lcd.h
+0x02035768	ax32xx_lcdEnable	void	u8	void ax32xx_lcdEnable(u8 en)	ax32xx/inc/ax32xx_lcd.h
+0x020357CC	ax32xx_lcdTeMode	void	u8,u8	void ax32xx_lcdTeMode(u8 mode,u8 en)	ax32xx/inc/ax32xx_lcd.h
+0x02035814	ax32xx_lcdKick	void	void	void ax32xx_lcdKick(void)	ax32xx/inc/ax32xx_lcd.h
+0x0203584C	ax32xx_lcdIRQHandler	void	void	void ax32xx_lcdIRQHandler(void)	ax32xx/inc/ax32xx_lcd.h
+0x020359BC	ax32xx_lcdISRRegister	void	u8,void (*)()	void ax32xx_lcdISRRegister(u8 type,void (*isr)(void))	ax32xx/inc/ax32xx_lcd.h
+0x02035C34	ax32xx_lcd_lsawbtooth	void	u32 *	void ax32xx_lcd_lsawbtooth(u32 *anti_lsawtooth)	ax32xx/inc/ax32xx_lcd.h
+0x020361A0	ax32xx_mjpB_reset	void	void	void ax32xx_mjpB_reset(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x0203620C	ax32xx_mjpegAIRQHandler	void	void	void ax32xx_mjpegAIRQHandler(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x020363F8	ax32xx_mjpB_dcdown_reg	void	void (*)()	void ax32xx_mjpB_dcdown_reg(void (*fp_fun)(void))	ax32xx/inc/ax32xx_mjpeg.h
+0x02036418	ax32xx_mjB_as_dcode	void	void	void ax32xx_mjB_as_dcode(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036444	ax32xx_mjpegEA_ncodeISRRegister	void	void (*)(int)	void ax32xx_mjpegEA_ncodeISRRegister(void (*isr)(int flag))	ax32xx/inc/ax32xx_mjpeg.h
+0x02036484	ax32xx_mjpegEA_ncodeISR	u8	void	u8 ax32xx_mjpegEA_ncodeISR(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x020364B0	ax32xx_mjpegDecodeISRRegister	void	void (*)(int)	void ax32xx_mjpegDecodeISRRegister(void (*isr)(int flag))	ax32xx/inc/ax32xx_mjpeg.h
+0x020364D0	ax32xx_mjpegEncodeBufferSet	void	u32,u32	void ax32xx_mjpegEncodeBufferSet(u32 saddr,u32 eaddr)	ax32xx/inc/ax32xx_mjpeg.h
+0x0203651C	ax32xx_mjpegEncodeEnable	void	u8	void ax32xx_mjpegEncodeEnable(u8 en)	ax32xx/inc/ax32xx_mjpeg.h
+0x020366FC	ax32xx_mjpegEncodeSizeSet	void	u32,u32,u32,u32	void ax32xx_mjpegEncodeSizeSet(u32 src_w,u32 src_h,u32 tar_w,u32 tar_h)	ax32xx/inc/ax32xx_mjpeg.h
+0x020367A4	ax32xx_mjpegEncodeQuilitySet	void	u8	void ax32xx_mjpegEncodeQuilitySet(u8 qulity)	ax32xx/inc/ax32xx_mjpeg.h
+0x0203681C	ax32xx_mjpegEncodeQadj	void	u32,u32,u32	void ax32xx_mjpegEncodeQadj(u32 jsize,u32 min_size,u32 max_size)	ax32xx/inc/ax32xx_mjpeg.h
+0x020368E4	ax32xx_mjpegEncodeInfoSet	void	u8	void ax32xx_mjpegEncodeInfoSet(u8 mode)	ax32xx/inc/ax32xx_mjpeg.h
+0x0203692C	ax32xx_mjpegEncodeLoadAddrGet	u32	void	u32 ax32xx_mjpegEncodeLoadAddrGet(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036948	ax32xx_mjpeg_inlinebuf_init	void	u8*,u8 *	void ax32xx_mjpeg_inlinebuf_init(u8* ybuf, u8 *uvbuf)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036964	ax32xx_mjpegEncodeInit	void	bool,bool	void ax32xx_mjpegEncodeInit(bool manual, bool tp)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036B9C	ax32xx_mjpeg_manual_on	void	void	void ax32xx_mjpeg_manual_on(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036C08	ax32xx_mjpegDecodeScalerCal	s32	u32,u32	s32 ax32xx_mjpegDecodeScalerCal(u32 src_w,u32 tar_w)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036CD8	ax32xx_mjpegDecodeSetSize	s32	u32,u32,u32,u32,u32	s32 ax32xx_mjpegDecodeSetSize(u32 src_w,u32 src_h,u32 tar_w,u32 tar_h,u32 stride)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036EFC	ax32xx_mjpegDecodeOutputSet	void	u32,u32	void ax32xx_mjpegDecodeOutputSet(u32 yaddr,u32 uvaddr)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036F18	ax32xx_mjpegDecodeInputSet	void	u32,u32	void ax32xx_mjpegDecodeInputSet(u32 saddr,u32 eaddr)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036F50	ax32xx_mjpegDecodeDriSet	void	u32	void ax32xx_mjpegDecodeDriSet(u32 dri)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036F68	ax32xx_mjpegDecodeCompressSet	void	u32	void ax32xx_mjpegDecodeCompressSet(u32 table)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036F80	ax32xx_mjpegDecodeInitTable	void	u32,u32	void ax32xx_mjpegDecodeInitTable(u32 tab,u32 len)	ax32xx/inc/ax32xx_mjpeg.h
+0x02036FD8	ax32xx_mjpegDecodeInit	void	u8	void ax32xx_mjpegDecodeInit(u8 yuvfmt)	ax32xx/inc/ax32xx_mjpeg.h
+0x020371DC	ax32xx_mjpegDecodeDCTimeSet	void	u8,u32,u32	void ax32xx_mjpegDecodeDCTimeSet(u8 en, u32 src_w,u32 src_h)	ax32xx/inc/ax32xx_mjpeg.h
+0x0203727C	ax32xx_mjpegDecodeEnable	void	u8	void ax32xx_mjpegDecodeEnable(u8 en)	ax32xx/inc/ax32xx_mjpeg.h
+0x020372F8	ax32xx_mjpegDecodeKick	void	void	void ax32xx_mjpegDecodeKick(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x02037350	ax32xx_mjpegDecodeStop	void	void	void ax32xx_mjpegDecodeStop(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x0203738C	ax32xx_mjpegBIRQHandler	void	void	void ax32xx_mjpegBIRQHandler(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x02037490	ax32xx_mjpegDecodeQDTCfg	void	u8 *[3]	void ax32xx_mjpegDecodeQDTCfg(u8 *qdt[3])	ax32xx/inc/ax32xx_mjpeg.h
+0x020374F0	ax32xx_mjpegDecodeStatus	s32	void	s32 ax32xx_mjpegDecodeStatus(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x02037524	ax32xx_mjpegDecodeCheck	s32	void	s32 ax32xx_mjpegDecodeCheck(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x02037554	ax32xx_mjpegDecodeODma1Cfg	void	u8 *,u8 *,bool	void ax32xx_mjpegDecodeODma1Cfg(u8 * y_addr,u8 * uv_addr,bool dma_en)	ax32xx/inc/ax32xx_mjpeg.h
+0x02037A4C	ax32xx_mjpB_Ctl_init	void	u8,u8,u32,u32,u32,u32	void ax32xx_mjpB_Ctl_init(u8 mod, u8 quality, u32 src_w, u32 src_h, u32 obj_w, u32 obj_h)	ax32xx/inc/ax32xx_mjpeg.h
+0x02037D1C	ax32xx_mjpB_dma_cfg	void	u32,u32	void ax32xx_mjpB_dma_cfg(u32 s, u32 e)	ax32xx/inc/ax32xx_mjpeg.h
+0x02037D48	ax32xx_mjpB_stop	void	void	void ax32xx_mjpB_stop(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x02037DB0	ax32xx_mjpB_on	void	void	void ax32xx_mjpB_on(void)	ax32xx/inc/ax32xx_mjpeg.h
+0x0203814C	hal_adcGetChannel	s32	u8	s32 hal_adcGetChannel(u8 ch)	hal/inc/hal_adc.h
+0x020381C8	hal_csiRegister	void	_Sensor_Adpt_ *,_Sensor_Ident_ *	void hal_csiRegister(_Sensor_Adpt_ *sensor_op,_Sensor_Ident_ *sensor_ident)	hal/inc/hal_csi.h
+0x020381FC	hal_csiResolutionGet	int	u16 *,u16 *	int hal_csiResolutionGet(u16 *width,u16 *height)	hal/inc/hal_csi.h
+0x02038258	hal_csiAdptGet	_Sensor_Adpt_ *	void	_Sensor_Adpt_ *hal_csiAdptGet(void)	hal/inc/hal_csi.h
+0x02038278	hal_csi_SeninitGet	_Sensor_Ident_ *	void	_Sensor_Ident_ *hal_csi_SeninitGet(void)	hal/inc/hal_csi.h
+0x020382E0	hal_dacInit	void	void	void hal_dacInit(void)	hal/inc/hal_dac.h
+0x02038338	hal_dacPlayStart	s32	u32,u32,u32	s32 hal_dacPlayStart(u32 sampleRate,u32 buffer,u32 size)	hal/inc/hal_dac.h
+0x020383E4	hal_dacPlayStop	s32	void	s32 hal_dacPlayStop(void)	hal/inc/hal_dac.h
+0x02038410	hal_dacSetVolume	s32	u8	s32 hal_dacSetVolume(u8 volume)	hal/inc/hal_dac.h
+0x02038474	hal_dacSetBuffer	s32	u32,u32	s32 hal_dacSetBuffer(u32 buffer,u32 size)	hal/inc/hal_dac.h
+0x02038498	hal_dacCallBackRegister	s32	void (*)(int)	s32 hal_dacCallBackRegister(void (*callback)(int flag))	hal/inc/hal_dac.h
+0x020384BC	hal_dacHPSet	s32	u8,u32	s32 hal_dacHPSet(u8 en,u32 level)	hal/inc/hal_dac.h
+0x020384E4	hal_gpioInit	void	u8,u32,u8,u8	void hal_gpioInit(u8 ch,u32 pin,u8 dir,u8 pull)	hal/inc/hal_gpio.h
+0x02038690	hal_gpioWrite	void	u8,u32,u8	void hal_gpioWrite(u8 ch,u32 pin,u8 data)	hal/inc/hal_gpio.h
+0x020386B8	hal_gpioRead	u8	u8,u32	u8 hal_gpioRead(u8 ch,u32 pin)	hal/inc/hal_gpio.h
+0x02038730	hal_iic0Init	void	void	void hal_iic0Init(void)	hal/inc/hal_iic.h
+0x0203875C	hal_iic0Uninit	void	void	void hal_iic0Uninit(void)	hal/inc/hal_iic.h
+0x0203877C	hal_iic08bitAddrWriteData	void	u8,u8,u8	void hal_iic08bitAddrWriteData(u8 slaveid,u8 addr,u8 data)	hal/inc/hal_iic.h
+0x02038818	hal_iic08bitAddrReadData	void	u8,u8,u8 *	void hal_iic08bitAddrReadData(u8 slaveid,u8 addr,u8 *data)	hal/inc/hal_iic.h
+0x020388D0	hal_iic08bitAddrWrite	void	u8,u8,u8 *,u8	void hal_iic08bitAddrWrite(u8 slaveid,u8 addr,u8 *data,u8 len)	hal/inc/hal_iic.h
+0x02038990	hal_iic08bitAddrRead	void	u8,u8,u8 *,u8	void hal_iic08bitAddrRead(u8 slaveid,u8 addr,u8 *data,u8 len)	hal/inc/hal_iic.h
+0x02038A64	hal_iic016bitAddrWriteData	void	u8,u16,u8	void hal_iic016bitAddrWriteData(u8 slaveid,u16 addr,u8 data)	hal/inc/hal_iic.h
+0x02038B0C	hal_iic016bitAddrReadData	void	u8,u16,u8 *	void hal_iic016bitAddrReadData(u8 slaveid,u16 addr,u8 *data)	hal/inc/hal_iic.h
+0x02038BD0	hal_iic016bitAddrWrite	void	u8,u16,u8 *,u8	void hal_iic016bitAddrWrite(u8 slaveid,u16 addr,u8 *data,u8 len)	hal/inc/hal_iic.h
+0x02038C9C	hal_iic016bitAddrRead	void	u8,u16,u8 *,u8	void hal_iic016bitAddrRead(u8 slaveid,u16 addr,u8 *data,u8 len)	hal/inc/hal_iic.h
+0x02038D7C	hal_iic1IOShare	u8	void	u8 hal_iic1IOShare(void)	hal/inc/hal_iic.h
+0x02038DF0	hal_iic1Uninit	void	void	void hal_iic1Uninit(void)	hal/inc/hal_iic.h
+0x02038E28	hal_iic18bitAddrWriteData	void	u8,u8,u8	void hal_iic18bitAddrWriteData(u8 slaveid,u8 addr,u8 data)	hal/inc/hal_iic.h
+0x02038EA0	hal_iic18bitAddrReadData	void	u8,u8,u8 *	void hal_iic18bitAddrReadData(u8 slaveid,u8 addr,u8 *data)	hal/inc/hal_iic.h
+0x02038F34	hal_iic18bitAddrWrite	void	u8,u8,u8 *,u8	void hal_iic18bitAddrWrite(u8 slaveid,u8 addr,u8 *data,u8 len)	hal/inc/hal_iic.h
+0x02038FD0	hal_iic18bitAddrRead	void	u8,u8,u8 *,u8	void hal_iic18bitAddrRead(u8 slaveid,u8 addr,u8 *data,u8 len)	hal/inc/hal_iic.h
+0x02039080	hal_iic116bitAddrWriteData	void	u8,u16,u8	void hal_iic116bitAddrWriteData(u8 slaveid,u16 addr,u8 data)	hal/inc/hal_iic.h
+0x02039104	hal_iic116bitAddrReadData	void	u8,u16,u8 *	void hal_iic116bitAddrReadData(u8 slaveid,u16 addr,u8 *data)	hal/inc/hal_iic.h
+0x020391A4	hal_iic116bitAddrWrite	void	u8,u16,u8 *,u8	void hal_iic116bitAddrWrite(u8 slaveid,u16 addr,u8 *data,u8 len)	hal/inc/hal_iic.h
+0x0203924C	hal_iic116bitAddrRead	void	u8,u16,u8 *,u8	void hal_iic116bitAddrRead(u8 slaveid,u16 addr,u8 *data,u8 len)	hal/inc/hal_iic.h
+0x02039618	hal_lcdSetBufYUV	void	disp_frame_t *,u8,u8,u8	void hal_lcdSetBufYUV(disp_frame_t * buffer,u8 y,u8 u,u8 v)	hal/inc/hal_lcd.h
+0x020396AC	hal_lcd_vde_cfg	void	lcddev_t *	void hal_lcd_vde_cfg(lcddev_t *p_lcddev)	hal/inc/hal_lcd.h
+0x020396E4	hal_lcd_gamma_cfg	void	_Lcd_Header_ *,lcddev_t *,lcd_gamma_t *	void hal_lcd_gamma_cfg(_Lcd_Header_ * p_devLcdHeader,lcddev_t *p_lcddev,lcd_gamma_t *p_lcd_gamma)	hal/inc/hal_lcd.h
+0x02039898	usb_lcd_cfg	void	lcddev_t *,lcddev_t *	void usb_lcd_cfg(lcddev_t *new_lcddev,lcddev_t *p_devLcd)	hal/inc/hal_lcd.h
+0x02039B4C	lcd_isp_config	void	lcddev_t *	void lcd_isp_config(lcddev_t *p_lcddev)	hal/inc/hal_lcd.h
+0x02039DC8	hal_lcdPreviewStop	s32	void	s32 hal_lcdPreviewStop(void)	hal/inc/hal_lcd.h
+0x02039E14	hal_lcdSetShowingSize	s32	u16,u16,u16,u16	s32 hal_lcdSetShowingSize(u16 srcw,u16 srch,u16 width,u16 height)	hal/inc/hal_lcd.h
+0x02039E2C	hal_lcdSetRoate	s32	u8	s32 hal_lcdSetRoate(u8 rotate)	hal/inc/hal_lcd.h
+0x02039EF8	hal_lcdGetShowingBuffer	disp_frame_t *	void	disp_frame_t * hal_lcdGetShowingBuffer(void)	hal/inc/hal_lcd.h
+0x02039F5C	hal_lcdGetIdleBuffer	disp_frame_t *	void	disp_frame_t * hal_lcdGetIdleBuffer(void)	hal/inc/hal_lcd.h
+0x02039F9C	hal_lcdPreviewStart	s32	u16,u16	s32 hal_lcdPreviewStart(u16 width,u16 height)	hal/inc/hal_lcd.h
+0x0203A0E0	hal_lcdSetFrame	s32	s16,s16,u16,u16,void *,u8	s32 hal_lcdSetFrame(s16 x,s16 y,u16 w,u16 h,void *p_lcd_buffer,u8 scan_mode)	hal/inc/hal_lcd.h
+0x0203A11C	hal_lcdSetVCH	int	u8,u8,u16,u16,u16,u16,u8	int hal_lcdSetVCH(u8 src,u8 layer,u16 x,u16 y,u16 w,u16 h,u8 vch_en)	hal/inc/hal_lcd.h
+0x0203A570	hal_lcdPreSetPIPEnable	void	u8	void hal_lcdPreSetPIPEnable(u8 enable)	hal/inc/hal_lcd.h
+0x0203A590	hal_lcdSetPIPEnable	void	u8	void hal_lcdSetPIPEnable(u8 enable)	hal/inc/hal_lcd.h
+0x0203A64C	hal_lcdGetOSDShowingResolution	s32	u16 *,u16 *	s32 hal_lcdGetOSDShowingResolution(u16 *width,u16 *height)	hal/inc/hal_lcd.h
+0x0203A6A8	hal_lcdGetOSDShowingPosition	s32	u16 *,u16 *	s32 hal_lcdGetOSDShowingPosition(u16 *x,u16 *y)	hal/inc/hal_lcd.h
+0x0203A704	hal_lcdGetShowingRotate	s32	void	s32 hal_lcdGetShowingRotate(void)	hal/inc/hal_lcd.h
+0x0203A734	hal_lcdGetBufferResolution	s32	u16 *,u16 *	s32 hal_lcdGetBufferResolution(u16 *width,u16 *height)	hal/inc/hal_lcd.h
+0x0203A790	hal_lcdGetVideoPos	s32	u16 *,u16 *	s32 hal_lcdGetVideoPos(u16 *x,u16 *y)	hal/inc/hal_lcd.h
+0x0203A91C	hal_lcdFrameEndCallBack	s32	void (*)()	s32 hal_lcdFrameEndCallBack(void (*callback)(void))	hal/inc/hal_lcd.h
+0x0203B0DC	hal_lcd_lsawtooth	void	u32 *	void hal_lcd_lsawtooth(u32 *anti_lsawtooth)	hal/inc/hal_lcd.h
+0x0203B0FC	hal_lcdSetCsiCrop	void	u16,u16,u16,u16	void hal_lcdSetCsiCrop(u16 crop_sx,u16 crop_sy,u16 crop_ex,u16 crop_ey)	hal/inc/hal_lcd.h
+0x0203B188	hal_mdInit	s32	void	s32 hal_mdInit(void)	hal/inc/hal_md.h
+0x0203B1EC	hal_mdEnable	s32	u8	s32 hal_mdEnable(u8 en)	hal/inc/hal_md.h
+0x0203B238	hal_mdCheck	s32	void	s32 hal_mdCheck(void)	hal/inc/hal_md.h
+0x0203B270	hal_osdGetIdleRotateBuffer	disp_frame_t *	void	disp_frame_t * hal_osdGetIdleRotateBuffer(void)	hal/inc/hal_osd.h
+0x0203B294	hal_osdGetIdleCmpBuffer	disp_frame_t *	void	disp_frame_t * hal_osdGetIdleCmpBuffer(void)	hal/inc/hal_osd.h
+0x0203B2B8	hal_osdGetIdleDispBuffer	disp_frame_t *	void	disp_frame_t * hal_osdGetIdleDispBuffer(void)	hal/inc/hal_osd.h
+0x0203B2DC	hal_osdBufferRelease	void	disp_frame_t *	void hal_osdBufferRelease(disp_frame_t * p_osd_buffer)	hal/inc/hal_osd.h
+0x0203B304	hal_osdDealBuffer	void	disp_frame_t *	void hal_osdDealBuffer(disp_frame_t * p_osd_buffer)	hal/inc/hal_osd.h
+0x0203B720	hal_osdEnable	s32	u8,u8	s32 hal_osdEnable(u8 osd,u8 en)	hal/inc/hal_osd.h
+0x0203B75C	hal_osdSetAddr	s32	u8,u32	s32 hal_osdSetAddr(u8 osd,u32 addr)	hal/inc/hal_osd.h
+0x0203B798	hal_osdSetBuffer	s32	u8,disp_frame_t *	s32 hal_osdSetBuffer(u8 osd,disp_frame_t * buf)	hal/inc/hal_osd.h
+0x0203B828	hal_osdSetPosition	s32	u8,s16,s16	s32 hal_osdSetPosition(u8 osd,s16 x,s16 y)	hal/inc/hal_osd.h
+0x0203B870	hal_osdSetPalette	s32	u8,u32	s32 hal_osdSetPalette(u8 osd,u32 addr)	hal/inc/hal_osd.h
+0x0203B8A8	hal_osdSetSize	s32	u8,u16,u16	s32 hal_osdSetSize(u8 osd,u16 width,u16 height)	hal/inc/hal_osd.h
+0x0203B928	hal_osdGetBufferResolution	s32	u8,u16 *,u16 *	s32 hal_osdGetBufferResolution(u8 osd,u16 *width,u16 *height)	hal/inc/hal_osd.h
+0x0203B98C	hal_deSet_DE_CCM	void	u32 *	void hal_deSet_DE_CCM(u32 *p_ccm)	hal/inc/hal_osd.h
+0x0203B9B4	hal_deSet_DE_SAJ	void	u32 *	void hal_deSet_DE_SAJ(u32 *p_saj)	hal/inc/hal_osd.h
+0x0203BA08	hal_rtcCallBackRegister	int	void (*)()	int hal_rtcCallBackRegister(void (*callback)(void))	hal/inc/hal_rtc.h
+0x0203BA68	hal_rtcCallBackRelease	void	int	void hal_rtcCallBackRelease(int fd)	hal/inc/hal_rtc.h
+0x0203BAA4	hal_rtcUninit	s32	void	s32 hal_rtcUninit(void)	hal/inc/hal_rtc.h
+0x0203BAE0	hal_rtcTimeGet	HAL_RTC_T *	void	HAL_RTC_T *hal_rtcTimeGet(void)	hal/inc/hal_rtc.h
+0x0203BAFC	hal_rtcTimeGetExt	void	HAL_RTC_T *	void hal_rtcTimeGetExt(HAL_RTC_T *rtcTime)	hal/inc/hal_rtc.h
+0x0203BB30	hal_rtcSecondGet	u32	void	u32 hal_rtcSecondGet(void)	hal/inc/hal_rtc.h
+0x0203BB50	hal_rtcTime2String	char *	HAL_RTC_T *	char *hal_rtcTime2String(HAL_RTC_T *rtcTime)	hal/inc/hal_rtc.h
+0x0203BE04	hal_rtcTime2StringExt	void	char *,HAL_RTC_T *	void hal_rtcTime2StringExt(char *str,HAL_RTC_T *rtcTime)	hal/inc/hal_rtc.h
+0x0203BE68	hal_rtcLeapYear	u8	int	u8 hal_rtcLeapYear(int year)	hal/inc/hal_rtc.h
+0x0203C084	hal_rtcTime	void	u32,HAL_RTC_T *	void hal_rtcTime(u32 second,HAL_RTC_T *rtcTime)	hal/inc/hal_rtc.h
+0x0203C198	hal_rtcInit	s32	void	s32 hal_rtcInit(void)	hal/inc/hal_rtc.h
+0x0203C2C0	hal_rtcSecondSet	void	u32	void hal_rtcSecondSet(u32 second)	hal/inc/hal_rtc.h
+0x0203C2FC	hal_rtcValue	u32	HAL_RTC_T *	u32 hal_rtcValue(HAL_RTC_T *rtcTime)	hal/inc/hal_rtc.h
+0x0203C40C	hal_rtcTimeSet	void	HAL_RTC_T *	void hal_rtcTimeSet(HAL_RTC_T *rtcTime)	hal/inc/hal_rtc.h
+0x0203C494	hal_rtcAlarmSet	void	u32,u8	void hal_rtcAlarmSet(u32 alarmtime,u8 en)	hal/inc/hal_rtc.h
+0x0203C524	hal_rtcAlarmSetExt	void	HAL_RTC_T *,u8	void hal_rtcAlarmSetExt(HAL_RTC_T *rtcTime,u8 en)	hal/inc/hal_rtc.h
+0x0203C5C8	hal_rtcAlarmStatusGet	u8	u8	u8 hal_rtcAlarmStatusGet(u8 clear)	hal/inc/hal_rtc.h
+0x0203C604	hal_vddWKOEnable	void	u8	void hal_vddWKOEnable(u8 enable)	hal/inc/hal_rtc.h
+0x0203C628	hal_vddGSENEnable	void	u8	void hal_vddGSENEnable(u8 enable)	hal/inc/hal_rtc.h
+0x0203C6E8	hal_sdStop	s32	void	s32 hal_sdStop(void)	hal/inc/hal_sd.h
+0x0203C958	hal_sdNextLBA	s32	void	s32 hal_sdNextLBA(void)	hal/inc/hal_sd.h
+0x0203C978	hal_sdInit	s32	u8	s32 hal_sdInit(u8 sd_bus_width)	hal/inc/hal_sd.h
+0x0203CDD8	hal_sdUninit	void	void	void hal_sdUninit(void)	hal/inc/hal_sd.h
+0x0203CE04	hal_sdLock	void	void	void hal_sdLock(void)	hal/inc/hal_sd.h
+0x0203CE44	hal_sdUnlock	void	void	void hal_sdUnlock(void)	hal/inc/hal_sd.h
+0x0203CE70	hal_sdCheck	s32	void	s32 hal_sdCheck(void)	hal/inc/hal_sd.h
+0x0203CEE4	hal_sdSetCardState	void	u8	void hal_sdSetCardState(u8 state)	hal/inc/hal_sd.h
+0x0203CF04	hal_sdGetCardState	u8	void	u8 hal_sdGetCardState(void)	hal/inc/hal_sd.h
+0x0203CF24	hal_sdGetBusWidth	u8	void	u8 hal_sdGetBusWidth(void)	hal/inc/hal_sd.h
+0x0203CF44	hal_sdCapacity	u32	void	u32 hal_sdCapacity(void)	hal/inc/hal_sd.h
+0x0203CF64	hal_sdExist	s32	void	s32 hal_sdExist(void)	hal/inc/hal_sd.h
+0x0203CF8C	hal_sdWrite	s32	void *,u32,u32	s32 hal_sdWrite(void *pDataBuf, u32 dwLBA, u32 dwLBANum)	hal/inc/hal_sd.h
+0x0203D05C	hal_sdRead	s32	void *,u32,u32	s32 hal_sdRead(void *pDataBuf, u32 dwLBA, u32 dwLBANum)	hal/inc/hal_sd.h
+0x0203D0DC	hal_spiIOShare	u8	void	u8 hal_spiIOShare(void)	hal/inc/hal_spi.h
+0x0203D108	hal_spiInit	void	void	void hal_spiInit(void)	hal/inc/hal_spi.h
+0x0203D134	hal_spiSendByte	void	u8	void hal_spiSendByte(u8 byte)	hal/inc/hal_spi.h
+0x0203D158	hal_spiSend	void	u32,u32	void hal_spiSend(u32 addr,u32 len)	hal/inc/hal_spi.h
+0x0203D178	hal_spiRecvByte	u8	void	u8 hal_spiRecvByte(void)	hal/inc/hal_spi.h
+0x0203D198	hal_spiRecv	void	u32,u32	void hal_spiRecv(u32 addr,u32 len)	hal/inc/hal_spi.h
+0x0203D1FC	hal_spiFlashReadID	u32	void	u32 hal_spiFlashReadID(void)	hal/inc/hal_spi.h
+0x0203D25C	hal_spiFlashWriteEnable	void	void	void hal_spiFlashWriteEnable(void)	hal/inc/hal_spi.h
+0x0203D290	hal_spiFlashWait	s32	void	s32 hal_spiFlashWait(void)	hal/inc/hal_spi.h
+0x0203D314	hal_spiFlashReadPage	s32	u32,u32	s32 hal_spiFlashReadPage(u32 addr,u32 buffer)	hal/inc/hal_spi.h
+0x0203D38C	hal_spiFlashRead	s32	u32,u32,u32	s32 hal_spiFlashRead(u32 addr,u32 buffer,u32 len)	hal/inc/hal_spi.h
+0x0203D454	hal_spiFlashWritePage	s32	u32,u32	s32 hal_spiFlashWritePage(u32 addr,u32 buffer)	hal/inc/hal_spi.h
+0x0203D4E8	hal_spiFlashWrite	s32	u32,u32,u32	s32 hal_spiFlashWrite(u32 addr,u32 buffer,u32 len)	hal/inc/hal_spi.h
+0x0203D584	hal_spiFlashEraseSector	s32	u32	s32 hal_spiFlashEraseSector(u32 sectorAddr)	hal/inc/hal_spi.h
+0x0203D5F0	hal_spiFlashEraseBlock	s32	u32	s32 hal_spiFlashEraseBlock(u32 blockAddr)	hal/inc/hal_spi.h
+0x0203D654	hal_spiFlashEraseChip	s32	void	s32 hal_spiFlashEraseChip(void)	hal/inc/hal_spi.h
+0x0203D690	hal_timerStart	s32	u8,u32,void (*)()	s32 hal_timerStart(u8 htimer,u32 frq,void (*isr)(void))	hal/inc/hal_timer.h
+0x0203D6B4	hal_timerStop	s32	u8	s32 hal_timerStop(u8 htimer)	hal/inc/hal_timer.h
+0x0203D6D8	hal_timerEnable	s32	u8,u8	s32 hal_timerEnable(u8 htimer,u8 en)	hal/inc/hal_timer.h
+0x0203D710	hal_timerTickEnable	s32	u8	s32 hal_timerTickEnable(u8 en)	hal/inc/hal_timer.h
+0x0203D748	hal_timerTickGet	s32	void	s32 hal_timerTickGet(void)	hal/inc/hal_timer.h
+0x0203D7CC	hal_uartIOShare	u8	void	u8 hal_uartIOShare(void)	hal/inc/hal_uart.h
+0x0203D854	hal_uartInit	void	void	void hal_uartInit(void)	hal/inc/hal_uart.h
+0x0203D8A4	hal_uartSendData	void	u8	void hal_uartSendData(u8 data)	hal/inc/hal_uart.h
+0x0203D8C8	hal_uartRXIsrRegister	void	void (*)(u8)	void hal_uartRXIsrRegister(void (*isr)(u8 data))	hal/inc/hal_uart.h
+0x0203D8E8	uart_PutChar_n	void	u8	void uart_PutChar_n(u8 c)	hal/inc/hal_uart.h
+0x0203D91C	uart_PutStr	void	u8 *	void uart_PutStr(u8 *p_str)	hal/inc/hal_uart.h
+0x0203D95C	uart_Put_hex	void	DWORD,BOOL	void uart_Put_hex(DWORD dwHex, BOOL bMode)	hal/inc/hal_uart.h
+0x0203DA88	uart_Put_udec	void	DWORD	void uart_Put_udec(DWORD dwDec)	hal/inc/hal_uart.h
+0x0203DB1C	uart_Put_dec	void	long	void uart_Put_dec(long lDec)	hal/inc/hal_uart.h
+0x0203DBC4	uart_Printf	void	const char *,...	extern void uart_Printf(const char *pszStr, ...)	ax32xx/inc/ax32xx.h
+0x0203DD08	uart_PrintfBuf	void	void *,int	void uart_PrintfBuf(void *pBuf, int iDataLen)	hal/inc/hal_uart.h
+0x0203DDA0	hal_uartPrintString	void	char *	void hal_uartPrintString(char *string)	hal/inc/hal_uart.h
+0x0203DE4C	hal_watermarkInit	s32	void	s32 hal_watermarkInit(void)	hal/inc/hal_watermark.h
+0x0203DEFC	hal_watermarkClose	s32	s32	s32 hal_watermarkClose(s32 layer)	hal/inc/hal_watermark.h
+0x0203DF94	hal_watermarkClear	s32	s32	s32 hal_watermarkClear(s32 layer)	hal/inc/hal_watermark.h
+0x0203E014	hal_watermarkOpen	s32	void	s32 hal_watermarkOpen(void)	hal/inc/hal_watermark.h
+0x0203E0B4	hal_watermarkColor	s32	s32,u8,u8,u8	s32 hal_watermarkColor(s32 layer,u8 y,u8 u,u8 v)	hal/inc/hal_watermark.h
+0x0203E108	hal_watermarkAddr	s32	s32,void *	s32 hal_watermarkAddr(s32 layer,void *addr)	hal/inc/hal_watermark.h
+0x0203E120	hal_watermarkSize	s32	s32,u32,u32	s32 hal_watermarkSize(s32 layer,u32 width,u32 height)	hal/inc/hal_watermark.h
+0x0203E16C	hal_watermarkPosition	s32	s32,s32,s32	s32 hal_watermarkPosition(s32 layer,s32 x,s32 y)	hal/inc/hal_watermark.h
+0x0203E1B8	hal_watermarkCallbackRegister	s32	s32,void (*)()	s32 hal_watermarkCallbackRegister(s32 layer,void (*callback)(void))	hal/inc/hal_watermark.h
+0x0203E200	hal_watermarkRam	void *	s32,INT16U *,INT16U *	void *hal_watermarkRam(s32 layer,INT16U *width,INT16U *height)	hal/inc/hal_watermark.h
+0x0203E2A0	hal_watermarkEnable	s32	s32,u8	s32 hal_watermarkEnable(s32 layer,u8 en)	hal/inc/hal_watermark.h
+0x0203E410	hal_watermarkBPos_Adjust	void	s32	void hal_watermarkBPos_Adjust(s32 y)	hal/inc/hal_watermark.h
+0x0203E5C4	hal_sysMemMalloc	void *	u32,u8	void *hal_sysMemMalloc(u32 size,u8 algin)	hal/inc/hal_sys.h
+0x0203E694	hal_sysMemFree	void	void *	void hal_sysMemFree(void *mem)	hal/inc/hal_sys.h
+0x0203E788	hal_sysMemRemain	u32	void	u32 hal_sysMemRemain(void)	hal/inc/hal_sys.h
+0x0203E9A0	hal_audc_stamp_out	s32	void	s32 hal_audc_stamp_out(void)	hal/inc/hal_auadc.h
+0x0203E9F4	hal_audc_stamp_next	s32	void	s32 hal_audc_stamp_next(void)	hal/inc/hal_auadc.h
+0x0203EB3C	hal_auadcInit	void	void	void hal_auadcInit(void)	hal/inc/hal_auadc.h
+0x0203EB94	hal_auadcMemInit	int	void	int hal_auadcMemInit(void)	hal/inc/hal_auadc.h
+0x0203EC08	hal_auadcMemInitB	int	void	int hal_auadcMemInitB(void)	hal/inc/hal_auadc.h
+0x0203EC78	hal_auadcMemUninit	int	void	int hal_auadcMemUninit(void)	hal/inc/hal_auadc.h
+0x0203ECC4	hal_auadcMemUninitB	int	void	int hal_auadcMemUninitB(void)	hal/inc/hal_auadc.h
+0x0203ED20	hal_auadc_cnt	u32	void	u32 hal_auadc_cnt(void)	hal/inc/hal_auadc.h
+0x0203EE30	hal_auadcStartForWAV	int	_PCM_FRQ_,int	int hal_auadcStartForWAV(_PCM_FRQ_ frq,int volume)	hal/inc/hal_auadc.h
+0x0203EF28	hal_auadcStartForAVI	int	_PCM_FRQ_,int	int hal_auadcStartForAVI(_PCM_FRQ_ frq,int volume)	hal/inc/hal_auadc.h
+0x0203F048	hal_auadcStartForAVIB	int	_PCM_FRQ_,int	int hal_auadcStartForAVIB(_PCM_FRQ_ frq,int volume)	hal/inc/hal_auadc.h
+0x0203F0BC	hal_auadcBufferGet	void *	u32 *,u32 *,s32 *,s32 *	void *hal_auadcBufferGet(u32 *addr,u32 *len,s32 *syncnt,s32 *syncnt_next)	hal/inc/hal_auadc.h
+0x0203F1C4	hal_auadcBufferGetB	void *	u32 *,u32 *,s32 *,s32 *	void *hal_auadcBufferGetB(u32 *addr,u32 *len,s32 *syncnt,s32 *syncnt_next)	hal/inc/hal_auadc.h
+0x0203F2CC	hal_auadcStop	void	void	void hal_auadcStop(void)	hal/inc/hal_auadc.h
+0x0203F2F8	hal_auadcBufferRelease	void	void *	void hal_auadcBufferRelease(void *buffer)	hal/inc/hal_auadc.h
+0x0203F320	hal_auadcBufferReleaseB	void	void *	void hal_auadcBufferReleaseB(void *buffer)	hal/inc/hal_auadc.h
+0x0203F348	hal_auadcUACProcess	void	void	void hal_auadcUACProcess(void)	hal/inc/hal_auadc.h
+0x0203F428	hal_adcBuffer_prefull	bool	void	bool hal_adcBuffer_prefull(void)	hal/inc/hal_auadc.h
+0x0203F48C	hal_adcBuffer_halffull	bool	void	bool hal_adcBuffer_halffull(void)	hal/inc/hal_auadc.h
+0x0203F4A4	hal_adc_volume_set	void	int	void hal_adc_volume_set(int volume)	hal/inc/hal_auadc.h
+0x0203F4C4	hal_adc_volume_setB	void	int	void hal_adc_volume_setB(int volume)	hal/inc/hal_auadc.h
+0x0203F4E4	hal_uac_send	void	void	void hal_uac_send(void)	hal/inc/hal_auadc.h
+0x0203F548	hal_auadcStartForUAC	int	_PCM_FRQ_,int	int hal_auadcStartForUAC(_PCM_FRQ_ frq,int volume)	hal/inc/hal_auadc.h
+0x020401A8	hal_mjpegMemInit	int	void	int hal_mjpegMemInit(void)	hal/inc/hal_mjpeg.h
+0x020402F4	hal_mjpegMemUninit	void	void	void hal_mjpegMemUninit(void)	hal/inc/hal_mjpeg.h
+0x02040384	hal_mjpegEncodeInit	void	void	void hal_mjpegEncodeInit(void)	hal/inc/hal_mjpeg.h
+0x020403EC	hal_mjpegEncodeUninit	void	void	void hal_mjpegEncodeUninit(void)	hal/inc/hal_mjpeg.h
+0x0204043C	hal_mjpegEncodeResolution	void	u16,u16	void hal_mjpegEncodeResolution(u16 width,u16 height)	hal/inc/hal_mjpeg.h
+0x02040524	hal_mjpegEncodeResolutionImage	void	u16,u16	void hal_mjpegEncodeResolutionImage(u16 width,u16 height)	hal/inc/hal_mjpeg.h
+0x02040558	hal_mjpegSizecalculate	int	u8,u16,u16	int hal_mjpegSizecalculate(u8 quailty,u16 width,u16 height)	hal/inc/hal_mjpeg.h
+0x02040804	hal_mjpegUVCStart	int	u16,u16,u8	int hal_mjpegUVCStart(u16 win_w, u16 win_h, u8 quality)	hal/inc/hal_mjpeg.h
+0x020410A8	hal_mjpegPhotoStart	int	u16,u16,u8,u8	int hal_mjpegPhotoStart(u16 win_w, u16 win_h, u8 quality, u8 timestramp)	hal/inc/hal_mjpeg.h
+0x02041460	hal_mjpegAVIStart	int	u16,u16,u8,u8	int hal_mjpegAVIStart(u16 win_w, u16 win_h, u8 quality, u8 timestramp)	hal/inc/hal_mjpeg.h
+0x020415AC	hal_mjpegRawDataGet	void *	void **,u32 *,u32 *	void *hal_mjpegRawDataGet(void **hbuff,u32 *addr,u32 *len)	hal/inc/hal_mjpeg.h
+0x020416A4	hal_mjpegRawBufferfree	void	void	void hal_mjpegRawBufferfree(void)	hal/inc/hal_mjpeg.h
+0x0204183C	hal_mjpegRawDataSet	void	void *	void hal_mjpegRawDataSet(void *buffer)	hal/inc/hal_mjpeg.h
+0x02041EF0	hal_mjpegDecodeGetResolution	int	u16 *,u16 *	int hal_mjpegDecodeGetResolution(u16 *width,u16 *height)	hal/inc/hal_mjpeg.h
+0x02041FA0	hal_mjpegDecodeSetResolution	void	u16,u16	void hal_mjpegDecodeSetResolution(u16 width,u16 height)	hal/inc/hal_mjpeg.h
+0x02042028	hal_mjpegDecodeStatusCheck	int	void	int hal_mjpegDecodeStatusCheck(void)	hal/inc/hal_mjpeg.h
+0x02042048	hal_mjpegDecodeErrorCheck	u32	void	u32 hal_mjpegDecodeErrorCheck(void)	hal/inc/hal_mjpeg.h
+0x020421EC	hal_mjpegDecodeStop	void	void	void hal_mjpegDecodeStop(void)	hal/inc/hal_mjpeg.h
+0x0204220C	hal_mjpegDecodeReset	int	void	int hal_mjpegDecodeReset(void)	hal/inc/hal_mjpeg.h
+0x02042240	hal_mjpegDecodePicture	int	u8 *,u8 *,u8 *,u16,u16	int hal_mjpegDecodePicture(u8 * p_jpeg_start,u8 * p_out_y,u8 * p_out_uv,u16 dst_width,u16 dst_height)	hal/inc/hal_mjpeg.h
+0x020422B0	hal_mjpegDecodePicture_2	int	u8 *,u8 *,u8 *,u16,u16	int hal_mjpegDecodePicture_2(u8 * p_jpeg_start,u8 * p_out_y,u8 * p_out_uv,u16 dst_width,u16 dst_height)	hal/inc/hal_mjpeg.h
+0x0204231C	hal_mjpegDecodeParse	int	u8 *,u16,u16	int hal_mjpegDecodeParse(u8 * p_jpeg_start,u16 dst_width,u16 dst_height)	hal/inc/hal_mjpeg.h
+0x0204234C	hal_mjpegDecodeOneFrame	void	u8 *,u8 *,u8 *	void hal_mjpegDecodeOneFrame(u8 * p_jpeg_start,u8 * p_out_y,u8 * p_out_uv)	hal/inc/hal_mjpeg.h
+0x020423A4	hal_mjpegDecodeOneFrame_Ext	void	u8 *,u8 *,u8 *	void hal_mjpegDecodeOneFrame_Ext(u8 * p_jpeg_start,u8 * p_out_y,u8 * p_out_uv)	hal/inc/hal_mjpeg.h
+0x0204242C	hal_mjpegDecodeRestart_Ext	void	u8 *	void hal_mjpegDecodeRestart_Ext(u8 * p_jpeg_start)	hal/inc/hal_mjpeg.h
+0x02042498	hal_mjpegDecodeOneFrame_Fast	void	u8 *,u8 *,u8 *,u16,u16,u16	void hal_mjpegDecodeOneFrame_Fast(u8 * p_jpeg_start,u8 * p_out_y,u8 * p_out_uv,u16 dst_width,u16 dst_height,u16 stride)	hal/inc/hal_mjpeg.h
+0x02042580	hal_BackRecDecodeStatusCheck	int	void	int hal_BackRecDecodeStatusCheck(void)	hal/inc/hal_mjpeg.h
+0x02042E64	hal_intInit	void	void	void hal_intInit(void)	hal/inc/hal_int.h
+0x02042E98	hal_streamInit	int	Stream_Head_T *,Stream_Node_T *,u32,u32,u32	int hal_streamInit(Stream_Head_T *head,Stream_Node_T *pool,u32 num,u32 mem,u32 mem_len)	hal/inc/hal_stream.h
+0x02043078	hal_streamIn_Drop	void	Stream_Head_T *	void hal_streamIn_Drop(Stream_Head_T *head)	hal/inc/hal_stream.h
+0x020430DC	hal_streamIn	int	Stream_Head_T *,u32,u32,s32,s32	int hal_streamIn(Stream_Head_T *head, u32 p, u32 len,s32 t_sync,s32 t_sync_next)	hal/inc/hal_stream.h
+0x02043178	hal_streamOut	int	Stream_Head_T *,u32 *,u32 *,s32 *,s32 *	int hal_streamOut(Stream_Head_T *head, u32 *p, u32 *len,s32 *sync, s32 *sync_next)	hal/inc/hal_stream.h
+0x02043294	hal_streamfree	int	Stream_Head_T *	int hal_streamfree(Stream_Head_T *c)	hal/inc/hal_stream.h
+0x02043A74	hal_mjpB_usensor_fram_free	bool	void	extern bool hal_mjpB_usensor_fram_free(void)	multimedia/video/video_record.h
+0x02043A9C	hal_mjpB_usensor_fram_rd	bool	u8 **,u32 *,u32 *,s32 *,s32 *	extern bool hal_mjpB_usensor_fram_rd(u8 **p, u32 *len, u32 *id,s32 *u_sync, s32 *u_sync_next)	multimedia/video/video_record.h
+0x02043BAC	hal_get_fBcnt	u32	void	extern u32 hal_get_fBcnt(void)	multimedia/video/video_record.h
+0x02043C30	hal_mjpB_ecdown	void	void	void hal_mjpB_ecdown(void)	hal/inc/hal_mjpeg.h
+0x02043D18	hal_mjpB_ecbusy	void	void	void hal_mjpB_ecbusy(void)	hal/inc/hal_mjpeg.h
+0x02043F8C	api_mjp_avi_stop	void	void	void api_mjp_avi_stop(void)	hal/inc/hal_mjpeg.h
+0x02044180	hal_mjpB_Buffer_prefull	bool	void	bool hal_mjpB_Buffer_prefull(void)	hal/inc/hal_mjpeg.h
+0x02044248	hal_osdcmpStart	void	disp_frame_t *,disp_frame_t *	void hal_osdcmpStart(disp_frame_t * src,disp_frame_t * dst)	hal/inc/hal_osdcmp.h
+0x0204432C	hal_osdcmpInit	void	void	void hal_osdcmpInit(void)	hal/inc/hal_osdcmp.h
+0x02044354	hal_osdcmpCompOneFrame	int	u8 *,u32,u8 *,u32 *,u8	int hal_osdcmpCompOneFrame(u8 * src,u32 src_len,u8 * dst,u32 * dst_len,u8 reverse_en)	hal/inc/hal_osdcmp.h
+0x0204450C	hal_rotateInit	void	void	void hal_rotateInit(void)	hal/inc/hal_rotate.h
+0x02044560	hal_rotateAdd	void	u8,disp_frame_t *,disp_frame_t *	void hal_rotateAdd(u8 ch,disp_frame_t * src,disp_frame_t * dst)	hal/inc/hal_rotate.h
+0x0204473C	hal_dispframeInit	void	u32,u32,u32,u32,u8	void hal_dispframeInit(u32 vsrc_w,u32 vsrc_h,u32 osd_w,u32 osd_h,u8 scan_mode)	hal/inc/hal_lcdframe.h
+0x02044CE0	hal_dispframeVideoCfg	void	disp_frame_t*,u16,u16,u16,u16	void hal_dispframeVideoCfg(disp_frame_t* p_frame,u16 posX,u16 posY,u16 width,u16 height)	hal/inc/hal_lcdframe.h
+0x02044F64	hal_dispframeMalloc	disp_frame_t *	u8	disp_frame_t * hal_dispframeMalloc(u8 frame_type)	hal/inc/hal_lcdframe.h
+0x02044FF8	hal_dispframeFree	void	disp_frame_t *	void hal_dispframeFree(disp_frame_t * p_frame)	hal/inc/hal_lcdframe.h
+0x02045084	hal_dispframeSetCallback	void	disp_frame_t *,void (*)(disp_frame_t *)	void hal_dispframeSetCallback(disp_frame_t * p_frame,void (*priv_func)(disp_frame_t *))	hal/inc/hal_lcdframe.h
+0x0204509C	hal_dispframeGetFrameNums	u32	u32	u32 hal_dispframeGetFrameNums(u32 type)	hal/inc/hal_lcdframe.h
+0x0204655C	isp_stat_isr_hal	void	void	void isp_stat_isr_hal(void)	ax32xx/inc/ax32xx_isp.h
+0x020465F8	hal_ispFrameCnt	int	u8	int hal_ispFrameCnt(u8 clear)	hal/isp/hal_isp.h
+0x02046638	awb_manual_gain_adapt	void	u32	void awb_manual_gain_adapt(u32 awb_scene_mod)	hal/isp/hal_isp.h
+0x02046718	isp_AWB_adj_cfg	void	u32,u8*,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32,u32 *,u32 *,u32 *	void isp_AWB_adj_cfg(u32 en,u8*p_wp_tab,u32 seg_mode,u32 rgmin,u32 rgmax, u32 weight_in,u32 weight_mid,u32 ymin,u32 ymax,u32 hb_rate,u32 hb_class,u32 hr_rate,u32 hr_class, u32 yuv_mod_en, u32 rg_start, u32 ycbcr_th, u32 *cb_th, u32 *cr_th, u32 *cbcr_th)	ax32xx/inc/ax32xx_isp.h
+0x02046860	isp_LSC_adj_cfg	void	u16 *,u8	void isp_LSC_adj_cfg(u16 *p_lsc_tab,u8 first_time)	ax32xx/inc/ax32xx_isp.h
+0x020468F4	awb_scene_mod_set	void	u32	void awb_scene_mod_set(u32 awb_scene_mod)	hal/isp/hal_isp.h
+0x02046CA4	isp_table_load	void	u32,u32,u32	void isp_table_load(u32 gma_num,u32 contra_num,u32 rgbgma_num)	hal/isp/hal_isp.h
+0x02047FF8	sensor_compensate_exp_set	void	u32	void sensor_compensate_exp_set(u32 compensate_mod)	hal/isp/hal_isp.h
+0x020480B0	isp_get_scen_light	u8	void	u8 isp_get_scen_light(void)	hal/isp/hal_isp.h
+0x020480D0	sensor_frame_rate_adapt	void	u32,u32	void sensor_frame_rate_adapt(u32 frequecy_mode,u32 frame_rate)	hal/isp/hal_isp.h
+0x020482F4	isp_process_check	void	void	void isp_process_check(void)	hal/isp/hal_isp.h
+0x020487A4	exposal_adj	bool	u32,u32,u32 *,u32	bool exposal_adj(u32 yloga_avg,u32 yloga,u32 * p_br,u32 exp_ext_mod)	hal/isp/hal_isp.h
+0x02048808	isp_all_model_cfg	void	u32	void isp_all_model_cfg(u32 isp_all_mod)	hal/isp/hal_isp.h
+0x02048864	hal_ispService	void	void	void hal_ispService(void)	hal/isp/hal_isp.h
+0x02048928	hal_isp_sof_loop	void	void	void hal_isp_sof_loop()	hal/isp/hal_isp.h
+0x02048E98	init_common_str	void	void	void init_common_str(void)	hal/isp/hal_isp.h
+0x0204915C	isp_init	void	void	void isp_init(void)	hal/isp/hal_isp.h
+0x02049230	hal_isp_debug_read	void	u8 *,u32,u32	void hal_isp_debug_read(u8 *pbdata ,u32 trans_len, u32 param_3B)	hal/isp/hal_isp.h
+0x0204934C	hal_Sensor_common_Get	void	u8 *,u32,u32	void hal_Sensor_common_Get(u8 *pbdata ,u32 trans_len, u32 param_3B)	hal/isp/hal_isp.h
+0x02049388	CopyToMember	void	void*,int,int,void*,int,int	void CopyToMember(void* ispModuleData, int offsetOfMember, int sizeOfMember, void* pbdata, int startPos, int trans_len)	device/cmos_sensor/cmos_sensor.h
+0x0204940C	hal_Sensor_common_Set	void	u8 *,u32,u32	void hal_Sensor_common_Set(u8 *pbdata ,u32 trans_len, u32 param_3B)	hal/isp/hal_isp.h
+0x02049F18	ygama_update	void	u8 *,u32,u32	void ygama_update(u8 *pbdata ,u32 trans_len, u32 param_3B)	hal/isp/hal_isp.h
+0x02049FA0	hal_isp_debug_write	void	u8 *,u32,u32	void hal_isp_debug_write(u8 *pbdata ,u32 trans_len, u32 param_3B)	hal/isp/hal_isp.h
+0x0204A450	awb_update	void	u8 *,u32,u32	void awb_update(u8 *pbdata ,u32 trans_len, u32 param_3B)	hal/isp/hal_isp.h
+0x0204A720	usb_uvciso_kick	bool	u32,u16	bool usb_uvciso_kick(u32 adr, u16 len)	hal/dusb/hal_usb_api.h
+0x0204A750	usb_uvciso_wait_txdown	bool	void	bool usb_uvciso_wait_txdown(void)	hal/dusb/hal_usb_api.h
+0x0204A774	usb_uaciso_kick	bool	u32,u16	bool usb_uaciso_kick(u32 adr, u16 len)	hal/dusb/hal_usb_api.h
+0x0204A7A4	usb_uaciso_wait_txdown	bool	void	bool usb_uaciso_wait_txdown(void)	hal/dusb/hal_usb_api.h
+0x0204A9D4	hal_usbdEnable	void	u8	void hal_usbdEnable(u8 en)	hal/dusb/hal_usb_api.h
+0x0204AC1C	usb_ep0_tx	bool	u8*,u8	bool usb_ep0_tx(u8* txbuf, u8 len)	hal/dusb/hal_usb_dev_enum.h
+0x0204ACF4	usbdev_reset	void	void	void usbdev_reset(void)	hal/dusb/hal_usb_dev_enum.h
+0x0204ADF4	usb_stall_ep	void	u8	void usb_stall_ep(u8 epnum)	hal/dusb/hal_usb_dev_enum.h
+0x0204B3F4	uvc_ready	bool	void	bool uvc_ready(void)	hal/dusb/hal_usb_dev_enum.h
+0x0204B948	usb_ep0_hal	void	void	void usb_ep0_hal(void)	hal/dusb/hal_usb_dev_enum.h
+0x0204BA3C	enum_epx_cfg	void	u8	void enum_epx_cfg(u8 devtyp)	hal/dusb/hal_usb_dev_enum.h
+0x0204BBD4	msc_epx_cfg	void	void	void msc_epx_cfg(void)	hal/dusb/hal_usb_msc.h
+0x0204D0A8	rbc_process	BOOL	void	BOOL rbc_process(void)	hal/dusb/hal_usb_msc.h
+0x0204D148	uac_epx_cfg	void	void	void uac_epx_cfg(void)	hal/dusb/hal_usb_uac.h
+0x0204D1DC	uac_unit_ctl_hal	bool	u8,u8,u8	bool uac_unit_ctl_hal(u8 val, u8 rqu, u8 len)	hal/dusb/hal_usb_uac.h
+0x0204D354	UacHandleToStreaming	bool	u8,u8,u8	bool UacHandleToStreaming(u8 val, u8 rqu, u8 len)	hal/dusb/hal_usb_uac.h
+0x0204D424	uac_start	void	void	void uac_start(void)	hal/dusb/hal_usb_uac.h
+0x0204D484	uac_stop	void	void	void uac_stop(void)	hal/dusb/hal_usb_uac.h
+0x0204D5E0	uvc_unit_ctl_ex_hal	bool	u8,u8,u8	bool uvc_unit_ctl_ex_hal(u8 val, u8 rqu, u8 len)	hal/dusb/hal_usb_uvc.h
+0x0204D6A0	uvc_unit_ctl_hal	bool	u8,u8,u8	bool uvc_unit_ctl_hal(u8 val, u8 rqu, u8 len)	hal/dusb/hal_usb_uvc.h
+0x0204D760	uvc_video_probe_control	void	u8,u8	void uvc_video_probe_control(u8 request,u8 len)	hal/dusb/hal_usb_uvc.h
+0x0204D810	uvc_video_commit_control	void	u8,u8	void uvc_video_commit_control(u8 request,u8 len)	hal/dusb/hal_usb_uvc.h
+0x0204D8C0	uvc_still_probe_control	void	u8,u8	void uvc_still_probe_control(u8 request,u8 len)	hal/dusb/hal_usb_uvc.h
+0x0204D970	uvc_still_commit_control	void	u8,u8	void uvc_still_commit_control(u8 request,u8 len)	hal/dusb/hal_usb_uvc.h
+0x0204DA20	uvc_probe_ctl_hal	bool	u8,u8,u8	bool uvc_probe_ctl_hal(u8 val, u8 rqu, u8 len)	hal/dusb/hal_usb_uvc.h
+0x0204DAB0	uvc_epx_cfg	void	void	void uvc_epx_cfg(void)	hal/dusb/hal_usb_uvc.h
+0x0204DB68	uvc_off	void	void	void uvc_off(void)	hal/dusb/hal_usb_uac.h
+0x0204DB8C	uvc_pkg_tx	BOOL	u8,u8*,u16	BOOL uvc_pkg_tx(u8 pkgtoggle, u8* addr, u16 len)	hal/dusb/hal_usb_uvc.h
+0x0204DC14	uvc_header	void	u32,u8 *	void uvc_header(u32 tgl, u8 *pbuf)	hal/dusb/hal_usb_uvc.h
+0x0204DC70	uvc_header_fill	void	u8,u32,u8,u8 *	void uvc_header_fill(u8 toggle, u32 pts, u8 end, u8 *pbuf)	hal/dusb/hal_usb_uvc.h
+0x0204DD3C	delay_5ms	void	u32	void delay_5ms(u32 n)	hal/husb/hal_usb_host_enum.h
+0x0204DE2C	hal_husb_init_typeA	void	void	void hal_husb_init_typeA(void)	hal/husb/hal_usb_host_api.h
+0x0204DF4C	uvc_host_dev_detech	void	void	void uvc_host_dev_detech(void)	hal/husb/hal_usb_host_api.h
+0x0204DF74	usb_host_remove	u8	void	u8 usb_host_remove(void)	hal/husb/hal_usb_host_api.h
+0x0204DFC4	usb11_host_remove	u8	void	u8 usb11_host_remove(void)	hal/husb/hal_usb_host_api.h
+0x0204E04C	usb11_host_fun_reg	void	void	void usb11_host_fun_reg(void)	hal/husb/hal_usb_host_api.h
+0x0204E09C	hal_husb11_init_typeA	void	void	void hal_husb11_init_typeA(void)	hal/husb/hal_usb_host_api.h
+0x0204E110	usb_host_detect	u8	void	u8 usb_host_detect(void)	hal/husb/hal_usb_host_api.h
+0x0204E184	usb_host_type_set	void	u8	void usb_host_type_set(u8 type)	hal/husb/hal_usb_host_api.h
+0x0204E270	cnvr	void	u8 *	void cnvr(u8 *p)	hal/husb/hal_usb_host_uvc.h
+0x0204F8E0	usb_stack_init	void	void	void usb_stack_init(void)	hal/husb/hal_usb_host_enum.h
+0x0204F9C4	husb_kick_ep0isr	void	void	void husb_kick_ep0isr(void)	hal/husb/hal_usb_host_enum.h
+0x0204FA0C	husb_ep0isr	void	void	void husb_ep0isr(void)	hal/husb/hal_usb_host_enum.h
+0x0204FAF8	uhost_backsta_cmd	void	void	void uhost_backsta_cmd(void)	hal/husb/hal_usb_host_enum.h
+0x0204FB50	check_backsta	bool	void	bool check_backsta(void)	hal/husb/hal_usb_host_enum.h
+0x0204FBBC	usb_enum_phase_get	u32	void	u32 usb_enum_phase_get(void)	hal/husb/hal_usb_host_enum.h
+0x0204FBDC	usb_enum_phase_clr	void	void	void usb_enum_phase_clr(void)	hal/husb/hal_usb_host_enum.h
+0x02050194	rbc_read_lba	s32	u8 *,u32,u16	s32 rbc_read_lba(u8 *buffer2,u32 lba,u16 len)	hal/husb/hal_usb_host_tpbulk.h
+0x020508FC	api_uvc_fcnt_get	u32	void	u32 api_uvc_fcnt_get(void)	hal/husb/hal_usb_host_uvc.h
+0x02050C20	huvc_dcod_down	void	u8	void huvc_dcod_down(u8 err)	hal/husb/hal_usb_host_uvc.h
+0x02050C90	hal_huvc_strm_init	void	void	void hal_huvc_strm_init(void)	hal/husb/hal_usb_host_uvc.h
+0x02050CB0	usb_usensor_frame_read	bool	u8 **,u32 *,u32 *	bool usb_usensor_frame_read(u8 **p, u32 *len, u32 *id)	hal/husb/hal_usb_host_uvc.h
+0x020510B0	uvc_host_init	bool	u8,u8,u8,u16,u8	bool uvc_host_init(u8 addr, u8 epin, u8 epout, u16 payload, u8 interval)	hal/husb/hal_usb_host_uvc.h
+0x02051198	uvc_actech_as_usensor	UVCHAL *	void	UVCHAL *uvc_actech_as_usensor(void)	hal/husb/hal_usb_host_uvc.h
+0x02051238	uvc11_actech_as_usensor	UVCHAL *	void	UVCHAL *uvc11_actech_as_usensor(void)	hal/husb/hal_usb_host_uvc.h
+0x020512E0	uvc_host11_init	bool	u8,u8,u8,u16,u8	bool uvc_host11_init(u8 addr, u8 epin, u8 epout, u16 payload, u8 interval)	hal/husb/hal_usb_host_uvc.h
+0x020517E0	backrec_adpt	bool	void	extern bool backrec_adpt(void)	multimedia/video/video_record.h
+0x02051800	backrec_sensor	void	bool	void backrec_sensor(bool stat)	hal/husb/hal_usb_host_api.h
+0x02051840	backrec_sensor_stat	bool	void	bool backrec_sensor_stat(void)	hal/husb/hal_usb_host_api.h
+0x02051880	usensor_actech	void	void	void usensor_actech(void)	hal/husb/hal_usb_host_api.h
+0x020518CC	api_backrec_linking	void	void	void api_backrec_linking(void)	hal/dusb/hal_usb_api.h
+0x02051934	api_backrec_relinking	void	void	void api_backrec_relinking(void)	hal/dusb/hal_usb_api.h
+0x0205195C	api_backrec_status	bool	void	bool api_backrec_status(void)	hal/dusb/hal_usb_api.h
+0x0205197C	api_astern_status	bool	void	bool api_astern_status(void)	hal/dusb/hal_usb_api.h
+0x0205199C	api_astern_set_status	void	bool	void api_astern_set_status(bool sta)	hal/dusb/hal_usb_api.h
+0x020519E8	api_backsta_linking	void	void	void api_backsta_linking(void)	hal/husb/hal_usb_host_uvc.h
+0x02051AD0	usensor_detach	void	void	void usensor_detach(void)	hal/husb/hal_usb_host_uvc.h
+0x02051B24	backrec_stop	void	void	void backrec_stop(void)	hal/husb/hal_usb_host_uvc.h
+0x02051B7C	backrec_lowerpower	bool	void	bool backrec_lowerpower(void)	hal/husb/hal_usb_host_api.h
+0x02051B9C	hal_mjpB_decoding	bool	void	bool hal_mjpB_decoding(void)	hal/husb/hal_usb_host_uvc.h
+0x02051BC8	hal_mjpB_dcdown	void	void	void hal_mjpB_dcdown(void)	hal/husb/hal_usb_host_uvc.h
+0x02051DB8	api_usensor_1S_pollmonitor	void	void	void api_usensor_1S_pollmonitor(void)	hal/husb/hal_usb_host_uvc.h
+0x02052140	audioPlaybackUninit	int	void	int audioPlaybackUninit(void)	multimedia/audio/audio_playback.h
+0x02052428	audioPlaybackPuase	int	void	int audioPlaybackPuase(void)	multimedia/audio/audio_playback.h
+0x020524A0	audioPlaybackGetStatus	int	void	int audioPlaybackGetStatus(void)	multimedia/audio/audio_playback.h
+0x020524E0	audioPlaybackGetTime	int	INT32U *,INT32U *	int audioPlaybackGetTime(INT32U *total,INT32U *curr)	multimedia/audio/audio_playback.h
+0x02052810	audioRecordInit	int	AUDIO_RARG_T *	int audioRecordInit(AUDIO_RARG_T *arg)	multimedia/audio/audio_record.h
+0x020528B4	audioRecordUninit	int	void	int audioRecordUninit(void)	multimedia/audio/audio_record.h
+0x02052AA8	audioRecordGetStatus	int	void	int audioRecordGetStatus(void)	multimedia/audio/audio_record.h
+0x02052C58	ringBufferRead	int	INT8U *,INT32U	int ringBufferRead(INT8U *buffer,INT32U len)	multimedia/audio/ring_buffer.h
+0x02052CE4	ringBufferService	int	void	int ringBufferService(void)	multimedia/audio/ring_buffer.h
+0x02052E58	ringBufferInit	int	INT8U *,INT32U,Media_T *	int ringBufferInit(INT8U *addr,INT32U len,Media_T *src)	multimedia/audio/ring_buffer.h
+0x02052F1C	ringBufferSeek	int	int	int ringBufferSeek(int offset)	multimedia/audio/ring_buffer.h
+0x02052FE0	ringBufferPoint	int	void	int ringBufferPoint(void)	multimedia/audio/ring_buffer.h
+0x0205301C	ringBufferDataSize	int	void	int ringBufferDataSize(void)	multimedia/audio/ring_buffer.h
+0x0205317C	playBackGetPlayTime	INT32U	void	INT32U playBackGetPlayTime(void)	multimedia/video/video_playback.h
+0x020531A4	videoPlaybackClear	void	INT8U *,INT8U *,INT16U,INT16U,INT8U,INT8U	void videoPlaybackClear(INT8U *ybuffer,INT8U *uvbuffer,INT16U width,INT16U height,INT8U y,INT8U uv)	multimedia/video/video_playback.h
+0x02053768	audioPlaybackSetVolume	int	INT8U	int audioPlaybackSetVolume(INT8U volume)	multimedia/audio/audio_playback.h
+0x020537BC	audioPlaybackGetVolume	int	void	int audioPlaybackGetVolume(void)	multimedia/audio/audio_playback.h
+0x020537FC	videoPlaybackGetResolution	Media_Res_T *	void	Media_Res_T *videoPlaybackGetResolution(void)	multimedia/video/video_playback.h
+0x020542AC	videoPlaybackThumbnailUninit	int	void	int videoPlaybackThumbnailUninit(void)	multimedia/video/video_playback.h
+0x020544A8	videoPlaybackThumbnailShow	int	INT16S,INT16S,INT16U,INT16U,INT32U,INT32U	int videoPlaybackThumbnailShow(INT16S x,INT16S y,INT16U width,INT16U height,INT32U y_addr,INT32U uv_addr)	multimedia/video/video_playback.h
+0x020545D8	videoPlaybackThumbnailInit	int	INT8U	int videoPlaybackThumbnailInit(INT8U cnt)	multimedia/video/video_playback.h
+0x0205473C	videoPlaybackThumbnailOne	int	FHANDLE,INT8U,INT16S,INT16S,INT16U,INT16U	int videoPlaybackThumbnailOne(FHANDLE fd,INT8U ftype,INT16S x,INT16S y,INT16U width,INT16U height)	multimedia/video/video_playback.h
+0x02054B64	videoRecordImageWatermark	void	INT16U,INT16U,INT8U	void videoRecordImageWatermark(INT16U width,INT16U height,INT8U en)	multimedia/video/video_record.h
+0x020561A8	videoRecordSizePreSec	int	int,INT32U	int videoRecordSizePreSec(int channel,INT32U time_s)	multimedia/video/video_record.h
+0x020562A0	videoRecordTakePhoto	int	int	int videoRecordTakePhoto(int fd)	multimedia/video/video_record.h
+0x020562E4	videoRecordTakePhotoStatus	int	void	int videoRecordTakePhotoStatus(void)	multimedia/video/video_record.h
+0x02056304	videoRecordSetPhotoStatus	void	INT32S	void videoRecordSetPhotoStatus(INT32S status)	multimedia/video/video_record.h
+0x02056C70	pcm_decode	INT32S	INT16U *,INT16U *,INT32U,INT16U,INT16U	INT32S pcm_decode(INT16U *input,INT16U *output,INT32U len,INT16U chtype,INT16U wavtype)	multimedia/wav/pcm.h
+0x02057A2C	streamSprintf	INT8U *	char *,INT8U *,INT16U,INT8U	INT8U *streamSprintf(char *str,INT8U *buffer,INT16U width,INT8U font)	multimedia/stream/stream.h
+0x02057BB8	gsensor_iic_read	void	INT8U,INT8U,INT8U *	void gsensor_iic_read(INT8U sid,INT8U addr,INT8U *data)	device/gsensor/gsensor.h
+0x02057BE0	gsensor_iic_write	void	INT8U,INT8U,INT8U	void gsensor_iic_write(INT8U sid,INT8U addr,INT8U data)	device/gsensor/gsensor.h
+0x02057CF0	gSensorUninit	int	void	int gSensorUninit(void)	device/gsensor/gsensor.h
+0x02057D40	gSensorWakeUpGet	int	void	int gSensorWakeUpGet(void)	device/gsensor/gsensor.h
+0x02057D78	gSensorWakeupSet	int	int	int gSensorWakeupSet(int level)	device/gsensor/gsensor.h
+0x02057DC8	gSensorActiveGet	int	void	int gSensorActiveGet(void)	device/gsensor/gsensor.h
+0x02057E18	gSensorActiveSet	int	int	int gSensorActiveSet(int level)	device/gsensor/gsensor.h
+0x02057E68	gSensorRead	int	int *,int *,int *	int gSensorRead(int *x,int *y,int *z)	device/gsensor/gsensor.h
+0x02057EAC	gSensorMircoMotionWait	int	int	int gSensorMircoMotionWait(int level)	device/gsensor/gsensor.h
+0x02057F4C	gSensorGetName	char *	void	char *gSensorGetName(void)	device/gsensor/gsensor.h
+0x02057FA0	sensor_iic_disable	void	void	void sensor_iic_disable(void)	device/cmos_sensor/cmos_sensor.h
+0x02058374	sensor_iic_info	void	INT8U,INT8U,INT8U,INT8U	void sensor_iic_info(INT8U wid,INT8U rid,INT8U awidth,INT8U dwidth)	device/cmos_sensor/cmos_sensor.h
+0x020583B8	SensorGetName	char *	void	char *SensorGetName(void)	device/cmos_sensor/cmos_sensor.h
+0x020585E8	uart_to_iic	INT8U *	u8 *	INT8U *uart_to_iic(u8 *p)	device/cmos_sensor/cmos_sensor.h
+0x0205B37C	nv_uninit	int	void	int nv_uninit(void)	bwlib/nvfs/nvfs.h
+0x0205B394	nv_configAddr	int	void	int nv_configAddr(void)	bwlib/nvfs/nvfs.h
+0x0205B408	nv_open	int	int	int nv_open(int res_num)	bwlib/nvfs/nvfs.h
+0x0205B49C	nv_size	int	int	int nv_size(int res_num)	bwlib/nvfs/nvfs.h
+0x0205B51C	nv_read	int	int,void *,int	int nv_read(int addr,void *buffer,int size)	bwlib/nvfs/nvfs.h
+0x0205B54C	user_string_size_get	s32_t	u32_t,u16_t *,u16_t *	extern s32_t user_string_size_get(u32_t id,u16_t *width,u16_t *height)	bwlib/Maxlib/max_user.h
+0x0205B570	user_string_data_get	u8_t *	u32_t	extern u8_t *user_string_data_get(u32_t id)	bwlib/Maxlib/max_user.h
+0x0205B588	user_get_icon	s32_t	u32_t,u32_t,u32_t	extern s32_t user_get_icon(u32_t name,u32_t buff,u32_t size)	bwlib/Maxlib/max_user.h
+0x0205B5AC	user_get_icon_addr	s32_t	u32_t	extern s32_t user_get_icon_addr(u32_t name)	bwlib/Maxlib/max_user.h
+0x0205B5CC	user_get_icon_line	void *	u32_t,u32_t	extern void *user_get_icon_line(u32_t addr,u32_t size)	bwlib/Maxlib/max_user.h
+0x0205B618	user_get_iconSize	s32_t	u32_t,u16_t *,u16_t *	extern s32_t user_get_iconSize(u32_t name,u16_t *width,u16_t *height)	bwlib/Maxlib/max_user.h
+0x0205B6F4	useDoubleBuff	void	bool	extern void useDoubleBuff(bool en)	bwlib/Maxlib/max_user.h
+0x0205B828	initDrawBuffWH	s32_t	uint16,uint16	extern s32_t initDrawBuffWH(uint16 width,uint16 height)	bwlib/Maxlib/max_user.h
+0x0205B87C	getDrawBuff	INT8U*	void	extern INT8U* getDrawBuff(void)	bwlib/Maxlib/max_user.h
+0x0205C9D0	drawRectangle	void	uiRect*,uiColor	void drawRectangle(uiRect* rect,uiColor color)	sUI/winManage.h
+0x0205D16C	drawImage	void	uiRect*,uiRect*,resID,uint8,uiColor	void drawImage(uiRect* winRect,uiRect* drawRect,resID id,uint8 alignment,uiColor bgColor)	sUI/winManage.h
+0x02066840	CountToString	s32_t	char *,u16_t,u16_t	extern s32_t CountToString(char *string,u16_t count1,u16_t count2)	bwlib/Maxlib/std/misc.h
+0x02066930	stringInster	s32_t	char *,char *,u32_t,u32_t	extern s32_t stringInster(char *des,char *src,u32_t offset,u32_t len)	bwlib/Maxlib/std/misc.h
+0x02066988	strTransform	void	char *,u32_t	extern void strTransform(char *str,u32_t len)	bwlib/Maxlib/std/misc.h
+0x020669FC	HexToString	char *	u32_t,u8_t	extern char *HexToString(u32_t value,u8_t lenght)	bwlib/Maxlib/std/misc.h
+0x02066A84	NumberToString	char *	u32_t,u8_t	extern char *NumberToString(u32_t value,u8_t lenght)	bwlib/Maxlib/std/misc.h
+0x02066B40	math_cos	s16_t	u16_t	s16_t math_cos(u16_t angle)	bwlib/Maxlib/std/std_math.h
+0x02066B74	math_sin	s16_t	u16_t	s16_t math_sin(u16_t angle)	bwlib/Maxlib/std/std_math.h
+0x02066BA8	math_abs	u32_t	s32_t	u32_t math_abs(s32_t m1)	bwlib/Maxlib/std/std_math.h
+0x02066BC8	math_max	s32_t	s32_t,s32_t	s32_t math_max(s32_t m1,s32_t m2)	bwlib/Maxlib/std/std_math.h
+0x02066BEC	math_min	s32_t	s32_t,s32_t	s32_t math_min(s32_t m1,s32_t m2)	bwlib/Maxlib/std/std_math.h
+0x02066C10	str_cpy	char *	char *,char *	extern char *str_cpy(char *des,char *src)	bwlib/Maxlib/std/str.h
+0x02066C4C	str_ncpy	char *	char *,char *,int	extern char *str_ncpy(char *des,char *src,int n)	bwlib/Maxlib/std/str.h
+0x02066CA4	str_char	char *	char *,char	extern char *str_char(char *stc,char c)	bwlib/Maxlib/std/str.h
+0x02066CE0	str_cmp	int	char *,char *	extern int str_cmp(char *str1,char *str2)	bwlib/Maxlib/std/str.h
+0x02066D3C	str_ncmp	int	char *,char *,int	extern int str_ncmp(char *str1,char *str2,int n)	bwlib/Maxlib/std/str.h
+0x02066DBC	str_len	int	char *	extern int str_len(char *str)	bwlib/Maxlib/std/str.h
+0x02066DEC	str_cat	char *	char *,char *	extern char *str_cat(char *dest,char *src)	bwlib/Maxlib/std/str.h
+0x02067240	R_loadResource	void	void *,unsigned long int	extern void R_loadResource(void *res,unsigned long int length)	bwlib/Maxlib/res/R.h
+0x0206729C	R_getData	void *	unsigned long int	extern void *R_getData(unsigned long int r_id)	bwlib/Maxlib/res/R.h
+0x020672F0	R_freeData	void	unsigned long int	extern void R_freeData(unsigned long int r_id)	bwlib/Maxlib/res/R.h
+0x0206732C	R_getSize	int	unsigned long int,unsigned short *,unsigned short *	extern int R_getSize(unsigned long int r_id,unsigned short *width,unsigned short *height)	bwlib/Maxlib/res/R.h
+0x02067380	R_getDataAndSize	void *	unsigned long int,unsigned short *,unsigned short *	extern void *R_getDataAndSize(unsigned long int r_id,unsigned short *width,unsigned short *height)	bwlib/Maxlib/res/R.h
+0x020673D4	R_getTColor	unsigned int	unsigned long int	extern unsigned int R_getTColor(unsigned long int r_id)	bwlib/Maxlib/res/R.h
+0x02067414	R_getAsciiCharSize	int	char,unsigned short *,unsigned short *,unsigned char	extern int R_getAsciiCharSize(char c,unsigned short *width,unsigned short *heigth,unsigned char font)	bwlib/Maxlib/res/R.h
+0x02067498	R_getAsciiStringSize	unsigned int	char *,unsigned short *,unsigned short *,unsigned char	extern unsigned int R_getAsciiStringSize(char *str,unsigned short *width,unsigned short *heigth,unsigned char font)	bwlib/Maxlib/res/R.h
+0x02067578	R_drawAsciiChar	int	unsigned short *,char,int,int,unsigned short,unsigned short,unsigned short,unsigned char	extern int R_drawAsciiChar(unsigned short *obuff,char c,int x,int y,unsigned short width,unsigned short color,unsigned short fcolor,unsigned char font)	bwlib/Maxlib/res/R.h
+0x02067944	R_drawAsciiString	int	unsigned short *,char *,int,int,unsigned short,unsigned short,unsigned short,unsigned char	extern int R_drawAsciiString(unsigned short *obuff,char *str,int x,int y,unsigned short width,unsigned short color,unsigned short fcolor,unsigned char font)	bwlib/Maxlib/res/R.h
+0x02067AEC	R_iconLoadResource	void	R_ICON_T *,unsigned long int	extern void R_iconLoadResource(R_ICON_T *res,unsigned long int length)	bwlib/Maxlib/res/R_icon.h
+0x02067B64	R_iconGetData	void *	unsigned long int	extern void *R_iconGetData(unsigned long int r_id)	bwlib/Maxlib/res/R_icon.h
+0x02067C58	R_iconGetSize	int	unsigned long int,unsigned short *,unsigned short *	extern int R_iconGetSize(unsigned long int r_id,unsigned short *width,unsigned short *height)	bwlib/Maxlib/res/R_icon.h
+0x02067D14	R_iconGetDataAndSize	void *	unsigned long int,unsigned short *,unsigned short *	extern void *R_iconGetDataAndSize(unsigned long int r_id,unsigned short *width,unsigned short *height)	bwlib/Maxlib/res/R_icon.h
+0x02067DC4	R_iconFreeData	void	unsigned long int	extern void R_iconFreeData(unsigned long int r_id)	bwlib/Maxlib/res/R_icon.h
+0x02067E18	R_iconGetTColor	unsigned int	unsigned long int	extern unsigned int R_iconGetTColor(unsigned long int r_id)	bwlib/Maxlib/res/R_icon.h
+0x02067EE4	R_stringLoadResource	void	R_STRING_T *,unsigned long int	extern void R_stringLoadResource(R_STRING_T *res,unsigned long int length)	bwlib/Maxlib/res/R_string.h
+0x02067F64	R_stringGetData	void *	unsigned int	extern void *R_stringGetData(unsigned int r_id)	bwlib/Maxlib/res/R_string.h
+0x02067FC8	R_stringGetSize	int	unsigned int,unsigned short *,unsigned short *	extern int R_stringGetSize(unsigned int r_id,unsigned short *width,unsigned short *height)	bwlib/Maxlib/res/R_string.h
+0x02068070	R_stringGetDataAndSize	void *	unsigned long int,unsigned short *,unsigned short *	extern void *R_stringGetDataAndSize(unsigned long int r_id,unsigned short *width,unsigned short *height)	bwlib/Maxlib/res/R_string.h
+0x02068604	ax32xx_sd0Uninit	void	void	void ax32xx_sd0Uninit(void)	ax32xx/inc/ax32xx_sd.h
+0x02068670	ax32xx_sd0SendCmd	s32	u8,u32	s32 ax32xx_sd0SendCmd(u8 byCMDIndex, u32 dwArgument)	ax32xx/inc/ax32xx_sd.h
+0x020687BC	ax32xx_sd0BusSet	void	u8	void ax32xx_sd0BusSet(u8 type)	ax32xx/inc/ax32xx_sd.h
+0x02068800	ax32xx_sd0Recv	void	u32,u32	void ax32xx_sd0Recv(u32 addr,u32 len)	ax32xx/inc/ax32xx_sd.h
+0x02068854	ax32xx_sd0Send	void	u32,u32	void ax32xx_sd0Send(u32 addr,u32 len)	ax32xx/inc/ax32xx_sd.h
+0x0206888C	ax32xx_sd0WaitDAT0	s32	void	s32 ax32xx_sd0WaitDAT0(void)	ax32xx/inc/ax32xx_sd.h
+0x0206891C	ax32xx_sd0WaitPend	s32	void	s32 ax32xx_sd0WaitPend(void)	ax32xx/inc/ax32xx_sd.h
+0x02068990	ax32xx_sd0GetRsp	s32	void	s32 ax32xx_sd0GetRsp(void)	ax32xx/inc/ax32xx_sd.h
+0x020689AC	ax32xx_sdCRCCheck	s32	u8	s32 ax32xx_sdCRCCheck(u8 mode)	ax32xx/inc/ax32xx_sd.h
+0x02068A0C	ax32xx_sd0Buffer	u8 *	void	u8 *ax32xx_sd0Buffer(void)	ax32xx/inc/ax32xx_sd.h
+0x02068B0C	ax32xx_sd0ClkSet	void	u32,u32	void ax32xx_sd0ClkSet(u32 hs_clk,u32 ns_clk)	ax32xx/inc/ax32xx_sd.h
+0x02068BB8	aviEncodeInit	int	INT8U,int (*)(int,void *,INT32U)	int aviEncodeInit(INT8U type,int (*cachewrite)(int fd,void *cachebuffer,INT32U lenght))	multimedia/avi/inc/avi_api.h
+0x02068C9C	aviEncodeUninit	int	int	int aviEncodeUninit(int favi)	multimedia/avi/inc/avi_api.h
+0x02068D38	aviEncodeParse	int	int,int,INT16U,INT16U,INT16U,INT16U,INT16U	int aviEncodeParse(int favi,int fhandle,INT16U width,INT16U height,INT16U fps,INT16U audio,INT16U samperate)	multimedia/avi/inc/avi_api.h
+0x02068DBC	aviEncodeAddIdx	int	int,INT8U *,INT8U,INT8U,INT32U,INT32U	int aviEncodeAddIdx(int favi,INT8U *buff,INT8U type,INT8U keyFrame,INT32U size,INT32U buflen)	multimedia/avi/inc/avi_api.h
+0x02068E38	aviEncodeSetIdx1	int	int,INT8U *	int aviEncodeSetIdx1(int favi,INT8U *buffer)	multimedia/avi/inc/avi_api.h
+0x02068EB8	aviEncodeFrameTag	int	int,INT32U *,INT32U,INT32U	int aviEncodeFrameTag(int favi,INT32U *buffer,INT32U tag,INT32U size)	multimedia/avi/inc/avi_api.h
+0x02068F24	aviEncodeAddOffset	int	int,INT32U	int aviEncodeAddOffset(int favi,INT32U add_offset)	multimedia/avi/inc/avi_api.h
+0x02068F74	aviEncodeGetIdx1Length	int	int	int aviEncodeGetIdx1Length(int favi)	multimedia/avi/inc/avi_api.h
+0x02068FB8	aviEncodeGetFrameCount	int	int	int aviEncodeGetFrameCount(int favi)	multimedia/avi/inc/avi_api.h
+0x02068FFC	aviEncodeEnd	int	int,INT8U *,INT32U,INT32U	int aviEncodeEnd(int favi,INT8U *buffer,INT32U fsize,INT32U idx_offset)	multimedia/avi/inc/avi_api.h
+0x02069070	aviEncodeService	int	int	int aviEncodeService(int favi)	multimedia/avi/inc/avi_api.h
+0x020690E4	aviEncodeAddofs	int	int,INT32U	int aviEncodeAddofs(int favi,INT32U offset)	multimedia/avi/inc/avi_api.h
+0x0206AD30	avi_odmlAddoffset	int	void *,INT32U	int avi_odmlAddoffset(void *encoder,INT32U offset)	multimedia/avi/inc/avi.h
+0x0206AD88	aviDecodeIdx1QInit	void	DECODE_Q_T *,AVIINDEXENTRY *,int	void aviDecodeIdx1QInit(DECODE_Q_T *idxq,AVIINDEXENTRY *table,int len)	multimedia/avi/inc/avi.h
+0x0206ADB4	aviDecodeIdx1Cpy	void	AVIINDEXENTRY *,AVIINDEXENTRY*	void aviDecodeIdx1Cpy(AVIINDEXENTRY *dst,AVIINDEXENTRY*src)	multimedia/avi/inc/avi.h
+0x0206ADE8	aviDecodeIdx1QIn	void	DECODE_Q_T *,AVIINDEXENTRY *	void aviDecodeIdx1QIn(DECODE_Q_T *idxq,AVIINDEXENTRY *idx1)	multimedia/avi/inc/avi.h
+0x0206AE64	aviDecodeIdx1QOut	void	DECODE_Q_T *,AVIINDEXENTRY *	void aviDecodeIdx1QOut(DECODE_Q_T *idxq,AVIINDEXENTRY *idx1)	multimedia/avi/inc/avi.h
+0x0206B044	aviDecodeInit	int	void *,INT32U,int (*)(void *,INT32U,INT32U)	int aviDecodeInit(void *cachebuffer,INT32U len,int (*cacheread)(void *cachebuffer,INT32U offset,INT32U lenght))	multimedia/avi/inc/avi_api.h
+0x0206B0A8	aviDecodeService	int	void	int aviDecodeService(void)	multimedia/avi/inc/avi_api.h
+0x0206B0E4	aviDecodeParse	int	int	int aviDecodeParse(int fhandle)	multimedia/avi/inc/avi_api.h
+0x0206B510	aviDecodeOneFrame	int	INT32U *,INT32U *,INT32U	int aviDecodeOneFrame(INT32U *offset,INT32U *length,INT32U type)	multimedia/avi/inc/avi_api.h
+0x0206B54C	aviDecodeFast	void	int	void aviDecodeFast(int deta)	multimedia/avi/inc/avi_api.h
+0x0206B584	aviDecodeGetTime	int	INT32U *,INT32U *	int aviDecodeGetTime(INT32U *totaltime,INT32U *curtime)	multimedia/avi/inc/avi_api.h
+0x0206B5C0	aviDecodeGetAudioSampleRate	int	void	int aviDecodeGetAudioSampleRate(void)	multimedia/avi/inc/avi_api.h
+0x0206B5E0	aviDecodeGetVideoFrameTime	int	void	int aviDecodeGetVideoFrameTime(void)	multimedia/avi/inc/avi_api.h
+0x0206B600	aviDecodeGetResolution	int	INT16U *,INT16U *	int aviDecodeGetResolution(INT16U *width,INT16U *height)	multimedia/avi/inc/avi_api.h
+0x0206B648	aviDecodeGetFrameIndex	int	void	int aviDecodeGetFrameIndex(void)	multimedia/avi/inc/avi_api.h
+0x0206C4E0	fs_mount	int	int	int fs_mount(int dev)	bwlib/fs/inc/fs.h
+0x0206C5B8	open	int	const char *,INT32U	int open(const char *name,INT32U op)	bwlib/fs/inc/fs.h
+0x0206C680	close	int	int	int close(int fd)	bwlib/fs/inc/fs.h
+0x0206C6F8	read	int	int,void *,UINT	int read(int fd,void *buff,UINT len)	bwlib/fs/inc/fs.h
+0x0206C770	write	int	int,const void *,UINT	int write(int fd,const void *buff,UINT len)	bwlib/fs/inc/fs.h
+0x0206C7E8	lseek	int	int,INT32S,INT32U	int lseek(int fd,INT32S offset,INT32U point)	bwlib/fs/inc/fs.h
+0x0206C86C	fs_readsector	int	int,void *,int	int fs_readsector(int fd,void *buffer,int sectors)	bwlib/fs/inc/fs.h
+0x0206C8EC	fs_writesector	int	int,void *,int	int fs_writesector(int fd,void *buffer,int sectors)	bwlib/fs/inc/fs.h
+0x0206C96C	fs_getsector	INT32U	int,INT32U,int	INT32U fs_getsector(int fd,INT32U offset,int from)	bwlib/fs/inc/fs.h
+0x0206CA60	fs_getclustersize	INT32U	void	INT32U fs_getclustersize(void)	bwlib/fs/inc/fs.h
+0x0206CA84	fs_getcluster	INT32U	int,INT32U	INT32U fs_getcluster(int fd,INT32U cluster_no)	bwlib/fs/inc/fs.h
+0x0206CAF8	fs_size	INT32U	int	INT32U fs_size(int fd)	bwlib/fs/inc/fs.h
+0x0206CB44	fs_size2	INT32U	int	INT32U fs_size2(int fd)	bwlib/fs/inc/fs.h
+0x0206CB90	fs_free_size	INT32U	void	INT32U fs_free_size(void)	bwlib/fs/inc/fs.h
+0x0206CBE0	fs_fastseek_init	int	int	int fs_fastseek_init(int fd)	bwlib/fs/inc/fs.h
+0x0206CC64	fs_merge	int	int,int	int fs_merge(int fd1,int fd2)	bwlib/fs/inc/fs.h
+0x0206CC7C	fs_bound	int	int,int	int fs_bound(int fd1,int fd2)	bwlib/fs/inc/fs.h
+0x0206CD48	get_fattime	U32	void	U32 get_fattime ()	bwlib/fs/inc/diskio.h
+0x0206CDC0	fs_init	int	void	int fs_init(void)	bwlib/fs/inc/diskio.h
+0x0206CE3C	disk_status	DSTATUS	BYTE	DSTATUS disk_status (BYTE pdrv)	bwlib/fs/inc/diskio.h
+0x0206CE7C	disk_initialize	DSTATUS	BYTE	DSTATUS disk_initialize (BYTE pdrv)	bwlib/fs/inc/diskio.h
+0x0206CEB8	disk_read	DRESULT	BYTE,BYTE*,DWORD,UINT	DRESULT disk_read (BYTE pdrv, BYTE* buff, DWORD sector, UINT count)	bwlib/fs/inc/diskio.h
+0x0206CEF4	disk_write	DRESULT	BYTE,const BYTE*,DWORD,UINT	DRESULT disk_write (BYTE pdrv, const BYTE* buff, DWORD sector, UINT count)	bwlib/fs/inc/diskio.h
+0x0206CF30	disk_ioctl	DRESULT	BYTE,BYTE,void*	DRESULT disk_ioctl (BYTE pdrv, BYTE cmd, void* buff)	bwlib/fs/inc/diskio.h
+0x0206ED48	clst2sect	DWORD	FATFS*,DWORD	DWORD clst2sect ( FATFS* fs, DWORD clst )	bwlib/fs/inc/ff.h
+0x02070ECC	f_mount	FRESULT	FATFS*,const TCHAR*,BYTE	FRESULT f_mount (FATFS* fs, const TCHAR* path, BYTE opt)	bwlib/fs/inc/ff.h
+0x02070F7C	f_open	FRESULT	FIL*,const TCHAR*,BYTE	FRESULT f_open (FIL* fp, const TCHAR* path, BYTE mode)	bwlib/fs/inc/ff.h
+0x02071440	f_read	FRESULT	FIL*,void*,UINT,UINT*	FRESULT f_read (FIL* fp, void* buff, UINT btr, UINT* br)	bwlib/fs/inc/ff.h
+0x0207174C	f_write	FRESULT	FIL*,const void*,UINT,UINT*	FRESULT f_write (FIL* fp, const void* buff, UINT btw, UINT* bw)	bwlib/fs/inc/ff.h
+0x02071ADC	f_sync	FRESULT	FIL*	FRESULT f_sync (FIL* fp)	bwlib/fs/inc/ff.h
+0x02071D58	f_close	FRESULT	FIL*	FRESULT f_close (FIL* fp)	bwlib/fs/inc/ff.h
+0x02071DA4	f_lseek	FRESULT	FIL*,FSIZE_t	FRESULT f_lseek (FIL* fp, FSIZE_t ofs)	bwlib/fs/inc/ff.h
+0x020723A0	f_opendir	FRESULT	DIR*,const TCHAR*	FRESULT f_opendir (DIR* dp, const TCHAR* path)	bwlib/fs/inc/ff.h
+0x020724D0	f_closedir	FRESULT	DIR*	FRESULT f_closedir (DIR* dp)	bwlib/fs/inc/ff.h
+0x0207250C	f_readdir	FRESULT	DIR*,FILINFO*	FRESULT f_readdir (DIR* dp, FILINFO* fno)	bwlib/fs/inc/ff.h
+0x020725B0	f_findnext	FRESULT	DIR*,FILINFO*	FRESULT f_findnext (DIR* dp, FILINFO* fno)	bwlib/fs/inc/ff.h
+0x02072654	f_findfirst	FRESULT	DIR*,FILINFO*,const TCHAR*,const TCHAR*	FRESULT f_findfirst (DIR* dp, FILINFO* fno, const TCHAR* path, const TCHAR* pattern)	bwlib/fs/inc/ff.h
+0x020726A8	f_stat	FRESULT	const TCHAR*,FILINFO*	FRESULT f_stat (const TCHAR* path, FILINFO* fno)	bwlib/fs/inc/ff.h
+0x02072730	f_getfree	FRESULT	const TCHAR*,DWORD*,FATFS**	FRESULT f_getfree (const TCHAR* path, DWORD* nclst, FATFS** fatfs)	bwlib/fs/inc/ff.h
+0x0207299C	f_truncate	FRESULT	FIL*	FRESULT f_truncate (FIL* fp)	bwlib/fs/inc/ff.h
+0x02072B18	f_unlink	FRESULT	const TCHAR*	FRESULT f_unlink (const TCHAR* path)	bwlib/fs/inc/ff.h
+0x02072C94	f_mkdir	FRESULT	const TCHAR*	FRESULT f_mkdir (const TCHAR* path)	bwlib/fs/inc/ff.h
+0x02072F14	f_rename	FRESULT	const TCHAR*,const TCHAR*	FRESULT f_rename (const TCHAR* path_old, const TCHAR* path_new)	bwlib/fs/inc/ff.h
+0x020731F4	f_chmod	FRESULT	const TCHAR*,BYTE,BYTE	FRESULT f_chmod (const TCHAR* path, BYTE attr, BYTE mask)	bwlib/fs/inc/ff.h
+0x020732DC	f_utime	FRESULT	const TCHAR*,const FILINFO*	FRESULT f_utime (const TCHAR* path, const FILINFO* fno)	bwlib/fs/inc/ff.h
+0x02074808	FEX_getlink_clust	DWORD	FFOBJID*,DWORD	DWORD FEX_getlink_clust(FFOBJID* obj,DWORD clst)	bwlib/fs/inc/ff.h
+0x020748DC	ff_uni2oem	WCHAR	DWORD,WORD	WCHAR ff_uni2oem (DWORD uni, WORD cp)	bwlib/fs/inc/ff.h
+0x020749AC	ff_oem2uni	WCHAR	WCHAR,WORD	WCHAR ff_oem2uni (WCHAR oem, WORD cp)	bwlib/fs/inc/ff.h
+0x02074A54	ff_wtoupper	DWORD	DWORD	DWORD ff_wtoupper (DWORD uni)	bwlib/fs/inc/ff.h

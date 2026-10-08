@@ -1,0 +1,396 @@
+addr	func	instrs	sprs	strings	named_callees	named_callers	tables
+33555512	FUN_ram_02000438	13			ui_get_ctx,ui_key_invoke	video_present	
+33556812	FUN_ram_0200094c	30			memcpy		
+33566496	FUN_ram_02002f20	174			XOSTimeDly,hal_dacHPSet,hal_gpioInit,hal_sdCheck,sensor_h62_exp_gain_wr		
+33567728	FUN_ram_020033f0	53			hal_dacHPSet,hal_gpioInit		
+33568184	FUN_ram_020035b8	8				status_screen_show	
+33568216	FUN_ram_020035d8	8				selfTestSysMsg500MS	
+33572928	FUN_ram_02004840	16				video_present	
+33573112	FUN_ram_020048f8	19				tbl_0C4990_48,video_present	
+33573368	FUN_ram_020049f8	180			hal_csiResolutionGet,hal_lcdSetCsiCrop,hal_mjpegAVIStart	mode_photo_enter,mode_video_enter	
+33574152	FUN_ram_02004d08	15					
+33574212	FUN_ram_02004d44	42					
+33574380	FUN_ram_02004dec	40					
+33574540	FUN_ram_02004e8c	45					
+33574720	FUN_ram_02004f40	33					
+33574852	FUN_ram_02004fc4	15					
+33574912	FUN_ram_02005000	6					
+33574936	FUN_ram_02005018	101			f_chmod,lseek,open,read		
+33575340	FUN_ram_020051ac	99			strcmp,strcpy		
+33576076	FUN_ram_0200548c	33			kc02_keypad_event		
+33576208	FUN_ram_02005510	19			kc02_keypad_event		
+33576284	FUN_ram_0200555c	26			kc02_keypad_event		
+33576388	FUN_ram_020055c4	37			kc02_keypad_event		
+33576536	FUN_ram_02005658	89			kc02_keypad_event		
+33576892	FUN_ram_020057bc	38			kc02_keypad_event		
+33577044	FUN_ram_02005854	65			kc02_keypad_event		
+33577832	FUN_ram_02005b68	50			nv_open,nv_read	app_boot_init	
+33578032	FUN_ram_02005c30	44			nv_read		
+33580100	FUN_ram_02006444	26			nv_open,nv_read,nv_size	dispLayerInit	
+33580204	FUN_ram_020064ac	2					
+33580212	FUN_ram_020064b4	460			configGet	app_boot_init,caseD_24,mode_photo_tick,mode_video_enter	
+33582052	FUN_ram_02006be4	36			R_loadResource,configGet	ui_state_dispatch_06	
+33582196	FUN_ram_02006c74	18				configSystem,menuOptionKeyMsgOk	ui_state_dispatch
+33582984	FUN_ram_02006f88	143	SPR_VR,SPR_SR		XOSTimeDly,ax32xx_sysDcacheFlush,dispLayerFreeFrame,dispLayerGetFrame,dispLayerShow,dispLayerUninit	mode_usb_enter	
+33583556	FUN_ram_020071c4	192		'鴚嶙'	XOSTimeGet,audioPlaybackGetStatus,audioPlaybackGetTime,audioPlaybackUninit,ax32xx_dacSampleRateSet,ax32xx_dacStart	ui_init_callbacks_04,ui_task_print_image	
+33584324	FUN_ram_020074c4	12				caseD_8	
+33584372	FUN_ram_020074f4	94		'329X_V1.0.0'	XOSTimeDly,audioPlaybackGetStatus,boardIoctrl,hal_vddGSENEnable	app_boot_init,mode_poweroff_enter	
+33584748	FUN_ram_0200766c	101			hal_sysMemMalloc,nv_open,nv_read,nv_size	app_boot_init	
+33585152	FUN_ram_02007800	12					
+33585200	FUN_ram_02007830	20					
+33585328	FUN_ram_020078b0	34					
+33586180	FUN_ram_02007c04	15			tick_auto_poweroff		
+33586240	FUN_ram_02007c40	15			tick_auto_poweroff		
+33586300	FUN_ram_02007c7c	15			tick_auto_poweroff		
+33586360	FUN_ram_02007cb8	15			tick_auto_poweroff		
+33586420	FUN_ram_02007cf4	15			tick_auto_poweroff		
+33586480	FUN_ram_02007d30	15			tick_auto_poweroff		
+33586540	FUN_ram_02007d6c	15			tick_auto_poweroff		
+33586600	FUN_ram_02007da8	30			ui_mode_request		
+33586720	FUN_ram_02007e20	15			ui_mode_request		
+33586780	FUN_ram_02007e5c	34					
+33586916	FUN_ram_02007ee4	38			tick_lcd_timeout,ui_mode_request,usb_mode_set		
+33588096	FUN_ram_02008380	18			XOSTimeDly,ax32xx_csiEnable		
+33590228	FUN_ram_02008bd4	90			winSetResid,winSetVisible		
+33590588	FUN_ram_02008d3c	14					
+33590644	FUN_ram_02008d74	183			winSetResid,winSetVisible		
+33591376	FUN_ram_02009050	46			video_present,winSetResid,winSetVisible		
+33591560	FUN_ram_02009108	169			hal_rtcTime2String,hal_rtcTimeGet,video_present,winSetResid,winSetVisible		ui_init_callbacks
+33592244	FUN_ram_020093b4	2					
+33592260	FUN_ram_020093c4	2					
+33592444	FUN_ram_0200947c	15			caseD_8		
+33592504	FUN_ram_020094b8	44			winSetResid,winSetVisible		
+33592680	FUN_ram_02009568	202			XOSTimeGet,hal_dispframeGetFrameNums,record_config_set		
+33593488	FUN_ram_02009890	340			XOSTimeGet,hal_dispframeGetFrameNums,record_config_set,winSetResid,winSetVisible		
+33594848	FUN_ram_02009de0	36					
+33594992	FUN_ram_02009e70	38					
+33595244	FUN_ram_02009f6c	233			boardIoctrl,configGet,winSetResid		
+33596176	FUN_ram_0200a310	27					
+33596284	FUN_ram_0200a37c	80			caseD_8,winSetVisible		
+33598092	FUN_ram_0200aa8c	30			XOSTimeGet	mode_photo_tick	
+33598652	FUN_ram_0200acbc	206			XMsgQPost,audioPlaybackGetStatus,ax32xx_sysDcacheFlush,close,dispLayerFreeFrame,dispLayerGetFrame	mode_playback_enter,mode_playback_tick	
+33599784	FUN_ram_0200b128	6					
+33599808	FUN_ram_0200b140	6					
+33601740	FUN_ram_0200b8cc	144			ax32xx_deUpdate,ax32xx_sysDcacheWback,winSetResid,winSetVisible		
+33602408	FUN_ram_0200bb68	38			playBackSysMsgUSB,playbackFileNameShow,playback_decode_close,playback_decode_state,work_service		
+33602560	FUN_ram_0200bc00	34			XOSTimeDly,audioPlaybackGetStatus,playback_decode_close,playback_decode_state,work_service		
+33602696	FUN_ram_0200bc88	49			XOSTimeDly,audioPlaybackGetStatus,work_service		
+33602892	FUN_ram_0200bd4c	25			ui_mode_request		
+33602992	FUN_ram_0200bdb0	42			playBackSysMsgTimeUpdate,playBackSysMsgUSB,playbackFileNameShow,playbackSDShow,winSetVisible,work_service		
+33603160	FUN_ram_0200be58	64			playBackSysMsgTimeUpdate,playBackSysMsgUSB,playbackFileNameShow,playbackSDShow,winSetName,winSetResid		
+33603416	FUN_ram_0200bf58	77			playBackSysMsgUSB,playbackFileNameShow,playback_decode_state,winSetResid,winSetVisible,work_service		
+33603724	FUN_ram_0200c08c	40			playBackSysMsgTimeUpdate,playback_decode_state,winSetResid,winSetVisible		
+33603884	FUN_ram_0200c12c	72			playBackSysMsgUSB,playbackFileNameShow,playback_decode_state,winSetResid,winSetVisible,work_service		
+33604732	FUN_ram_0200c47c	15			winSetVisible		
+33604792	FUN_ram_0200c4b8	52			XOSTimeDly,ax32xx_sysDcacheFlush,dispLayerGetFrame,dispLayerShow,display_get_mode,hal_dispframeVideoCfg		
+33605720	FUN_ram_0200c858	22			XMsgQPost,boardIoctrl	usb11_host_remove,usb_host_remove	
+33607188	FUN_ram_0200ce14	17				ui_key_dispatch,ui_task_print_file	
+33607256	FUN_ram_0200ce58	28			XMsgQPost,fs_free_size	asternKeyMsgUp,tick_sd_detect	
+33607368	FUN_ram_0200cec8	129		'AUDIO/' | 'PHOTO/' | 'VIDEO/'	XMsgQPost,f_mkdir,fs_getclustersize,hal_sdStop,hal_sdUnlock,managerFileScan	menuUsbKeyMsgMode,tick_sd_detect	
+33610064	FUN_ram_0200d950	422		'VIDEO/'	XMsgQPost,close,f_rename,f_unlink,fs_size,hal_sdGetCardState	mode_video_enter,tick_sd_detect,ui_state_dispatch_12	
+33615604	FUN_ram_0200eef4	102			record_stream_stop_B,video_present,vr_get_state		
+33624480	FUN_ram_020111a0	8		'!"$&()+-/024579:<>?ACDFHIKMNPRSUVXY[\\^_abdefhiklmoprsuvwyz|}~'		ui_key_dispatch	
+33626008	FUN_ram_02011798	139			XOSTimeDly,ax32xx_sysDcacheFlush,dispLayerFreeFrame,dispLayerGetFrame,dispLayerShow,display_get_mode		
+33626564	FUN_ram_020119c4	28			ui_mode_request		
+33626676	FUN_ram_02011a34	82			ui_mode_request,winSetResid		
+33628672	FUN_ram_02012200	53			msgDealByMsgInfor,msgFuncRegister,ui_key_invoke		
+33628932	FUN_ram_02012304	118			msgFuncRegister,video_present,winSendMsg	asternKeyMsgUp,kc02_print_file,kc02_print_image,menuUsbKeyMsgMode	
+33632544	FUN_ram_02013120	197			ax32xx_sysDcacheFlush,blit_b,dispLayerGetFrame,dispLayerShow,display_get_mode,hal_dispframeVideoCfg		
+33633944	FUN_ram_02013698	31			XOSTimeGet		
+33634836	FUN_ram_02013a14	25			ui_mode_request,video_present		
+33640564	FUN_ram_02015074	838			R_stringGetDataAndSize,XOSTimeDly,audioPlaybackGetStatus,audioPlaybackGetTime,audio_core_fn2,audio_core_result		
+33647636	FUN_ram_02016c14	3743			XOSTimeDly,ax32xx_sysDcacheFlush,blit_b,configGet,configSet,dispLayerShow		
+33662608	FUN_ram_0201a690	43					
+33662780	FUN_ram_0201a73c	34					
+33662916	FUN_ram_0201a7c4	40					
+33663076	FUN_ram_0201a864	25					
+33663176	FUN_ram_0201a8c8	45					
+33663356	FUN_ram_0201a97c	24					
+33663452	FUN_ram_0201a9dc	36		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	blit_a		
+33663596	FUN_ram_0201aa6c	37		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	memcpy		
+33663744	FUN_ram_0201ab00	48			memcpy		
+33663936	FUN_ram_0201abc0	42					
+33664104	FUN_ram_0201ac68	17					
+33664172	FUN_ram_0201acac	15			fill240		
+33664232	FUN_ram_0201ace8	67			memcpy		
+33664500	FUN_ram_0201adf4	77			memcpy		
+33664808	FUN_ram_0201af28	38			memcpy		
+33664960	FUN_ram_0201afc0	18			memcpy		
+33665032	FUN_ram_0201b008	48			memcpy		
+33665224	FUN_ram_0201b0c8	18		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'			
+33665296	FUN_ram_0201b110	62			memcpy		
+33665544	FUN_ram_0201b208	27			memcpy		
+33665652	FUN_ram_0201b274	57			memcpy		
+33665880	FUN_ram_0201b358	27			memcpy		
+33665988	FUN_ram_0201b3c4	31			memcpy		
+33666112	FUN_ram_0201b440	40			memcpy		
+33666272	FUN_ram_0201b4e0	14					
+33666328	FUN_ram_0201b518	61					
+33666572	FUN_ram_0201b60c	43					
+33666744	FUN_ram_0201b6b8	13					
+33666796	FUN_ram_0201b6ec	186					
+33667540	FUN_ram_0201b9d4	56					
+33667764	FUN_ram_0201bab4	95					
+33668144	FUN_ram_0201bc30	107					
+33668572	FUN_ram_0201bddc	46					
+33668756	FUN_ram_0201be94	49					
+33668952	FUN_ram_0201bf58	26					
+33669056	FUN_ram_0201bfc0	35					
+33669196	FUN_ram_0201c04c	61					
+33669440	FUN_ram_0201c140	32					
+33669568	FUN_ram_0201c1c0	47					
+33669756	FUN_ram_0201c27c	23					
+33669848	FUN_ram_0201c2d8	21				screen_game_balls	
+33669932	FUN_ram_0201c32c	23					
+33670024	FUN_ram_0201c388	21				screen_game_balls	
+33670108	FUN_ram_0201c3dc	51			asset_decode,hal_sysMemMalloc,present_frame		
+33670312	FUN_ram_0201c4a8	18					
+33670384	FUN_ram_0201c4f0	46					
+33670568	FUN_ram_0201c5a8	49					
+33670764	FUN_ram_0201c66c	78			XMsgQPost		
+33671076	FUN_ram_0201c7a4	25					
+33671176	FUN_ram_0201c808	29					
+33671292	FUN_ram_0201c87c	30					
+33671412	FUN_ram_0201c8f4	47		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	present_frame,window_fb	screen_game_balls	
+33671600	FUN_ram_0201c9b0	29				screen_game_balls	
+33671948	FUN_ram_0201cb0c	28					
+33672060	FUN_ram_0201cb7c	22					
+33672148	FUN_ram_0201cbd4	43					
+33672320	FUN_ram_0201cc80	45					
+33672500	FUN_ram_0201cd34	57					
+33672728	FUN_ram_0201ce18	21					
+33672812	FUN_ram_0201ce6c	22					
+33672900	FUN_ram_0201cec4	36			XMsgQPost		
+33673044	FUN_ram_0201cf54	21			hal_sysMemFree	screen_game_snake	
+33673128	FUN_ram_0201cfa8	19		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'			
+33673204	FUN_ram_0201cff4	62		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	hal_lcdGetShowingRotate		
+33673452	FUN_ram_0201d0ec	24			ax32xx_deUpdate,ax32xx_sysDcacheWback		
+33673548	FUN_ram_0201d14c	77			hal_sysMemMalloc		
+33673856	FUN_ram_0201d280	66					
+33674120	FUN_ram_0201d388	78					
+33674432	FUN_ram_0201d4c0	133				screen_game_snake	
+33674964	FUN_ram_0201d6d4	40				screen_game_snake	
+33675124	FUN_ram_0201d774	42			asset_decode,hal_sysMemMalloc	screen_game_snake	
+33675540	FUN_ram_0201d914	87				caseD_1d	
+33675888	FUN_ram_0201da70	38				caseD_1d	
+33676040	FUN_ram_0201db08	23					
+33676132	FUN_ram_0201db64	28					
+33676244	FUN_ram_0201dbd4	29			asset_decode,hal_sysMemMalloc,memcpy		
+33676360	FUN_ram_0201dc48	80			blit_a		
+33676680	FUN_ram_0201dd88	30					
+33676800	FUN_ram_0201de00	14		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	present_frame,window_fb	caseD_1d	
+33676856	FUN_ram_0201de38	50				caseD_1d	
+33677056	FUN_ram_0201df00	23			asset_decode,fill240	screen_game_crate	
+33677372	FUN_ram_0201e03c	69					
+33677648	FUN_ram_0201e150	40					
+33677808	FUN_ram_0201e1f0	34		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	blit_a		
+33677944	FUN_ram_0201e278	116		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	R_drawAsciiChar		
+33678408	FUN_ram_0201e448	37					
+33678556	FUN_ram_0201e4dc	56					
+33678780	FUN_ram_0201e5bc	46					
+33678964	FUN_ram_0201e674	72					
+33679252	FUN_ram_0201e794	45					
+33679432	FUN_ram_0201e848	41					
+33679596	FUN_ram_0201e8ec	100					
+33679996	FUN_ram_0201ea7c	52					
+33680204	FUN_ram_0201eb4c	44					
+33680380	FUN_ram_0201ebfc	41					
+33680544	FUN_ram_0201eca0	57		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	present_frame,window_fb	screen_game_tetris	
+33680772	FUN_ram_0201ed84	40			memcpy,memset		
+33680932	FUN_ram_0201ee24	37			asset_decode,fill240,present_frame,window_fb	screen_game_tetris	
+33681080	FUN_ram_0201eeb8	17				screen_game_tetris	
+33681924	FUN_ram_0201f204	33			boardIoctrl		
+33682056	FUN_ram_0201f288	53					
+33682268	FUN_ram_0201f35c	11					
+33682312	FUN_ram_0201f388	27		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	XOSRandom		
+33682420	FUN_ram_0201f3f4	10				screen_game_balls	
+33683216	FUN_ram_0201f710	409			dcacheFlush,drawChar,drawNotIntersect,drawRectangle,hal_lcdGetShowingRotate,resGetCharInfor	tbl_0C4990_48	
+33684852	FUN_ram_0201fd74	227			XMsgQPend,ax32xx_deUpdate,ax32xx_sysDcacheWback,dispLayerInit,dispLayerUninit,memset	screen_game_balls	
+33686404	FUN_ram_02020384	10			hal_sysMemFree	caseD_1d,caseD_24	
+33686444	FUN_ram_020203ac	97			ax32xx_sysDcacheFlush,hal_sysMemMalloc,memset,nv_open,nv_read,nv_size	mode_game_enter	
+33686892	FUN_ram_0202056c	105			XOSTimeGet,audioPlaybackGetStatus,ax32xx_dacSampleRateSet,ax32xx_dacStart,ax32xx_dacVolumeSet,hal_dacCallBackRegister		
+33687312	FUN_ram_02020710	98		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~' | ' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	XMsgQPost,memcpy,ui_mode_get_current		
+33687704	FUN_ram_02020898	6					
+33687728	FUN_ram_020208b0	6					
+33687752	FUN_ram_020208c8	6					
+33687776	FUN_ram_020208e0	6					
+33687800	FUN_ram_020208f8	37			ui_mode_request		
+33687948	FUN_ram_0202098c	112					
+33688396	FUN_ram_02020b4c	23					
+33688488	FUN_ram_02020ba8	22					
+33688576	FUN_ram_02020c00	12					
+33688624	FUN_ram_02020c30	49			blit_a		
+33688820	FUN_ram_02020cf4	30					
+33688940	FUN_ram_02020d6c	14		' #&(*,.03468:;=?ABDEGHJKMOPQRTUVWYZ[\\^_`abcefghijlmnopqrstuvwyz{|}~'	present_frame,window_fb		
+33688996	FUN_ram_02020da4	18					
+33689068	FUN_ram_02020dec	21				caseD_1d	
+33689152	FUN_ram_02020e40	18			fill240	screen_game_maze	
+33692280	FUN_ram_02021a78	82			ax32xx_sysDcacheFlush,jpeg_show_or_save	blit_b,fill240,game_menu_enter_icons,main_menu_init_icons	
+33692608	FUN_ram_02021bc0	80		"!$'*,.13589;=?@BDFGIJLMOPRTUVXYZ\\]^`abdefghijklmnoqrstuvwxyz{|~~"		app_boot_init	
+33694772	FUN_ram_02022434	187			ax32xx_sysDcacheFlush,hal_sysMemFree,hal_sysMemMalloc,memcpy,memset	hal_BackRecDecodeStatusCheck,hal_mjpegSizecalculate,photo_encode_frame,ui_task_print_image	
+33695520	FUN_ram_02022720	8				hal_lcdUpdataVCH,mode_photo_exit,mode_photo_tick,ui_task_print_image	
+33695552	FUN_ram_02022740	915			__udivdi3,ax32xx_sysDcacheFlush,hal_sysMemFree,hal_sysMemMalloc,memcpy,tbl_0C4990_18	hal_BackRecDecodeStatusCheck,hal_mjpegSizecalculate,mode_photo_tick,photo_encode_frame	
+33699212	FUN_ram_0202358c	107					
+33699640	FUN_ram_02023738	209					
+33700476	FUN_ram_02023a7c	269					
+33701552	FUN_ram_02023eb0	439					
+33703308	FUN_ram_0202458c	710			drawImage,drawRectangle,widgetProc,widgetSetId,winSetfgColor,winTouch		
+33706148	FUN_ram_020250a4	44			winSendMsgToParentNoData,winSetbgColor		
+33706324	FUN_ram_02025154	132			drawRectangle,widgetGetId,winSendMsg	asternKeyMsgUp,asternSysMsgAstern,caseD_24,defaultKeyMsgDown	
+33714180	FUN_ram_02027004	20			widgetProc		tbl_082A4C
+33721016	FUN_ram_02028ab8	19					
+33725136	FUN_ram_02029ad0	347			uiFree,winChangeNotify,winContain,winCreate,winOverlapping,winPaint1	frameWinCreateIndirect,itemCreatemenuOption,itemManageSetCharInfor,tbl_082A4C_01	
+33726928	FUN_ram_0202a1d0	67		'mempool err' | 'memPool error information:'	uart_Printf,winDestroy	video_present	
+33727624	FUN_ram_0202a488	94		'memPool error information:'	resBuffInit,resBuffUninit,uart_Printf,uiAlloc,uiHeapInit,winSetbgColor	app_boot_init	
+33728000	FUN_ram_0202a600	26					
+33728104	FUN_ram_0202a668	22					
+33728192	FUN_ram_0202a6c0	15				winCreate	
+33728252	FUN_ram_0202a6fc	30		'memPool maxBlks:%d' | 'memPool freeBlks:%d' | 'memPool minFreeBlks:%d'	uart_Printf		
+33728372	FUN_ram_0202a774	23			widgetProc		tbl_082D1C
+33746036	FUN_ram_0202ec74	8			software_iic_start	hal_iic016bitAddrRead,hal_iic016bitAddrReadData,hal_iic016bitAddrWrite,hal_iic016bitAddrWriteData	
+33746068	FUN_ram_0202ec94	8			software_iic_stop	hal_iic016bitAddrRead,hal_iic016bitAddrReadData,hal_iic016bitAddrWrite,hal_iic016bitAddrWriteData	
+33746100	FUN_ram_0202ecb4	18			software_iic_scl_set,software_iic_wait_ack	hal_iic016bitAddrRead,hal_iic016bitAddrReadData,hal_iic016bitAddrWrite,hal_iic016bitAddrWriteData	
+33746172	FUN_ram_0202ecfc	88	SPR_VR,SPR_SR		software_iic_delay_us,software_iic_scl_set,software_iic_sda_get,software_iic_sda_set,software_iic_sdain,software_iic_sdaout	hal_iic016bitAddrRead,hal_iic016bitAddrReadData,hal_iic016bitAddrWrite,hal_iic016bitAddrWriteData	
+33756176	FUN_ram_02031410	79	SPR_VR,USB20_Index,USB20E1TADR,USB20CON1		ax32xx_intEnable	awb_update	
+33756492	FUN_ram_0203154c	67	SPR_VR,USB20_Index,USB20E1RADR,USB20_OutCSR1		ax32xx_intEnable	awb_update	
+33756760	FUN_ram_02031658	60	SPR_VR,USB20_InCSR1,USB20_Index,USB20E2TADR		ax32xx_intEnable	usb_uaciso_kick,usb_uvciso_kick	
+33757000	FUN_ram_02031748	92	SPR_VR,USB20_Index,USB20_InCSR1,USB20E4TADR		ax32xx_intEnable	usb_uaciso_wait_txdown,usb_uvciso_wait_txdown	
+33757520	FUN_ram_02031950	175	SPR_VR,USB20CON0,CLKCON2,CLKCON0		XOSTimeDly	usb_device_start	
+33758220	FUN_ram_02031c0c	69	SPR_VR,USB20_IntrUSBE		usb_burst_reset	uvc_header_fill	
+33758496	FUN_ram_02031d20	80	SPR_VR		api_backrec_status,husb_ep0isr,husb_kick_ep0isr,usb_stack_init	usb_fun_reg	
+33758816	FUN_ram_02031e60	92	SPR_VR,USB20CON0		ax32xx_sysCpuMsDelay	usb_host_check	
+33759184	FUN_ram_02031fd0	11	USB11CON4			delay_5ms,husb11_pidin_get,husb11_pidin_kick,husb11_pidin_next	
+33759228	FUN_ram_02031ffc	14	USB11CON4,SPR_VR			husb11_pidin_get,husb11_pidin_kick,husb11_pidin_next,husb11_pidout	
+33759284	FUN_ram_02032034	94	SPR_VR,USB11CON1,USB11MCPCON,USB11CON3		XOSTimeDly	rbc_read_capacity	
+33762256	FUN_ram_02032bd0	63	SPR_VR,EMIPND,EMIHEADER,EMICON			tbl_082D1C_50,tbl_082D1C_80	
+33768144	FUN_ram_020342d0	7	CSI_I2J_YBADR,CSI_I2J_UVBADR			hal_mjpegSizecalculate	
+33768172	FUN_ram_020342ec	7	CSI_I2W_YBADR,CSI_I2W_UVBADR			hal_mjpegSizecalculate	
+33772032	FUN_ram_02035200	33	LCDCMD,SPR_VR		ax32xx_gpioDataSet,ax32xx_sysCpuNopDelay	hal_lcd_isp_init,sensor_h62_exp_gain_wr	
+33772164	FUN_ram_02035284	29	LCDCMD,SPR_VR		ax32xx_gpioDataSet,ax32xx_sysCpuNopDelay	hal_lcd_isp_init,sensor_h62_exp_gain_wr	
+33772280	FUN_ram_020352f8	33	LCDCMD,SPR_VR		ax32xx_gpioDataSet,ax32xx_sysCpuNopDelay	hal_lcd_isp_init,sensor_h62_exp_gain_wr	
+33772412	FUN_ram_0203537c	33	LCDCMD,SPR_VR		ax32xx_gpioDataSet,ax32xx_sysCpuNopDelay	hal_lcd_isp_init,sensor_h62_exp_gain_wr	
+33776708	FUN_ram_02036444	16				caseD_8,hal_mjpegEncodeUninit,hal_mjpegPhotoStart,hal_mjpegUVCStart	
+33783804	FUN_ram_02037ffc	84	SPR_VR,BACK_JPFLG_CLR		ax32xx_adcConverStart,ax32xx_adcEnable,ax32xx_adcRead,ax32xx_adcSetBaudrate,ax32xx_mjpegDecodeStop	hal_dispframeGetFrameNums,jpeg_show_or_save,kc02_load_print_image	
+33784140	FUN_ram_0203814c	23			ax32xx_adcConverStart,ax32xx_adcEnable,ax32xx_adcRead,ax32xx_adcSetBaudrate	battery_ioctl,battery_read,kc02_battery_check,kc02_keypad_scan	
+33785488	FUN_ram_02038690	10			ax32xx_gpioDataSet	app_boot_init,board_usb_ioctrl,kc02_adc_handler,kc02_adc_init	
+33785528	FUN_ram_020386b8	30			ax32xx_gpioDataGet,ax32xx_gpioINTInit,ax32xx_gpioLedInit	battery_read,kc02_keypad_scan,kc02_sensor_read	
+33794124	FUN_ram_0203a84c	44		'buf full'	ax32xx_csiLCDDmaKick,ax32xx_csiLCDFrameSet,hal_dispframeVideoCfg,hal_lcdGetIdleBuffer,uart_Printf	mode_photo_exit,mode_photo_tick	
+33796996	FUN_ram_0203b384	55		' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'	ax32xx_deWait,ax32xx_osdSetPalette	dispLayerInit	
+33797672	FUN_ram_0203b628	16		' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'		dispLayerGetFrame	
+33797736	FUN_ram_0203b668	20		' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'			
+33797816	FUN_ram_0203b6b8	26		' !"#$%&\'()*+,-./0123456789:;<=>?@ABCDEFGHIJKLMNOPQRSTUVWXYZ[\\]^_`abcdefghijklmnopqrstuvwxyz{|}~'	ax32xx_deWait,ax32xx_osdSetAddr		
+33814476	FUN_ram_0203f7cc	82			ax32xx_mjpegEncodeQuilitySet	hal_jA_fcnt_get,hal_mjpegCallback_state	
+33814804	FUN_ram_0203f914	46				caseD_8,hal_mjpegPhotoStart,hal_mjpegUVCStart	
+33822820	FUN_ram_02041864	320			ax32xx_mjpegDecodeInitTable,hal_sysMemFree,hal_sysMemMalloc,memcpy	hal_dispframeGetFrameNums,hal_mjpegDecodeInit_constprop_6,jpeg_show_or_save,kc02_load_print_image	
+33824708	FUN_ram_02041fc4	14				jpeg_show_or_save	
+33824764	FUN_ram_02041ffc	11				jpeg_show_or_save	
+33824808	FUN_ram_02042028	8			ax32xx_mjpegDecodeStatus	jpeg_show_or_save,playback_decode_service,videoPlaybackDecodeWait,videoPlaybackThumbnailUninit	
+33824840	FUN_ram_02042048	8			ax32xx_mjpegDecodeCheck	jpeg_show_or_save,playback_decode_service,videoPlaybackThumbnailUninit	
+33829524	FUN_ram_02043294	48	SPR_VR,SPR_SR			audio_core_close,hal_auadcBufferfree,hal_auadcBufferfreeB,hal_mjpegRawBufferfree	
+33832772	FUN_ram_02043f44	18			hal_sysMemFree	api_mjp_avi_stop	
+33840040	FUN_ram_02045ba8	94	SPR_VR,SPR_SR		api_backrec_status,ax32xx_csiScalerCheck,backrec_sensor,hal_BackRecDecodeStatusCheck,hal_lcdSetPIPEnable,hal_mjpegDecodePicture_2	hal_BackRecDecodeStatusCheck,hal_mjpegSizecalculate	
+33840416	FUN_ram_02045d20	166	SPR_DCAWR			hal_BackRecDecodeStatusCheck,hal_mjpegSizecalculate	
+33841080	FUN_ram_02045fb8	45	SPR_VR,SPR_SR		hal_sysMemFree,memset	power_off_shutdown	
+33841260	FUN_ram_0204606c	18				mode_photo_enter,mode_photo_exit,mode_video_enter	
+33841332	FUN_ram_020460b4	39			ax32xx_sysInit	mode_photo_tick	
+33841488	FUN_ram_02046150	67			ax32xx_sysInit,hal_csiResolutionGet	hal_BackRecDecodeStatusCheck,hal_mjpegSizecalculate,photo_encode_frame	
+33842432	FUN_ram_02046500	23			pointer_check		
+33849552	FUN_ram_020480d0	74			ax32xx_csiPrioritySet,hal_csiAdptGet,pointer_check	caseD_a,sensor_frame_rate_adapt_for_dark,sensor_init	
+33868284	FUN_ram_0204c9fc	111	SPR_VR,USB20CON0,SPR_SR,USB11CON1		XOSTimeDly,ax32xx_intEnable,ax32xx_sysLDOSet,ax32xx_wdtEnable,hal_dacHPSet,sent_csw	usb_scsi_dispatch	
+33885524	FUN_ram_02050d54	203	SPR_VR,USB20_OutCSR1,USB20E3RADR,USB20_Index		ax32xx_mcpy_gram2ufifo,ax32xx_sysInit,huvc_jfill_down,huvc_jfill_loadadr,usb_host_remove		
+33887204	FUN_ram_020513e4	221	SPR_VR,USB11E3RADR		ax32xx_sysInit,huvc_jfill_down,huvc_jfill_loadadr,usb11_host_remove		
+33891520	FUN_ram_020524c0	8				configSystem,mode_game_exit	
+33896088	FUN_ram_02053698	44			hal_dacPlayStop,hal_sdLock,hal_sdUnlock	playback_decode_service,ui_task_print_file	
+33898316	FUN_ram_02053f4c	216			XMsgQFlush,XMsgQPost,aviDecodeGetResolution,aviDecodeGetVideoFrameTime,aviDecodeInit,aviDecodeParse		
+33901564	FUN_ram_02054bfc	38			hal_watermarkClear,hal_watermarkEnable,hal_watermarkPosition,videoRecordWatermark	caseD_8,hal_mjpegPhotoStart,hal_mjpegUVCStart,photo_encode_frame	
+33906280	FUN_ram_02055e68	141			aviEncodeFrameTag,aviEncodeGetFrameCount,aviEncodeService,aviPushFrame,hal_mjpegRawDataSet,record_rollover_A		
+33908764	FUN_ram_0205681c	46			hal_mjpegDecodeGetResolution	caseD_8,photo_encode_frame	
+33908948	FUN_ram_020568d4	231			XOSTimeGet,ax32xx_sysDcacheWback,close,f_unlink,hal_mjpegEncodeResolution,hal_mjpegEncodeUninit	mode_photo_exit	
+33910356	FUN_ram_02056e54	488			lseek,pcm_decode,ringBufferPoint,write	tbl_0860E0_12	
+33913696	FUN_ram_02057b60	22			ascii_draw_get	videoRecordImageWatermark	
+33913932	FUN_ram_02057c4c	41			hal_vddGSENEnable		
+33917120	FUN_ram_020588c0	174			XOSTimeDly,ax32xx_csiEnable,boardNameIoctrl,dispLayerInit,dispLayerUninit,isp_CCM_cfg	mode_photo_enter,mode_photo_exit,mode_video_enter,videoRemainTimeShow	
+33936800	FUN_ram_0205d5a0	469		'麿嶙' | '麿嶙' | '臾嶙'	dcacheFlush,drawChar,drawNotIntersect,drawRectangle,getDrawBuff,hal_lcdGetShowingRotate	tbl_082A4C_106,tbl_082A4C_131	
+33938676	FUN_ram_0205dcf4	133					
+33939208	FUN_ram_0205df08	61					
+33939452	FUN_ram_0205dffc	72					
+33939740	FUN_ram_0205e11c	58			memcpy		
+33939972	FUN_ram_0205e204	107					
+33940400	FUN_ram_0205e3b0	43			memcpy	caseD_1,caseD_3	
+33940572	FUN_ram_0205e45c	9					
+33940608	FUN_ram_0205e480	149				caseD_b	
+33941204	FUN_ram_0205e6d4	18					
+33941276	FUN_ram_0205e71c	40				caseD_7	
+33941436	FUN_ram_0205e7bc	9					
+33941472	FUN_ram_0205e7e0	45			memcpy	caseD_6	
+33941652	FUN_ram_0205e894	20				caseD_6	
+33941732	FUN_ram_0205e8e4	75					
+33942032	FUN_ram_0205ea10	86					
+33942376	FUN_ram_0205eb68	9					
+33942412	FUN_ram_0205eb8c	201				caseD_1	
+33943216	FUN_ram_0205eeb0	21				caseD_3	
+33943300	FUN_ram_0205ef04	31					
+33943424	FUN_ram_0205ef80	35				caseD_0	
+33943564	FUN_ram_0205f00c	33				caseD_1	
+33943696	FUN_ram_0205f090	36					
+33943840	FUN_ram_0205f120	38				caseD_2	
+33943992	FUN_ram_0205f1b8	35				caseD_6	
+33944132	FUN_ram_0205f244	26				caseD_a	
+33944236	FUN_ram_0205f2ac	27			XOSTimeGet	audio_core_fn2	tbl_086FA4
+33944960	FUN_ram_0205f580	51					
+33945164	FUN_ram_0205f64c	241					
+33946128	FUN_ram_0205fa10	177					
+33946836	FUN_ram_0205fcd4	116					
+33947300	FUN_ram_0205fea4	78					
+33947612	FUN_ram_0205ffdc	632					
+33950140	FUN_ram_020609bc	87			memcpy		
+33950488	FUN_ram_02060b18	341					
+33951852	FUN_ram_0206106c	981					
+33955776	FUN_ram_02061fc0	160					
+33956416	FUN_ram_02062240	147					
+33957004	FUN_ram_0206248c	23					
+33957096	FUN_ram_020624e8	20					
+33957176	FUN_ram_02062538	16					
+33957240	FUN_ram_02062578	389					tbl_089020
+33958796	FUN_ram_02062b8c	37			memset	caseD_9	
+33958944	FUN_ram_02062c20	252				caseD_3	
+33959952	FUN_ram_02063010	33					
+33960084	FUN_ram_02063094	75					
+33960384	FUN_ram_020631c0	242				caseD_7	
+33961352	FUN_ram_02063588	523				caseD_8	
+33963444	FUN_ram_02063db4	136			memcpy		
+33963988	FUN_ram_02063fd4	148				caseD_1,caseD_3	
+33965136	FUN_ram_02064450	31			ax32xx_mcpy1_sdram2gram		
+33965260	FUN_ram_020644cc	210			audio_core_close,ax32xx_dacBufferFlush,hal_dacPlayStop,hal_dacSetBuffer,hal_streamIn,hal_streamOut		
+33966100	FUN_ram_02064814	10				audio_core_fn2	
+33966860	FUN_ram_02064b0c	60			audio_core_close,audio_core_fn2	audio_core_result	
+33968092	FUN_ram_02064fdc	21			lseek		
+33968176	FUN_ram_02065030	36			memset,write		
+33968320	FUN_ram_020650c0	22					
+33968408	FUN_ram_02065118	135			ax32xx_sysDcacheFlush,memcpy,memset		
+33968948	FUN_ram_02065334	17				caseD_6	
+33969016	FUN_ram_02065378	831					
+33972340	FUN_ram_02066074	20					
+33972420	FUN_ram_020660c4	479					
+33980884	FUN_ram_020681d4	86			memcpy		
+33981228	FUN_ram_0206832c	62			memset,xsum32	resGetStringInfor	
+33981476	FUN_ram_02068424	35			memcpy	resGetCharInfor	
+33981616	FUN_ram_020684b0	85	SDCON0,SPR_VR,SDBAUD,SDCON1		ax32xx_dmaChannelEnable,ax32xx_gpioDirSet,ax32xx_gpioMapSet,ax32xx_gpioPullSet,ax32xx_gpioSFRSet,ax32xx_sysClkSet	hal_sdInit	
+33997968	FUN_ram_0206c490	20			memset	fs_mount,tick_sd_detect	
+34001228	FUN_ram_0206d14c	15				follow_path	
+34001288	FUN_ram_0206d188	31			__udivdi3	f_lseek,f_read,f_write	
+34001636	FUN_ram_0206d2e4	41				f_mount,f_rename,f_utime,find_volume	
+34002240	FUN_ram_0206d540	243			ld_dword,ld_qword,put_utf	f_readdir,f_stat	
+34003440	FUN_ram_0206d9f0	40			disk_write	dir_clear	
+34003600	FUN_ram_0206da90	111			ld_dword	find_volume	
+34004044	FUN_ram_0206dc4c	38			disk_read	change_bitmap,create_chain,dir_alloc,dir_find	
+34005240	FUN_ram_0206e0f8	164			ld_dword	FEX_getlink_clust,create_chain,dir_next,dir_sdi	
+34007476	FUN_ram_0206e9b4	45					
+34007656	FUN_ram_0206ea68	112				f_findnext	
+34008104	FUN_ram_0206ec28	72			disk_ioctl,disk_write,memset,st_dword	f_chmod,f_mkdir,f_rename,f_sync	
+34046464	FUN_ram_02078200	44				dir_find,strncmp	
+34046984	FUN_ram_02078408	104					
+34047748	FUN_ram_02078704	41				manangerCheckFileType	
+34048096	FUN_ram_02078860	127				follow_path,strncmp	
+34054808	FUN_ram_0207a298	411					tbl_0C4990
+34060156	FUN_ram_0207b77c	6788	0x3,0xb4b3,0x7e1c,0xb41e		__udivsi3,tbl_089020_00	__udivdi3	tbl_0C4990
