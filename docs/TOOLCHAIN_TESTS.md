@@ -104,6 +104,10 @@ python3 tools/test_toolchain.py run --ack-ram-execution --verbose
 By default the runner saves evidence under
 `patched/toolchain-tests/runs/<UTC timestamp>/`:
 
+The `patched/` directory is git-ignored, so run evidence is written locally and is
+not committed. Everything needed to regenerate it is in the repository, except the
+toolchain itself (see [`../toolchain/README.md`](../toolchain/README.md)).
+
 - `run.json`: progress, passed/failed vectors, last command, blocked cases, errors.
 - `suite.json`: build metadata and artifact fingerprints for that run.
 - Per-vector `.bin` files: raw returned 2 KiB buffers.
