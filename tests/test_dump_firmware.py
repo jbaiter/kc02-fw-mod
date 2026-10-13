@@ -514,23 +514,68 @@ class CliTests(unittest.TestCase):
             self.assertIn(message, dump.explain_error(UsbError(code)))
         self.assertIn("Not enough disk space", dump.explain_error(OSError(errno.ENOSPC, "full")))
 
+    def test_blackbox_payload_patch_and_profile(self):
+        parser = dump.build_parser()
+        self.assertEqual(parser.parse_args(["--profile", "blackbox"]).profile, "blackbox")
+        self.assertEqual(parser.parse_args([]).profile, "auto")
+        # The flash payload carries the SPI reader address as a movhi/ori pair.
+        payload = bytearray(dump.BLACKBOX_FLASH_PAYLOAD)
+        spi = 0x0203D38C
+        payload[dump.BLACKBOX_SPI_HI_OFF:dump.BLACKBOX_SPI_HI_OFF + 2] = (
+            spi >> 16
+        ).to_bytes(2, "little")
+        payload[dump.BLACKBOX_SPI_LO_OFF:dump.BLACKBOX_SPI_LO_OFF + 2] = (
+            spi & 0xFFFF
+        ).to_bytes(2, "little")
+        self.assertEqual(payload[dump.BLACKBOX_SPI_HI_OFF:dump.BLACKBOX_SPI_HI_OFF + 2], b"\x03\x02")
+        self.assertEqual(payload[dump.BLACKBOX_SPI_LO_OFF:dump.BLACKBOX_SPI_LO_OFF + 2], b"\x8c\xd3")
+        self.assertTrue(dump.BLACKBOX_READ_PAYLOAD)
+
+    def test_auto_profile_falls_back_to_stock_on_mismatch(self):
+        calls = {"n": 0}
+
+        def fake_read_dump(dev, *args, **kwargs):
+            calls["n"] += 1
+            if calls["n"] == 1:
+                raise dump.ProfileMismatch("no match")
+            return image()
+
+        with tempfile.TemporaryDirectory() as directory:
+            path = str(Path(directory) / "original.bin")
+            with patch.object(dump, "read_dump", side_effect=fake_read_dump):
+                code, out, err = self.run_fake_main(
+                    FakeCamera(), "-q", "--single-read", "--profile", "auto", "-o", path
+                )
+            self.assertEqual(code, 0, err)
+            self.assertEqual(calls["n"], 2)
+            self.assertEqual(Path(path).read_bytes(), image())
+
     def test_invalid_image(self):
         data = image()
         dump.validate_image(data)
-        for offset in (4, 12, 510, 0x304):
+        for offset in (4, 510, 0x304):
             bad = bytearray(data)
             bad[offset] ^= 1
             with self.subTest(offset=offset), self.assertRaises(dump.DumpError):
                 dump.validate_image(bad)
+        # The additive header checksum is zero on the original build but non-zero
+        # on later builds, so it is informational rather than fatal.
+        non_zero_checksum = bytearray(data)
+        non_zero_checksum[12] ^= 1
+        dump.validate_image(non_zero_checksum)
         with self.assertRaisesRegex(dump.DumpError, "Incomplete"):
             dump.validate_image(data[:-1])
 
     def run_fake_main(self, camera, *args):
         stdout, stderr = io.StringIO(), io.StringIO()
+        # The fake camera only implements the legacy stock recipe.
+        argv = list(args)
+        if "--profile" not in argv:
+            argv = ["--profile", "stock", *argv]
         with patch.object(dump, "load_usb", return_value=(fake_usb(camera), object())), \
                 patch.object(dump, "find_cameras", return_value=([camera], [])), \
                 contextlib.redirect_stdout(stdout), contextlib.redirect_stderr(stderr):
-            code = dump.main(list(args))
+            code = dump.main(argv)
         return code, stdout.getvalue(), stderr.getvalue()
 
     def test_save_no_clobber_and_force(self):

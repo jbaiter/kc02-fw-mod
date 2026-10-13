@@ -9,19 +9,29 @@ Windows: substitute `py -3` for `python3`; see README.md for USB permissions/dri
 This is a self-contained script; only PyUSB and a libusb backend are needed.
 
 Design:
-    Use stock vendor command 0xCD over USB mass-storage Bulk-Only Transport
-    (interface 4), with the function pointer pinned to the memory-transfer helper.
-    Check known routine signatures; cache-clean and verify fixed RAM uploads.
-    Test RAM execution with a return-only canary before loading a 48-byte adapter
-    that reshapes callback(buffer, length, offset) into SPI_read(offset, buffer, length).
-    Flash -> reusable 2 KiB RAM buffer -> USB -> host; validate each command's
-    status, check the image headers, and compare two complete 4 MiB reads before
-    saving. Guard the scratch bounds to avoid documented patch regions.
+    Two recipes are supported and selected automatically by default.
+
+    "stock" (original KC02 build): the vendor command's function pointer is
+    pinned to the memory-transfer helper; known routine signatures are checked,
+    fixed RAM uploads are cache-cleaned and verified, a return-only canary
+    proves RAM execution, and a 48-byte adapter reshapes
+    callback(buffer, length, offset) into SPI_read(offset, buffer, length).
+
+    "blackbox" (newer KC02 builds, e.g. the unit whose helpers moved): a small
+    relocatable payload is staged into the fixed low-SRAM USB OUT endpoint
+    buffer with a standard SCSI WRITE(10), then executed through the vendor
+    command's host-supplied function pointer. It provides a firmware-independent
+    memory read, and the SPI flash reader is located by signature. No
+    firmware-specific code address is needed for delivery.
+
+    Both recipes stream flash -> USB -> host with strict command-status checks,
+    validate the image headers, and compare two complete 4 MiB reads before saving.
 
 No flash writes, UI patches, firmware updates or automatic USB resets are
-performed. RAM changes disappear on power-off. A stalled camera may need a
-power-cycle. Only the researched KC02 firmware layout is supported; matching
-USB IDs alone do not establish firmware compatibility.
+performed. RAM/SRAM changes disappear on power-off. The black-box recipe writes
+only to the unused gap sector between the MBR and the first partition and
+restores it afterwards. A stalled camera may need a power-cycle. Use --profile
+to force a recipe; unsupported firmware is rejected rather than guessed at.
 """
 
 from __future__ import annotations
@@ -106,8 +116,65 @@ ROUTINE_SIGNATURES = (
 )
 
 
+# --- Firmware recipes -------------------------------------------------------
+#
+# Two known AX3292 KC02 layouts exist in the wild.  The original build is dumped
+# with the RAM shim above ("stock").  Newer builds move the application code, so
+# that recipe's fixed addresses no longer apply.  They all keep the same low-SRAM
+# USB endpoint buffers, though, which gives a firmware-independent way in:
+#
+#   1. stage a tiny relocatable payload into the OUT endpoint buffer at 0x8250
+#      with an ordinary SCSI WRITE(10) command (the reserved gap at LBA 1),
+#   2. execute it by pointing the vendor command's host-supplied function pointer
+#      (CDB bytes 1..4) at 0x8290, the payload entry inside that buffer,
+#   3. the payload copies CPU memory through the TX endpoint buffer and streams
+#      it back, and the flash reader is then found by signature.
+#
+# No firmware-specific code address is required for delivery, and no flash is
+# written.  The only side effect is a temporary write to the unused gap sector.
+STOCK = "stock"
+BLACKBOX = "blackbox"
+
+BLACKBOX_STAGE_LBA = 1          # unused gap between the MBR and the first partition
+BLACKBOX_STAGE_BUF = 0x8250     # USB OUT endpoint buffer (low SRAM)
+BLACKBOX_STAGE_LEN = 0x200      # its size
+BLACKBOX_ENTRY = 0x8290         # entry = STAGE_BUF + 0x40, clear of the 31-byte CBW
+BLACKBOX_APP_LO = 0x02000000    # application load address in SDRAM
+BLACKBOX_APP_SCAN = 0x00080000  # how far to scan for the flash reader
+BLACKBOX_CHUNK = 0x1000         # bytes per memory/flash transfer
+
+# Relocatable ``memcpy(memory) -> USB`` payload (assembled from payloads/*.s).
+BLACKBOX_READ_PAYLOAD = bytes.fromhex(
+    "fc4fe1d7f817e1d7f477e1d7f07fe1d7ec87e1d7e897e1d7e49fe1d7e4ff219c"
+    "0000c3a9000044a838006e862400ee85240042860100028e00000fbc17000010"
+    "000200a900404fe40200001000000fa90000e0184080e7a8000020a9004009e4"
+    "07000010004853e100008a8d004847e100600ad80100299df9ffff03000070a8"
+    "000087a80000a8a8004073e20240efe100900048e9ffff031c00219cfcff2185"
+    "f8ff4184f4ffc185f0ffe185ecff0186e8ff4186e4ff618600480044"
+)
+# Same shape, but it calls the located SPI reader (offset 0x40/0x44) and streams
+# physical flash: ``spi_read(offset, TX_BUF, len)`` then ``tx(TX_BUF, len)``.
+BLACKBOX_FLASH_PAYLOAD = bytes.fromhex(
+    "fc4fe1d7f817e1d7f477e1d7f07fe1d7ec87e1d7e88fe1d7e497e1d7e09fe1d7"
+    "dca7e1d7dcff219c0000c3a9000044a838006e862400ee85240042860100028e"
+    "0302201a047431aa00000fbc12000010000280aa00a04fe40200001000008faa"
+    "000073a800008018408084a80000b4a800880048000070a800008018408084a8"
+    "0000b4a800a073e202a0efe100900048eeffff032400219cfcff2185f8ff4184"
+    "f4ffc185f0ffe185ecff0186e8ff2186e4ff4186e0ff6186dcff818600480044"
+)
+BLACKBOX_SPI_HI_OFF = 0x40      # l.movhi r17 immediate inside the flash payload
+BLACKBOX_SPI_LO_OFF = 0x44      # l.ori   r17 immediate
+BLACKBOX_SPI_SIG = bytes.fromhex(
+    "fc4fe1d7ec17e1d7f077e1d7f497e1d7e80fe1d7000043aaf8a7e1d7"
+)
+
+
 class DumpError(Exception):
     """An actionable failure suitable for display without a traceback."""
+
+
+class ProfileMismatch(DumpError):
+    """The camera's firmware does not match the selected recipe."""
 
 
 def load_usb():
@@ -250,11 +317,14 @@ class CameraTransport:
     interfaces. Detach and reclaim interface 4 only, using public PyUSB APIs.
     """
 
-    def __init__(self, usb, dev, timeout_ms, verbose=False, trace=False):
+    def __init__(self, usb, dev, timeout_ms, verbose=False, trace=False, profile=STOCK):
         self.usb, self.dev, self.timeout_ms = usb, dev, timeout_ms
         self.verbose, self.trace = verbose or trace, trace
         self.claimed = self.detached = False
         self.tag = 0
+        self.profile = profile
+        self.spi_read_fn = None
+        self._staging_orig = None
 
     def log(self, message):
         if self.verbose:
@@ -317,6 +387,17 @@ class CameraTransport:
 
     def close(self):
         self.log(f"USB cleanup: claimed={self.claimed}, detached={self.detached}.")
+        if getattr(self, "claimed", False) and self._staging_orig is not None:
+            try:
+                self._scsi10(0x2A, BLACKBOX_STAGE_LBA, 1, BLACKBOX_STAGE_LEN, 0x00,
+                             self._staging_orig)
+                self.log("Restored the SD staging sector.")
+            except Exception as exc:
+                print(
+                    f"⚠️ Warning: could not restore the SD staging sector ({exc}).",
+                    file=sys.stderr,
+                )
+            self._staging_orig = None
         operations = []
         if self.claimed:
             operations.append(
@@ -409,6 +490,113 @@ class CameraTransport:
     def read_memory(self, address, length):
         return self._command(address, length)
 
+    # --- black-box recipe ---------------------------------------------------
+    def _bb_cbw(self, cdb, length, direction):
+        self.tag = (self.tag + 1) & 0xFFFFFFFF
+        return (
+            struct.pack("<4sIIBBB", b"USBC", self.tag, length, direction, 0, 16)
+            + cdb
+        )
+
+    def _bb_transact(self, cbw, length, direction, payload=None):
+        if not self.claimed:
+            raise DumpError("USB interface has not been claimed.")
+        self._write(cbw)
+        if payload is not None:
+            for start in range(0, len(payload), 0x200):
+                self._write(payload[start:start + 0x200])
+        data = self._read_exact(length) if (direction == 0x80 and length) else b""
+        csw = self._read_exact(13)
+        signature, tag, residue, status = struct.unpack("<4sIIB", csw)
+        if signature != b"USBS" or tag != self.tag or residue != 0 or status != 0:
+            raise DumpError(
+                f"Invalid USB status during black-box transfer (signature={signature!r}, "
+                f"tag={tag}, expected={self.tag}, residue={residue}, status={status}). "
+                "Power-cycle before retrying."
+            )
+        return data
+
+    def _scsi10(self, opcode, lba, blocks, length, direction, payload=None):
+        cdb = (
+            bytes([opcode, 0])
+            + lba.to_bytes(4, "big")
+            + b"\x00"
+            + blocks.to_bytes(2, "big")
+            + b"\x00"
+            + b"\x00" * 6
+        )
+        cbw = self._bb_cbw(cdb, length, direction)
+        return self._bb_transact(cbw, length, direction, payload)
+
+    def _bb_exec(self, address, length):
+        """Run the staged payload: 0xCD Func1=entry, DataAddr=address, skip callback."""
+        cdb = (
+            bytes([0xCD])
+            + struct.pack("<III", BLACKBOX_ENTRY, address, CALLBACK_SKIP)
+            + b"\x00\x00\x00"
+        )
+        cbw = self._bb_cbw(cdb, length, 0x80)
+        return self._bb_transact(cbw, length, 0x80)
+
+    def _stage_blackbox_payload(self, payload):
+        blob = bytearray(BLACKBOX_STAGE_LEN)
+        start = BLACKBOX_ENTRY - BLACKBOX_STAGE_BUF
+        if start < 0 or start + len(payload) > len(blob):
+            raise DumpError("Black-box payload does not fit the staging buffer.")
+        blob[start:start + len(payload)] = payload
+        self._scsi10(0x2A, BLACKBOX_STAGE_LBA, 1, len(blob), 0x00, bytes(blob))
+
+    def blackbox_probe(self, verbose=False):
+        """Stage the read payload, locate the SPI reader, stage the flash payload."""
+        # Preserve the staging sector so the session leaves the SD card unchanged.
+        try:
+            self._staging_orig = self._scsi10(
+                0x28, BLACKBOX_STAGE_LBA, 1, BLACKBOX_STAGE_LEN, 0x80
+            )
+        except DumpError:
+            self._staging_orig = None
+        self._stage_blackbox_payload(BLACKBOX_READ_PAYLOAD)
+        app = bytearray()
+        found = -1
+        for offset in range(0, BLACKBOX_APP_SCAN, BLACKBOX_CHUNK):
+            try:
+                app += self._bb_exec(BLACKBOX_APP_LO + offset, BLACKBOX_CHUNK)
+            except DumpError as exc:
+                raise ProfileMismatch(
+                    f"Black-box memory read failed at 0x{BLACKBOX_APP_LO + offset:08X} "
+                    f"({exc})."
+                ) from exc
+            found = bytes(app).find(BLACKBOX_SPI_SIG)
+            if found >= 0:
+                break
+        if found < 0:
+            raise ProfileMismatch(
+                "Black-box probe ran but the SPI flash reader signature was not "
+                "found. This firmware layout is not supported."
+            )
+        self.spi_read_fn = BLACKBOX_APP_LO + found
+        if verbose:
+            print(
+                f"🧭 Located SPI flash reader at 0x{self.spi_read_fn:08X}.",
+                file=sys.stderr,
+                flush=True,
+            )
+        payload = bytearray(BLACKBOX_FLASH_PAYLOAD)
+        payload[BLACKBOX_SPI_HI_OFF:BLACKBOX_SPI_HI_OFF + 2] = (
+            self.spi_read_fn >> 16
+        ).to_bytes(2, "little")
+        payload[BLACKBOX_SPI_LO_OFF:BLACKBOX_SPI_LO_OFF + 2] = (
+            self.spi_read_fn & 0xFFFF
+        ).to_bytes(2, "little")
+        self._stage_blackbox_payload(bytes(payload))
+
+    def _blackbox_flash_read(self, progress):
+        data = bytearray()
+        for offset in range(0, FLASH_SIZE, BLACKBOX_CHUNK):
+            data += self._bb_exec(offset, BLACKBOX_CHUNK)
+            progress(len(data), FLASH_SIZE)
+        return bytes(data)
+
     def _load_scratch(self, address):
         blob = RAM_BLOBS[address]
         self._command(address, len(blob), CACHE_CLEAN_FN, payload=blob)
@@ -443,6 +631,8 @@ class CameraTransport:
         self._load_scratch(SHIM_ADDR)
 
     def flash_read(self, progress):
+        if self.profile == BLACKBOX:
+            return self._blackbox_flash_read(progress)
         data = bytearray()
         for offset in range(0, FLASH_SIZE, SPI_CHUNK):
             data.extend(self._command(BUFFER_ADDR, SPI_CHUNK, SHIM_ADDR, offset))
@@ -473,9 +663,12 @@ def validate_image(data):
     checks = (
         (data[4:8] == b"BLDR", "BLDR boot magic at offset 0x04 is missing"),
         (data[0x1FE:0x200] == b"\x55\xaa", "boot signature at offset 0x1FE is invalid"),
-        (sum(data[:512]) % 256 == 0, "512-byte boot-header checksum is invalid"),
         (data[0x304:0x308] == b"SFAT", "SFAT marker at offset 0x304 is missing"),
     )
+    # The original build ships with a zero additive 512-byte header checksum.
+    # Later builds ship a non-zero value and still boot, so it is informational
+    # only; the structural markers plus the two-read comparison are the checks
+    # that matter.  (Both known builds were verified against their own hashes.)
     for valid, reason in checks:
         if not valid:
             raise DumpError(
@@ -555,24 +748,34 @@ def read_dump(dev, single_read=False, quiet=False, verbose=False):
     with Status(
         "🔍 Checking compatibility", quiet, verbose, "✅ Compatibility checked."
     ):
-        check_firmware(dev)
-        if verbose:
-            print(
-                "🧪 Checking RAM Execution (temporary RAM writes only; flash is not modified)...",
-                file=sys.stderr,
-                flush=True,
-            )
-        if dev.canary() != CANARY_PATTERN:
-            raise DumpError(
-                "RAM execution check failed. Refusing to run the SPI shim; power-cycle the camera."
-            )
-        if verbose:
-            print(
-                f"🧩 Loading SPI-read adapter at 0x{SHIM_ADDR:08X} ({len(SHIM_BYTES)} bytes)...",
-                file=sys.stderr,
-                flush=True,
-            )
-        dev.load_shim()  # Verifies the written bytes and cleans D-cache.
+        if dev.profile == BLACKBOX:
+            if verbose:
+                print(
+                    "🧪 Staging the black-box read payload in the USB endpoint buffer "
+                    "(RAM/SRAM only; flash is not modified)...",
+                    file=sys.stderr,
+                    flush=True,
+                )
+            dev.blackbox_probe(verbose)
+        else:
+            check_firmware(dev)
+            if verbose:
+                print(
+                    "🧪 Checking RAM Execution (temporary RAM writes only; flash is not modified)...",
+                    file=sys.stderr,
+                    flush=True,
+                )
+            if dev.canary() != CANARY_PATTERN:
+                raise DumpError(
+                    "RAM execution check failed. Refusing to run the SPI shim; power-cycle the camera."
+                )
+            if verbose:
+                print(
+                    f"🧩 Loading SPI-read adapter at 0x{SHIM_ADDR:08X} ({len(SHIM_BYTES)} bytes)...",
+                    file=sys.stderr,
+                    flush=True,
+                )
+            dev.load_shim()  # Verifies the written bytes and cleans D-cache.
     with Progress("📥 Dumping", quiet, verbose) as progress:
         data = dev.flash_read(progress=progress)
         validate_image(data)
@@ -758,6 +961,14 @@ def build_parser():
         help="skip the second full read/compare (faster, less assurance)",
     )
     parser.add_argument(
+        "--profile",
+        choices=("auto", BLACKBOX, STOCK),
+        default="auto",
+        help="firmware recipe: 'blackbox' stages code in the fixed USB endpoint "
+        "buffer and works on both known KC02 builds; 'stock' is the legacy "
+        "RAM-shim recipe for the original build (default: auto)",
+    )
+    parser.add_argument(
         "--timeout",
         type=positive_int,
         default=5000,
@@ -820,8 +1031,34 @@ def main(argv=None):
                 file=sys.stderr,
                 flush=True,
             )
-        with CameraTransport(usb, camera, args.timeout, verbose, trace) as dev:
-            data = read_dump(dev, args.single_read, args.quiet, verbose)
+        profiles = (
+            (BLACKBOX, STOCK) if args.profile == "auto" else (args.profile,)
+        )
+        data = None
+        last_error = None
+        for index, profile in enumerate(profiles):
+            # close() disposes the device handle, so re-enumerate before a retry.
+            cameras, webcams = find_cameras(usb, backend)
+            camera = select_camera(cameras, webcams, args.device)
+            try:
+                with CameraTransport(
+                    usb, camera, args.timeout, verbose, trace, profile
+                ) as dev:
+                    data = read_dump(dev, args.single_read, args.quiet, verbose)
+                break
+            except ProfileMismatch as exc:
+                last_error = exc
+                if index + 1 < len(profiles):
+                    if not args.quiet:
+                        print(
+                            f"⚠️ {profile} recipe did not match ({exc}); trying the next recipe...",
+                            file=sys.stderr,
+                        )
+                    time.sleep(1.0)
+                    continue
+                raise
+        if data is None:
+            raise last_error or DumpError("No firmware recipe matched this camera.")
         summary = f"✅ Saved {len(data):,} bytes to {args.output}"
         with Status(
             f"💾 Saving to {args.output}",

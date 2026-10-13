@@ -43,7 +43,7 @@ Here are some of the things and challenges I went through:
 | Sensor | H63P |
 | Buttons | ADC-based (6 buttons on single analog pin) |
 
-This camera is sold under various brand names. If your camera has the same internals (check the SoC and flash chip), this toolkit will likely work.
+This camera is sold under various brand names. If your camera has the same internals (check the SoC and flash chip), this toolkit will likely work. One confirmed rebrand with a different (newer) firmware build is the **MYSTILUCK X8D** — see [`docs/BLACKBOX_DUMP.md`](docs/BLACKBOX_DUMP.md).
 
 ## Requirements
 
@@ -109,6 +109,13 @@ python3 -m pip install pyusb libusb-package
 python3 tools/dump_firmware.py  # saves firmware/original.bin
 ```
 
+The tool supports both known KC02 firmware generations automatically. It first
+tries a firmware-independent black-box stage (a payload placed in the fixed USB
+endpoint buffer, executable on any AX3292 KC02) and falls back to the original
+RAM-shim recipe. Force one with `--profile blackbox` or `--profile stock`. See
+[`docs/BLACKBOX_DUMP.md`](docs/BLACKBOX_DUMP.md) for the MYSTILUCK X8D / newer
+build's technique.
+
 On Windows, use `py -3` instead of `python3`. Follow [USB device permissions and drivers](#usb-device-permissions-and-drivers), connect a USB **data** cable, power on, and leave the camera idle on its USB/SD screen. You do not need to remove the SD card. The self-contained script checks the researched firmware layout, loads a temporary RAM-only SPI-read adapter, and compares two complete reads before saving. It checks the boot header and SFAT marker; verbose mode also prints a SHA-256 checksum. It does not write flash. If the camera stops responding, power-cycle it before retrying.
 
 Use `-o backup.bin` to choose a destination, `--list` and `--device NUMBER` to select among cameras, or `--force` to replace an existing backup after a successful dump. `--single-read` skips the second comparison. Run `--help` for all options. Failed or interrupted dumps remove temporary data and any incomplete output created by this run. Existing backups remain untouched on dump failure.
@@ -169,7 +176,7 @@ If `--sd` is passed to the build command, it copies to `/Volumes/NO NAME` (the d
 
 | Tool | What it does |
 |------|-------------|
-| `tools/dump_firmware.py` | Self-contained USB firmware backup CLI, with two-read verification |
+| `tools/dump_firmware.py` | Self-contained USB firmware backup CLI. Two firmware recipes (original RAM-shim and newer black-box staging) are auto-selected; two-read verification. |
 | `tools/build.py` | Build `DestBin.bin` from dump + theme assets. Supports button remapping, handler swaps, icon repositioning, and raw data patches. |
 | `tools/extract_assets.py` | Extract all assets from a firmware dump using the SFAT table |
 | `tools/compare.py` | Web UI (localhost:8080) — the main workspace for theme development |
