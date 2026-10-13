@@ -19,6 +19,7 @@ later work replaced.
 | [NEXT_STEPS.md](NEXT_STEPS.md) | Dated running log of what was done and what is next; numbered sections are the project history |
 | [DOC_AUDIT.md](DOC_AUDIT.md) | Documentation audit: fixes applied, open disagreements, coverage table |
 | [NAMING_RECONCILIATION.md](NAMING_RECONCILIATION.md) | One canonical name per address, with aliases and the evidence that decides between them |
+| [custom_ui/README.md](custom_ui/README.md) | Custom UI routing patch: boot to camera, two-tap sequences, POWER returns to camera; builds a custom image |
 | [HARDWARE_OBSERVATION.md](HARDWARE_OBSERVATION.md) | Method and results of read-only observation on real hardware, including the region-table correction |
 | [NEW_BUILDS.md](NEW_BUILDS.md) | The two newer units (MYSTILUCK X8D, HMOLLIMT Z-12): mapping, asset tables, what is still unmapped |
 | [BLACKBOX_DUMP.md](BLACKBOX_DUMP.md) | Dumping a unit whose firmware addresses are unknown, via a firmware-independent code stage |
