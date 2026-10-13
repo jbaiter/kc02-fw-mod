@@ -113,7 +113,7 @@ engine (all 66 port-SPR write sites in the image are in this module).
 | Signal | Register | Bit | Notes |
 |---|---|---|---|
 | head DATA (serial) | PORTE `0x800C` | 15 (`0x8000`) | one bit per `lbz`-ed bitmap byte, thresholded |
-| head CLK | PORTE `0x800C` | 13 (`0x2000`) | high/low per dot; 383 clocks per line |
+| head CLK | PORTE `0x800C` | 13 (`0x2000`) | high/low per dot; 383 bitmap columns loaded per line, index 0 skipped (see the addendum) |
 | head LATCH | PORTB `0x8004` | 5 (`0x20`) | low → high after the line is shifted |
 | head STROBE (heat) | PORTA `0x8000` | 9 (`0x200`) | pulse width = adaptive, via `kc02_strobe_pulse` |
 | head / print supply | PORTB `0x8004` | 6 (`0x40`) | on before the driver, off after |
@@ -232,9 +232,63 @@ H63P driver — it is a board-specific member of that vendor family.
 
 ## Open items
 
-1. Printer: which dot row is skipped (383 vs 384) — needs a scope on hardware; the "JRX" record header
+1. ~~Printer: which dot row is skipped (383 vs 384)~~ — **resolved on hardware (2026-10), see the addendum below**; the "JRX" record header
    format; why SFR `0x4800` is bracketed around jobs; `0x020D2EC8` has no reader in the image.
 2. Sensor: which of the two `0x478` tables is LSC vs AWB; the full SFR list programmed by `FUN_02032844`
    (CSI/ISP capture config).
 3. Keypad: the message strings behind print status ids `0x57`/`0x58`/`0xBB` live in the compressed UI
    resource pack (no printable ASCII for "paper"/"print" exists).
+
+
+---
+
+## Device-confirmed addendum (2026-10)
+
+The image-sensor identification in this document is no longer inference from resource bytes: it was
+**verified against the physical sensor** by running the firmware's own bring-up path on the camera (payload
+`docs/hw/payloads/sensorprobe.c`, read-only with respect to firmware state, LDO powered only for the probe):
+
+* `sensorAutoCheck` (`0x02058170`) returned the **real** sensor ops `0x020E32A0` - it only does so when the
+  probe register read equals the resource's expected id, i.e. the part answered **`0x48`**.
+* Probed register **`0x0B`**, 7-bit I2C slave address **`0x40`**, inline name **`H63P`** (item +0x34),
+  expected id **`0x48`** (item +0x48), init table **202 B / 100 write pairs** (item +0x0C), first pairs
+  `12/40 48/85 48/05 0E/11 0F/84 10/20`.
+* The driver's RAM copies (`0x020E4BA0`, `0x020D1EA0`) are **byte-identical** to the flash resources
+  (`0x020CB3F0`, file `0xD2FB0`), confirming both the resource layout and the copy path.
+
+
+---
+
+## Printer dot-column question — resolved on hardware (2026-10)
+
+A test bitmap was printed **directly from RAM** (payload `docs/hw/payloads/ramprint.c`: `hal_sysMemMalloc`
+canvas, luma row-major `canvas[head_pos*w + line]` with `0x00` = ink, then `kc02_print_run_A(canvas, w, 384,
+energy, threshold_mode, param6)`, which performs its own pin setup, head power, strobe ramp, paper check and
+40-step feed). Pattern used: five 1-dot-wide lengthwise lines at head dots **0, 4, 8, 12 and 383**.
+
+Observed on paper: **four lines on the left, one on the right — all five printed.** Therefore:
+
+* **The print drivers load 383 bitmap columns per line, starting at bitmap index 1.** Both
+  `kc02_print_head_ramp` (`0x0205A1FC`: `uVar6 = stride; while (uVar6 < stride * rows)`) and
+  `kc02_print_run_B` (`0x0205A87C`: `uVar1 = stride; while (uVar1 < stride * 0x180)`) begin at
+  `stride x 1`, so **bitmap index 0 is never loaded**. This supersedes the earlier paper-based reading
+  that no column is dropped: one 0.125 mm column cannot be told apart by eye, so the paper test could
+  not settle it. Confirming what the unused shift-register position carries needs an electrical check
+  of CLK pulses per LATCH on `PORTE.13`. For a custom print path the practical consequence is that a
+  384-column canvas can only ever place 383 columns.
+* **The dot order is mirrored.** Drawing with increasing bitmap index prints the image reversed
+  left-to-right, so bitmap index 0 lands on the paper's **right** edge. The RAM print payloads
+  therefore index the canvas as `384 - 1 - x` (`phys_x` in `docs/hw/payloads/artprint.c` and
+  `probe.c`). This supersedes the earlier "no mirroring" note here; the stock `kc02_print_file` path
+  compensates internally, which is why printed camera photos are not mirrored.
+
+Two hardware limits were found while doing this, both of them supply-related and both **resolved by the
+battery-connector repair**: **solid fills** (a full-width bar is a whole line of head current) did not
+transfer on USB-only power, while a ~50-dot-per-line pattern did; and camera mode was not sustainable without
+the battery. After the repair both work, and the limits are now understood as power-source limits rather than
+head limits - see [hw/post_repair/README.md](hw/post_repair/README.md) and
+[HARDWARE_OBSERVATION.md](HARDWARE_OBSERVATION.md).
+
+Also validated: the print job can be driven entirely from a payload with **no SD card, no gallery and no mode
+change** (status 0 = ok, 8 = no paper / paper-cover sensor, 9 = low supply, 10 = wrong bitmap height,
+14 = charging, 255 = internal), which makes the printer testable in ~10 s per iteration.

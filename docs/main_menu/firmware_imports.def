@@ -1,0 +1,23 @@
+/* Reconstructed call-site contracts, not a general SDK ABI guarantee.
+ * Register/stack evidence: raw/disassembly.txt and region.dis.
+ * Allocator returns a 32-bit CPU address, also used as a token by host mocks.
+ */
+IMPORT(void, menu_fw_csi_enable, (uint32_t enabled), 0x02034ee4)
+IMPORT(void, menu_fw_ui_state, (uint32_t state), 0x02004944)
+IMPORT(MenuWindow, menu_fw_window_open, (MenuDescriptor *descriptor, uint32_t argc, ...), 0x02012304)
+IMPORT(void *, menu_fw_frame_get, (uint32_t layer), 0x020047f8)
+IMPORT(int32_t, menu_fw_lcd_resolution, (uint16_t *width, uint16_t *height), 0x0203a5c8)
+IMPORT(void, menu_fw_frame_config, (void *frame, uint32_t x, uint32_t y, uint32_t width, uint32_t height), 0x02044ce0)
+IMPORT(void *, menu_fw_copy, (void *destination, const void *source, uint32_t length), 0x020782b0)
+IMPORT(void, menu_fw_blit, (void *destination, uint32_t destination_width, uint32_t destination_height, int32_t x, int32_t y, uint32_t clip_width, uint32_t clip_height, void *source, uint32_t source_width, uint32_t source_height, uint32_t key_y, uint32_t key_uv), 0x02022060)
+IMPORT(void, menu_fw_cache_flush, (void *buffer, uint32_t length), 0x0202b0d4)
+IMPORT(int32_t, menu_fw_frame_show, (uint32_t layer, void *frame, uint32_t width, uint32_t height, uint32_t rotation), 0x020047b4)
+IMPORT(MenuWindow, menu_fw_child, (MenuWindow root, uint32_t id), 0x02025154)
+IMPORT(void, menu_fw_visible, (MenuWindow widget, uint32_t visible), 0x0202984c)
+IMPORT(void, menu_fw_free, (void *buffer), 0x0203e694)
+IMPORT(uint32_t, menu_fw_alloc, (uint32_t length, uint32_t alignment), 0x0203e5c4)
+IMPORT(int32_t, menu_fw_decode_background, (uint32_t resource, void *y, void *uv, uint32_t width, uint32_t height), 0x02021a78)
+IMPORT(uint32_t, menu_fw_decode_icon, (uint32_t resource, void *scratch, void *y, void *uv, uint32_t width, uint32_t height), 0x02021d00)
+IMPORT(uint32_t, menu_fw_time, (void), 0x02021894)
+IMPORT(void, menu_fw_present, (uint32_t force), 0x0205b8c4)
+IMPORT(void, menu_fw_mode_request, (uint32_t mode, uint32_t argument), 0x02008108)

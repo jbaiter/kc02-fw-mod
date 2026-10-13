@@ -1,0 +1,33 @@
+{
+  "payload": "probe",
+  "do_print": 0,
+  "lines": 64,
+  "energy": 3,
+  "threshold": 1,
+  "code_bytes": 2048,
+  "code_sha256": "8e73ccef89bf7466ba7c235cc3bd6cf40c14d7e7642de6e52038c2cc862ce414",
+  "started": "2026-10-09T15:48:04.367689+00:00",
+  "device": "0219:3280 (bus 8, address 51)",
+  "magic_ok": true,
+  "status": "executed",
+  "sensor_raw": 1,
+  "battery_status": 14,
+  "battery_adc": 0,
+  "battery_read": 0,
+  "gpio_raw": 1,
+  "printer_counter": 0,
+  "print_sensor": [
+    1,
+    1,
+    129,
+    128
+  ],
+  "app_level": 5,
+  "app_threshold": 0,
+  "app_density": 2,
+  "sensor_cache": 0,
+  "canvas": null,
+  "ink": null,
+  "canvas_hash": null,
+  "print_status": null
+}

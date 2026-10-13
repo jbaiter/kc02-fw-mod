@@ -178,8 +178,9 @@ stream/FIFO ops vtable `0x020C26BC` (18) · task array `0x020CCD5C` (12).
 * **1100 distinct RAM globals** referenced by code (1065 in BSS `0x020C6200`–`0x02100000`);
   `ram_globals.json` lists each with refs, referencing functions and a module vote. Top-referenced ones are
   the keypad/printer/ISP/UI state blocks documented in `BOARD_RE.md`.
-* Per-block detail: keypad `0x020C8780`–`0x020C87D8`, `0x020C2598`; printer `0x020D2EC8`–
-  `0x020D2EE0` + SFR `0x4800` snapshot; stream/FIFO records `0x020C8A3C` (stride 0x4040); sensor ops
+* Per-block detail: keypad `0x020C8780`–`0x020C87D8`, `0x020C2598`; printer counter
+  `0x020D2EC8` (4 bytes; the words up to `0x020D2EE4` are separate globals) + SFR `0x4800`
+  snapshot; stream/FIFO records `0x020C8A3C` (stride 0x4040); sensor ops
   `0x020E32A0`; AVI record contexts `0x020E3180` (channel A) and `0x020DB0F8` (channel B).
 
 ## 9. Pipelines (summary; details in `map-pipelines.md`)
@@ -262,8 +263,10 @@ commands) are in the `tooling` bookmark and `docs/NEXT_STEPS.md`.
    with a 13-bit mask save/restore (`kc02_sfr4800_save_restore` snapshots bits 14,0,6,4,5,7,10,13,15,1,2,3,8
    at `0x020D2ECD`–`0x020D2ED8`, testing bit `0x4000`); **`JRX`** = the vendor's tag (JinRiXin), used both as
    the build string `JRX_20220309` and as the 12-byte print-file record magic (writer `0x02056510`,
-   validator in `kc02_print_file` at `0x0205AF8C`, comparing bytes `74/82/88`). Still open: the 383-vs-384
-   dot-row question (the drivers start the row loop at index 1 and `print_run_B` enforces height == 384 while
-   clocking `height−1` = 383 dots) — needs a scope on real hardware.
+   validator in `kc02_print_file` at `0x0205AF8C`, comparing bytes `74/82/88`). **Resolved:** the 383-vs-384
+   dot-row question. Both print drivers start the row loop at `stride x 1` and load 383 columns, so
+   **bitmap index 0 is never loaded** (`kc02_print_head_ramp` `0x0205A1FC`, `kc02_print_run_B` `0x0205A87C`);
+   `print_run_B` still enforces `height == 384`. What the unused shift-register position carries is not
+   established, and needs an electrical check rather than paper - see the BOARD_RE addendum.
 5. `0x020D2EC8` (printer state counter) has no reader in the image; the `ui_state_dispatch` entries 6+ are
    reached via `FUN_02006C74`'s case bodies rather than the table, which is worth double-checking.

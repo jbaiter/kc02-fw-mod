@@ -2,6 +2,13 @@
 
 Target: **HiMont KC02 (U8)**, `original_firmware_backup.bin`
 (md5 `7236c4c1bd3f12b1d85d33a9bebdf510`). Companion to
+
+> **Hash note.** The `md5 7236c4c1bd3f12b1d85d33a9bebdf510` quoted in early documents is not the
+> hash of the canonical image in this repo. `firmware/original.bin` is
+> `sha256 218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5`
+> (`md5 757f58ae6d2c729469fe873e95df794a`), and every tool and build script pins that sha256.
+> The old md5 described `original_firmware_backup.bin`, an earlier dump; an early dump pair was
+> already known to differ by 8 bytes in one SFAT counter run. See [DOC_AUDIT.md](DOC_AUDIT.md).
 `UI_STATE_MACHINE.md`. Conventions identical: CPU addresses
 (`CPU = 0x02000000 + fileoff - 0x2600`), CONFIRMED = listing/raw bytes quoted,
 INFERRED = consistent but unproven. Symbols replayable from
@@ -53,6 +60,54 @@ planes, output in place:
    **grayscale** output); else chroma kept (tinted variant). Flag =
    `(self-timer-mode != 7)` at the capture call site.
 5. `dcache_invalidate_range` both planes (the output DMA consumes them).
+
+## 3b. CORRECTION (2026-10, decompilation): the print path does its own tone ramp
+
+Section 1 and section 4 above describe the *capture/display* chain. For the **thermal print**
+path the tone conversion is CPU-side, in `kc02_print_head_ramp` `0x0205A1FC`, and it is not a
+dither: it is per-dot pulse-count modulation.
+
+`kc02_print_run_A` `0x0205A6C4` -> `kc02_print_head_ramp(canvas, threshold_mode, energy, w, h,
+strobe, param6)`. The head driver builds a threshold table `asStack_5ac[32]` = `0, 8, 16, ...,
+248` and runs **32 sub-strobes per printed line**. For each sub-strobe `i` it walks the 384 head
+dots of the line and compares the canvas luma byte against a threshold:
+
+```
+l.lbz   r5, 0(r5)        ; unsigned byte load, NOT sign-extended
+l.sfgts r5, r30          ; luma > threshold ?
+l.bf    <clear data bit> ; yes  -> dot off
+                         ; no   -> dot on, and increment the dot counter
+```
+
+So a dot is inked in every sub-strobe whose threshold is `>= luma`. Luma 0 gets 32 pulses,
+luma 8 gets 31, and so on down to luma 248 with one pulse; 249..255 give none. That is about
+**32 heat levels per individual dot with no spatial dithering at all**.
+
+The `threshold_mode` argument (`param_2`) selects the threshold source:
+
+| Value | Threshold used per sub-strobe |
+|---|---|
+| 0 | the 8-step ramp, giving per-dot grayscale |
+| 1 | fixed `0x80`, i.e. a hard 50 percent cut with no grayscale |
+
+This is the byte the camera print path passes as `app_context+0x60`; `app_context+0x61` is the
+energy/strobe argument and `app_context+0` is param6. So the "continuous grayscale" camera setting
+is mode 0 and the "dithered" setting is mode 1, where the image must already be 1-bit because the
+hard threshold discards all intermediate tone.
+
+Also in the same loop: the strobe width is adapted to the load,
+`strobe = asStack_56c[inked_dots] + (bias + 10 + threshold_mode*8) * 2`, clamped at 8000, where
+`asStack_56c[d] = d / (8 - threshold_mode)` for mode 0..3 and `/4` otherwise. That is the
+per-line power compensation, and it is why `threshold_mode` also acts as a density control.
+
+Practical consequence: for a RAM canvas, **feed real luminance values** (0 = black, 255 = white)
+and leave threshold mode at 0. One-pixel dithering is unnecessary and actively harmful, because
+each dithered black dot receives the full 32 pulses and bleeds into its neighbours. That is
+exactly what the printed 1-dot checkerboard showed: solid grey, while the same average density as
+a flat luma value should print as smooth grey.
+
+Status: static analysis, with the luma comparison confirmed from the listing. The printed tone
+ramp card (pattern 13 in `docs/hw/post_repair/payloads/artprint.c`) is the visual confirmation.
 
 ## 4. Output paths — compositor vs hardware channels
 

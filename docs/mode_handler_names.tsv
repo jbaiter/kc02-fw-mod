@@ -1,0 +1,9 @@
+0x0200B128	playback_msg03_sysmsg3	device-verified mode descriptor 'Play Back' (0x020C2F90) keymap entry: handler for message 0x03 (sysmsg3); map at 0x020C2FB4
+0x0200B140	playback_msg06_sysmsg6	device-verified mode descriptor 'Play Back' (0x020C2F90) keymap entry: handler for message 0x06 (sysmsg6); map at 0x020C2FB4
+0x0200BB68	playback_msg01_sysmsg1	device-verified mode descriptor 'Play Back' (0x020C2F90) keymap entry: handler for message 0x01 (sysmsg1); map at 0x020C2FB4
+0x02013120	main_menu_msg0a_msg0a	device-verified mode descriptor 'Main menu' (0x020C4C18) keymap entry: handler for message 0x0A (msg0a); map at 0x020C4C3C
+0x02020898	game_msg1a_ok	device-verified mode descriptor 'Game' (0x020C64FC) keymap entry: handler for message 0x1A (ok); map at 0x020C6520
+0x020208B0	game_msg1b_up	device-verified mode descriptor 'Game' (0x020C64FC) keymap entry: handler for message 0x1B (up); map at 0x020C6520
+0x020208C8	game_msg1c_down	device-verified mode descriptor 'Game' (0x020C64FC) keymap entry: handler for message 0x1C (down); map at 0x020C6520
+0x020208E0	game_msg0e_enter	device-verified mode descriptor 'Game' (0x020C64FC) keymap entry: handler for message 0x0E (enter); map at 0x020C6520
+0x020208F8	game_msg0f_exit	device-verified mode descriptor 'Game' (0x020C64FC) keymap entry: handler for message 0x0F (exit); map at 0x020C6520

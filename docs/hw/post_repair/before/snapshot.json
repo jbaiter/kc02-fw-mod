@@ -1,0 +1,92 @@
+{
+  "device": "0219:3280 (bus 8, address 43)",
+  "started": "2026-10-09T14:59:50.495966+00:00",
+  "firmware_signatures_ok": true,
+  "status": "pass",
+  "regions": [
+    {
+      "name": "handler_table",
+      "address": 34393228,
+      "length": 184,
+      "sha256": "b10acd9107d4fe7f67f5410071295ea6ca048abfeb15a8a8049795e42ab912dd"
+    },
+    {
+      "name": "task_array",
+      "address": 34393436,
+      "length": 240,
+      "sha256": "b81587b6fb1d78dfa182e498c52460fd41afc3790fca6c43a2019dc83a554d1d"
+    },
+    {
+      "name": "mode_byte",
+      "address": 34393860,
+      "length": 32,
+      "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+    },
+    {
+      "name": "game_field",
+      "address": 34394316,
+      "length": 64,
+      "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b"
+    },
+    {
+      "name": "game_state",
+      "address": 34395804,
+      "length": 64,
+      "sha256": "f5a5fd42d16a20302798ef6ed309979b43003d2320d9f0e8ea9831a92759fb4b"
+    },
+    {
+      "name": "key_adc_table",
+      "address": 34350732,
+      "length": 48,
+      "sha256": "1ec1273b5c543d1a8c92cb1f7e251c18eb8c0cf82bdaa16aa9756a895de7a185"
+    },
+    {
+      "name": "device_list",
+      "address": 34350492,
+      "length": 216,
+      "sha256": "7fe176629d009083a77971778334cd8f17dde2a12950f353a65a3c4018d8e6f4"
+    },
+    {
+      "name": "keypad_state",
+      "address": 34375588,
+      "length": 32,
+      "sha256": "66687aadf862bd776c8fc18b8e9f8e20089714856ee233b3902a591d0d5f2925"
+    },
+    {
+      "name": "keypad_state2",
+      "address": 34375552,
+      "length": 32,
+      "sha256": "3792c5dae981402414ebf7b2b83b1561d07d26642db63fd04f76009668e4dd35"
+    },
+    {
+      "name": "app_context",
+      "address": 34423148,
+      "length": 120,
+      "sha256": "a3d789848cf70c43c997a4c0e7c33b13279631f70c096052119b19f8e415011f"
+    },
+    {
+      "name": "sensor_item",
+      "address": 34386928,
+      "length": 80,
+      "sha256": "6d92a8ea911d0d96dad7f2d76f2647e8b612e645140157668298db20a9412d4b"
+    },
+    {
+      "name": "printer_state",
+      "address": 34418376,
+      "length": 32,
+      "sha256": "8e5494da2e87d27ddfdf15b4fe1becd355312ef35c8ba412ba7a1db53b830a88"
+    },
+    {
+      "name": "ui_queue",
+      "address": 34423264,
+      "length": 48,
+      "sha256": "34f5602a837d4baa4091c47bb7c72c9f85de666beb3fb0c2812565a8d6032712"
+    },
+    {
+      "name": "mailbox",
+      "address": 34452224,
+      "length": 256,
+      "sha256": "5341e6b2646979a70e57653007a1f310169421ec9bdd9f1a5648f75ade005af1"
+    }
+  ]
+}

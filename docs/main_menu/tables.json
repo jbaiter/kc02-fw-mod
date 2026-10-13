@@ -1,0 +1,377 @@
+{
+  "firmware_sha256": "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5",
+  "cpu_to_file_bias": "0x01ffda00",
+  "mode_descriptor": "0x020c4c18",
+  "mode_callbacks": {
+    "enter": "0x020130e4",
+    "exit": "0x020130d0",
+    "tick": "0x020130bc"
+  },
+  "window_descriptor": "0x020c4c2c",
+  "keymap_address": "0x020c4c3c",
+  "widgets_address": "0x020c4c9c",
+  "widget_stride": 48,
+  "widget_terminator": "0x020c4dec",
+  "initial_handle": 0,
+  "repeat_open": 0,
+  "coordinate_table": "0x0207bb60",
+  "icon_resource_table": "0x0207bb78",
+  "background": {
+    "resource_id": 32,
+    "sfat_zero_based_index": 31,
+    "file_offset": "0x1a6102",
+    "length": 41106,
+    "path": "assets/background.jpg",
+    "sha256": "7fd5cb1122ae4cba6485c74c455c5599e4447ec776d4c68b7ec2120579d38bad"
+  },
+  "items": [
+    {
+      "index": 0,
+      "action": "camera",
+      "target_mode": 3,
+      "icon_x": 12,
+      "icon_y": 18,
+      "icon_width": 96,
+      "icon_height": 96,
+      "label_widget_id": 0,
+      "label_resource": "0x81000042",
+      "icon": {
+        "resource_id": 34,
+        "sfat_zero_based_index": 33,
+        "file_offset": "0x1b6dcc",
+        "length": 27704,
+        "path": "assets/0_camera_selection.bmp",
+        "sha256": "90826ce01bb15937386ef4d61db460e4ff619382551bb76af46ab6eaa6d4c72f",
+        "bitmap_width": 96,
+        "bitmap_height": 96
+      }
+    },
+    {
+      "index": 1,
+      "action": "video_recording",
+      "target_mode": 2,
+      "icon_x": 112,
+      "icon_y": 18,
+      "icon_width": 96,
+      "icon_height": 96,
+      "label_widget_id": 1,
+      "label_resource": "0x81000041",
+      "icon": {
+        "resource_id": 37,
+        "sfat_zero_based_index": 36,
+        "file_offset": "0x1cb274",
+        "length": 27704,
+        "path": "assets/1_video_recording_selection.bmp",
+        "sha256": "48bc43bc25706fc3a349287dbcbba9163f105a4cc9fa3d58b49a587d54271e2b",
+        "bitmap_width": 96,
+        "bitmap_height": 96
+      }
+    },
+    {
+      "index": 2,
+      "action": "audio_player",
+      "target_mode": 5,
+      "icon_x": 212,
+      "icon_y": 18,
+      "icon_width": 96,
+      "icon_height": 96,
+      "label_widget_id": 2,
+      "label_resource": "0x81000044",
+      "icon": {
+        "resource_id": 31,
+        "sfat_zero_based_index": 30,
+        "file_offset": "0x19f4ca",
+        "length": 27704,
+        "path": "assets/2_audio_player_selection.bmp",
+        "sha256": "4da049e257c2946593dfbca8c1f7bb5ded8a93f92eb6f0527704bcdad75eb4c1",
+        "bitmap_width": 96,
+        "bitmap_height": 96
+      }
+    },
+    {
+      "index": 3,
+      "action": "playback",
+      "target_mode": 4,
+      "icon_x": 12,
+      "icon_y": 126,
+      "icon_width": 96,
+      "icon_height": 96,
+      "label_widget_id": 3,
+      "label_resource": "0x81000043",
+      "icon": {
+        "resource_id": 35,
+        "sfat_zero_based_index": 34,
+        "file_offset": "0x1bda04",
+        "length": 27704,
+        "path": "assets/3_playback_selection.bmp",
+        "sha256": "563f7414d39ea2ce503b4320839496a0d3481d6970fcadfe9b92c103eef2caba",
+        "bitmap_width": 96,
+        "bitmap_height": 96
+      }
+    },
+    {
+      "index": 4,
+      "action": "game_menu",
+      "target_mode": 7,
+      "icon_x": 112,
+      "icon_y": 126,
+      "icon_width": 96,
+      "icon_height": 96,
+      "label_widget_id": 4,
+      "label_resource": "0x81000045",
+      "icon": {
+        "resource_id": 33,
+        "sfat_zero_based_index": 32,
+        "file_offset": "0x1b0194",
+        "length": 27704,
+        "path": "assets/4_game_menu_selection.bmp",
+        "sha256": "ae004f86f3447b91175665b68451bb548d601a086c177950d31b40cbad821780",
+        "bitmap_width": 96,
+        "bitmap_height": 96
+      }
+    },
+    {
+      "index": 5,
+      "action": "settings",
+      "target_mode": 9,
+      "icon_x": 212,
+      "icon_y": 126,
+      "icon_width": 96,
+      "icon_height": 96,
+      "label_widget_id": 5,
+      "label_resource": "0x81000040",
+      "icon": {
+        "resource_id": 36,
+        "sfat_zero_based_index": 35,
+        "file_offset": "0x1c463c",
+        "length": 27704,
+        "path": "assets/5_settings_selection.bmp",
+        "sha256": "32f80b36a36dcc80f68fcdc0fa5595967d5222873e96cc56c1057669d95e1d58",
+        "bitmap_width": 96,
+        "bitmap_height": 96
+      }
+    }
+  ],
+  "keymap": [
+    {
+      "address": "0x020c4c3c",
+      "message": 14,
+      "handler": "0x020134b8"
+    },
+    {
+      "address": "0x020c4c44",
+      "message": 15,
+      "handler": "0x02013434"
+    },
+    {
+      "address": "0x020c4c4c",
+      "message": 27,
+      "handler": "0x020138b0"
+    },
+    {
+      "address": "0x020c4c54",
+      "message": 28,
+      "handler": "0x02013828"
+    },
+    {
+      "address": "0x020c4c5c",
+      "message": 29,
+      "handler": "0x0201379c"
+    },
+    {
+      "address": "0x020c4c64",
+      "message": 30,
+      "handler": "0x02013714"
+    },
+    {
+      "address": "0x020c4c6c",
+      "message": 31,
+      "handler": "0x02013a14"
+    },
+    {
+      "address": "0x020c4c74",
+      "message": 26,
+      "handler": "0x02013938"
+    },
+    {
+      "address": "0x020c4c7c",
+      "message": 35,
+      "handler": "0x02013938"
+    },
+    {
+      "address": "0x020c4c84",
+      "message": 9,
+      "handler": "0x02013698"
+    },
+    {
+      "address": "0x020c4c8c",
+      "message": 10,
+      "handler": "0x02013120"
+    },
+    {
+      "address": "0x020c4c94",
+      "message": 46,
+      "handler": "0x00000000"
+    }
+  ],
+  "widgets": [
+    {
+      "address": "0x020c4c9c",
+      "create": "0x020253c8",
+      "id": 65535,
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 240,
+      "style": "0x8",
+      "bg_color": 249,
+      "image": "0x7fffffff",
+      "image_align": 0,
+      "string": "0x7fffffff",
+      "string_align": 0,
+      "font_color": 255,
+      "font": 0,
+      "private": "0x00000000",
+      "extra_28": "0xf9ff0000",
+      "extra_2c": "0x0000ffff",
+      "raw_hex": "c8530202ffff000000004001f0000800f9000000ffffff7f00000000ffffff7f00ff0000000000000000fff9ffff0000"
+    },
+    {
+      "address": "0x020c4ccc",
+      "create": "0x020283cc",
+      "id": 0,
+      "x": 12,
+      "y": 106,
+      "width": 98,
+      "height": 25,
+      "style": "0x0",
+      "bg_color": 255,
+      "image": "0x7fffffff",
+      "image_align": 0,
+      "string": "0x81000042",
+      "string_align": 2,
+      "font_color": 250,
+      "font": 0,
+      "private": "0x00000000",
+      "extra_28": "0xfffa0002",
+      "extra_2c": "0x0000fbff",
+      "raw_hex": "cc83020200000c006a00620019000000ff000000ffffff7f000000004200008102fa0000000000000200fafffffb0000"
+    },
+    {
+      "address": "0x020c4cfc",
+      "create": "0x020283cc",
+      "id": 1,
+      "x": 112,
+      "y": 106,
+      "width": 98,
+      "height": 25,
+      "style": "0x0",
+      "bg_color": 255,
+      "image": "0x7fffffff",
+      "image_align": 0,
+      "string": "0x81000041",
+      "string_align": 2,
+      "font_color": 250,
+      "font": 0,
+      "private": "0x00000000",
+      "extra_28": "0xfffa0002",
+      "extra_2c": "0x0000fbff",
+      "raw_hex": "cc830202010070006a00620019000000ff000000ffffff7f000000004100008102fa0000000000000200fafffffb0000"
+    },
+    {
+      "address": "0x020c4d2c",
+      "create": "0x020283cc",
+      "id": 2,
+      "x": 214,
+      "y": 106,
+      "width": 98,
+      "height": 25,
+      "style": "0x0",
+      "bg_color": 255,
+      "image": "0x7fffffff",
+      "image_align": 0,
+      "string": "0x81000044",
+      "string_align": 2,
+      "font_color": 250,
+      "font": 0,
+      "private": "0x00000000",
+      "extra_28": "0xfffa0002",
+      "extra_2c": "0x0000fbff",
+      "raw_hex": "cc8302020200d6006a00620019000000ff000000ffffff7f000000004400008102fa0000000000000200fafffffb0000"
+    },
+    {
+      "address": "0x020c4d5c",
+      "create": "0x020283cc",
+      "id": 3,
+      "x": 12,
+      "y": 214,
+      "width": 98,
+      "height": 25,
+      "style": "0x0",
+      "bg_color": 255,
+      "image": "0x7fffffff",
+      "image_align": 0,
+      "string": "0x81000043",
+      "string_align": 2,
+      "font_color": 250,
+      "font": 0,
+      "private": "0x00000000",
+      "extra_28": "0xfffa0002",
+      "extra_2c": "0x0000fbff",
+      "raw_hex": "cc83020203000c00d600620019000000ff000000ffffff7f000000004300008102fa0000000000000200fafffffb0000"
+    },
+    {
+      "address": "0x020c4d8c",
+      "create": "0x020283cc",
+      "id": 4,
+      "x": 112,
+      "y": 214,
+      "width": 98,
+      "height": 25,
+      "style": "0x0",
+      "bg_color": 255,
+      "image": "0x7fffffff",
+      "image_align": 0,
+      "string": "0x81000045",
+      "string_align": 2,
+      "font_color": 250,
+      "font": 0,
+      "private": "0x00000000",
+      "extra_28": "0xfffa0002",
+      "extra_2c": "0x0000fbff",
+      "raw_hex": "cc83020204007000d600620019000000ff000000ffffff7f000000004500008102fa0000000000000200fafffffb0000"
+    },
+    {
+      "address": "0x020c4dbc",
+      "create": "0x020283cc",
+      "id": 5,
+      "x": 214,
+      "y": 214,
+      "width": 98,
+      "height": 25,
+      "style": "0x0",
+      "bg_color": 255,
+      "image": "0x7fffffff",
+      "image_align": 0,
+      "string": "0x81000040",
+      "string_align": 2,
+      "font_color": 250,
+      "font": 0,
+      "private": "0x00000000",
+      "extra_28": "0xfffa0002",
+      "extra_2c": "0x0000fbff",
+      "raw_hex": "cc8302020500d600d600620019000000ff000000ffffff7f000000004000008102fa0000000000000200fafffffb0000"
+    }
+  ],
+  "globals": {
+    "selected": "0x020d41d3",
+    "icon_width": "0x020cceac",
+    "icon_height": "0x020cceae",
+    "icon_buffers": "0x020cceb0",
+    "background_height": "0x020ccec8",
+    "background_width": "0x020cceca",
+    "background_buffer": "0x020ccecc",
+    "blink_phase": "0x020cced0",
+    "blink_timestamp": "0x020cced4"
+  }
+}

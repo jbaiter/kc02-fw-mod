@@ -1,0 +1,45 @@
+{
+  "passed": true,
+  "assertions": 1101,
+  "firmware_sha256": "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5",
+  "command": [
+    "cc",
+    "-std=c11",
+    "-O1",
+    "-g",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-DMENU_HOST_TEST",
+    "-fsanitize=undefined",
+    "-fno-sanitize-recover=all",
+    "-I/tmp/kc02-board-re/main-menu/final-tests",
+    "-I/home/jbaiter/.src/kc02-fw-mod/docs/main_menu",
+    "/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/main_menu_screen_model.c",
+    "/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/test_main_menu.c",
+    "-o",
+    "/tmp/kc02-board-re/main-menu/final-tests/test_main_menu"
+  ],
+  "sanitizers": [
+    "undefined-behavior sanitizer"
+  ],
+  "source_sha256": {
+    "main_menu_screen_model.c": "0fd09ecd5c78ae06fb228997740827124d8d0ac400e6f9d8a7661fd8db67c143",
+    "main_menu_screen.h": "0bb67b894c0707ef51afe3a45955eebe8a01a955baafe23def9c92ea75419e9c",
+    "firmware_imports.def": "2e156a0278a69e626459442de43f4d78d4e3b7dac8bda0aeabed8c0da2ae7134",
+    "test_main_menu.c": "150710fce1d7338508d5fefb154619f5f57a6157a5f917420ea0e1322a5a16ca",
+    "test_main_menu.py": "21cf07f774ed5543572f4bf4c1bc59bd93891d4a473d023a533803fb3d7d5f91",
+    "build_main_menu.py": "539d81dc02aee907d0b608c231e31e88b77fb0c68aac8e0b7dc841d604e37c3b"
+  },
+  "coverage": [
+    "all six valid selections, four arrows, event/flag guards",
+    "six mode routes, audio transition state, playback shortcut",
+    "enter/exit allocations, labels and renderer import arguments",
+    "six selection positions, blink threshold and background-only phase",
+    "all eight allocation failure points, including the retained stock leak"
+  ],
+  "limitations": [
+    "Drivers/resource decoders are mocked; no peripheral or target ABI validation.",
+    "Tests check reconstructed behavior, not whole-program binary equivalence."
+  ]
+}

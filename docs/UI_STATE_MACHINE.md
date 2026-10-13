@@ -3,6 +3,13 @@
 Target: **HiMont KC02 (U8) kids instant-print camera**, firmware
 `original_firmware_backup.bin` (md5 `7236c4c1bd3f12b1d85d33a9bebdf510`).
 
+> **Hash note.** The `md5 7236c4c1bd3f12b1d85d33a9bebdf510` quoted in early documents is not the
+> hash of the canonical image in this repo. `firmware/original.bin` is
+> `sha256 218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5`
+> (`md5 757f58ae6d2c729469fe873e95df794a`), and every tool and build script pins that sha256.
+> The old md5 described `original_firmware_backup.bin`, an earlier dump; an early dump pair was
+> already known to differ by 8 bytes in one SFAT counter run. See [DOC_AUDIT.md](DOC_AUDIT.md).
+
 This document is the durable map of the UI/state machinery, written for future
 customization (child-friendly boot-to-camera, adult-only menu gate, and the
 USB/BOT hoist that shipped with it).

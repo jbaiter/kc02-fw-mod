@@ -1,0 +1,31 @@
+{
+  "cached_battery_adc": [
+    624,
+    3
+  ],
+  "print_power_latch": [
+    0
+  ],
+  "charger_flag": [
+    1
+  ],
+  "battery_level": 5,
+  "app_bytes": [
+    5,
+    1,
+    2,
+    0,
+    4,
+    0,
+    1,
+    0,
+    0,
+    0,
+    0,
+    0,
+    2,
+    1,
+    4,
+    0
+  ]
+}

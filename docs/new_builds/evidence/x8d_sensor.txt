@@ -1,0 +1,471 @@
+##### ram:02047bf4  Sensor_DebugRegister  size 108 (GhidraScript)  
+
+/* name propagated from the original KC02 build by masked-opcode match */
+
+void Sensor_DebugRegister(undefined1 *param_1,uint param_2)
+
+{
+  if ((param_2 & 0xff) == 2) {
+    hal_iic016bitAddrWrite(JPEG_ram_020804b8._13127_1_,CONCAT11(*param_1,param_1[1]),param_1 + 2);
+  }
+  else {
+    hal_iic08bitAddrWrite
+              (JPEG_ram_020804b8._13127_1_,*param_1,param_1 + 1,(param_2 & 0xff00) >> 8,
+               &stack0x00000000);
+  }
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02047c60  FUN_ram_02047c60  size 20 (GhidraScript)  
+
+void FUN_ram_02047c60(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02047c74  FUN_ram_02047c74  size 20 (GhidraScript)  
+
+void FUN_ram_02047c74(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02047c88  FUN_ram_02047c88  size 20 (GhidraScript)  
+
+void FUN_ram_02047c88(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02047c9c  FUN_ram_02047c9c  size 20 (GhidraScript)  
+
+void FUN_ram_02047c9c(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02047cb0  FUN_ram_02047cb0  size 20 (GhidraScript)  
+
+void FUN_ram_02047cb0(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02047cc4  FUN_ram_02047cc4  size 648 (GhidraScript)  
+
+void FUN_ram_02047cc4(sbyte param_1)
+
+{
+  undefined1 uStack_10;
+  undefined1 uStack_f;
+  
+  uStack_10 = 0xd5;
+  if (param_1 == 1) {
+    uStack_f = 0;
+    FUN_ram_020479b4(&uStack_10);
+    uStack_10 = 0x15;
+    uStack_f = 0;
+    FUN_ram_020479b4(&uStack_10);
+    uStack_10 = 0xb;
+    uStack_f = 0x20;
+    FUN_ram_020479b4(&uStack_10);
+    uStack_f = 0x60;
+LAB_ram_02047eac:
+    uStack_10 = 0x1c;
+    FUN_ram_020479b4(&uStack_10);
+    uStack_f = 0x60;
+  }
+  else {
+    if (param_1 == 2) {
+      uStack_f = 0;
+      FUN_ram_020479b4(&uStack_10);
+      uStack_10 = 0x15;
+      uStack_f = 0;
+      FUN_ram_020479b4(&uStack_10);
+      uStack_10 = 0xb;
+      uStack_f = 0x20;
+      FUN_ram_020479b4(&uStack_10);
+      uStack_10 = 0x1c;
+      uStack_f = 0x60;
+      FUN_ram_020479b4(&uStack_10);
+      uStack_f = 0xe0;
+      goto LAB_ram_02047f2c;
+    }
+    if (param_1 == 3) {
+      uStack_f = 0;
+      FUN_ram_020479b4(&uStack_10);
+      uStack_10 = 0x15;
+      uStack_f = 0;
+      FUN_ram_020479b4(&uStack_10);
+      uStack_f = 0x20;
+    }
+    else {
+      if (param_1 == 4) {
+        uStack_f = 0;
+     
+...[truncated] (GhidraScript)  
+##### ram:02047f4c  FUN_ram_02047f4c  size 4476 (GhidraScript)  
+
+void FUN_ram_02047f4c(sbyte param_1)
+
+{
+  uint uVar1;
+  undefined1 uVar2;
+  undefined1 uStack_14;
+  sbyte sStack_13;
+  undefined1 uStack_12;
+  
+  ax32xx_csiEnable(0);
+  uVar1 = (uint)*(char *)(JPEG_ram_020804b8._13112_4_ + 0x40);
+  if (((int)((uVar1 ^ 0xa0) - 1) < 0) || ((int)((uVar1 ^ 0x9b) - 1) < 0)) {
+    if (param_1 == 1) {
+      sStack_13 = 0;
+      uStack_14 = 0xba;
+      FUN_ram_020479b4(&uStack_14);
+      sStack_13 = 0x60;
+    }
+    else {
+      if (param_1 == 2) {
+        uStack_14 = 0xba;
+        sStack_13 = 0x80;
+        FUN_ram_020479b4(&uStack_14);
+        uStack_14 = 0xbb;
+        sStack_13 = 0x80;
+        FUN_ram_020479b4(&uStack_14);
+        uStack_14 = 0x23;
+        sStack_13 = 2;
+        goto LAB_ram_020490a0;
+      }
+      if (param_1 == 3) {
+        sStack_13 = 0x70;
+        uStack_14 = 0xba;
+        FUN_ram_020479b4(&uStack_14);
+        sStack_13 = 0xc0;
+      }
+      else if (param_1 == 4) {
+        sStack_13 = 0;
+        uStack_14 = 0xba;
+        FUN_ram_020479b4(&uStack_14);
+        sStack_13 = 0;
+      }
+      else {
+        if (param_1 != 5) {
+          uSt
+...[truncated] (GhidraScript)  
+##### ram:020490c8  FUN_ram_020490c8  size 136 (GhidraScript)  
+
+void FUN_ram_020490c8(sbyte param_1)
+
+{
+  uint uVar1;
+  undefined1 uStack_e;
+  char cStack_d;
+  
+  uVar1 = (uint)*(char *)(JPEG_ram_020804b8._13112_4_ + 0x40);
+  if (((int)((uVar1 ^ 0xa0) - 1) < 0) || ((int)((uVar1 ^ 0x9b) - 1) < 0)) {
+    cStack_d = param_1 | '\x10';
+    uStack_e = 0x14;
+  }
+  else {
+    if (uVar1 != 0x3a) {
+      return;
+    }
+    cStack_d = param_1 << 4 | '@';
+    uStack_e = 0x1e;
+  }
+  FUN_ram_020479b4(&uStack_e);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02049150  FUN_ram_02049150  size 1004 (GhidraScript)  
+
+void FUN_ram_02049150(void)
+
+{
+  undefined1 uVar1;
+  uint uVar2;
+  int iVar3;
+  uint uVar4;
+  uint uVar5;
+  uint uVar6;
+  sbyte asStack_13a0 [4112];
+  sbyte *psStack_390;
+  undefined1 uStack_38c;
+  undefined1 auStack_38b [3];
+  undefined1 auStack_388 [64];
+  sbyte asStack_348 [6];
+  short asStack_342 [397];
+  
+  FUN_ram_02032b74(16000000);
+  FUN_ram_0203317c();
+  if (JPEG_ram_020804b8._13116_4_ == 0) {
+    if (JPEG_ram_020804b8._13120_4_ == 0) {
+      JPEG_ram_020804b8._13120_4_ = hal_sysMemMalloc(0x40);
+    }
+    hal_spiFlashRead(0x7f4a4,JPEG_ram_020804b8._13120_4_,0x40);
+    uVar2 = *(uint *)(JPEG_ram_020804b8._13120_4_ + 4);
+    uVar5 = *(uint *)(JPEG_ram_020804b8._13120_4_ + 8);
+    hal_spiFlashRead(*(int *)JPEG_ram_020804b8._13120_4_ + 0x7f4a4,auStack_388);
+    for (uVar6 = 0; (int)uVar6 < (int)(uVar2 / uVar5); uVar6 = uVar6 + 1 & 0xff) {
+      psStack_390 = (sbyte *)(uVar6 * 8);
+      iVar3 = uVar6 * 0x48;
+      if (((asStack_348[iVar3] == -0x40) && (*(short *)(asStack_348 + iVar3 + 6) == 0)) &&
+         (asStack_348[iVar3 + 1] == 0x62)) {
+        uStack_38c = 0xfc;
+        au
+...[truncated] (GhidraScript)  
+##### ram:0204953c  FUN_ram_0204953c  size 56 (GhidraScript)  
+
+void FUN_ram_0204953c(void)
+
+{
+  JPEG_ram_020804b8._13116_4_ = 0;
+  FUN_ram_02049150(&stack0x00000000);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02049574  FUN_ram_02049574  size 340 (GhidraScript)  
+
+void FUN_ram_02049574(void)
+
+{
+  int iVar1;
+  
+  ax32xx_csiEnable(0,&stack0x00000000);
+  dispLayerUninit(0);
+  if (JPEG_ram_020804b8._13108_1_ == 0) {
+    JPEG_ram_020804b8._13108_1_ = 1;
+    hal_gpioWrite(3,2,0);
+    hal_gpioWrite(1,0);
+    XOSTimeDly(0x32);
+  }
+  else {
+    if (*(sbyte *)(JPEG_ram_020804b8._13112_4_ + 0x40) == 0xc) {
+      FUN_ram_02047bb8();
+    }
+    JPEG_ram_020804b8._13108_1_ = 0;
+    hal_gpioWrite(3,2,1);
+    hal_gpioWrite(1,1);
+    FUN_ram_02027150(0x32);
+  }
+  FUN_ram_0204953c();
+  FUN_ram_02032b74(*(undefined4 *)(JPEG_ram_020804b8._13116_4_ + 4));
+  FUN_ram_02032b94(JPEG_ram_020804b8._13116_4_,JPEG_ram_020804b8._13112_4_);
+  hal_mjpegSrcCSI();
+  ax32xx_csi_only_FrameSet();
+  JPEG_ram_02084155._1398_1_ = 0;
+  FUN_ram_02003aec(0);
+  hal_lcdPreviewStart(*(undefined2 *)(JPEG_ram_020804b8._13116_4_ + 0x18),
+                      *(undefined2 *)(JPEG_ram_020804b8._13116_4_ + 0x1c));
+  iVar1 = FUN_ram_02032c24();
+  if (*(code **)(iVar1 + 0x54) != (code *)0x0) {
+    (**(code **)(iVar1 + 0x54))(JPEG_ram_020804b8._13108_1_);
+  }
+  XOSTimeDly(400);
+  ax32xx_csiEnable
+...[truncated] (GhidraScript)  
+##### ram:020496c8  FUN_ram_020496c8  size 156 (GhidraScript)  
+
+void FUN_ram_020496c8(uint param_1,undefined4 param_2)
+
+{
+  int iVar1;
+  undefined1 *puVar2;
+  undefined1 auStack_18 [4];
+  undefined1 uStack_14;
+  undefined1 uStack_13;
+  undefined1 uStack_12;
+  undefined1 uStack_11;
+  undefined1 uStack_10;
+  undefined1 uStack_f;
+  undefined1 uStack_e;
+  undefined1 uStack_d;
+  
+  auStack_18[0] = 0x2a;
+  uStack_13 = (undefined1)param_2;
+  auStack_18[3] = (undefined1)param_1;
+  uStack_11 = (undefined1)((uint)param_2 >> 8);
+  auStack_18[1] = (undefined1)((param_1 >> 8) << 4);
+  auStack_18[2] = 0x2b;
+  uStack_10 = 0xe3;
+  uStack_14 = 0x92;
+  uStack_12 = 0x93;
+  uStack_e = 0xe4;
+  uStack_f = 9;
+  uStack_d = 0;
+  iVar1 = 0;
+  do {
+    puVar2 = auStack_18 + iVar1;
+    iVar1 = iVar1 + 2;
+    FUN_ram_020479b4(puVar2);
+  } while (iVar1 != 0xc);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02049764  FUN_ram_02049764  size 60 (GhidraScript)  
+
+void FUN_ram_02049764(void)
+
+{
+  undefined1 uStack_e;
+  undefined1 uStack_d;
+  
+  uStack_e = 0x1e;
+  uStack_d = 0x40;
+  FUN_ram_020479b4(&uStack_e);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:020497a0  FUN_ram_020497a0  size 60 (GhidraScript)  
+
+void FUN_ram_020497a0(void)
+
+{
+  undefined1 uStack_e;
+  undefined1 uStack_d;
+  
+  uStack_e = 0x4a;
+  uStack_d = 4;
+  FUN_ram_020479b4(&uStack_e);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:020497dc  FUN_ram_020497dc  size 340 (GhidraScript)  
+
+void FUN_ram_020497dc(void)
+
+{
+  undefined4 uVar1;
+  
+  JPEG_ram_020804b8._13128_4_ = hal_sysMemMalloc(0x38,0x40,&stack0x00000000);
+  hal_spiFlashRead(0x7f000,JPEG_ram_020804b8._13128_4_,0x38);
+  JPEG_ram_020804b8._13132_4_ = hal_sysMemMalloc(0x24c,0x40);
+  hal_spiFlashRead(*(int *)(JPEG_ram_020804b8._13128_4_ + 4) + 0x7f000,JPEG_ram_020804b8._13132_4_,
+                   *(undefined4 *)(JPEG_ram_020804b8._13128_4_ + 8));
+  if (*(int *)(JPEG_ram_020804b8._13132_4_ + 0x48) != 0) {
+    uVar1 = hal_sysMemMalloc(*(undefined4 *)(JPEG_ram_020804b8._13132_4_ + 0x50),0x40,
+                             register0x00000401);
+    hal_spiFlashRead(*(int *)(JPEG_ram_020804b8._13132_4_ + 0x48) + 0x7f000,uVar1,
+                     *(undefined4 *)(JPEG_ram_020804b8._13132_4_ + 0x50));
+    *(undefined4 *)(JPEG_ram_020804b8._13132_4_ + 0x48) = uVar1;
+  }
+  if (*(int *)(JPEG_ram_020804b8._13132_4_ + 0x4c) != 0) {
+    uVar1 = hal_sysMemMalloc(*(undefined4 *)(JPEG_ram_020804b8._13132_4_ + 0x54),0x40);
+    hal_spiFlashRead(*(int *)(JPEG_ram_020804b8._13132_4_ + 0x4c) + 0x7f000,uVar1,
+                    
+...[truncated] (GhidraScript)  
+##### ram:02049930  FUN_ram_02049930  size 48 (GhidraScript)  
+
+void FUN_ram_02049930(void)
+
+{
+  FUN_ram_020497dc(&stack0x00000000);
+  FUN_ram_020347b0(JPEG_ram_020804b8._13132_4_);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02049960  FUN_ram_02049960  size 32 (GhidraScript)  
+
+undefined4 FUN_ram_02049960(void)
+
+{
+  return JPEG_ram_020804b8._13128_4_;
+}
+
+ (GhidraScript)  
+##### ram:02049980  FUN_ram_02049980  size 32 (GhidraScript)  
+
+undefined4 FUN_ram_02049980(void)
+
+{
+  return JPEG_ram_020804b8._13132_4_;
+}
+
+ (GhidraScript)  
+##### ram:020499a0  FUN_ram_020499a0  size 52 (GhidraScript)  
+
+undefined4 FUN_ram_020499a0(void)
+
+{
+  undefined4 uVar1;
+  
+  uVar1 = 0x206cdfc;
+  if (JPEG_ram_020804b8._13132_4_ != 0) {
+    uVar1 = JPEG_ram_020804b8._13132_4_;
+  }
+  return uVar1;
+}
+
+ (GhidraScript)  
+##### ram:020499d4  FUN_ram_020499d4  size 20 (GhidraScript)  
+
+void FUN_ram_020499d4(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:020499e8  FUN_ram_020499e8  size 20 (GhidraScript)  
+
+void FUN_ram_020499e8(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:020499fc  FUN_ram_020499fc  size 20 (GhidraScript)  
+
+void FUN_ram_020499fc(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02049a10  FUN_ram_02049a10  size 20 (GhidraScript)  
+
+void FUN_ram_02049a10(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02049a24  FUN_ram_02049a24  size 60 (GhidraScript)  
+
+void FUN_ram_02049a24(int param_1)
+
+{
+  bool bVar1;
+  undefined4 uStack_8;
+  
+  uStack_8 = param_1 * 500;
+  do {
+    bVar1 = uStack_8 != 0;
+    uStack_8 = uStack_8 + -1;
+  } while (bVar1);
+  return;
+}
+
+ (GhidraScript)  
+REPORT: decompiled 25 functions in [0x2047bf4,0x2049a60) (GhidraScript)  
+INFO  REPORT: Save succeeded for processed file: /mystiluck-x8d-8e0636e1.bin (HeadlessAnalyzer)  

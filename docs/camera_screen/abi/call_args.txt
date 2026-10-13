@@ -1,0 +1,2114 @@
+
+ram:0200866c  l.jal 0x0203defc (caller 0x2008630)
+ram:02008644  l.sw -0x14(r1),r24
+ram:02008648  l.sw -0x10(r1),r26
+ram:0200864c  l.sw -0x2c(r1),r1
+ram:02008650  l.sw -0x24(r1),r14
+ram:02008654  l.sw -0x1c(r1),r20
+ram:02008658  l.sw -0xc(r1),r28
+ram:0200865c  l.sw -0x8(r1),r30
+ram:02008660  l.ori r2,r2,0x3180
+ram:02008664  l.addi r1,r1,-0x48
+ram:02008668  l.lbs r3,0x1(r2)
+ram:0200866c  l.jal 0x0203defc
+ram:02008670  l.jal 0x0203e014
+
+ram:02008670  l.jal 0x0203e014 (caller 0x2008630)
+ram:02008648  l.sw -0x10(r1),r26
+ram:0200864c  l.sw -0x2c(r1),r1
+ram:02008650  l.sw -0x24(r1),r14
+ram:02008654  l.sw -0x1c(r1),r20
+ram:02008658  l.sw -0xc(r1),r28
+ram:0200865c  l.sw -0x8(r1),r30
+ram:02008660  l.ori r2,r2,0x3180
+ram:02008664  l.addi r1,r1,-0x48
+ram:02008668  l.lbs r3,0x1(r2)
+ram:0200866c  l.jal 0x0203defc
+ram:02008670  l.jal 0x0203e014
+ram:02008674  l.addi r3,r0,0xe
+
+ram:0200867c  l.jal 0x020064b4 (caller 0x2008630)
+ram:02008654  l.sw -0x1c(r1),r20
+ram:02008658  l.sw -0xc(r1),r28
+ram:0200865c  l.sw -0x8(r1),r30
+ram:02008660  l.ori r2,r2,0x3180
+ram:02008664  l.addi r1,r1,-0x48
+ram:02008668  l.lbs r3,0x1(r2)
+ram:0200866c  l.jal 0x0203defc
+ram:02008670  l.jal 0x0203e014
+ram:02008674  l.addi r3,r0,0xe
+ram:02008678  l.sb 0x1(r2),r11
+ram:0200867c  l.jal 0x020064b4
+ram:02008680  l.addi r3,r0,0x18
+
+ram:02008688  l.jal 0x020064b4 (caller 0x2008630)
+ram:02008660  l.ori r2,r2,0x3180
+ram:02008664  l.addi r1,r1,-0x48
+ram:02008668  l.lbs r3,0x1(r2)
+ram:0200866c  l.jal 0x0203defc
+ram:02008670  l.jal 0x0203e014
+ram:02008674  l.addi r3,r0,0xe
+ram:02008678  l.sb 0x1(r2),r11
+ram:0200867c  l.jal 0x020064b4
+ram:02008680  l.addi r3,r0,0x18
+ram:02008684  l.ori r24,r11,0x0
+ram:02008688  l.jal 0x020064b4
+ram:0200868c  l.srli r26,r11,0x10
+
+ram:02008694  l.jal 0x02056188 (caller 0x2008630)
+ram:0200866c  l.jal 0x0203defc
+ram:02008670  l.jal 0x0203e014
+ram:02008674  l.addi r3,r0,0xe
+ram:02008678  l.sb 0x1(r2),r11
+ram:0200867c  l.jal 0x020064b4
+ram:02008680  l.addi r3,r0,0x18
+ram:02008684  l.ori r24,r11,0x0
+ram:02008688  l.jal 0x020064b4
+ram:0200868c  l.srli r26,r11,0x10
+ram:02008690  l.ori r22,r11,0x0
+ram:02008694  l.jal 0x02056188
+ram:02008698  l.addi r3,r0,0x1e0
+
+ram:020086a4  l.jal 0x0203e410 (caller 0x2008630)
+ram:0200867c  l.jal 0x020064b4
+ram:02008680  l.addi r3,r0,0x18
+ram:02008684  l.ori r24,r11,0x0
+ram:02008688  l.jal 0x020064b4
+ram:0200868c  l.srli r26,r11,0x10
+ram:02008690  l.ori r22,r11,0x0
+ram:02008694  l.jal 0x02056188
+ram:02008698  l.addi r3,r0,0x1e0
+ram:0200869c  l.andi r2,r26,0xffff
+ram:020086a0  l.ori r18,r11,0x0
+ram:020086a4  l.jal 0x0203e410
+ram:020086a8  l.sfleui r2,0x500
+
+ram:020086e0  l.jal 0x02008550 (caller 0x2008630)
+ram:020086b8  l.addi r7,r0,0x4
+ram:020086bc  l.bf 0x020086d0
+ram:020086c0  l.sfleui r2,0xc80
+ram:020086c4  l.addi r7,r0,0x6
+ram:020086c8  l.bf 0x020086d0
+ram:020086cc  l.addi r7,r0,0x0
+ram:020086d0  l.addi r3,r0,0x0
+ram:020086d4  l.addi r4,r1,0x18
+ram:020086d8  l.addi r2,r0,0x0
+ram:020086dc  l.sw 0x14(r1),r7
+ram:020086e0  l.jal 0x02008550
+ram:020086e4  l.sflts r11,r2
+
+ram:02008748  l.jal 0x02076f98 (caller 0x2008630)
+ram:02008720  l.sw 0x0(r1),r18
+ram:02008724  l.lwz r3,0x18(r1)
+ram:02008728  l.sw 0xc(r1),r2
+ram:0200872c  l.sw 0x10(r1),r2
+ram:02008730  l.ori r4,r11,0x0
+ram:02008734  l.ori r5,r26,0x0
+ram:02008738  l.andi r6,r22,0xffff
+ram:0200873c  l.andi r8,r24,0xff
+ram:02008740  l.sb 0x58(r28),r2
+ram:02008744  l.sw 0x0(r30),r20
+ram:02008748  l.jal 0x02076f98
+ram:0200874c  l.sw 0x0(r30),r2
+
+ram:02008760  l.jal 0x0206c680 (caller 0x2008630)
+ram:02008738  l.andi r6,r22,0xffff
+ram:0200873c  l.andi r8,r24,0xff
+ram:02008740  l.sb 0x58(r28),r2
+ram:02008744  l.sw 0x0(r30),r20
+ram:02008748  l.jal 0x02076f98
+ram:0200874c  l.sw 0x0(r30),r2
+ram:02008750  l.sb 0x58(r28),r20
+ram:02008754  l.sfges r11,r2
+ram:02008758  l.ori r3,r14,0x0
+ram:0200875c  l.bf 0x02008770
+ram:02008760  l.jal 0x0206c680
+ram:02008764  l.lwz r3,0x18(r1)
+
+ram:02008768  l.jal 0x02072b18 (caller 0x2008630)
+ram:02008740  l.sb 0x58(r28),r2
+ram:02008744  l.sw 0x0(r30),r20
+ram:02008748  l.jal 0x02076f98
+ram:0200874c  l.sw 0x0(r30),r2
+ram:02008750  l.sb 0x58(r28),r20
+ram:02008754  l.sfges r11,r2
+ram:02008758  l.ori r3,r14,0x0
+ram:0200875c  l.bf 0x02008770
+ram:02008760  l.jal 0x0206c680
+ram:02008764  l.lwz r3,0x18(r1)
+ram:02008768  l.jal 0x02072b18
+ram:0200876c  l.j 0x020087a8
+
+ram:02008770  l.jal 0x0206caf8 (caller 0x2008630)
+ram:02008748  l.jal 0x02076f98
+ram:0200874c  l.sw 0x0(r30),r2
+ram:02008750  l.sb 0x58(r28),r20
+ram:02008754  l.sfges r11,r2
+ram:02008758  l.ori r3,r14,0x0
+ram:0200875c  l.bf 0x02008770
+ram:02008760  l.jal 0x0206c680
+ram:02008764  l.lwz r3,0x18(r1)
+ram:02008768  l.jal 0x02072b18
+ram:0200876c  l.j 0x020087a8
+ram:02008770  l.jal 0x0206caf8
+ram:02008774  l.addi r3,r0,-0x1
+
+ram:02008780  l.jal 0x0200d344 (caller 0x2008630)
+ram:02008758  l.ori r3,r14,0x0
+ram:0200875c  l.bf 0x02008770
+ram:02008760  l.jal 0x0206c680
+ram:02008764  l.lwz r3,0x18(r1)
+ram:02008768  l.jal 0x02072b18
+ram:0200876c  l.j 0x020087a8
+ram:02008770  l.jal 0x0206caf8
+ram:02008774  l.addi r3,r0,-0x1
+ram:02008778  l.ori r4,r11,0x0
+ram:0200877c  l.ori r2,r20,0x0
+ram:02008780  l.jal 0x0200d344
+ram:02008784  l.ori r3,r14,0x0
+
+ram:02008788  l.jal 0x0206c680 (caller 0x2008630)
+ram:02008760  l.jal 0x0206c680
+ram:02008764  l.lwz r3,0x18(r1)
+ram:02008768  l.jal 0x02072b18
+ram:0200876c  l.j 0x020087a8
+ram:02008770  l.jal 0x0206caf8
+ram:02008774  l.addi r3,r0,-0x1
+ram:02008778  l.ori r4,r11,0x0
+ram:0200877c  l.ori r2,r20,0x0
+ram:02008780  l.jal 0x0200d344
+ram:02008784  l.ori r3,r14,0x0
+ram:02008788  l.jal 0x0206c680
+ram:0200878c  l.lwz r5,0x18(r1)
+
+ram:020087a0  l.jal 0x020017a0 (caller 0x2008630)
+ram:02008778  l.ori r4,r11,0x0
+ram:0200877c  l.ori r2,r20,0x0
+ram:02008780  l.jal 0x0200d344
+ram:02008784  l.ori r3,r14,0x0
+ram:02008788  l.jal 0x0206c680
+ram:0200878c  l.lwz r5,0x18(r1)
+ram:02008790  l.movhi r4,0x207
+ram:02008794  l.lwz r3,0x38(r28)
+ram:02008798  l.ori r4,r4,0xb859
+ram:0200879c  l.addi r5,r5,0x6
+ram:020087a0  l.jal 0x020017a0
+ram:020087a4  l.jal 0x0203c6e8
+
+ram:020087a4  l.jal 0x0203c6e8 (caller 0x2008630)
+ram:0200877c  l.ori r2,r20,0x0
+ram:02008780  l.jal 0x0200d344
+ram:02008784  l.ori r3,r14,0x0
+ram:02008788  l.jal 0x0206c680
+ram:0200878c  l.lwz r5,0x18(r1)
+ram:02008790  l.movhi r4,0x207
+ram:02008794  l.lwz r3,0x38(r28)
+ram:02008798  l.ori r4,r4,0xb859
+ram:0200879c  l.addi r5,r5,0x6
+ram:020087a0  l.jal 0x020017a0
+ram:020087a4  l.jal 0x0203c6e8
+ram:020087a8  l.jal 0x0203ce44
+
+ram:020087a8  l.jal 0x0203ce44 (caller 0x2008630)
+ram:02008780  l.jal 0x0200d344
+ram:02008784  l.ori r3,r14,0x0
+ram:02008788  l.jal 0x0206c680
+ram:0200878c  l.lwz r5,0x18(r1)
+ram:02008790  l.movhi r4,0x207
+ram:02008794  l.lwz r3,0x38(r28)
+ram:02008798  l.ori r4,r4,0xb859
+ram:0200879c  l.addi r5,r5,0x6
+ram:020087a0  l.jal 0x020017a0
+ram:020087a4  l.jal 0x0203c6e8
+ram:020087a8  l.jal 0x0203ce44
+ram:020087ac  l.addi r1,r1,0x48
+
+ram:0200882c  l.jal 0x0203defc (caller 0x20087e8)
+ram:02008804  l.sw -0x10(r1),r26
+ram:02008808  l.sw -0xc(r1),r28
+ram:0200880c  l.sw -0x2c(r1),r1
+ram:02008810  l.sw -0x24(r1),r14
+ram:02008814  l.sw -0x8(r1),r30
+ram:02008818  l.ori r2,r2,0x3180
+ram:0200881c  l.addi r1,r1,-0x64
+ram:02008820  l.sw 0x0(r1),r3
+ram:02008824  l.lbs r3,0x1(r2)
+ram:02008828  l.sw 0x4(r1),r4
+ram:0200882c  l.jal 0x0203defc
+ram:02008830  l.jal 0x0203e014
+
+ram:02008830  l.jal 0x0203e014 (caller 0x20087e8)
+ram:02008808  l.sw -0xc(r1),r28
+ram:0200880c  l.sw -0x2c(r1),r1
+ram:02008810  l.sw -0x24(r1),r14
+ram:02008814  l.sw -0x8(r1),r30
+ram:02008818  l.ori r2,r2,0x3180
+ram:0200881c  l.addi r1,r1,-0x64
+ram:02008820  l.sw 0x0(r1),r3
+ram:02008824  l.lbs r3,0x1(r2)
+ram:02008828  l.sw 0x4(r1),r4
+ram:0200882c  l.jal 0x0203defc
+ram:02008830  l.jal 0x0203e014
+ram:02008834  l.addi r3,r0,0xe
+
+ram:0200883c  l.jal 0x020064b4 (caller 0x20087e8)
+ram:02008814  l.sw -0x8(r1),r30
+ram:02008818  l.ori r2,r2,0x3180
+ram:0200881c  l.addi r1,r1,-0x64
+ram:02008820  l.sw 0x0(r1),r3
+ram:02008824  l.lbs r3,0x1(r2)
+ram:02008828  l.sw 0x4(r1),r4
+ram:0200882c  l.jal 0x0203defc
+ram:02008830  l.jal 0x0203e014
+ram:02008834  l.addi r3,r0,0xe
+ram:02008838  l.sb 0x1(r2),r11
+ram:0200883c  l.jal 0x020064b4
+ram:02008840  l.addi r3,r0,0x18
+
+ram:0200884c  l.jal 0x020064b4 (caller 0x20087e8)
+ram:02008824  l.lbs r3,0x1(r2)
+ram:02008828  l.sw 0x4(r1),r4
+ram:0200882c  l.jal 0x0203defc
+ram:02008830  l.jal 0x0203e014
+ram:02008834  l.addi r3,r0,0xe
+ram:02008838  l.sb 0x1(r2),r11
+ram:0200883c  l.jal 0x020064b4
+ram:02008840  l.addi r3,r0,0x18
+ram:02008844  l.ori r26,r11,0x0
+ram:02008848  l.andi r28,r11,0xff
+ram:0200884c  l.jal 0x020064b4
+ram:02008850  l.ori r20,r11,0x0
+
+ram:0200885c  l.jal 0x02056188 (caller 0x20087e8)
+ram:02008834  l.addi r3,r0,0xe
+ram:02008838  l.sb 0x1(r2),r11
+ram:0200883c  l.jal 0x020064b4
+ram:02008840  l.addi r3,r0,0x18
+ram:02008844  l.ori r26,r11,0x0
+ram:02008848  l.andi r28,r11,0xff
+ram:0200884c  l.jal 0x020064b4
+ram:02008850  l.ori r20,r11,0x0
+ram:02008854  l.srli r24,r11,0x10
+ram:02008858  l.andi r20,r20,0xffff
+ram:0200885c  l.jal 0x02056188
+ram:02008860  l.ori r3,r24,0x0
+
+ram:02008870  l.jal 0x02040478 (caller 0x20087e8)
+ram:02008848  l.andi r28,r11,0xff
+ram:0200884c  l.jal 0x020064b4
+ram:02008850  l.ori r20,r11,0x0
+ram:02008854  l.srli r24,r11,0x10
+ram:02008858  l.andi r20,r20,0xffff
+ram:0200885c  l.jal 0x02056188
+ram:02008860  l.ori r3,r24,0x0
+ram:02008864  l.sub r11,r0,r11
+ram:02008868  l.ori r4,r20,0x0
+ram:0200886c  l.srli r22,r11,0x1f
+ram:02008870  l.jal 0x02040478
+ram:02008874  l.addi r3,r0,0x3
+
+ram:0200887c  l.jal 0x020401a8 (caller 0x20087e8)
+ram:02008854  l.srli r24,r11,0x10
+ram:02008858  l.andi r20,r20,0xffff
+ram:0200885c  l.jal 0x02056188
+ram:02008860  l.ori r3,r24,0x0
+ram:02008864  l.sub r11,r0,r11
+ram:02008868  l.ori r4,r20,0x0
+ram:0200886c  l.srli r22,r11,0x1f
+ram:02008870  l.jal 0x02040478
+ram:02008874  l.addi r3,r0,0x3
+ram:02008878  l.andi r18,r24,0xffff
+ram:0200887c  l.jal 0x020401a8
+ram:02008880  l.sfltsi r11,0x0
+
+ram:020088bc  l.jal 0x020381fc (caller 0x20087e8)
+ram:02008894  l.bf 0x020088b4
+ram:02008898  l.sfleui r18,0xa00
+ram:0200889c  l.addi r14,r0,0x4
+ram:020088a0  l.bf 0x020088b4
+ram:020088a4  l.sfleui r18,0xc80
+ram:020088a8  l.addi r14,r0,0x6
+ram:020088ac  l.bf 0x020088b4
+ram:020088b0  l.addi r14,r0,0x0
+ram:020088b4  l.addi r3,r1,0x8
+ram:020088b8  l.addi r4,r1,0xa
+ram:020088bc  l.jal 0x020381fc
+ram:020088c0  l.addi r6,r0,0x0
+
+ram:020088d8  l.jal 0x02040c6c (caller 0x20087e8)
+ram:020088b0  l.addi r14,r0,0x0
+ram:020088b4  l.addi r3,r1,0x8
+ram:020088b8  l.addi r4,r1,0xa
+ram:020088bc  l.jal 0x020381fc
+ram:020088c0  l.addi r6,r0,0x0
+ram:020088c4  l.lhz r3,0x8(r1)
+ram:020088c8  l.lhz r4,0xa(r1)
+ram:020088cc  l.ori r5,r14,0x0
+ram:020088d0  l.ori r7,r22,0x0
+ram:020088d4  l.ori r8,r6,0x0
+ram:020088d8  l.jal 0x02040c6c
+ram:020088dc  l.movhi r3,0x8
+
+ram:020088e4  l.jal 0x0203e5c4 (caller 0x20087e8)
+ram:020088bc  l.jal 0x020381fc
+ram:020088c0  l.addi r6,r0,0x0
+ram:020088c4  l.lhz r3,0x8(r1)
+ram:020088c8  l.lhz r4,0xa(r1)
+ram:020088cc  l.ori r5,r14,0x0
+ram:020088d0  l.ori r7,r22,0x0
+ram:020088d4  l.ori r8,r6,0x0
+ram:020088d8  l.jal 0x02040c6c
+ram:020088dc  l.movhi r3,0x8
+ram:020088e0  l.addi r4,r0,0x40
+ram:020088e4  l.jal 0x0203e5c4
+ram:020088e8  l.ori r18,r11,0x0
+
+ram:020088ec  l.jal 0x02021894 (caller 0x20087e8)
+ram:020088c4  l.lhz r3,0x8(r1)
+ram:020088c8  l.lhz r4,0xa(r1)
+ram:020088cc  l.ori r5,r14,0x0
+ram:020088d0  l.ori r7,r22,0x0
+ram:020088d4  l.ori r8,r6,0x0
+ram:020088d8  l.jal 0x02040c6c
+ram:020088dc  l.movhi r3,0x8
+ram:020088e0  l.addi r4,r0,0x40
+ram:020088e4  l.jal 0x0203e5c4
+ram:020088e8  l.ori r18,r11,0x0
+ram:020088ec  l.jal 0x02021894
+ram:020088f0  l.ori r30,r11,0x0
+
+ram:02008908  l.jal 0x020416cc (caller 0x20087e8)
+ram:020088e0  l.addi r4,r0,0x40
+ram:020088e4  l.jal 0x0203e5c4
+ram:020088e8  l.ori r18,r11,0x0
+ram:020088ec  l.jal 0x02021894
+ram:020088f0  l.ori r30,r11,0x0
+ram:020088f4  l.addi r3,r0,0x0
+ram:020088f8  l.addi r4,r1,0x10
+ram:020088fc  l.addi r5,r1,0x14
+ram:02008900  l.addi r6,r1,0x18
+ram:02008904  l.addi r7,r1,0x1c
+ram:02008908  l.jal 0x020416cc
+ram:0200890c  l.sfeqi r11,0x0
+
+ram:0200892c  l.jal 0x020782b0 (caller 0x20087e8)
+ram:02008904  l.addi r7,r1,0x1c
+ram:02008908  l.jal 0x020416cc
+ram:0200890c  l.sfeqi r11,0x0
+ram:02008910  l.ori r2,r11,0x0
+ram:02008914  l.bf 0x0200893c
+ram:02008918  l.sfeqi r18,0x0
+ram:0200891c  l.bf 0x0200894c
+ram:02008920  l.ori r3,r18,0x0
+ram:02008924  l.ori r4,r11,0x0
+ram:02008928  l.lwz r5,0x14(r1)
+ram:0200892c  l.jal 0x020782b0
+ram:02008930  l.ori r3,r2,0x0
+
+ram:02008934  l.jal 0x0204183c (caller 0x20087e8)
+ram:0200890c  l.sfeqi r11,0x0
+ram:02008910  l.ori r2,r11,0x0
+ram:02008914  l.bf 0x0200893c
+ram:02008918  l.sfeqi r18,0x0
+ram:0200891c  l.bf 0x0200894c
+ram:02008920  l.ori r3,r18,0x0
+ram:02008924  l.ori r4,r11,0x0
+ram:02008928  l.lwz r5,0x14(r1)
+ram:0200892c  l.jal 0x020782b0
+ram:02008930  l.ori r3,r2,0x0
+ram:02008934  l.jal 0x0204183c
+ram:02008938  l.j 0x0200894c
+
+ram:0200893c  l.jal 0x02021894 (caller 0x20087e8)
+ram:02008914  l.bf 0x0200893c
+ram:02008918  l.sfeqi r18,0x0
+ram:0200891c  l.bf 0x0200894c
+ram:02008920  l.ori r3,r18,0x0
+ram:02008924  l.ori r4,r11,0x0
+ram:02008928  l.lwz r5,0x14(r1)
+ram:0200892c  l.jal 0x020782b0
+ram:02008930  l.ori r3,r2,0x0
+ram:02008934  l.jal 0x0204183c
+ram:02008938  l.j 0x0200894c
+ram:0200893c  l.jal 0x02021894
+ram:02008940  l.addi r3,r30,0x7d0
+
+ram:02008960  l.jal 0x02054bfc (caller 0x20087e8)
+ram:02008938  l.j 0x0200894c
+ram:0200893c  l.jal 0x02021894
+ram:02008940  l.addi r3,r30,0x7d0
+ram:02008944  l.sfgeu r3,r11
+ram:02008948  l.bf 0x020088f4
+ram:0200894c  l.sfeqi r28,0x0
+ram:02008950  l.bf 0x02008964
+ram:02008954  l.ori r3,r24,0x0
+ram:02008958  l.ori r4,r20,0x0
+ram:0200895c  l.addi r5,r0,0x0
+ram:02008960  l.jal 0x02054bfc
+ram:02008964  l.movhi r20,0x20d
+
+ram:0200898c  l.jal 0x0202b058 (caller 0x20087e8)
+ram:02008964  l.movhi r20,0x20d
+ram:02008968  l.ori r20,r20,0x41f8
+ram:0200896c  l.lhz r4,0xe(r20)
+ram:02008970  l.lhz r3,0xc(r20)
+ram:02008974  l.mul r3,r3,r4
+ram:02008978  l.lwz r4,0x18(r20)
+ram:0200897c  l.add r3,r4,r3
+ram:02008980  l.lwz r4,0x14(r1)
+ram:02008984  l.sw 0x1c(r20),r3
+ram:02008988  l.ori r3,r18,0x0
+ram:0200898c  l.jal 0x0202b058
+ram:02008990  l.addi r3,r0,0x1
+
+ram:02008994  l.jal 0x02034ee4 (caller 0x20087e8)
+ram:0200896c  l.lhz r4,0xe(r20)
+ram:02008970  l.lhz r3,0xc(r20)
+ram:02008974  l.mul r3,r3,r4
+ram:02008978  l.lwz r4,0x18(r20)
+ram:0200897c  l.add r3,r4,r3
+ram:02008980  l.lwz r4,0x14(r1)
+ram:02008984  l.sw 0x1c(r20),r3
+ram:02008988  l.ori r3,r18,0x0
+ram:0200898c  l.jal 0x0202b058
+ram:02008990  l.addi r3,r0,0x1
+ram:02008994  l.jal 0x02034ee4
+ram:02008998  l.addi r3,r0,0x7
+
+ram:0200899c  l.jal 0x02004944 (caller 0x20087e8)
+ram:02008974  l.mul r3,r3,r4
+ram:02008978  l.lwz r4,0x18(r20)
+ram:0200897c  l.add r3,r4,r3
+ram:02008980  l.lwz r4,0x14(r1)
+ram:02008984  l.sw 0x1c(r20),r3
+ram:02008988  l.ori r3,r18,0x0
+ram:0200898c  l.jal 0x0202b058
+ram:02008990  l.addi r3,r0,0x1
+ram:02008994  l.jal 0x02034ee4
+ram:02008998  l.addi r3,r0,0x7
+ram:0200899c  l.jal 0x02004944
+ram:020089a0  l.addi r3,r0,0x14
+
+ram:020089a4  l.jal 0x020218b4 (caller 0x20087e8)
+ram:0200897c  l.add r3,r4,r3
+ram:02008980  l.lwz r4,0x14(r1)
+ram:02008984  l.sw 0x1c(r20),r3
+ram:02008988  l.ori r3,r18,0x0
+ram:0200898c  l.jal 0x0202b058
+ram:02008990  l.addi r3,r0,0x1
+ram:02008994  l.jal 0x02034ee4
+ram:02008998  l.addi r3,r0,0x7
+ram:0200899c  l.jal 0x02004944
+ram:020089a0  l.addi r3,r0,0x14
+ram:020089a4  l.jal 0x020218b4
+ram:020089a8  l.jal 0x02021894
+
+ram:020089a8  l.jal 0x02021894 (caller 0x20087e8)
+ram:02008980  l.lwz r4,0x14(r1)
+ram:02008984  l.sw 0x1c(r20),r3
+ram:02008988  l.ori r3,r18,0x0
+ram:0200898c  l.jal 0x0202b058
+ram:02008990  l.addi r3,r0,0x1
+ram:02008994  l.jal 0x02034ee4
+ram:02008998  l.addi r3,r0,0x7
+ram:0200899c  l.jal 0x02004944
+ram:020089a0  l.addi r3,r0,0x14
+ram:020089a4  l.jal 0x020218b4
+ram:020089a8  l.jal 0x02021894
+ram:020089ac  l.lhz r3,0xc(r20)
+
+ram:020089e4  l.jal 0x02056368 (caller 0x20087e8)
+ram:020089bc  l.lwz r3,0x18(r20)
+ram:020089c0  l.sw 0x30(r1),r18
+ram:020089c4  l.sw 0x24(r1),r3
+ram:020089c8  l.lwz r3,0x1c(r20)
+ram:020089cc  l.sw 0x28(r1),r3
+ram:020089d0  l.addi r3,r0,0x2
+ram:020089d4  l.sh 0x2c(r1),r3
+ram:020089d8  l.addi r3,r0,0x1
+ram:020089dc  l.sb 0x21(r1),r3
+ram:020089e0  l.addi r3,r1,0x20
+ram:020089e4  l.jal 0x02056368
+ram:020089e8  l.sfltsi r11,0x0
+
+ram:020089f0  l.jal 0x02021894 (caller 0x20087e8)
+ram:020089c8  l.lwz r3,0x1c(r20)
+ram:020089cc  l.sw 0x28(r1),r3
+ram:020089d0  l.addi r3,r0,0x2
+ram:020089d4  l.sh 0x2c(r1),r3
+ram:020089d8  l.addi r3,r0,0x1
+ram:020089dc  l.sb 0x21(r1),r3
+ram:020089e0  l.addi r3,r1,0x20
+ram:020089e4  l.jal 0x02056368
+ram:020089e8  l.sfltsi r11,0x0
+ram:020089ec  l.bf 0x02008a00
+ram:020089f0  l.jal 0x02021894
+ram:020089f4  l.addi r3,r1,0xc
+
+ram:020089fc  l.jal 0x0205681c (caller 0x20087e8)
+ram:020089d4  l.sh 0x2c(r1),r3
+ram:020089d8  l.addi r3,r0,0x1
+ram:020089dc  l.sb 0x21(r1),r3
+ram:020089e0  l.addi r3,r1,0x20
+ram:020089e4  l.jal 0x02056368
+ram:020089e8  l.sfltsi r11,0x0
+ram:020089ec  l.bf 0x02008a00
+ram:020089f0  l.jal 0x02021894
+ram:020089f4  l.addi r3,r1,0xc
+ram:020089f8  l.addi r4,r1,0xe
+ram:020089fc  l.jal 0x0205681c
+ram:02008a00  l.movhi r24,0x20d
+
+ram:02008a0c  l.jal 0x02034ee4 (caller 0x20087e8)
+ram:020089e4  l.jal 0x02056368
+ram:020089e8  l.sfltsi r11,0x0
+ram:020089ec  l.bf 0x02008a00
+ram:020089f0  l.jal 0x02021894
+ram:020089f4  l.addi r3,r1,0xc
+ram:020089f8  l.addi r4,r1,0xe
+ram:020089fc  l.jal 0x0205681c
+ram:02008a00  l.movhi r24,0x20d
+ram:02008a04  l.addi r3,r0,0x1
+ram:02008a08  l.ori r24,r24,0x416c
+ram:02008a0c  l.jal 0x02034ee4
+ram:02008a10  l.lbz r3,0x7(r24)
+
+ram:02008a14  l.jal 0x02004944 (caller 0x20087e8)
+ram:020089ec  l.bf 0x02008a00
+ram:020089f0  l.jal 0x02021894
+ram:020089f4  l.addi r3,r1,0xc
+ram:020089f8  l.addi r4,r1,0xe
+ram:020089fc  l.jal 0x0205681c
+ram:02008a00  l.movhi r24,0x20d
+ram:02008a04  l.addi r3,r0,0x1
+ram:02008a08  l.ori r24,r24,0x416c
+ram:02008a0c  l.jal 0x02034ee4
+ram:02008a10  l.lbz r3,0x7(r24)
+ram:02008a14  l.jal 0x02004944
+ram:02008a18  l.ori r3,r18,0x0
+
+ram:02008a1c  l.jal 0x0203e694 (caller 0x20087e8)
+ram:020089f4  l.addi r3,r1,0xc
+ram:020089f8  l.addi r4,r1,0xe
+ram:020089fc  l.jal 0x0205681c
+ram:02008a00  l.movhi r24,0x20d
+ram:02008a04  l.addi r3,r0,0x1
+ram:02008a08  l.ori r24,r24,0x416c
+ram:02008a0c  l.jal 0x02034ee4
+ram:02008a10  l.lbz r3,0x7(r24)
+ram:02008a14  l.jal 0x02004944
+ram:02008a18  l.ori r3,r18,0x0
+ram:02008a1c  l.jal 0x0203e694
+ram:02008a20  l.lbz r3,0x2(r20)
+
+ram:02008a38  l.jal 0x02046150 (caller 0x20087e8)
+ram:02008a10  l.lbz r3,0x7(r24)
+ram:02008a14  l.jal 0x02004944
+ram:02008a18  l.ori r3,r18,0x0
+ram:02008a1c  l.jal 0x0203e694
+ram:02008a20  l.lbz r3,0x2(r20)
+ram:02008a24  l.sfnei r3,0x1
+ram:02008a28  l.bf 0x02008a3c
+ram:02008a2c  l.movhi r3,0x20d
+ram:02008a30  l.ori r3,r3,0x41f8
+ram:02008a34  l.lwz r3,0x18(r3)
+ram:02008a38  l.jal 0x02046150
+ram:02008a3c  l.lbz r3,0x59(r24)
+
+ram:02008a58  l.jal 0x02022740 (caller 0x20087e8)
+ram:02008a30  l.ori r3,r3,0x41f8
+ram:02008a34  l.lwz r3,0x18(r3)
+ram:02008a38  l.jal 0x02046150
+ram:02008a3c  l.lbz r3,0x59(r24)
+ram:02008a40  l.sfnei r3,0x2
+ram:02008a44  l.bf 0x02008a60
+ram:02008a48  l.lhz r5,0xc(r20)
+ram:02008a4c  l.lhz r6,0xe(r20)
+ram:02008a50  l.lwz r3,0x18(r20)
+ram:02008a54  l.lwz r4,0x1c(r20)
+ram:02008a58  l.jal 0x02022740
+ram:02008a5c  l.j 0x02008aa0
+
+ram:02008a9c  l.jal 0x02022434 (caller 0x20087e8)
+ram:02008a74  l.addi r3,r7,-0x7
+ram:02008a78  l.sfgtui r3,0x1
+ram:02008a7c  l.bf 0x02008aa0
+ram:02008a80  l.xori r7,r7,0x7
+ram:02008a84  l.lhz r5,0xc(r20)
+ram:02008a88  l.sub r7,r0,r7
+ram:02008a8c  l.lhz r6,0xe(r20)
+ram:02008a90  l.srli r7,r7,0x1f
+ram:02008a94  l.lwz r3,0x18(r20)
+ram:02008a98  l.lwz r4,0x1c(r20)
+ram:02008a9c  l.jal 0x02022434
+ram:02008aa0  l.sfeqi r28,0x0
+
+ram:02008abc  l.jal 0x02077ef0 (caller 0x20087e8)
+ram:02008a94  l.lwz r3,0x18(r20)
+ram:02008a98  l.lwz r4,0x1c(r20)
+ram:02008a9c  l.jal 0x02022434
+ram:02008aa0  l.sfeqi r28,0x0
+ram:02008aa4  l.bf 0x02008ac0
+ram:02008aa8  l.addi r6,r0,0x0
+ram:02008aac  l.lwz r3,0x18(r20)
+ram:02008ab0  l.addi r4,r0,0x14
+ram:02008ab4  l.addi r5,r0,0x280
+ram:02008ab8  l.ori r7,r6,0x0
+ram:02008abc  l.jal 0x02077ef0
+ram:02008ac0  l.lhz r4,0xe(r20)
+
+ram:02008adc  l.jal 0x0202b058 (caller 0x20087e8)
+ram:02008ab4  l.addi r5,r0,0x280
+ram:02008ab8  l.ori r7,r6,0x0
+ram:02008abc  l.jal 0x02077ef0
+ram:02008ac0  l.lhz r4,0xe(r20)
+ram:02008ac4  l.lhz r3,0xc(r20)
+ram:02008ac8  l.mul r3,r3,r4
+ram:02008acc  l.add r4,r3,r3
+ram:02008ad0  l.add r4,r4,r3
+ram:02008ad4  l.lwz r3,0x18(r20)
+ram:02008ad8  l.srai r4,r4,0x1
+ram:02008adc  l.jal 0x0202b058
+ram:02008ae0  l.lhz r3,0x8(r1)
+
+ram:02008af8  l.jal 0x02040c6c (caller 0x20087e8)
+ram:02008ad0  l.add r4,r4,r3
+ram:02008ad4  l.lwz r3,0x18(r20)
+ram:02008ad8  l.srai r4,r4,0x1
+ram:02008adc  l.jal 0x0202b058
+ram:02008ae0  l.lhz r3,0x8(r1)
+ram:02008ae4  l.lhz r4,0xa(r1)
+ram:02008ae8  l.ori r5,r14,0x0
+ram:02008aec  l.andi r6,r26,0xff
+ram:02008af0  l.ori r7,r22,0x0
+ram:02008af4  l.addi r8,r0,0x1
+ram:02008af8  l.jal 0x02040c6c
+ram:02008afc  l.jal 0x02021894
+
+ram:02008afc  l.jal 0x02021894 (caller 0x20087e8)
+ram:02008ad4  l.lwz r3,0x18(r20)
+ram:02008ad8  l.srai r4,r4,0x1
+ram:02008adc  l.jal 0x0202b058
+ram:02008ae0  l.lhz r3,0x8(r1)
+ram:02008ae4  l.lhz r4,0xa(r1)
+ram:02008ae8  l.ori r5,r14,0x0
+ram:02008aec  l.andi r6,r26,0xff
+ram:02008af0  l.ori r7,r22,0x0
+ram:02008af4  l.addi r8,r0,0x1
+ram:02008af8  l.jal 0x02040c6c
+ram:02008afc  l.jal 0x02021894
+ram:02008b00  l.addi r14,r11,0x7d0
+
+ram:02008b18  l.jal 0x020416cc (caller 0x20087e8)
+ram:02008af0  l.ori r7,r22,0x0
+ram:02008af4  l.addi r8,r0,0x1
+ram:02008af8  l.jal 0x02040c6c
+ram:02008afc  l.jal 0x02021894
+ram:02008b00  l.addi r14,r11,0x7d0
+ram:02008b04  l.ori r3,r2,0x0
+ram:02008b08  l.addi r4,r1,0x10
+ram:02008b0c  l.addi r5,r1,0x14
+ram:02008b10  l.addi r6,r1,0x18
+ram:02008b14  l.addi r7,r1,0x1c
+ram:02008b18  l.jal 0x020416cc
+ram:02008b1c  l.sfeqi r11,0x0
+
+ram:02008b2c  l.jal 0x0204183c (caller 0x20087e8)
+ram:02008b04  l.ori r3,r2,0x0
+ram:02008b08  l.addi r4,r1,0x10
+ram:02008b0c  l.addi r5,r1,0x14
+ram:02008b10  l.addi r6,r1,0x18
+ram:02008b14  l.addi r7,r1,0x1c
+ram:02008b18  l.jal 0x020416cc
+ram:02008b1c  l.sfeqi r11,0x0
+ram:02008b20  l.ori r2,r11,0x0
+ram:02008b24  l.bf 0x02008b50
+ram:02008b28  l.ori r3,r11,0x0
+ram:02008b2c  l.jal 0x0204183c
+ram:02008b30  l.lwz r3,0x14(r1)
+
+ram:02008b38  l.jal 0x0203e5c4 (caller 0x20087e8)
+ram:02008b10  l.addi r6,r1,0x18
+ram:02008b14  l.addi r7,r1,0x1c
+ram:02008b18  l.jal 0x020416cc
+ram:02008b1c  l.sfeqi r11,0x0
+ram:02008b20  l.ori r2,r11,0x0
+ram:02008b24  l.bf 0x02008b50
+ram:02008b28  l.ori r3,r11,0x0
+ram:02008b2c  l.jal 0x0204183c
+ram:02008b30  l.lwz r3,0x14(r1)
+ram:02008b34  l.addi r4,r0,0x20
+ram:02008b38  l.jal 0x0203e5c4
+ram:02008b3c  l.sfnei r11,0x0
+
+ram:02008b50  l.jal 0x02021894 (caller 0x20087e8)
+ram:02008b28  l.ori r3,r11,0x0
+ram:02008b2c  l.jal 0x0204183c
+ram:02008b30  l.lwz r3,0x14(r1)
+ram:02008b34  l.addi r4,r0,0x20
+ram:02008b38  l.jal 0x0203e5c4
+ram:02008b3c  l.sfnei r11,0x0
+ram:02008b40  l.ori r2,r11,0x0
+ram:02008b44  l.bf 0x02008b64
+ram:02008b48  l.addi r2,r0,-0x2
+ram:02008b4c  l.j 0x02008b98
+ram:02008b50  l.jal 0x02021894
+ram:02008b54  l.sfltu r14,r11
+
+ram:02008b70  l.jal 0x020782b0 (caller 0x20087e8)
+ram:02008b48  l.addi r2,r0,-0x2
+ram:02008b4c  l.j 0x02008b98
+ram:02008b50  l.jal 0x02021894
+ram:02008b54  l.sfltu r14,r11
+ram:02008b58  l.bnf 0x02008b04
+ram:02008b5c  l.addi r2,r0,-0x1
+ram:02008b60  l.j 0x02008b98
+ram:02008b64  l.ori r3,r11,0x0
+ram:02008b68  l.lwz r4,0x10(r1)
+ram:02008b6c  l.lwz r5,0x14(r1)
+ram:02008b70  l.jal 0x020782b0
+ram:02008b74  l.ori r3,r2,0x0
+
+ram:02008b7c  l.jal 0x0202b0d4 (caller 0x20087e8)
+ram:02008b54  l.sfltu r14,r11
+ram:02008b58  l.bnf 0x02008b04
+ram:02008b5c  l.addi r2,r0,-0x1
+ram:02008b60  l.j 0x02008b98
+ram:02008b64  l.ori r3,r11,0x0
+ram:02008b68  l.lwz r4,0x10(r1)
+ram:02008b6c  l.lwz r5,0x14(r1)
+ram:02008b70  l.jal 0x020782b0
+ram:02008b74  l.ori r3,r2,0x0
+ram:02008b78  l.lwz r4,0x14(r1)
+ram:02008b7c  l.jal 0x0202b0d4
+ram:02008b80  l.lwz r3,0x0(r1)
+
+ram:02008b98  l.jal 0x020403ec (caller 0x20087e8)
+ram:02008b70  l.jal 0x020782b0
+ram:02008b74  l.ori r3,r2,0x0
+ram:02008b78  l.lwz r4,0x14(r1)
+ram:02008b7c  l.jal 0x0202b0d4
+ram:02008b80  l.lwz r3,0x0(r1)
+ram:02008b84  l.sw 0x0(r3),r2
+ram:02008b88  l.lwz r2,0x14(r1)
+ram:02008b8c  l.lwz r3,0x4(r1)
+ram:02008b90  l.sw 0x0(r3),r2
+ram:02008b94  l.addi r2,r0,0x0
+ram:02008b98  l.jal 0x020403ec
+ram:02008b9c  l.addi r1,r1,0x64
+
+ram:020090c4  l.jal 0x02025154 (caller 0x2009050)
+ram:0200909c  l.slli r5,r6,0x2
+ram:020090a0  l.addi r7,r7,0x30
+ram:020090a4  l.add r6,r6,r5
+ram:020090a8  l.sb 0x0(r1),r7
+ram:020090ac  l.sub r4,r4,r6
+ram:020090b0  l.addi r4,r4,0x30
+ram:020090b4  l.sb 0x1(r1),r4
+ram:020090b8  l.addi r4,r0,0x58
+ram:020090bc  l.sb 0x2(r1),r4
+ram:020090c0  l.addi r4,r0,0x16
+ram:020090c4  l.jal 0x02025154
+ram:020090c8  l.ori r4,r1,0x0
+
+ram:020090d0  l.jal 0x0202990c (caller 0x2009050)
+ram:020090a8  l.sb 0x0(r1),r7
+ram:020090ac  l.sub r4,r4,r6
+ram:020090b0  l.addi r4,r4,0x30
+ram:020090b4  l.sb 0x1(r1),r4
+ram:020090b8  l.addi r4,r0,0x58
+ram:020090bc  l.sb 0x2(r1),r4
+ram:020090c0  l.addi r4,r0,0x16
+ram:020090c4  l.jal 0x02025154
+ram:020090c8  l.ori r4,r1,0x0
+ram:020090cc  l.ori r3,r11,0x0
+ram:020090d0  l.jal 0x0202990c
+ram:020090d4  l.ori r3,r2,0x0
+
+ram:020090dc  l.jal 0x02025154 (caller 0x2009050)
+ram:020090b4  l.sb 0x1(r1),r4
+ram:020090b8  l.addi r4,r0,0x58
+ram:020090bc  l.sb 0x2(r1),r4
+ram:020090c0  l.addi r4,r0,0x16
+ram:020090c4  l.jal 0x02025154
+ram:020090c8  l.ori r4,r1,0x0
+ram:020090cc  l.ori r3,r11,0x0
+ram:020090d0  l.jal 0x0202990c
+ram:020090d4  l.ori r3,r2,0x0
+ram:020090d8  l.addi r4,r0,0x16
+ram:020090dc  l.jal 0x02025154
+ram:020090e0  l.addi r4,r0,0x1
+
+ram:020090e8  l.jal 0x0202984c (caller 0x2009050)
+ram:020090c0  l.addi r4,r0,0x16
+ram:020090c4  l.jal 0x02025154
+ram:020090c8  l.ori r4,r1,0x0
+ram:020090cc  l.ori r3,r11,0x0
+ram:020090d0  l.jal 0x0202990c
+ram:020090d4  l.ori r3,r2,0x0
+ram:020090d8  l.addi r4,r0,0x16
+ram:020090dc  l.jal 0x02025154
+ram:020090e0  l.addi r4,r0,0x1
+ram:020090e4  l.ori r3,r11,0x0
+ram:020090e8  l.jal 0x0202984c
+ram:020090ec  l.addi r3,r0,0x1
+
+ram:020090f0  l.jal 0x0205b8c4 (caller 0x2009050)
+ram:020090c8  l.ori r4,r1,0x0
+ram:020090cc  l.ori r3,r11,0x0
+ram:020090d0  l.jal 0x0202990c
+ram:020090d4  l.ori r3,r2,0x0
+ram:020090d8  l.addi r4,r0,0x16
+ram:020090dc  l.jal 0x02025154
+ram:020090e0  l.addi r4,r0,0x1
+ram:020090e4  l.ori r3,r11,0x0
+ram:020090e8  l.jal 0x0202984c
+ram:020090ec  l.addi r3,r0,0x1
+ram:020090f0  l.jal 0x0205b8c4
+ram:020090f4  l.addi r1,r1,0x10
+
+ram:02009488  l.jal 0x02078188 (caller 0x200947c)
+ram:0200944c  l.ori r4,r14,0x0
+ram:02009450  l.ori r3,r11,0x0
+ram:02009454  l.jal 0x0202984c
+ram:02009458  l.addi r3,r0,0x1
+ram:0200945c  l.jal 0x0205b8c4
+
+=== 0x0200947c FUN_ram_0200947c ===
+ram:0200947c  l.sw -0x4(r1),r9
+ram:02009480  l.sw -0x8(r1),r1
+ram:02009484  l.addi r1,r1,-0x8
+ram:02009488  l.jal 0x02078188
+ram:0200948c  l.movhi r3,0x20c
+
+ram:02009e84  l.jal 0x02009bc0 (caller 0x2009e70)
+ram:02009e64  l.lwz r1,-0xc(r1)
+ram:02009e68  l.lwz r2,-0x8(r1)
+ram:02009e6c  l.jr r9
+
+=== 0x02009e70 FUN_ram_02009e70 ===
+ram:02009e70  l.sw -0x4(r1),r9
+ram:02009e74  l.sw -0x8(r1),r2
+ram:02009e78  l.sw -0xc(r1),r1
+ram:02009e7c  l.addi r1,r1,-0x14
+ram:02009e80  l.ori r2,r3,0x0
+ram:02009e84  l.jal 0x02009bc0
+ram:02009e88  l.ori r3,r2,0x0
+
+ram:02009e8c  l.jal 0x0200917c (caller 0x2009e70)
+ram:02009e6c  l.jr r9
+
+=== 0x02009e70 FUN_ram_02009e70 ===
+ram:02009e70  l.sw -0x4(r1),r9
+ram:02009e74  l.sw -0x8(r1),r2
+ram:02009e78  l.sw -0xc(r1),r1
+ram:02009e7c  l.addi r1,r1,-0x14
+ram:02009e80  l.ori r2,r3,0x0
+ram:02009e84  l.jal 0x02009bc0
+ram:02009e88  l.ori r3,r2,0x0
+ram:02009e8c  l.jal 0x0200917c
+ram:02009e90  l.movhi r3,0x20d
+
+ram:02009eec  l.jal 0x02012304 (caller 0x2009e70)
+ram:02009ec4  l.addi r4,r0,0x2
+ram:02009ec8  l.j 0x02009ee0
+ram:02009ecc  l.sfnei r4,0x2
+ram:02009ed0  l.bf 0x02009ef0
+ram:02009ed4  l.movhi r3,0x8100
+ram:02009ed8  l.ori r3,r3,0x9e
+ram:02009edc  l.sw 0x0(r1),r3
+ram:02009ee0  l.movhi r3,0x20c
+ram:02009ee4  l.sw 0x4(r1),r4
+ram:02009ee8  l.ori r3,r3,0x4434
+ram:02009eec  l.jal 0x02012304
+ram:02009ef0  l.addi r1,r1,0x14
+
+ram:02009f30  l.jal 0x02008108 (caller 0x2009f08)
+ram:02009f08  l.sw -0x4(r1),r9
+ram:02009f0c  l.sw -0xc(r1),r1
+ram:02009f10  l.sw -0x8(r1),r2
+ram:02009f14  l.sfeqi r4,0x1
+ram:02009f18  l.addi r1,r1,-0xc
+ram:02009f1c  l.bnf 0x02009f54
+ram:02009f20  l.lwz r4,0x0(r5)
+ram:02009f24  l.sfnei r4,0x0
+ram:02009f28  l.bf 0x02009f54
+ram:02009f2c  l.addi r3,r0,0x6
+ram:02009f30  l.jal 0x02008108
+ram:02009f34  l.movhi r3,0x20d
+
+ram:0200a3ac  l.jal 0x020075e8 (caller 0x200a37c)
+ram:0200a384  l.sw -0x4(r1),r9
+ram:0200a388  l.sw -0x10(r1),r2
+ram:0200a38c  l.sw -0x8(r1),r18
+ram:0200a390  l.ori r2,r3,0x0
+ram:0200a394  l.sw -0x14(r1),r1
+ram:0200a398  l.addi r3,r0,0x0
+ram:0200a39c  l.addi r1,r1,-0x14
+ram:0200a3a0  l.ori r14,r14,0xcd98
+ram:0200a3a4  l.movhi r18,0x20c
+ram:0200a3a8  l.sw 0x0(r14),r3
+ram:0200a3ac  l.jal 0x020075e8
+ram:0200a3b0  l.addi r4,r0,0x0
+
+ram:0200a3c4  l.jal 0x02009ccc (caller 0x200a37c)
+ram:0200a39c  l.addi r1,r1,-0x14
+ram:0200a3a0  l.ori r14,r14,0xcd98
+ram:0200a3a4  l.movhi r18,0x20c
+ram:0200a3a8  l.sw 0x0(r14),r3
+ram:0200a3ac  l.jal 0x020075e8
+ram:0200a3b0  l.addi r4,r0,0x0
+ram:0200a3b4  l.ori r3,r2,0x0
+ram:0200a3b8  l.ori r6,r4,0x0
+ram:0200a3bc  l.ori r5,r4,0x0
+ram:0200a3c0  l.ori r18,r18,0xcda0
+ram:0200a3c4  l.jal 0x02009ccc
+ram:0200a3c8  l.ori r3,r2,0x0
+
+ram:0200a3cc  l.jal 0x0200a030 (caller 0x200a37c)
+ram:0200a3a4  l.movhi r18,0x20c
+ram:0200a3a8  l.sw 0x0(r14),r3
+ram:0200a3ac  l.jal 0x020075e8
+ram:0200a3b0  l.addi r4,r0,0x0
+ram:0200a3b4  l.ori r3,r2,0x0
+ram:0200a3b8  l.ori r6,r4,0x0
+ram:0200a3bc  l.ori r5,r4,0x0
+ram:0200a3c0  l.ori r18,r18,0xcda0
+ram:0200a3c4  l.jal 0x02009ccc
+ram:0200a3c8  l.ori r3,r2,0x0
+ram:0200a3cc  l.jal 0x0200a030
+ram:0200a3d0  l.ori r3,r2,0x0
+
+ram:0200a3d4  l.jal 0x02009bc0 (caller 0x200a37c)
+ram:0200a3ac  l.jal 0x020075e8
+ram:0200a3b0  l.addi r4,r0,0x0
+ram:0200a3b4  l.ori r3,r2,0x0
+ram:0200a3b8  l.ori r6,r4,0x0
+ram:0200a3bc  l.ori r5,r4,0x0
+ram:0200a3c0  l.ori r18,r18,0xcda0
+ram:0200a3c4  l.jal 0x02009ccc
+ram:0200a3c8  l.ori r3,r2,0x0
+ram:0200a3cc  l.jal 0x0200a030
+ram:0200a3d0  l.ori r3,r2,0x0
+ram:0200a3d4  l.jal 0x02009bc0
+ram:0200a3d8  l.ori r3,r2,0x0
+
+ram:0200a3dc  l.jal 0x02008bec (caller 0x200a37c)
+ram:0200a3b4  l.ori r3,r2,0x0
+ram:0200a3b8  l.ori r6,r4,0x0
+ram:0200a3bc  l.ori r5,r4,0x0
+ram:0200a3c0  l.ori r18,r18,0xcda0
+ram:0200a3c4  l.jal 0x02009ccc
+ram:0200a3c8  l.ori r3,r2,0x0
+ram:0200a3cc  l.jal 0x0200a030
+ram:0200a3d0  l.ori r3,r2,0x0
+ram:0200a3d4  l.jal 0x02009bc0
+ram:0200a3d8  l.ori r3,r2,0x0
+ram:0200a3dc  l.jal 0x02008bec
+ram:0200a3e0  l.ori r3,r2,0x0
+
+ram:0200a3e4  l.jal 0x02008d98 (caller 0x200a37c)
+ram:0200a3bc  l.ori r5,r4,0x0
+ram:0200a3c0  l.ori r18,r18,0xcda0
+ram:0200a3c4  l.jal 0x02009ccc
+ram:0200a3c8  l.ori r3,r2,0x0
+ram:0200a3cc  l.jal 0x0200a030
+ram:0200a3d0  l.ori r3,r2,0x0
+ram:0200a3d4  l.jal 0x02009bc0
+ram:0200a3d8  l.ori r3,r2,0x0
+ram:0200a3dc  l.jal 0x02008bec
+ram:0200a3e0  l.ori r3,r2,0x0
+ram:0200a3e4  l.jal 0x02008d98
+ram:0200a3e8  l.addi r4,r0,0x0
+
+ram:0200a3f4  l.jal 0x02009358 (caller 0x200a37c)
+ram:0200a3cc  l.jal 0x0200a030
+ram:0200a3d0  l.ori r3,r2,0x0
+ram:0200a3d4  l.jal 0x02009bc0
+ram:0200a3d8  l.ori r3,r2,0x0
+ram:0200a3dc  l.jal 0x02008bec
+ram:0200a3e0  l.ori r3,r2,0x0
+ram:0200a3e4  l.jal 0x02008d98
+ram:0200a3e8  l.addi r4,r0,0x0
+ram:0200a3ec  l.ori r3,r2,0x0
+ram:0200a3f0  l.ori r5,r4,0x0
+ram:0200a3f4  l.jal 0x02009358
+ram:0200a3f8  l.ori r3,r2,0x0
+
+ram:0200a3fc  l.jal 0x02009d5c (caller 0x200a37c)
+ram:0200a3d4  l.jal 0x02009bc0
+ram:0200a3d8  l.ori r3,r2,0x0
+ram:0200a3dc  l.jal 0x02008bec
+ram:0200a3e0  l.ori r3,r2,0x0
+ram:0200a3e4  l.jal 0x02008d98
+ram:0200a3e8  l.addi r4,r0,0x0
+ram:0200a3ec  l.ori r3,r2,0x0
+ram:0200a3f0  l.ori r5,r4,0x0
+ram:0200a3f4  l.jal 0x02009358
+ram:0200a3f8  l.ori r3,r2,0x0
+ram:0200a3fc  l.jal 0x02009d5c
+ram:0200a400  l.ori r3,r2,0x0
+
+ram:0200a404  l.jal 0x0200917c (caller 0x200a37c)
+ram:0200a3dc  l.jal 0x02008bec
+ram:0200a3e0  l.ori r3,r2,0x0
+ram:0200a3e4  l.jal 0x02008d98
+ram:0200a3e8  l.addi r4,r0,0x0
+ram:0200a3ec  l.ori r3,r2,0x0
+ram:0200a3f0  l.ori r5,r4,0x0
+ram:0200a3f4  l.jal 0x02009358
+ram:0200a3f8  l.ori r3,r2,0x0
+ram:0200a3fc  l.jal 0x02009d5c
+ram:0200a400  l.ori r3,r2,0x0
+ram:0200a404  l.jal 0x0200917c
+ram:0200a408  l.movhi r3,0x20c
+
+ram:0200a41c  l.jal 0x020094b8 (caller 0x200a37c)
+ram:0200a3f4  l.jal 0x02009358
+ram:0200a3f8  l.ori r3,r2,0x0
+ram:0200a3fc  l.jal 0x02009d5c
+ram:0200a400  l.ori r3,r2,0x0
+ram:0200a404  l.jal 0x0200917c
+ram:0200a408  l.movhi r3,0x20c
+ram:0200a40c  l.addi r4,r0,0x1
+ram:0200a410  l.ori r3,r3,0x8780
+ram:0200a414  l.sb 0x0(r3),r4
+ram:0200a418  l.ori r3,r2,0x0
+ram:0200a41c  l.jal 0x020094b8
+ram:0200a420  l.lwz r3,0x0(r18)
+
+ram:0200a438  l.jal 0x02007744 (caller 0x200a37c)
+ram:0200a410  l.ori r3,r3,0x8780
+ram:0200a414  l.sb 0x0(r3),r4
+ram:0200a418  l.ori r3,r2,0x0
+ram:0200a41c  l.jal 0x020094b8
+ram:0200a420  l.lwz r3,0x0(r18)
+ram:0200a424  l.sfnei r3,0x0
+ram:0200a428  l.bf 0x0200a440
+ram:0200a42c  l.movhi r4,0x20c
+ram:0200a430  l.addi r3,r0,0x28
+ram:0200a434  l.ori r4,r4,0xcd9c
+ram:0200a438  l.jal 0x02007744
+ram:0200a43c  l.sw 0x0(r18),r11
+
+ram:0200a454  l.jal 0x02025154 (caller 0x200a37c)
+ram:0200a42c  l.movhi r4,0x20c
+ram:0200a430  l.addi r3,r0,0x28
+ram:0200a434  l.ori r4,r4,0xcd9c
+ram:0200a438  l.jal 0x02007744
+ram:0200a43c  l.sw 0x0(r18),r11
+ram:0200a440  l.lwz r14,0x0(r14)
+ram:0200a444  l.sfnei r14,0x0
+ram:0200a448  l.bf 0x0200a464
+ram:0200a44c  l.ori r3,r2,0x0
+ram:0200a450  l.addi r4,r0,0x1a
+ram:0200a454  l.jal 0x02025154
+ram:0200a458  l.ori r4,r14,0x0
+
+ram:0200a460  l.jal 0x0202984c (caller 0x200a37c)
+ram:0200a438  l.jal 0x02007744
+ram:0200a43c  l.sw 0x0(r18),r11
+ram:0200a440  l.lwz r14,0x0(r14)
+ram:0200a444  l.sfnei r14,0x0
+ram:0200a448  l.bf 0x0200a464
+ram:0200a44c  l.ori r3,r2,0x0
+ram:0200a450  l.addi r4,r0,0x1a
+ram:0200a454  l.jal 0x02025154
+ram:0200a458  l.ori r4,r14,0x0
+ram:0200a45c  l.ori r3,r11,0x0
+ram:0200a460  l.jal 0x0202984c
+ram:0200a464  l.ori r3,r2,0x0
+
+ram:0200a46c  l.jal 0x02008f0c (caller 0x200a37c)
+ram:0200a444  l.sfnei r14,0x0
+ram:0200a448  l.bf 0x0200a464
+ram:0200a44c  l.ori r3,r2,0x0
+ram:0200a450  l.addi r4,r0,0x1a
+ram:0200a454  l.jal 0x02025154
+ram:0200a458  l.ori r4,r14,0x0
+ram:0200a45c  l.ori r3,r11,0x0
+ram:0200a460  l.jal 0x0202984c
+ram:0200a464  l.ori r3,r2,0x0
+ram:0200a468  l.movhi r2,0x20d
+ram:0200a46c  l.jal 0x02008f0c
+ram:0200a470  l.ori r2,r2,0x416c
+
+ram:0200a498  l.jal 0x02077cf4 (caller 0x200a37c)
+ram:0200a470  l.ori r2,r2,0x416c
+ram:0200a474  l.lbz r3,0x68(r2)
+ram:0200a478  l.sfnei r3,0x0
+ram:0200a47c  l.bf 0x0200a48c
+ram:0200a480  l.addi r4,r0,0x1
+ram:0200a484  l.sb 0x69(r2),r3
+ram:0200a488  l.sb 0x68(r2),r4
+ram:0200a48c  l.addi r3,r0,0x10
+ram:0200a490  l.addi r4,r0,0x20
+ram:0200a494  l.addi r5,r0,0xd
+ram:0200a498  l.jal 0x02077cf4
+ram:0200a49c  l.addi r1,r1,0x14
+
+ram:0200a588  l.jal 0x02021894 (caller 0x200a4bc)
+ram:0200a560  l.bf 0x0200a584
+ram:0200a564  l.sfeqi r2,0x4
+ram:0200a568  l.bf 0x0200a580
+ram:0200a56c  l.sfeqi r2,0x5
+ram:0200a570  l.bf 0x0200aa14
+ram:0200a574  l.sfeqi r2,0x6
+ram:0200a578  l.bnf 0x0200a5f0
+ram:0200a57c  l.j 0x0200aa30
+ram:0200a580  l.addi r2,r0,0x5
+ram:0200a584  l.addi r14,r0,0x1
+ram:0200a588  l.jal 0x02021894
+ram:0200a58c  l.addi r3,r0,0x64
+
+ram:0200a594  l.jal 0x020218b4 (caller 0x200a4bc)
+ram:0200a56c  l.sfeqi r2,0x5
+ram:0200a570  l.bf 0x0200aa14
+ram:0200a574  l.sfeqi r2,0x6
+ram:0200a578  l.bnf 0x0200a5f0
+ram:0200a57c  l.j 0x0200aa30
+ram:0200a580  l.addi r2,r0,0x5
+ram:0200a584  l.addi r14,r0,0x1
+ram:0200a588  l.jal 0x02021894
+ram:0200a58c  l.addi r3,r0,0x64
+ram:0200a590  l.ori r22,r11,0x0
+ram:0200a594  l.jal 0x020218b4
+ram:0200a598  l.jal 0x0202bc7c
+
+ram:0200a598  l.jal 0x0202bc7c (caller 0x200a4bc)
+ram:0200a570  l.bf 0x0200aa14
+ram:0200a574  l.sfeqi r2,0x6
+ram:0200a578  l.bnf 0x0200a5f0
+ram:0200a57c  l.j 0x0200aa30
+ram:0200a580  l.addi r2,r0,0x5
+ram:0200a584  l.addi r14,r0,0x1
+ram:0200a588  l.jal 0x02021894
+ram:0200a58c  l.addi r3,r0,0x64
+ram:0200a590  l.ori r22,r11,0x0
+ram:0200a594  l.jal 0x020218b4
+ram:0200a598  l.jal 0x0202bc7c
+ram:0200a59c  l.ori r3,r18,0x0
+
+ram:0200a5a8  l.jal 0x02009358 (caller 0x200a4bc)
+ram:0200a580  l.addi r2,r0,0x5
+ram:0200a584  l.addi r14,r0,0x1
+ram:0200a588  l.jal 0x02021894
+ram:0200a58c  l.addi r3,r0,0x64
+ram:0200a590  l.ori r22,r11,0x0
+ram:0200a594  l.jal 0x020218b4
+ram:0200a598  l.jal 0x0202bc7c
+ram:0200a59c  l.ori r3,r18,0x0
+ram:0200a5a0  l.addi r4,r0,0x1
+ram:0200a5a4  l.ori r5,r2,0x0
+ram:0200a5a8  l.jal 0x02009358
+ram:0200a5ac  l.jal 0x0202bc7c
+
+ram:0200a5ac  l.jal 0x0202bc7c (caller 0x200a4bc)
+ram:0200a584  l.addi r14,r0,0x1
+ram:0200a588  l.jal 0x02021894
+ram:0200a58c  l.addi r3,r0,0x64
+ram:0200a590  l.ori r22,r11,0x0
+ram:0200a594  l.jal 0x020218b4
+ram:0200a598  l.jal 0x0202bc7c
+ram:0200a59c  l.ori r3,r18,0x0
+ram:0200a5a0  l.addi r4,r0,0x1
+ram:0200a5a4  l.ori r5,r2,0x0
+ram:0200a5a8  l.jal 0x02009358
+ram:0200a5ac  l.jal 0x0202bc7c
+ram:0200a5b0  l.jal 0x02021894
+
+ram:0200a5b0  l.jal 0x02021894 (caller 0x200a4bc)
+ram:0200a588  l.jal 0x02021894
+ram:0200a58c  l.addi r3,r0,0x64
+ram:0200a590  l.ori r22,r11,0x0
+ram:0200a594  l.jal 0x020218b4
+ram:0200a598  l.jal 0x0202bc7c
+ram:0200a59c  l.ori r3,r18,0x0
+ram:0200a5a0  l.addi r4,r0,0x1
+ram:0200a5a4  l.ori r5,r2,0x0
+ram:0200a5a8  l.jal 0x02009358
+ram:0200a5ac  l.jal 0x0202bc7c
+ram:0200a5b0  l.jal 0x02021894
+ram:0200a5b4  l.sub r11,r11,r22
+
+ram:0200a5d4  l.jal 0x02009358 (caller 0x200a4bc)
+ram:0200a5ac  l.jal 0x0202bc7c
+ram:0200a5b0  l.jal 0x02021894
+ram:0200a5b4  l.sub r11,r11,r22
+ram:0200a5b8  l.sfleui r11,0x3e7
+ram:0200a5bc  l.bf 0x0200aa24
+ram:0200a5c0  l.addi r2,r2,-0x1
+ram:0200a5c4  l.ori r3,r18,0x0
+ram:0200a5c8  l.andi r2,r2,0xffff
+ram:0200a5cc  l.addi r4,r0,0x1
+ram:0200a5d0  l.ori r5,r2,0x0
+ram:0200a5d4  l.jal 0x02009358
+ram:0200a5d8  l.sfnei r2,0x0
+
+ram:0200a5ec  l.jal 0x02009358 (caller 0x200a4bc)
+ram:0200a5c4  l.ori r3,r18,0x0
+ram:0200a5c8  l.andi r2,r2,0xffff
+ram:0200a5cc  l.addi r4,r0,0x1
+ram:0200a5d0  l.ori r5,r2,0x0
+ram:0200a5d4  l.jal 0x02009358
+ram:0200a5d8  l.sfnei r2,0x0
+ram:0200a5dc  l.bf 0x0200aa1c
+ram:0200a5e0  l.ori r3,r18,0x0
+ram:0200a5e4  l.ori r4,r2,0x0
+ram:0200a5e8  l.ori r5,r2,0x0
+ram:0200a5ec  l.jal 0x02009358
+ram:0200a5f0  l.movhi r24,0x2000
+
+ram:0200a61c  l.jal 0x020084a0 (caller 0x200a4bc)
+ram:0200a5f4  l.movhi r2,0x8100
+ram:0200a5f8  l.ori r26,r24,0xa
+ram:0200a5fc  l.ori r22,r2,0x7f
+ram:0200a600  l.addi r14,r14,-0x1
+ram:0200a604  l.ori r3,r0,0xffff
+ram:0200a608  l.andi r14,r14,0xffff
+ram:0200a60c  l.sfne r14,r3
+ram:0200a610  l.bnf 0x0200aa08
+ram:0200a614  l.addi r3,r0,0x0
+ram:0200a618  l.movhi r30,0x20d
+ram:0200a61c  l.jal 0x020084a0
+ram:0200a620  l.lbz r3,0x4(r20)
+
+ram:0200a648  l.jal 0x02002a4c (caller 0x200a4bc)
+ram:0200a620  l.lbz r3,0x4(r20)
+ram:0200a624  l.addi r3,r3,-0x3
+ram:0200a628  l.ori r30,r30,0x416c
+ram:0200a62c  l.sfgtui r3,0x1
+ram:0200a630  l.bf 0x0200a8b8
+ram:0200a634  l.lbs r3,0x11(r30)
+ram:0200a638  l.movhi r28,0x20c
+ram:0200a63c  l.addi r5,r0,0x0
+ram:0200a640  l.ori r4,r26,0x0
+ram:0200a644  l.ori r28,r28,0xcd98
+ram:0200a648  l.jal 0x02002a4c
+ram:0200a64c  l.lwz r5,0x0(r28)
+
+ram:0200a660  l.jal 0x02002a4c (caller 0x200a4bc)
+ram:0200a638  l.movhi r28,0x20c
+ram:0200a63c  l.addi r5,r0,0x0
+ram:0200a640  l.ori r4,r26,0x0
+ram:0200a644  l.ori r28,r28,0xcd98
+ram:0200a648  l.jal 0x02002a4c
+ram:0200a64c  l.lwz r5,0x0(r28)
+ram:0200a650  l.sfnei r5,0x1
+ram:0200a654  l.bf 0x0200a664
+ram:0200a658  l.lbs r3,0x10(r30)
+ram:0200a65c  l.ori r4,r24,0x11
+ram:0200a660  l.jal 0x02002a4c
+ram:0200a664  l.lbz r3,0x59(r20)
+
+ram:0200a688  l.jal 0x02022720 (caller 0x200a4bc)
+ram:0200a660  l.jal 0x02002a4c
+ram:0200a664  l.lbz r3,0x59(r20)
+ram:0200a668  l.movhi r30,0x20d
+ram:0200a66c  l.sfeqi r3,0x0
+ram:0200a670  l.ori r30,r30,0x416c
+ram:0200a674  l.bnf 0x0200a6c8
+ram:0200a678  l.lbz r3,0x5b(r30)
+ram:0200a67c  l.addi r3,r3,-0x7
+ram:0200a680  l.sfgtui r3,0x1
+ram:0200a684  l.bf 0x0200a6c8
+ram:0200a688  l.jal 0x02022720
+ram:0200a68c  l.sfeqi r11,0x0
+
+ram:0200a6b8  l.jal 0x02022434 (caller 0x200a4bc)
+ram:0200a690  l.bf 0x0200a6c8
+ram:0200a694  l.lbz r7,0x5b(r30)
+ram:0200a698  l.xori r7,r7,0x7
+ram:0200a69c  l.lhz r5,0x20(r11)
+ram:0200a6a0  l.sub r7,r0,r7
+ram:0200a6a4  l.lhz r6,0x22(r11)
+ram:0200a6a8  l.srli r7,r7,0x1f
+ram:0200a6ac  l.lwz r3,0x4(r11)
+ram:0200a6b0  l.lwz r4,0x8(r11)
+ram:0200a6b4  l.sw 0x0(r1),r11
+ram:0200a6b8  l.jal 0x02022434
+ram:0200a6bc  l.lwz r11,0x0(r1)
+
+ram:0200a6c4  l.jal 0x02039e44 (caller 0x200a4bc)
+ram:0200a69c  l.lhz r5,0x20(r11)
+ram:0200a6a0  l.sub r7,r0,r7
+ram:0200a6a4  l.lhz r6,0x22(r11)
+ram:0200a6a8  l.srli r7,r7,0x1f
+ram:0200a6ac  l.lwz r3,0x4(r11)
+ram:0200a6b0  l.lwz r4,0x8(r11)
+ram:0200a6b4  l.sw 0x0(r1),r11
+ram:0200a6b8  l.jal 0x02022434
+ram:0200a6bc  l.lwz r11,0x0(r1)
+ram:0200a6c0  l.ori r3,r11,0x0
+ram:0200a6c4  l.jal 0x02039e44
+ram:0200a6c8  l.addi r3,r0,0x0
+
+ram:0200a6cc  l.jal 0x02034ee4 (caller 0x200a4bc)
+ram:0200a6a4  l.lhz r6,0x22(r11)
+ram:0200a6a8  l.srli r7,r7,0x1f
+ram:0200a6ac  l.lwz r3,0x4(r11)
+ram:0200a6b0  l.lwz r4,0x8(r11)
+ram:0200a6b4  l.sw 0x0(r1),r11
+ram:0200a6b8  l.jal 0x02022434
+ram:0200a6bc  l.lwz r11,0x0(r1)
+ram:0200a6c0  l.ori r3,r11,0x0
+ram:0200a6c4  l.jal 0x02039e44
+ram:0200a6c8  l.addi r3,r0,0x0
+ram:0200a6cc  l.jal 0x02034ee4
+ram:0200a6d0  l.addi r3,r0,0x0
+
+ram:0200a6d4  l.jal 0x020041b0 (caller 0x200a4bc)
+ram:0200a6ac  l.lwz r3,0x4(r11)
+ram:0200a6b0  l.lwz r4,0x8(r11)
+ram:0200a6b4  l.sw 0x0(r1),r11
+ram:0200a6b8  l.jal 0x02022434
+ram:0200a6bc  l.lwz r11,0x0(r1)
+ram:0200a6c0  l.ori r3,r11,0x0
+ram:0200a6c4  l.jal 0x02039e44
+ram:0200a6c8  l.addi r3,r0,0x0
+ram:0200a6cc  l.jal 0x02034ee4
+ram:0200a6d0  l.addi r3,r0,0x0
+ram:0200a6d4  l.jal 0x020041b0
+ram:0200a6d8  l.jal 0x02008630
+
+ram:0200a6d8  l.jal 0x02008630 (caller 0x200a4bc)
+ram:0200a6b0  l.lwz r4,0x8(r11)
+ram:0200a6b4  l.sw 0x0(r1),r11
+ram:0200a6b8  l.jal 0x02022434
+ram:0200a6bc  l.lwz r11,0x0(r1)
+ram:0200a6c0  l.ori r3,r11,0x0
+ram:0200a6c4  l.jal 0x02039e44
+ram:0200a6c8  l.addi r3,r0,0x0
+ram:0200a6cc  l.jal 0x02034ee4
+ram:0200a6d0  l.addi r3,r0,0x0
+ram:0200a6d4  l.jal 0x020041b0
+ram:0200a6d8  l.jal 0x02008630
+ram:0200a6dc  l.addi r3,r0,0x2c
+
+ram:0200a6ec  l.jal 0x020071c4 (caller 0x200a4bc)
+ram:0200a6c4  l.jal 0x02039e44
+ram:0200a6c8  l.addi r3,r0,0x0
+ram:0200a6cc  l.jal 0x02034ee4
+ram:0200a6d0  l.addi r3,r0,0x0
+ram:0200a6d4  l.jal 0x020041b0
+ram:0200a6d8  l.jal 0x02008630
+ram:0200a6dc  l.addi r3,r0,0x2c
+ram:0200a6e0  l.addi r4,r0,0x1
+ram:0200a6e4  l.addi r5,r0,0x0
+ram:0200a6e8  l.ori r30,r11,0x0
+ram:0200a6ec  l.jal 0x020071c4
+ram:0200a6f0  l.jal 0x020524a0
+
+ram:0200a6f0  l.jal 0x020524a0 (caller 0x200a4bc)
+ram:0200a6c8  l.addi r3,r0,0x0
+ram:0200a6cc  l.jal 0x02034ee4
+ram:0200a6d0  l.addi r3,r0,0x0
+ram:0200a6d4  l.jal 0x020041b0
+ram:0200a6d8  l.jal 0x02008630
+ram:0200a6dc  l.addi r3,r0,0x2c
+ram:0200a6e0  l.addi r4,r0,0x1
+ram:0200a6e4  l.addi r5,r0,0x0
+ram:0200a6e8  l.ori r30,r11,0x0
+ram:0200a6ec  l.jal 0x020071c4
+ram:0200a6f0  l.jal 0x020524a0
+ram:0200a6f4  l.sfeqi r11,0x1
+
+ram:0200a700  l.jal 0x020218b4 (caller 0x200a4bc)
+ram:0200a6d8  l.jal 0x02008630
+ram:0200a6dc  l.addi r3,r0,0x2c
+ram:0200a6e0  l.addi r4,r0,0x1
+ram:0200a6e4  l.addi r5,r0,0x0
+ram:0200a6e8  l.ori r30,r11,0x0
+ram:0200a6ec  l.jal 0x020071c4
+ram:0200a6f0  l.jal 0x020524a0
+ram:0200a6f4  l.sfeqi r11,0x1
+ram:0200a6f8  l.bnf 0x0200a708
+ram:0200a6fc  l.addi r3,r0,0xa
+ram:0200a700  l.jal 0x020218b4
+ram:0200a704  l.j 0x0200a6f0
+
+ram:0200a70c  l.jal 0x02034ee4 (caller 0x200a4bc)
+ram:0200a6e4  l.addi r5,r0,0x0
+ram:0200a6e8  l.ori r30,r11,0x0
+ram:0200a6ec  l.jal 0x020071c4
+ram:0200a6f0  l.jal 0x020524a0
+ram:0200a6f4  l.sfeqi r11,0x1
+ram:0200a6f8  l.bnf 0x0200a708
+ram:0200a6fc  l.addi r3,r0,0xa
+ram:0200a700  l.jal 0x020218b4
+ram:0200a704  l.j 0x0200a6f0
+ram:0200a708  l.addi r3,r0,0x1
+ram:0200a70c  l.jal 0x02034ee4
+ram:0200a710  l.addi r3,r0,0x0
+
+ram:0200a714  l.jal 0x02004588 (caller 0x200a4bc)
+ram:0200a6ec  l.jal 0x020071c4
+ram:0200a6f0  l.jal 0x020524a0
+ram:0200a6f4  l.sfeqi r11,0x1
+ram:0200a6f8  l.bnf 0x0200a708
+ram:0200a6fc  l.addi r3,r0,0xa
+ram:0200a700  l.jal 0x020218b4
+ram:0200a704  l.j 0x0200a6f0
+ram:0200a708  l.addi r3,r0,0x1
+ram:0200a70c  l.jal 0x02034ee4
+ram:0200a710  l.addi r3,r0,0x0
+ram:0200a714  l.jal 0x02004588
+ram:0200a718  l.lbs r3,0x11(r20)
+
+ram:0200a724  l.jal 0x02002a4c (caller 0x200a4bc)
+ram:0200a6fc  l.addi r3,r0,0xa
+ram:0200a700  l.jal 0x020218b4
+ram:0200a704  l.j 0x0200a6f0
+ram:0200a708  l.addi r3,r0,0x1
+ram:0200a70c  l.jal 0x02034ee4
+ram:0200a710  l.addi r3,r0,0x0
+ram:0200a714  l.jal 0x02004588
+ram:0200a718  l.lbs r3,0x11(r20)
+ram:0200a71c  l.ori r4,r26,0x0
+ram:0200a720  l.addi r5,r0,0x1
+ram:0200a724  l.jal 0x02002a4c
+ram:0200a728  l.lwz r3,0x0(r28)
+
+ram:0200a748  l.jal 0x02002a4c (caller 0x200a4bc)
+ram:0200a720  l.addi r5,r0,0x1
+ram:0200a724  l.jal 0x02002a4c
+ram:0200a728  l.lwz r3,0x0(r28)
+ram:0200a72c  l.sfnei r3,0x1
+ram:0200a730  l.bf 0x0200a74c
+ram:0200a734  l.movhi r3,0x20d
+ram:0200a738  l.ori r4,r24,0x11
+ram:0200a73c  l.ori r3,r3,0x416c
+ram:0200a740  l.addi r5,r0,0x0
+ram:0200a744  l.lbs r3,0x10(r3)
+ram:0200a748  l.jal 0x02002a4c
+ram:0200a74c  l.sfnei r30,0x0
+
+ram:0200a754  l.jal 0x0202bc7c (caller 0x200a4bc)
+ram:0200a72c  l.sfnei r3,0x1
+ram:0200a730  l.bf 0x0200a74c
+ram:0200a734  l.movhi r3,0x20d
+ram:0200a738  l.ori r4,r24,0x11
+ram:0200a73c  l.ori r3,r3,0x416c
+ram:0200a740  l.addi r5,r0,0x0
+ram:0200a744  l.lbs r3,0x10(r3)
+ram:0200a748  l.jal 0x02002a4c
+ram:0200a74c  l.sfnei r30,0x0
+ram:0200a750  l.bf 0x0200a600
+ram:0200a754  l.jal 0x0202bc7c
+ram:0200a758  l.ori r3,r30,0x0
+
+ram:0200a760  l.jal 0x02034ee4 (caller 0x200a4bc)
+ram:0200a738  l.ori r4,r24,0x11
+ram:0200a73c  l.ori r3,r3,0x416c
+ram:0200a740  l.addi r5,r0,0x0
+ram:0200a744  l.lbs r3,0x10(r3)
+ram:0200a748  l.jal 0x02002a4c
+ram:0200a74c  l.sfnei r30,0x0
+ram:0200a750  l.bf 0x0200a600
+ram:0200a754  l.jal 0x0202bc7c
+ram:0200a758  l.ori r3,r30,0x0
+ram:0200a75c  l.movhi r28,0x20d
+ram:0200a760  l.jal 0x02034ee4
+ram:0200a764  l.addi r3,r0,0x7
+
+ram:0200a76c  l.jal 0x02004944 (caller 0x200a4bc)
+ram:0200a744  l.lbs r3,0x10(r3)
+ram:0200a748  l.jal 0x02002a4c
+ram:0200a74c  l.sfnei r30,0x0
+ram:0200a750  l.bf 0x0200a600
+ram:0200a754  l.jal 0x0202bc7c
+ram:0200a758  l.ori r3,r30,0x0
+ram:0200a75c  l.movhi r28,0x20d
+ram:0200a760  l.jal 0x02034ee4
+ram:0200a764  l.addi r3,r0,0x7
+ram:0200a768  l.ori r28,r28,0x416c
+ram:0200a76c  l.jal 0x02004944
+ram:0200a770  l.lbz r3,0x5f(r20)
+
+ram:0200a780  l.jal 0x02000848 (caller 0x200a4bc)
+ram:0200a758  l.ori r3,r30,0x0
+ram:0200a75c  l.movhi r28,0x20d
+ram:0200a760  l.jal 0x02034ee4
+ram:0200a764  l.addi r3,r0,0x7
+ram:0200a768  l.ori r28,r28,0x416c
+ram:0200a76c  l.jal 0x02004944
+ram:0200a770  l.lbz r3,0x5f(r20)
+ram:0200a774  l.sfeqi r3,0x0
+ram:0200a778  l.bf 0x0200a898
+ram:0200a77c  l.lwz r3,0x3c(r28)
+ram:0200a780  l.jal 0x02000848
+ram:0200a784  l.sflesi r11,0x0
+
+ram:0200a794  l.jal 0x02000848 (caller 0x200a4bc)
+ram:0200a76c  l.jal 0x02004944
+ram:0200a770  l.lbz r3,0x5f(r20)
+ram:0200a774  l.sfeqi r3,0x0
+ram:0200a778  l.bf 0x0200a898
+ram:0200a77c  l.lwz r3,0x3c(r28)
+ram:0200a780  l.jal 0x02000848
+ram:0200a784  l.sflesi r11,0x0
+ram:0200a788  l.bf 0x0200a8a0
+ram:0200a78c  l.lwz r30,0x3c(r28)
+ram:0200a790  l.ori r3,r30,0x0
+ram:0200a794  l.jal 0x02000848
+ram:0200a798  l.ori r3,r30,0x0
+
+ram:0200a7a4  l.jal 0x02002138 (caller 0x200a4bc)
+ram:0200a77c  l.lwz r3,0x3c(r28)
+ram:0200a780  l.jal 0x02000848
+ram:0200a784  l.sflesi r11,0x0
+ram:0200a788  l.bf 0x0200a8a0
+ram:0200a78c  l.lwz r30,0x3c(r28)
+ram:0200a790  l.ori r3,r30,0x0
+ram:0200a794  l.jal 0x02000848
+ram:0200a798  l.ori r3,r30,0x0
+ram:0200a79c  l.ori r4,r11,0x0
+ram:0200a7a0  l.addi r5,r1,0x8
+ram:0200a7a4  l.jal 0x02002138
+ram:0200a7a8  l.sfeqi r11,0x0
+
+ram:0200a7bc  l.jal 0x0206c5b8 (caller 0x200a4bc)
+ram:0200a794  l.jal 0x02000848
+ram:0200a798  l.ori r3,r30,0x0
+ram:0200a79c  l.ori r4,r11,0x0
+ram:0200a7a0  l.addi r5,r1,0x8
+ram:0200a7a4  l.jal 0x02002138
+ram:0200a7a8  l.sfeqi r11,0x0
+ram:0200a7ac  l.ori r30,r11,0x0
+ram:0200a7b0  l.bf 0x0200a8a0
+ram:0200a7b4  l.ori r3,r11,0x0
+ram:0200a7b8  l.addi r4,r0,0x1
+ram:0200a7bc  l.jal 0x0206c5b8
+ram:0200a7c0  l.sfltsi r11,0x0
+
+ram:0200a7cc  l.jal 0x0206c680 (caller 0x200a4bc)
+ram:0200a7a4  l.jal 0x02002138
+ram:0200a7a8  l.sfeqi r11,0x0
+ram:0200a7ac  l.ori r30,r11,0x0
+ram:0200a7b0  l.bf 0x0200a8a0
+ram:0200a7b4  l.ori r3,r11,0x0
+ram:0200a7b8  l.addi r4,r0,0x1
+ram:0200a7bc  l.jal 0x0206c5b8
+ram:0200a7c0  l.sfltsi r11,0x0
+ram:0200a7c4  l.ori r3,r11,0x0
+ram:0200a7c8  l.bf 0x0200a8a0
+ram:0200a7cc  l.jal 0x0206c680
+ram:0200a7d0  l.ori r4,r22,0x0
+
+ram:0200a7dc  l.jal 0x02009c1c (caller 0x200a4bc)
+ram:0200a7b4  l.ori r3,r11,0x0
+ram:0200a7b8  l.addi r4,r0,0x1
+ram:0200a7bc  l.jal 0x0206c5b8
+ram:0200a7c0  l.sfltsi r11,0x0
+ram:0200a7c4  l.ori r3,r11,0x0
+ram:0200a7c8  l.bf 0x0200a8a0
+ram:0200a7cc  l.jal 0x0206c680
+ram:0200a7d0  l.ori r4,r22,0x0
+ram:0200a7d4  l.ori r5,r2,0x56
+ram:0200a7d8  l.ori r3,r18,0x0
+ram:0200a7dc  l.jal 0x02009c1c
+ram:0200a7e0  l.addi r3,r0,0x1
+
+ram:0200a7e4  l.jal 0x0205b8c4 (caller 0x200a4bc)
+ram:0200a7bc  l.jal 0x0206c5b8
+ram:0200a7c0  l.sfltsi r11,0x0
+ram:0200a7c4  l.ori r3,r11,0x0
+ram:0200a7c8  l.bf 0x0200a8a0
+ram:0200a7cc  l.jal 0x0206c680
+ram:0200a7d0  l.ori r4,r22,0x0
+ram:0200a7d4  l.ori r5,r2,0x56
+ram:0200a7d8  l.ori r3,r18,0x0
+ram:0200a7dc  l.jal 0x02009c1c
+ram:0200a7e0  l.addi r3,r0,0x1
+ram:0200a7e4  l.jal 0x0205b8c4
+ram:0200a7e8  l.ori r3,r30,0x0
+
+ram:0200a7f0  l.jal 0x0206c5b8 (caller 0x200a4bc)
+ram:0200a7c8  l.bf 0x0200a8a0
+ram:0200a7cc  l.jal 0x0206c680
+ram:0200a7d0  l.ori r4,r22,0x0
+ram:0200a7d4  l.ori r5,r2,0x56
+ram:0200a7d8  l.ori r3,r18,0x0
+ram:0200a7dc  l.jal 0x02009c1c
+ram:0200a7e0  l.addi r3,r0,0x1
+ram:0200a7e4  l.jal 0x0205b8c4
+ram:0200a7e8  l.ori r3,r30,0x0
+ram:0200a7ec  l.addi r4,r0,0x1
+ram:0200a7f0  l.jal 0x0206c5b8
+ram:0200a7f4  l.sfltsi r11,0x0
+
+ram:0200a810  l.jal 0x0205adf0 (caller 0x200a4bc)
+ram:0200a7e8  l.ori r3,r30,0x0
+ram:0200a7ec  l.addi r4,r0,0x1
+ram:0200a7f0  l.jal 0x0206c5b8
+ram:0200a7f4  l.sfltsi r11,0x0
+ram:0200a7f8  l.ori r30,r11,0x0
+ram:0200a7fc  l.bf 0x0200a8a0
+ram:0200a800  l.lbz r4,0x61(r28)
+ram:0200a804  l.lbz r5,0x60(r28)
+ram:0200a808  l.lbz r6,0x0(r28)
+ram:0200a80c  l.ori r3,r11,0x0
+ram:0200a810  l.jal 0x0205adf0
+ram:0200a814  l.andi r11,r11,0xff
+
+ram:0200a85c  l.jal 0x02009c1c (caller 0x200a4bc)
+ram:0200a834  l.bf 0x0200a848
+ram:0200a838  l.ori r3,r18,0x0
+ram:0200a83c  l.ori r4,r22,0x0
+ram:0200a840  l.ori r5,r2,0x58
+ram:0200a844  l.j 0x0200a85c
+ram:0200a848  l.sfnei r11,0xe
+ram:0200a84c  l.bf 0x0200a870
+ram:0200a850  l.ori r3,r18,0x0
+ram:0200a854  l.ori r4,r22,0x0
+ram:0200a858  l.ori r5,r2,0xbb
+ram:0200a85c  l.jal 0x02009c1c
+ram:0200a860  l.addi r3,r0,0x1
+
+ram:0200a864  l.jal 0x0205b8c4 (caller 0x200a4bc)
+ram:0200a83c  l.ori r4,r22,0x0
+ram:0200a840  l.ori r5,r2,0x58
+ram:0200a844  l.j 0x0200a85c
+ram:0200a848  l.sfnei r11,0xe
+ram:0200a84c  l.bf 0x0200a870
+ram:0200a850  l.ori r3,r18,0x0
+ram:0200a854  l.ori r4,r22,0x0
+ram:0200a858  l.ori r5,r2,0xbb
+ram:0200a85c  l.jal 0x02009c1c
+ram:0200a860  l.addi r3,r0,0x1
+ram:0200a864  l.jal 0x0205b8c4
+ram:0200a868  l.addi r3,r0,0x7d0
+
+ram:0200a86c  l.jal 0x020218b4 (caller 0x200a4bc)
+ram:0200a844  l.j 0x0200a85c
+ram:0200a848  l.sfnei r11,0xe
+ram:0200a84c  l.bf 0x0200a870
+ram:0200a850  l.ori r3,r18,0x0
+ram:0200a854  l.ori r4,r22,0x0
+ram:0200a858  l.ori r5,r2,0xbb
+ram:0200a85c  l.jal 0x02009c1c
+ram:0200a860  l.addi r3,r0,0x1
+ram:0200a864  l.jal 0x0205b8c4
+ram:0200a868  l.addi r3,r0,0x7d0
+ram:0200a86c  l.jal 0x020218b4
+ram:0200a870  l.ori r3,r30,0x0
+
+ram:0200a874  l.jal 0x0206c680 (caller 0x200a4bc)
+ram:0200a84c  l.bf 0x0200a870
+ram:0200a850  l.ori r3,r18,0x0
+ram:0200a854  l.ori r4,r22,0x0
+ram:0200a858  l.ori r5,r2,0xbb
+ram:0200a85c  l.jal 0x02009c1c
+ram:0200a860  l.addi r3,r0,0x1
+ram:0200a864  l.jal 0x0205b8c4
+ram:0200a868  l.addi r3,r0,0x7d0
+ram:0200a86c  l.jal 0x020218b4
+ram:0200a870  l.ori r3,r30,0x0
+ram:0200a874  l.jal 0x0206c680
+ram:0200a878  l.addi r4,r0,0x0
+
+ram:0200a888  l.jal 0x02009ccc (caller 0x200a4bc)
+ram:0200a860  l.addi r3,r0,0x1
+ram:0200a864  l.jal 0x0205b8c4
+ram:0200a868  l.addi r3,r0,0x7d0
+ram:0200a86c  l.jal 0x020218b4
+ram:0200a870  l.ori r3,r30,0x0
+ram:0200a874  l.jal 0x0206c680
+ram:0200a878  l.addi r4,r0,0x0
+ram:0200a87c  l.ori r3,r18,0x0
+ram:0200a880  l.ori r5,r4,0x0
+ram:0200a884  l.ori r6,r4,0x0
+ram:0200a888  l.jal 0x02009ccc
+ram:0200a88c  l.addi r3,r0,0x1
+
+ram:0200a890  l.jal 0x0205b8c4 (caller 0x200a4bc)
+ram:0200a868  l.addi r3,r0,0x7d0
+ram:0200a86c  l.jal 0x020218b4
+ram:0200a870  l.ori r3,r30,0x0
+ram:0200a874  l.jal 0x0206c680
+ram:0200a878  l.addi r4,r0,0x0
+ram:0200a87c  l.ori r3,r18,0x0
+ram:0200a880  l.ori r5,r4,0x0
+ram:0200a884  l.ori r6,r4,0x0
+ram:0200a888  l.jal 0x02009ccc
+ram:0200a88c  l.addi r3,r0,0x1
+ram:0200a890  l.jal 0x0205b8c4
+ram:0200a894  l.j 0x0200a8a0
+
+ram:0200a89c  l.jal 0x020218b4 (caller 0x200a4bc)
+ram:0200a874  l.jal 0x0206c680
+ram:0200a878  l.addi r4,r0,0x0
+ram:0200a87c  l.ori r3,r18,0x0
+ram:0200a880  l.ori r5,r4,0x0
+ram:0200a884  l.ori r6,r4,0x0
+ram:0200a888  l.jal 0x02009ccc
+ram:0200a88c  l.addi r3,r0,0x1
+ram:0200a890  l.jal 0x0205b8c4
+ram:0200a894  l.j 0x0200a8a0
+ram:0200a898  l.addi r3,r0,0x3e8
+ram:0200a89c  l.jal 0x020218b4
+ram:0200a8a0  l.jal 0x0202bc7c
+
+ram:0200a8a0  l.jal 0x0202bc7c (caller 0x200a4bc)
+ram:0200a878  l.addi r4,r0,0x0
+ram:0200a87c  l.ori r3,r18,0x0
+ram:0200a880  l.ori r5,r4,0x0
+ram:0200a884  l.ori r6,r4,0x0
+ram:0200a888  l.jal 0x02009ccc
+ram:0200a88c  l.addi r3,r0,0x1
+ram:0200a890  l.jal 0x0205b8c4
+ram:0200a894  l.j 0x0200a8a0
+ram:0200a898  l.addi r3,r0,0x3e8
+ram:0200a89c  l.jal 0x020218b4
+ram:0200a8a0  l.jal 0x0202bc7c
+ram:0200a8a4  l.addi r3,r0,0x1
+
+ram:0200a8a8  l.jal 0x02034ee4 (caller 0x200a4bc)
+ram:0200a880  l.ori r5,r4,0x0
+ram:0200a884  l.ori r6,r4,0x0
+ram:0200a888  l.jal 0x02009ccc
+ram:0200a88c  l.addi r3,r0,0x1
+ram:0200a890  l.jal 0x0205b8c4
+ram:0200a894  l.j 0x0200a8a0
+ram:0200a898  l.addi r3,r0,0x3e8
+ram:0200a89c  l.jal 0x020218b4
+ram:0200a8a0  l.jal 0x0202bc7c
+ram:0200a8a4  l.addi r3,r0,0x1
+ram:0200a8a8  l.jal 0x02034ee4
+ram:0200a8ac  l.lbz r3,0x7(r20)
+
+ram:0200a8b0  l.jal 0x02004944 (caller 0x200a4bc)
+ram:0200a888  l.jal 0x02009ccc
+ram:0200a88c  l.addi r3,r0,0x1
+ram:0200a890  l.jal 0x0205b8c4
+ram:0200a894  l.j 0x0200a8a0
+ram:0200a898  l.addi r3,r0,0x3e8
+ram:0200a89c  l.jal 0x020218b4
+ram:0200a8a0  l.jal 0x0202bc7c
+ram:0200a8a4  l.addi r3,r0,0x1
+ram:0200a8a8  l.jal 0x02034ee4
+ram:0200a8ac  l.lbz r3,0x7(r20)
+ram:0200a8b0  l.jal 0x02004944
+ram:0200a8b4  l.j 0x0200a600
+
+ram:0200a8e0  l.jal 0x02002a4c (caller 0x200a4bc)
+ram:0200a8b8  l.lbz r3,0x5f(r30)
+ram:0200a8bc  l.sfeqi r3,0x0
+ram:0200a8c0  l.bf 0x0200a9f8
+ram:0200a8c4  l.movhi r28,0x20c
+ram:0200a8c8  l.ori r28,r28,0xcd98
+ram:0200a8cc  l.lwz r5,0x0(r28)
+ram:0200a8d0  l.sfnei r5,0x1
+ram:0200a8d4  l.bf 0x0200a8e4
+ram:0200a8d8  l.lbs r3,0x10(r30)
+ram:0200a8dc  l.ori r4,r24,0x11
+ram:0200a8e0  l.jal 0x02002a4c
+ram:0200a8e4  l.lbs r3,0x11(r20)
+
+ram:0200a8f0  l.jal 0x02002a4c (caller 0x200a4bc)
+ram:0200a8c8  l.ori r28,r28,0xcd98
+ram:0200a8cc  l.lwz r5,0x0(r28)
+ram:0200a8d0  l.sfnei r5,0x1
+ram:0200a8d4  l.bf 0x0200a8e4
+ram:0200a8d8  l.lbs r3,0x10(r30)
+ram:0200a8dc  l.ori r4,r24,0x11
+ram:0200a8e0  l.jal 0x02002a4c
+ram:0200a8e4  l.lbs r3,0x11(r20)
+ram:0200a8e8  l.addi r5,r0,0x0
+ram:0200a8ec  l.ori r4,r26,0x0
+ram:0200a8f0  l.jal 0x02002a4c
+ram:0200a8f4  l.addi r3,r1,0x4
+
+ram:0200a8fc  l.jal 0x020087e8 (caller 0x200a4bc)
+ram:0200a8d4  l.bf 0x0200a8e4
+ram:0200a8d8  l.lbs r3,0x10(r30)
+ram:0200a8dc  l.ori r4,r24,0x11
+ram:0200a8e0  l.jal 0x02002a4c
+ram:0200a8e4  l.lbs r3,0x11(r20)
+ram:0200a8e8  l.addi r5,r0,0x0
+ram:0200a8ec  l.ori r4,r26,0x0
+ram:0200a8f0  l.jal 0x02002a4c
+ram:0200a8f4  l.addi r3,r1,0x4
+ram:0200a8f8  l.addi r4,r1,0x8
+ram:0200a8fc  l.jal 0x020087e8
+ram:0200a900  l.lbs r3,0x11(r20)
+
+ram:0200a910  l.jal 0x02002a4c (caller 0x200a4bc)
+ram:0200a8e8  l.addi r5,r0,0x0
+ram:0200a8ec  l.ori r4,r26,0x0
+ram:0200a8f0  l.jal 0x02002a4c
+ram:0200a8f4  l.addi r3,r1,0x4
+ram:0200a8f8  l.addi r4,r1,0x8
+ram:0200a8fc  l.jal 0x020087e8
+ram:0200a900  l.lbs r3,0x11(r20)
+ram:0200a904  l.ori r4,r26,0x0
+ram:0200a908  l.addi r5,r0,0x1
+ram:0200a90c  l.ori r30,r11,0x0
+ram:0200a910  l.jal 0x02002a4c
+ram:0200a914  l.lwz r3,0x0(r28)
+
+ram:0200a934  l.jal 0x02002a4c (caller 0x200a4bc)
+ram:0200a90c  l.ori r30,r11,0x0
+ram:0200a910  l.jal 0x02002a4c
+ram:0200a914  l.lwz r3,0x0(r28)
+ram:0200a918  l.sfnei r3,0x1
+ram:0200a91c  l.bf 0x0200a938
+ram:0200a920  l.movhi r3,0x20d
+ram:0200a924  l.ori r4,r24,0x11
+ram:0200a928  l.ori r3,r3,0x416c
+ram:0200a92c  l.addi r5,r0,0x0
+ram:0200a930  l.lbs r3,0x10(r3)
+ram:0200a934  l.jal 0x02002a4c
+ram:0200a938  l.sfnei r30,0x0
+
+ram:0200a94c  l.jal 0x02009c1c (caller 0x200a4bc)
+ram:0200a924  l.ori r4,r24,0x11
+ram:0200a928  l.ori r3,r3,0x416c
+ram:0200a92c  l.addi r5,r0,0x0
+ram:0200a930  l.lbs r3,0x10(r3)
+ram:0200a934  l.jal 0x02002a4c
+ram:0200a938  l.sfnei r30,0x0
+ram:0200a93c  l.bf 0x0200a600
+ram:0200a940  l.ori r4,r22,0x0
+ram:0200a944  l.ori r5,r2,0x56
+ram:0200a948  l.ori r3,r18,0x0
+ram:0200a94c  l.jal 0x02009c1c
+ram:0200a950  l.addi r3,r0,0x1
+
+ram:0200a954  l.jal 0x0205b8c4 (caller 0x200a4bc)
+ram:0200a92c  l.addi r5,r0,0x0
+ram:0200a930  l.lbs r3,0x10(r3)
+ram:0200a934  l.jal 0x02002a4c
+ram:0200a938  l.sfnei r30,0x0
+ram:0200a93c  l.bf 0x0200a600
+ram:0200a940  l.ori r4,r22,0x0
+ram:0200a944  l.ori r5,r2,0x56
+ram:0200a948  l.ori r3,r18,0x0
+ram:0200a94c  l.jal 0x02009c1c
+ram:0200a950  l.addi r3,r0,0x1
+ram:0200a954  l.jal 0x0205b8c4
+ram:0200a958  l.addi r3,r0,0x3e8
+
+ram:0200a95c  l.jal 0x020218b4 (caller 0x200a4bc)
+ram:0200a934  l.jal 0x02002a4c
+ram:0200a938  l.sfnei r30,0x0
+ram:0200a93c  l.bf 0x0200a600
+ram:0200a940  l.ori r4,r22,0x0
+ram:0200a944  l.ori r5,r2,0x56
+ram:0200a948  l.ori r3,r18,0x0
+ram:0200a94c  l.jal 0x02009c1c
+ram:0200a950  l.addi r3,r0,0x1
+ram:0200a954  l.jal 0x0205b8c4
+ram:0200a958  l.addi r3,r0,0x3e8
+ram:0200a95c  l.jal 0x020218b4
+ram:0200a960  l.lbz r4,0x61(r20)
+
+ram:0200a970  l.jal 0x0205b0fc (caller 0x200a4bc)
+ram:0200a948  l.ori r3,r18,0x0
+ram:0200a94c  l.jal 0x02009c1c
+ram:0200a950  l.addi r3,r0,0x1
+ram:0200a954  l.jal 0x0205b8c4
+ram:0200a958  l.addi r3,r0,0x3e8
+ram:0200a95c  l.jal 0x020218b4
+ram:0200a960  l.lbz r4,0x61(r20)
+ram:0200a964  l.lbz r5,0x60(r20)
+ram:0200a968  l.lbz r6,0x0(r20)
+ram:0200a96c  l.lwz r3,0x4(r1)
+ram:0200a970  l.jal 0x0205b0fc
+ram:0200a974  l.andi r11,r11,0xff
+
+ram:0200a9bc  l.jal 0x02009c1c (caller 0x200a4bc)
+ram:0200a994  l.bf 0x0200a9a8
+ram:0200a998  l.ori r3,r18,0x0
+ram:0200a99c  l.ori r4,r22,0x0
+ram:0200a9a0  l.ori r5,r2,0x58
+ram:0200a9a4  l.j 0x0200a9bc
+ram:0200a9a8  l.sfnei r11,0xe
+ram:0200a9ac  l.bf 0x0200a9d0
+ram:0200a9b0  l.ori r3,r18,0x0
+ram:0200a9b4  l.ori r4,r22,0x0
+ram:0200a9b8  l.ori r5,r2,0xbb
+ram:0200a9bc  l.jal 0x02009c1c
+ram:0200a9c0  l.addi r3,r0,0x1
+
+ram:0200a9c4  l.jal 0x0205b8c4 (caller 0x200a4bc)
+ram:0200a99c  l.ori r4,r22,0x0
+ram:0200a9a0  l.ori r5,r2,0x58
+ram:0200a9a4  l.j 0x0200a9bc
+ram:0200a9a8  l.sfnei r11,0xe
+ram:0200a9ac  l.bf 0x0200a9d0
+ram:0200a9b0  l.ori r3,r18,0x0
+ram:0200a9b4  l.ori r4,r22,0x0
+ram:0200a9b8  l.ori r5,r2,0xbb
+ram:0200a9bc  l.jal 0x02009c1c
+ram:0200a9c0  l.addi r3,r0,0x1
+ram:0200a9c4  l.jal 0x0205b8c4
+ram:0200a9c8  l.addi r3,r0,0x7d0
+
+ram:0200a9cc  l.jal 0x020218b4 (caller 0x200a4bc)
+ram:0200a9a4  l.j 0x0200a9bc
+ram:0200a9a8  l.sfnei r11,0xe
+ram:0200a9ac  l.bf 0x0200a9d0
+ram:0200a9b0  l.ori r3,r18,0x0
+ram:0200a9b4  l.ori r4,r22,0x0
+ram:0200a9b8  l.ori r5,r2,0xbb
+ram:0200a9bc  l.jal 0x02009c1c
+ram:0200a9c0  l.addi r3,r0,0x1
+ram:0200a9c4  l.jal 0x0205b8c4
+ram:0200a9c8  l.addi r3,r0,0x7d0
+ram:0200a9cc  l.jal 0x020218b4
+ram:0200a9d0  l.lwz r3,0x4(r1)
+
+ram:0200a9d4  l.jal 0x0203e694 (caller 0x200a4bc)
+ram:0200a9ac  l.bf 0x0200a9d0
+ram:0200a9b0  l.ori r3,r18,0x0
+ram:0200a9b4  l.ori r4,r22,0x0
+ram:0200a9b8  l.ori r5,r2,0xbb
+ram:0200a9bc  l.jal 0x02009c1c
+ram:0200a9c0  l.addi r3,r0,0x1
+ram:0200a9c4  l.jal 0x0205b8c4
+ram:0200a9c8  l.addi r3,r0,0x7d0
+ram:0200a9cc  l.jal 0x020218b4
+ram:0200a9d0  l.lwz r3,0x4(r1)
+ram:0200a9d4  l.jal 0x0203e694
+ram:0200a9d8  l.addi r4,r0,0x0
+
+ram:0200a9e8  l.jal 0x02009ccc (caller 0x200a4bc)
+ram:0200a9c0  l.addi r3,r0,0x1
+ram:0200a9c4  l.jal 0x0205b8c4
+ram:0200a9c8  l.addi r3,r0,0x7d0
+ram:0200a9cc  l.jal 0x020218b4
+ram:0200a9d0  l.lwz r3,0x4(r1)
+ram:0200a9d4  l.jal 0x0203e694
+ram:0200a9d8  l.addi r4,r0,0x0
+ram:0200a9dc  l.ori r3,r18,0x0
+ram:0200a9e0  l.ori r5,r4,0x0
+ram:0200a9e4  l.ori r6,r4,0x0
+ram:0200a9e8  l.jal 0x02009ccc
+ram:0200a9ec  l.addi r3,r0,0x1
+
+ram:0200a9f0  l.jal 0x0205b8c4 (caller 0x200a4bc)
+ram:0200a9c8  l.addi r3,r0,0x7d0
+ram:0200a9cc  l.jal 0x020218b4
+ram:0200a9d0  l.lwz r3,0x4(r1)
+ram:0200a9d4  l.jal 0x0203e694
+ram:0200a9d8  l.addi r4,r0,0x0
+ram:0200a9dc  l.ori r3,r18,0x0
+ram:0200a9e0  l.ori r5,r4,0x0
+ram:0200a9e4  l.ori r6,r4,0x0
+ram:0200a9e8  l.jal 0x02009ccc
+ram:0200a9ec  l.addi r3,r0,0x1
+ram:0200a9f0  l.jal 0x0205b8c4
+ram:0200a9f4  l.j 0x0200a600
+
+ram:0200aa00  l.jal 0x02021648 (caller 0x200a4bc)
+ram:0200a9d8  l.addi r4,r0,0x0
+ram:0200a9dc  l.ori r3,r18,0x0
+ram:0200a9e0  l.ori r5,r4,0x0
+ram:0200a9e4  l.ori r6,r4,0x0
+ram:0200a9e8  l.jal 0x02009ccc
+ram:0200a9ec  l.addi r3,r0,0x1
+ram:0200a9f0  l.jal 0x0205b8c4
+ram:0200a9f4  l.j 0x0200a600
+ram:0200a9f8  l.lwz r3,0x74(r30)
+ram:0200a9fc  l.addi r4,r0,0x1
+ram:0200aa00  l.jal 0x02021648
+ram:0200aa04  l.j 0x0200a600
+
+ram:0200aa0c  l.jal 0x0200917c (caller 0x200a4bc)
+ram:0200a9e4  l.ori r6,r4,0x0
+ram:0200a9e8  l.jal 0x02009ccc
+ram:0200a9ec  l.addi r3,r0,0x1
+ram:0200a9f0  l.jal 0x0205b8c4
+ram:0200a9f4  l.j 0x0200a600
+ram:0200a9f8  l.lwz r3,0x74(r30)
+ram:0200a9fc  l.addi r4,r0,0x1
+ram:0200aa00  l.jal 0x02021648
+ram:0200aa04  l.j 0x0200a600
+ram:0200aa08  l.ori r3,r18,0x0
+ram:0200aa0c  l.jal 0x0200917c
+ram:0200aa10  l.j 0x0200aa54
+
+ram:0200aa1c  l.jal 0x02021894 (caller 0x200a4bc)
+ram:0200a9f4  l.j 0x0200a600
+ram:0200a9f8  l.lwz r3,0x74(r30)
+ram:0200a9fc  l.addi r4,r0,0x1
+ram:0200aa00  l.jal 0x02021648
+ram:0200aa04  l.j 0x0200a600
+ram:0200aa08  l.ori r3,r18,0x0
+ram:0200aa0c  l.jal 0x0200917c
+ram:0200aa10  l.j 0x0200aa54
+ram:0200aa14  l.addi r2,r0,0xa
+ram:0200aa18  l.j 0x0200a584
+ram:0200aa1c  l.jal 0x02021894
+ram:0200aa20  l.ori r22,r11,0x0
+
+ram:0200aa28  l.jal 0x020084a0 (caller 0x200a4bc)
+ram:0200aa00  l.jal 0x02021648
+ram:0200aa04  l.j 0x0200a600
+ram:0200aa08  l.ori r3,r18,0x0
+ram:0200aa0c  l.jal 0x0200917c
+ram:0200aa10  l.j 0x0200aa54
+ram:0200aa14  l.addi r2,r0,0xa
+ram:0200aa18  l.j 0x0200a584
+ram:0200aa1c  l.jal 0x02021894
+ram:0200aa20  l.ori r22,r11,0x0
+ram:0200aa24  l.addi r3,r0,0x0
+ram:0200aa28  l.jal 0x020084a0
+ram:0200aa2c  l.j 0x0200a5ac
+
+ram:02012304  l.sw -0xc(r1),r2 (caller 0x2012304)
+ram:02004ca8  l.addi r11,r0,0x0
+ram:02004cac  l.lwz r9,-0x4(r1)
+ram:02004cb0  l.lwz r1,-0x18(r1)
+ram:02004cb4  l.lwz r2,-0x14(r1)
+ram:02004cb8  l.lwz r14,-0x10(r1)
+ram:02004cbc  l.lwz r18,-0xc(r1)
+ram:02004cc0  l.lwz r20,-0x8(r1)
+ram:02004cc4  l.jr r9
+
+=== 0x02012304 win_open ===
+ram:02012304  l.sw -0xc(r1),r2
+ram:02012308  l.sw -0x4(r1),r9
+
+ram:02012398  l.jal 0x020250a4 (caller 0x2012304)
+ram:02012370  l.bf 0x020123b8
+ram:02012374  l.addi r11,r0,0x0
+ram:02012378  l.j 0x020123d4
+ram:0201237c  l.lwz r3,0x4(r2)
+ram:02012380  l.sfeqi r3,0x0
+ram:02012384  l.bf 0x0201238c
+ram:02012388  l.sw 0x24(r3),r2
+ram:0201238c  l.movhi r4,0x201
+ram:02012390  l.addi r5,r0,0x0
+ram:02012394  l.ori r4,r4,0x2150
+ram:02012398  l.jal 0x020250a4
+ram:0201239c  l.sfeqi r11,0x0
+
+ram:020123ac  l.jal 0x02007880 (caller 0x2012304)
+ram:02012384  l.bf 0x0201238c
+ram:02012388  l.sw 0x24(r3),r2
+ram:0201238c  l.movhi r4,0x201
+ram:02012390  l.addi r5,r0,0x0
+ram:02012394  l.ori r4,r4,0x2150
+ram:02012398  l.jal 0x020250a4
+ram:0201239c  l.sfeqi r11,0x0
+ram:020123a0  l.bf 0x02012374
+ram:020123a4  l.lwz r3,0x0(r2)
+ram:020123a8  l.sw 0x0(r1),r11
+ram:020123ac  l.jal 0x02007880
+ram:020123b0  l.lwz r11,0x0(r1)
+
+ram:020123cc  l.jal 0x02028b04 (caller 0x2012304)
+ram:020123a4  l.lwz r3,0x0(r2)
+ram:020123a8  l.sw 0x0(r1),r11
+ram:020123ac  l.jal 0x02007880
+ram:020123b0  l.lwz r11,0x0(r1)
+ram:020123b4  l.sw 0x8(r2),r11
+ram:020123b8  l.addi r3,r0,0x22
+ram:020123bc  l.addi r4,r1,0x4
+ram:020123c0  l.sw 0x4(r1),r3
+ram:020123c4  l.lwz r3,0x8(r2)
+ram:020123c8  l.sw 0x10(r1),r14
+ram:020123cc  l.jal 0x02028b04
+ram:020123d0  l.lwz r11,0x8(r2)

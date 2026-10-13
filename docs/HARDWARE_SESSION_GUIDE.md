@@ -68,6 +68,13 @@ python3 tools/kc02_usb.py flash-read --offset 0 --len 0x400000 --out flash.bin
 Verify:
 ```bash
 md5sum flash.bin        # expect 7236c4c1bd3f12b1d85d33a9bebdf510
+
+> **Hash note.** The `md5 7236c4c1bd3f12b1d85d33a9bebdf510` quoted in early documents is not the
+> hash of the canonical image in this repo. `firmware/original.bin` is
+> `sha256 218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5`
+> (`md5 757f58ae6d2c729469fe873e95df794a`), and every tool and build script pins that sha256.
+> The old md5 described `original_firmware_backup.bin`, an earlier dump; an early dump pair was
+> already known to differ by 8 bytes in one SFAT counter run. See [DOC_AUDIT.md](DOC_AUDIT.md).
 ```
 - **md5 matches the backup** → end-to-end validation of everything: mapping,
   USB primitives, shim, the lot. Live flash == backup.

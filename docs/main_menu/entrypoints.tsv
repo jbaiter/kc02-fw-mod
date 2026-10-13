@@ -1,0 +1,16 @@
+original_address	symbol
+0x020130bc	main_menu_mode_tick
+0x020130d0	main_menu_mode_exit
+0x020130e4	main_menu_mode_enter
+0x02013120	main_menu_noop
+0x02013138	main_menu_render
+0x020132e4	main_menu_set_labels_visible
+0x02013434	main_menu_window_exit
+0x020134b8	main_menu_window_enter
+0x02013698	main_menu_blink
+0x02013714	main_menu_right
+0x0201379c	main_menu_left
+0x02013828	main_menu_down
+0x020138b0	main_menu_up
+0x02013938	main_menu_ok
+0x02013a14	main_menu_playback_shortcut

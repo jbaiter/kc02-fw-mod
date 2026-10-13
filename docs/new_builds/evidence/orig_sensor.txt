@@ -1,0 +1,426 @@
+##### ram:020587f0  Sensor_DebugRegister  size 108 (GhidraScript)  
+
+/* SDK align: cmos_sensor_cmos_sensor.c.o/Sensor_DebugRegister score=1.0 segment */
+
+void Sensor_DebugRegister(byte *param_1,uint param_2)
+
+{
+  byte p3;
+  
+  p3 = (byte)(param_2 >> 8);
+  if ((param_2 & 0xff) == 2) {
+    hal_iic016bitAddrWrite(DAT_ram_020d2eaf,CONCAT11(*param_1,param_1[1]),param_1 + 2,p3);
+  }
+  else {
+    hal_iic08bitAddrWrite(DAT_ram_020d2eaf,*param_1,param_1 + 1,p3);
+  }
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0205885c  usb_cut_raw  size 20 (GhidraScript)  
+
+/* SDK align: cmos_sensor_cmos_sensor.c.o/usb_cut_raw score=1.0 segment */
+
+void usb_cut_raw(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02058870  Sensor_common_Get  size 20 (GhidraScript)  
+
+/* SDK align: cmos_sensor_cmos_sensor.c.o/Sensor_common_Get score=1.0 segment */
+
+void Sensor_common_Get(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02058884  Sensor_common_Set  size 20 (GhidraScript)  
+
+/* SDK align: cmos_sensor_cmos_sensor.c.o/Sensor_common_Set score=1.0 segment */
+
+void Sensor_common_Set(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02058898  isp_debug_write  size 20 (GhidraScript)  
+
+/* SDK align: cmos_sensor_cmos_sensor.c.o/isp_debug_write score=1.0 segment */
+
+void isp_debug_write(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:020588ac  isp_debug_read  size 20 (GhidraScript)  
+
+/* SDK align: cmos_sensor_cmos_sensor.c.o/isp_debug_read score=1.0 segment */
+
+void isp_debug_read(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:020588c0  isp_set_ccm_preset  size 504 (GhidraScript)  
+
+/* WARNING: Globals starting with '_' overlap smaller symbols at the same address */
+/* Track2 evidence-based naming (likely, names_09.tsv): Loads one of several 9-coefficient matrices
+   selected by preset 1-5 into the ISP and programs it through isp_CCM_cfg.  [was FUN_ram_020588c0]
+    */
+
+void isp_set_ccm_preset(sbyte param_1)
+
+{
+  ushort *puVar1;
+  ushort uVar2;
+  
+  puVar1 = _DAT_ram_020d73f4;
+  if (*(int *)(_DAT_ram_020d1e84 + 0x18) != 0x500) {
+    return;
+  }
+  if (param_1 == 1) {
+    *_DAT_ram_020d73f4 = 0x128;
+    puVar1[1] = 0;
+    puVar1[2] = 0;
+    puVar1[3] = 0x55;
+    puVar1[4] = 0x110;
+    puVar1[5] = 0;
+    puVar1[6] = 0x55;
+    uVar2 = 0;
+  }
+  else {
+    if (param_1 != 2) {
+      if (param_1 == 3) {
+        *_DAT_ram_020d73f4 = 0x110;
+        puVar1[1] = 0;
+        puVar1[2] = 0x55;
+        puVar1[3] = 0;
+        puVar1[4] = 0x110;
+        puVar1[5] = 0x55;
+        puV
+...[truncated] (GhidraScript)  
+##### ram:02058b78  sensor_h62_exp_gain_wr  size 220 (GhidraScript)  
+
+/* SDK align: cmos_sensor_SENSOR_H62.c.o/sensor_h62_exp_gain_wr score=1.0 segment */
+
+void sensor_h62_exp_gain_wr(undefined4 param_1,uint param_2)
+
+{
+  uint *puVar1;
+  int iVar2;
+  undefined1 uStack_2e;
+  char cStack_2d;
+  undefined4 uStack_2c;
+  uint auStack_28 [6];
+  
+  memcpy(&uStack_2c,&DAT_ram_02084980,4);
+  uStack_2c._3_1_ = (undefined1)param_1;
+  uStack_2c._1_1_ = (undefined1)((uint)param_1 >> 8);
+  sensor_write_reg(&uStack_2c);
+  sensor_write_reg((int)&uStack_2c + 2);
+  uStack_2e = 0;
+  cStack_2d = '\0';
+  memcpy(&uStack_2c,&DAT_ram_02084984,0x1c);
+  puVar1 = &uStack_2c;
+  iVar2 = 0;
+  while ((param_2 < *puVar1 || (puVar1[1] <= param_2))) {
+    iVar2 = iVar2 + 1;
+    puVar1 = puVar1 + 1;
+    if (iVar2 == 6) {
+LAB_ram_02058c34:
+      sensor_write_reg(&uStack_2e);
+      return;
+    }
+  }
+  cStack_2d = (char)((param_2 << 8) / *puVar1 - 0x100 >> 4) | (char)(iVar2 << 4);
+  goto LAB_r
+...[truncated] (GhidraScript)  
+##### ram:020591cc  kc02_delay  size 60 (GhidraScript)  
+
+/* kc02_delay(r3) = busy loop of r3*500 iterations (kc02_busy_delay = r3*20). */
+
+void kc02_delay(int param_1)
+
+{
+  bool bVar1;
+  undefined4 local_8;
+  
+  local_8 = param_1 * 500;
+  do {
+    bVar1 = local_8 != 0;
+    local_8 = local_8 + -1;
+  } while (bVar1);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02059208  kc02_busy_delay  size 64 (GhidraScript)  
+
+/* busy delay: r3*20 iterations */
+
+void kc02_busy_delay(int param_1)
+
+{
+  bool bVar1;
+  undefined4 local_8;
+  
+  local_8 = param_1 * 0x14;
+  do {
+    bVar1 = local_8 != 0;
+    local_8 = local_8 + -1;
+  } while (bVar1);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02059248  kc02_strobe_pulse  size 72 (GhidraScript)  
+
+/* PORTA.9 high, busy_delay(r3), low (head heat strobe) */
+
+void kc02_strobe_pulse(void)
+
+{
+  uint uVar1;
+  
+  uVar1 = Spr00008000;
+  Spr00008000 = uVar1 | 0x200;
+  kc02_busy_delay(&stack0x00000000);
+  uVar1 = Spr00008000;
+  Spr00008000 = uVar1 & 0xfffffdff;
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02059290  kc02_battery_check  size 276 (GhidraScript)  
+
+/* ADC ch1 + threshold ladder -> supply/energy code (8=low, 14=charging) */
+
+undefined1 kc02_battery_check(void)
+
+{
+  int iVar1;
+  
+  hal_gpioInit(0,0x40,1,1);
+  iVar1 = hal_adcGetChannel(1);
+  if (DAT_ram_020c8788 != 0) {
+    iVar1 = 0x14;
+  }
+  if (iVar1 < 0x1c2) {
+    if (-1 < (int)(-DAT_ram_020ccdc8 | DAT_ram_020ccdc8)) {
+      DAT_ram_020c8788 = 1;
+      return 8;
+    }
+  }
+  else if (-1 < (int)(-DAT_ram_020ccdc8 | DAT_ram_020ccdc8)) {
+    if (iVar1 < 500) {
+      return 6;
+    }
+    if (iVar1 < 0x226) {
+      return 5;
+    }
+    if (iVar1 < 600) {
+      return 4;
+    }
+    if (iVar1 < 0x28a) {
+      return 3;
+    }
+    if (iVar1 < 700) {
+      return 2;
+    }
+    return iVar1 < 0x2ee;
+  }
+  DAT_ram_020c8788 = 0;
+  return 0xe;
+}
+
+ (GhidraScript)  
+##### ram:020593a4  kc02_sensor_read  size 40 (GhidraScript)  
+
+/* gpio_in(PORTA,0x80) - paper/cover sensor */
+
+void kc02_sensor_read(void)
+
+{
+  hal_gpioRead(0,0x80);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:020593cc  kc02_load_print_image  size 1088 (GhidraScript)  
+
+/* JPEG decode + scale to head size (YUV420 -> head bitmap) */
+
+undefined1
+kc02_load_print_image(byte *param_1,undefined4 *param_2,ushort *param_3,ushort *param_4,int param_5)
+
+{
+  ushort uVar1;
+  ushort p3;
+  ushort p4;
+  ushort uVar2;
+  uint uVar3;
+  uint uVar4;
+  bool bVar5;
+  undefined1 uVar6;
+  int iVar7;
+  undefined3 extraout_var;
+  byte *p1;
+  byte *p0;
+  byte *p1_00;
+  uint unaff_r24;
+  uint unaff_r26;
+  ushort uStack_30;
+  ushort uStack_2e;
+  
+  *param_2 = 0;
+  *param_3 = 0;
+  *param_4 = 0;
+  do {
+    do {
+      iVar7 = hal_BackRecDecodeStatusCheck();
+    } while (iVar7 != 0);
+    iVar7 = ax32xx_csiScalerCheck();
+  } while (iVar7 == 0);
+  bVar5 = api_backrec_status();
+  if (CONCAT31(extraout_var,bVar5) != 0) {
+    backrec_sensor(false);
+  }
+  uVar6 = 0;
+  hal_lcdSetPIPEnable(0);
+  iVar7 = mjpeg_parse_image_header(param_1);
+  if (iVar7 == -10) {
+    if (((int)((param_1[param_5 +
+...[truncated] (GhidraScript)  
+##### ram:0205980c  kc02_sfr4800_save_restore  size 1140 (GhidraScript)  
+
+/* WARNING: Restarted to delay deadcode elimination for space: ram */
+/* save/restore 13 bits of SFR 0x4800 around a print job */
+
+void kc02_sfr4800_save_restore(int param_1)
+
+{
+  uint uVar1;
+  byte p1;
+  
+  if (param_1 == 0) {
+    uVar1 = Spr00004800;
+    printer_state.sfr4800_bits[0xc] = (uVar1 & 0x4000) != 0;
+    uVar1 = Spr00004800;
+    printer_state.sfr4800_bits[0xb] = (uVar1 & 0x10000) != 0;
+    uVar1 = Spr00004800;
+    printer_state.sfr4800_bits[10] = (uVar1 & 0x400000) != 0;
+    uVar1 = Spr00004800;
+    printer_state.sfr4800_bits[9] = (uVar1 & 0x10) != 0;
+    uVar1 = Spr00004800;
+    printer_state.sfr4800_bits[8] = (uVar1 & 0x200000) != 0;
+    uVar1 = Spr00004800;
+    printer_state.sfr4800_bits[7] = (uVar1 & 0x800000) != 0;
+    uVar1 = Spr00004800;
+    printer_state.sfr4800_bits[6] = (uVar1 & 0x4000000) != 0;
+    uVar1 = Spr00004800;
+    printer_state.sfr4800_bits[5] = (uVar1 & 
+...[truncated] (GhidraScript)  
+##### ram:02059c80  kc02_printer_helper_C80  size 148 (GhidraScript)  
+
+/* head supply on/off (PORTB.6) + motor de-energize */
+
+void kc02_printer_helper_C80(int param_1)
+
+{
+  hal_gpioWrite(3,1,0);
+  hal_gpioWrite(4,0x400,0);
+  hal_gpioWrite(0,8,0);
+  hal_gpioWrite(4,0x800,0);
+  if (param_1 == 0) {
+    hal_gpioWrite(1,0x40,0);
+  }
+  else {
+    hal_gpioWrite(1,0x40,1);
+    kc02_delay(0x14);
+  }
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02059d14  kc02_motor_step  size 624 (GhidraScript)  
+
+/* kc02_motor_step - one platen step.
+   PORTE.0/.1 (0x1/0x2) = coil A dir1/dir2, PORTF.10/.11 (0x400/0x800) = coil B, PORTA.3 (0x8) =
+   common.
+   4 phases per call, delay(50) x3 (kc02_delay = r3*500 loops). State byte 0x020D2ED9 toggles the
+   phase set.
+   See docs/BOARD_RE.md */
+
+void kc02_motor_step(void)
+
+{
+  uint uVar1;
+  bool bVar2;
+  
+  bVar2 = printer_state.motor_phase != 0;
+  uVar1 = Spr0000800c;
+  if (bVar2) {
+    Spr0000800c = uVar1 & 0xfffffffe;
+    uVar1 = Spr00008010;
+    Spr00008010 = uVar1 | 0x400;
+    uVar1 = Spr00008000;
+    Spr00008000 = uVar1 & 0xfffffff7;
+    uVar1 = Spr00008010;
+    Spr00008010 = uVar1 | 0x800;
+    kc02_delay(0x32,&stack0x00000000);
+    uVar1 = Spr0000800c;
+    Spr0000800c = uVar1 & 0xfffffffe;
+    uVar1 = Spr00008010;
+    Spr00008010 = uVar1 & 0xfffffbff;
+    uVar1 = Spr00008000;
+    Spr00008000 = uVar1 & 0xfffffff7;
+    uVar1 = Spr00008010;
+  
+...[truncated] (GhidraScript)  
+##### ram:02059f84  kc02_printer_init  size 416 (GhidraScript)  
+
+/* printer pin directions + power-on settle sequence */
+
+void kc02_printer_init(void)
+
+{
+  hal_gpioInit(1,0x40,0,0);
+  hal_gpioWrite(1,0x40,0);
+  hal_gpioInit(1,0x40,0,0);
+  hal_gpioWrite(1,0x40,1);
+  kc02_busy_delay(500,register0x00000401);
+  hal_gpioInit(1,0x40,0,0);
+  hal_gpioWrite(1,0x40,0);
+  hal_gpioInit(3,1,0,0);
+  hal_gpioWrite(3,1,0);
+  hal_gpioInit(4,0x400,0,0);
+  hal_gpioWrite(4,0x400,0);
+  hal_gpioInit(0,8,0,0);
+  hal_gpioWrite(0,8,0);
+  hal_gpioInit(4,0x800,0,0);
+  hal_gpioWrite(4,0x800,0);
+  hal_gpioInit(0,0x80,1,0);
+  hal_gpioInit(1,0x20,0,0);
+  hal_gpioWrite(1,0x20,1);
+  hal_gpioInit(0,0x200,0,0);
+  hal_gpioWrite(0,0x200,0);
+  hal_gpioInit(0,0x200,0,0);
+  hal_gpioWrite(0,0x200,0);
+  return;
+}
+
+ (GhidraScript)  
+REPORT: decompiled 18 functions in [0x20587f0,0x2059ff0) (GhidraScript)  
+INFO  REPORT: Save succeeded for processed file: /218c6cdfe59932d1.bin (HeadlessAnalyzer)  

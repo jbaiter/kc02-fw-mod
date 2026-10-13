@@ -1,0 +1,263 @@
+{
+  "firmware_sha256": "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5",
+  "base": "0x02310000",
+  "binary_size": 2800,
+  "binary_sha256": "d3db0646c5583645ecdc8558b4c5fe0707008d20b5f7d36a9037850c255e67c1",
+  "replacements": {
+    "main_menu_mode_tick": {
+      "original": "0x020130bc",
+      "replacement": "0x0231009c"
+    },
+    "main_menu_mode_exit": {
+      "original": "0x020130d0",
+      "replacement": "0x023100b0"
+    },
+    "main_menu_mode_enter": {
+      "original": "0x020130e4",
+      "replacement": "0x023100c4"
+    },
+    "main_menu_noop": {
+      "original": "0x02013120",
+      "replacement": "0x02310000"
+    },
+    "main_menu_render": {
+      "original": "0x02013138",
+      "replacement": "0x02310100"
+    },
+    "main_menu_set_labels_visible": {
+      "original": "0x020132e4",
+      "replacement": "0x023104f0"
+    },
+    "main_menu_window_exit": {
+      "original": "0x02013434",
+      "replacement": "0x02310018"
+    },
+    "main_menu_window_enter": {
+      "original": "0x020134b8",
+      "replacement": "0x0231055c"
+    },
+    "main_menu_blink": {
+      "original": "0x02013698",
+      "replacement": "0x02310290"
+    },
+    "main_menu_right": {
+      "original": "0x02013714",
+      "replacement": "0x0231034c"
+    },
+    "main_menu_left": {
+      "original": "0x0201379c",
+      "replacement": "0x023103a8"
+    },
+    "main_menu_down": {
+      "original": "0x02013828",
+      "replacement": "0x02310418"
+    },
+    "main_menu_up": {
+      "original": "0x020138b0",
+      "replacement": "0x02310484"
+    },
+    "main_menu_ok": {
+      "original": "0x02013938",
+      "replacement": "0x02310734"
+    },
+    "main_menu_playback_shortcut": {
+      "original": "0x02013a14",
+      "replacement": "0x02310840"
+    }
+  },
+  "imports": [
+    {
+      "name": "menu_fw_csi_enable",
+      "return_type": "void",
+      "parameters": "uint32_t enabled",
+      "address": "0x02034ee4"
+    },
+    {
+      "name": "menu_fw_ui_state",
+      "return_type": "void",
+      "parameters": "uint32_t state",
+      "address": "0x02004944"
+    },
+    {
+      "name": "menu_fw_window_open",
+      "return_type": "MenuWindow",
+      "parameters": "MenuDescriptor *descriptor, uint32_t argc, ...",
+      "address": "0x02012304"
+    },
+    {
+      "name": "menu_fw_frame_get",
+      "return_type": "void *",
+      "parameters": "uint32_t layer",
+      "address": "0x020047f8"
+    },
+    {
+      "name": "menu_fw_lcd_resolution",
+      "return_type": "int32_t",
+      "parameters": "uint16_t *width, uint16_t *height",
+      "address": "0x0203a5c8"
+    },
+    {
+      "name": "menu_fw_frame_config",
+      "return_type": "void",
+      "parameters": "void *frame, uint32_t x, uint32_t y, uint32_t width, uint32_t height",
+      "address": "0x02044ce0"
+    },
+    {
+      "name": "menu_fw_copy",
+      "return_type": "void *",
+      "parameters": "void *destination, const void *source, uint32_t length",
+      "address": "0x020782b0"
+    },
+    {
+      "name": "menu_fw_blit",
+      "return_type": "void",
+      "parameters": "void *destination, uint32_t destination_width, uint32_t destination_height, int32_t x, int32_t y, uint32_t clip_width, uint32_t clip_height, void *source, uint32_t source_width, uint32_t source_height, uint32_t key_y, uint32_t key_uv",
+      "address": "0x02022060"
+    },
+    {
+      "name": "menu_fw_cache_flush",
+      "return_type": "void",
+      "parameters": "void *buffer, uint32_t length",
+      "address": "0x0202b0d4"
+    },
+    {
+      "name": "menu_fw_frame_show",
+      "return_type": "int32_t",
+      "parameters": "uint32_t layer, void *frame, uint32_t width, uint32_t height, uint32_t rotation",
+      "address": "0x020047b4"
+    },
+    {
+      "name": "menu_fw_child",
+      "return_type": "MenuWindow",
+      "parameters": "MenuWindow root, uint32_t id",
+      "address": "0x02025154"
+    },
+    {
+      "name": "menu_fw_visible",
+      "return_type": "void",
+      "parameters": "MenuWindow widget, uint32_t visible",
+      "address": "0x0202984c"
+    },
+    {
+      "name": "menu_fw_free",
+      "return_type": "void",
+      "parameters": "void *buffer",
+      "address": "0x0203e694"
+    },
+    {
+      "name": "menu_fw_alloc",
+      "return_type": "uint32_t",
+      "parameters": "uint32_t length, uint32_t alignment",
+      "address": "0x0203e5c4"
+    },
+    {
+      "name": "menu_fw_decode_background",
+      "return_type": "int32_t",
+      "parameters": "uint32_t resource, void *y, void *uv, uint32_t width, uint32_t height",
+      "address": "0x02021a78"
+    },
+    {
+      "name": "menu_fw_decode_icon",
+      "return_type": "uint32_t",
+      "parameters": "uint32_t resource, void *scratch, void *y, void *uv, uint32_t width, uint32_t height",
+      "address": "0x02021d00"
+    },
+    {
+      "name": "menu_fw_time",
+      "return_type": "uint32_t",
+      "parameters": "void",
+      "address": "0x02021894"
+    },
+    {
+      "name": "menu_fw_present",
+      "return_type": "void",
+      "parameters": "uint32_t force",
+      "address": "0x0205b8c4"
+    },
+    {
+      "name": "menu_fw_mode_request",
+      "return_type": "void",
+      "parameters": "uint32_t mode, uint32_t argument",
+      "address": "0x02008108"
+    }
+  ],
+  "mode_hook_candidates": [
+    {
+      "slot": "0x020c4c20",
+      "original": "0x020130e4",
+      "replacement": "0x023100c4"
+    },
+    {
+      "slot": "0x020c4c24",
+      "original": "0x020130d0",
+      "replacement": "0x023100b0"
+    },
+    {
+      "slot": "0x020c4c28",
+      "original": "0x020130bc",
+      "replacement": "0x0231009c"
+    }
+  ],
+  "build_commands": [
+    [
+      "/tmp/ax3292-toolchain/prefix/bin/or1k-elf-gcc",
+      "-mno-delay",
+      "-mhard-div",
+      "-Os",
+      "-std=gnu11",
+      "-ffreestanding",
+      "-fno-builtin",
+      "-fno-common",
+      "-fno-pic",
+      "-fno-stack-protector",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-I/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build",
+      "-I/home/jbaiter/.src/kc02-fw-mod/docs/main_menu",
+      "-c",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/main_menu_screen_model.c",
+      "-o",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o"
+    ],
+    [
+      "/tmp/ax3292-toolchain/prefix/bin/or1k-elf-ld",
+      "-T",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.ld",
+      "-Map=/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.map",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o",
+      "-o",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.elf"
+    ],
+    [
+      "/tmp/ax3292-toolchain/prefix/bin/or1k-elf-objcopy",
+      "-O",
+      "binary",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.elf",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.bin"
+    ]
+  ],
+  "source_sha256": {
+    "main_menu_screen_model.c": "0fd09ecd5c78ae06fb228997740827124d8d0ac400e6f9d8a7661fd8db67c143",
+    "main_menu_screen.h": "0bb67b894c0707ef51afe3a45955eebe8a01a955baafe23def9c92ea75419e9c",
+    "firmware_imports.def": "2e156a0278a69e626459442de43f4d78d4e3b7dac8bda0aeabed8c0da2ae7134",
+    "entrypoints.tsv": "3642288ddfac082f3f4f2e9916b119f7d8599e8a6b4beb38c8ddd0108808255e",
+    "extract_main_menu_tables.py": "d82d09c405b45693224d6cac7ded62e98ba56e03eea679357c635a5d1da4cb70",
+    "build_main_menu.py": "539d81dc02aee907d0b608c231e31e88b77fb0c68aac8e0b7dc841d604e37c3b"
+  },
+  "widget_bytes_identical": true,
+  "keymap_points_to_recompiled_handlers": true,
+  "undefined_symbols": [],
+  "bss_size": 0,
+  "no_delay_elf32_little_endian_openrisc": true,
+  "deployment_allowed": false,
+  "placement_verified": false,
+  "on_device_tested": false,
+  "limitations": [
+    "Stock allocation-failure behavior, including a scratch-buffer leak, is retained.",
+    "Resource bytes and driver engines remain in the original firmware.",
+    "Compilation does not validate target ABI or reserve the link address."
+  ]
+}

@@ -1,0 +1,21 @@
+{
+  "firmware_sha256": "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5",
+  "language": "KC02:LE:32:nodelay",
+  "exported_functions": 54,
+  "menu_region_functions": 15,
+  "region_start": "0x020130bc",
+  "region_end_exclusive": "0x02013a78",
+  "transient_created": 4,
+  "decompiler_warning_count": 15,
+  "combined_decompilation_lines": 2030,
+  "read_only": true,
+  "hardware_access": false,
+  "widget_records": 7,
+  "widget_stride": 48,
+  "key_bindings": 11,
+  "asset_files": 7,
+  "recompiled_manifest": "build/manifest.json",
+  "host_tests": "test_results.json",
+  "deployment_verified": false,
+  "scope": "All 15 contiguous menu functions plus selected dependencies, not their entire transitive graph."
+}

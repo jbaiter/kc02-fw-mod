@@ -1,0 +1,139 @@
+
+Discarded input sections
+
+ .comment       0x0000000000000000       0x12 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .eh_frame      0x0000000000000000      0x1ec /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+                0x0000000002034ee4                menu_fw_csi_enable = 0x2034ee4
+                0x0000000002004944                menu_fw_ui_state = 0x2004944
+                0x0000000002012304                menu_fw_window_open = 0x2012304
+                0x00000000020047f8                menu_fw_frame_get = 0x20047f8
+                0x000000000203a5c8                menu_fw_lcd_resolution = 0x203a5c8
+                0x0000000002044ce0                menu_fw_frame_config = 0x2044ce0
+                0x00000000020782b0                menu_fw_copy = 0x20782b0
+                0x0000000002022060                menu_fw_blit = 0x2022060
+                0x000000000202b0d4                menu_fw_cache_flush = 0x202b0d4
+                0x00000000020047b4                menu_fw_frame_show = 0x20047b4
+                0x0000000002025154                menu_fw_child = 0x2025154
+                0x000000000202984c                menu_fw_visible = 0x202984c
+                0x000000000203e694                menu_fw_free = 0x203e694
+                0x000000000203e5c4                menu_fw_alloc = 0x203e5c4
+                0x0000000002021a78                menu_fw_decode_background = 0x2021a78
+                0x0000000002021d00                menu_fw_decode_icon = 0x2021d00
+                0x0000000002021894                menu_fw_time = 0x2021894
+                0x000000000205b8c4                menu_fw_present = 0x205b8c4
+                0x0000000002008108                menu_fw_mode_request = 0x2008108
+                0x0000000002310000                . = 0x2310000
+
+.text           0x0000000002310000      0x8a4
+ *(.text .text.*)
+ .text          0x0000000002310000        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .text.main_menu_noop
+                0x0000000002310000       0x18 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310000                main_menu_noop
+ .text.main_menu_window_exit
+                0x0000000002310018       0x84 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310018                main_menu_window_exit
+ .text.main_menu_mode_tick
+                0x000000000231009c       0x14 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x000000000231009c                main_menu_mode_tick
+ .text.main_menu_mode_exit
+                0x00000000023100b0       0x14 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x00000000023100b0                main_menu_mode_exit
+ .text.main_menu_mode_enter
+                0x00000000023100c4       0x3c /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x00000000023100c4                main_menu_mode_enter
+ .text.main_menu_render
+                0x0000000002310100      0x190 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310100                main_menu_render
+ .text.main_menu_blink
+                0x0000000002310290       0x78 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310290                main_menu_blink
+ .text.repaint_after_navigation
+                0x0000000002310308       0x44 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .text.main_menu_right
+                0x000000000231034c       0x5c /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x000000000231034c                main_menu_right
+ .text.main_menu_left
+                0x00000000023103a8       0x70 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x00000000023103a8                main_menu_left
+ .text.main_menu_down
+                0x0000000002310418       0x6c /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310418                main_menu_down
+ .text.main_menu_up
+                0x0000000002310484       0x6c /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310484                main_menu_up
+ .text.main_menu_set_labels_visible
+                0x00000000023104f0       0x6c /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x00000000023104f0                main_menu_set_labels_visible
+ .text.main_menu_window_enter
+                0x000000000231055c      0x1d8 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x000000000231055c                main_menu_window_enter
+ .text.main_menu_ok
+                0x0000000002310734      0x10c /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310734                main_menu_ok
+ .text.main_menu_playback_shortcut
+                0x0000000002310840       0x64 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310840                main_menu_playback_shortcut
+                0x00000000023108c0                . = ALIGN (0x20)
+
+.rodata         0x00000000023108c0       0x90
+ *(.rodata .rodata.*)
+ .rodata.menu_bindings
+                0x00000000023108c0       0x60 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x00000000023108c0                menu_bindings
+ .rodata.icon_resources
+                0x0000000002310920       0x18 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .rodata.icon_positions
+                0x0000000002310938       0x18 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+
+.rela.dyn       0x0000000002310950        0x0
+ .rela.text.main_menu_window_exit
+                0x0000000002310950        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .rela.text.main_menu_mode_enter
+                0x0000000002310950        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .rela.text.main_menu_render
+                0x0000000002310950        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .rela.text.main_menu_blink
+                0x0000000002310950        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .rela.text.repaint_after_navigation
+                0x0000000002310950        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .rela.text.main_menu_set_labels_visible
+                0x0000000002310950        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .rela.text.main_menu_window_enter
+                0x0000000002310950        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .rela.text.main_menu_ok
+                0x0000000002310950        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .rela.text.main_menu_playback_shortcut
+                0x0000000002310950        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310960                . = ALIGN (0x20)
+
+.data           0x0000000002310960      0x190
+ *(.data .data.*)
+ .data          0x0000000002310960        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ .data.menu_descriptor
+                0x0000000002310960       0x10 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310960                menu_descriptor
+ .data.menu_widgets
+                0x0000000002310970      0x180 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+                0x0000000002310970                menu_widgets
+                0x0000000002310b00                . = ALIGN (0x20)
+
+.bss            0x0000000002310b00        0x0
+ *(.bss .bss.*)
+ .bss           0x0000000002310b00        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+ *(COMMON)
+
+/DISCARD/
+ *(.eh_frame*)
+ *(.comment*)
+ *(.note*)
+LOAD /home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.o
+OUTPUT(/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.elf elf32-or1kle)

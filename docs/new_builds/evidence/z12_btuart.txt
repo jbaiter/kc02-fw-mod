@@ -1,0 +1,164 @@
+##### ram:02026b3c  ax32xx_uart0SendByte  size 64 (GhidraScript)  
+
+/* name propagated from the original KC02 build by masked-opcode match */
+
+void ax32xx_uart0SendByte(uint param_1)
+
+{
+  uint uVar1;
+  
+  Spr00009088 = param_1 & 0xff;
+  do {
+    uVar1 = Spr0000908c;
+  } while ((uVar1 & 2) == 0);
+  uVar1 = Spr0000908c;
+  Spr0000908c = uVar1 | 1;
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02026b7c  FUN_ram_02026b7c  size 92 (GhidraScript)  
+
+void FUN_ram_02026b7c(void)
+
+{
+  uint uVar1;
+  
+  uVar1 = Spr0000904c;
+  Spr0000904c = uVar1 & 0xfffffff7;
+  if (DAT_ram_0209ccb8 != (code *)0x0) {
+    uVar1 = Spr00009048;
+    (*DAT_ram_0209ccb8)(uVar1 & 0xff,&stack0x00000000);
+  }
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02026bd8  FUN_ram_02026bd8  size 224 (GhidraScript)  
+
+void FUN_ram_02026bd8(sbyte param_1)
+
+{
+  undefined1 uVar1;
+  
+  if (param_1 == 0) {
+    FUN_ram_02025ec0(0,0,&stack0x00000000);
+    uVar1 = 0;
+  }
+  else {
+    ax32xx_gpioDirSet(3,2,0);
+    FUN_ram_020261a8(3,2,1);
+    ax32xx_gpioDataSet(3,2,1);
+    FUN_ram_02026490(3,2,1);
+    FUN_ram_02025ec0(0,0x16,register0x00000401);
+    FUN_ram_02026520(1,1);
+    FUN_ram_02026490(1,1);
+    ax32xx_gpioDirSet(1,1);
+    FUN_ram_02026640(1,0);
+    uVar1 = 8;
+  }
+  FUN_ram_02025ec0(1,uVar1,register0x00000401);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02026cb8  FUN_ram_02026cb8  size 116 (GhidraScript)  
+
+void FUN_ram_02026cb8(uint param_1,undefined4 param_2)
+
+{
+  uint uVar1;
+  
+  Spr00009040 = 0;
+  Spr00009044 = 144000000 / param_1 - 1;
+  uVar1 = Spr00009040;
+  Spr00009040 = uVar1 | 0x10;
+  uVar1 = Spr00009040;
+  Spr00009040 = uVar1 | 4;
+  DAT_ram_0209ccb8 = param_2;
+  FUN_ram_02024f74(0x14,1,&stack0x00000000);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02026d2c  FUN_ram_02026d2c  size 48 (GhidraScript)  
+
+void FUN_ram_02026d2c(uint param_1)
+
+{
+  uint uVar1;
+  
+  Spr00009048 = param_1 & 0xff;
+  do {
+    uVar1 = Spr0000904c;
+  } while ((uVar1 & 4) == 0);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02026d5c  FUN_ram_02026d5c  size 68 (GhidraScript)  
+
+void FUN_ram_02026d5c(void)
+
+{
+  uint uVar1;
+  
+  uVar1 = Spr000098a8;
+  Spr000098a8 = uVar1 | 0x20;
+  if (JPEG_ram_020a5834._8972_4_ != 0) {
+    (*(code *)JPEG_ram_020a5834._8972_4_)(&stack0x00000000);
+  }
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02026da0  FUN_ram_02026da0  size 68 (GhidraScript)  
+
+void FUN_ram_02026da0(void)
+
+{
+  uint uVar1;
+  
+  uVar1 = Spr000098ac;
+  Spr000098ac = uVar1 | 0x20;
+  if (JPEG_ram_020a5834._8976_4_ != 0) {
+    (*(code *)JPEG_ram_020a5834._8976_4_)(&stack0x00000000);
+  }
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02026de4  FUN_ram_02026de4  size 68 (GhidraScript)  
+
+void FUN_ram_02026de4(void)
+
+{
+  uint uVar1;
+  
+  uVar1 = Spr000098b0;
+  Spr000098b0 = uVar1 | 0x20;
+  if (JPEG_ram_020a5834._8980_4_ != 0) {
+    (*(code *)JPEG_ram_020a5834._8980_4_)(&stack0x00000000);
+  }
+  return;
+}
+
+ (GhidraScript)  
+##### ram:02026e28  FUN_ram_02026e28  size 68 (GhidraScript)  
+
+void FUN_ram_02026e28(void)
+
+{
+  uint uVar1;
+  
+  uVar1 = Spr000098b4;
+  Spr000098b4 = uVar1 | 0x20;
+  if (JPEG_ram_020a5834._8984_4_ != 0) {
+    (*(code *)JPEG_ram_020a5834._8984_4_)(&stack0x00000000);
+  }
+  return;
+}
+
+ (GhidraScript)  
+REPORT: decompiled 9 functions in [0x2026b3c,0x2026e6c) (GhidraScript)  
+INFO  REPORT: Save succeeded for processed file: /hmollimt-z12-10da5dbf.bin (HeadlessAnalyzer)  

@@ -1,0 +1,16 @@
+{
+  "firmware_sha256": "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5",
+  "language": "KC02:LE:32:nodelay",
+  "exported_functions": 72,
+  "camera_region_functions": 33,
+  "transient_created": 18,
+  "read_only": true,
+  "hardware_access": false,
+  "widget_records": 19,
+  "widget_stride": 48,
+  "decompiler_warning_count": 15,
+  "original_sketch_syntax_check": "camera_screen_sketch.c: cc -std=c11 -Wall -Wextra -Werror -fsyntax-only: PASS",
+  "recompiled_module_manifest": "build/manifest.json",
+  "host_recompiled_module_tests": "test_results.json",
+  "target_deployment_verified": false
+}

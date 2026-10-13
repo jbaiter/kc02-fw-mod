@@ -1,0 +1,826 @@
+##### ram:0201cf30  ui_grid_init  size 72 (GhidraScript)  
+
+/* name propagated from the original KC02 build by masked-opcode match */
+
+void ui_grid_init(void)
+
+{
+  undefined4 uVar1;
+  
+  DAT_ram_0209cb10 = 0;
+  uVar1 = FUN_ram_0201b3e4(&stack0x00000000);
+  fill240(uVar1,0,0x8080);
+  ui_grid_load_page();
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201cf78  FUN_ram_0201cf78  size 176 (GhidraScript)  
+
+void FUN_ram_0201cf78(void)
+
+{
+  undefined4 uVar1;
+  undefined4 uVar2;
+  undefined1 uVar3;
+  undefined1 uStack_d;
+  
+  ui_grid_init();
+switchD_ram_0201cfc4_caseD_1c:
+  uVar3 = XMsgQPend(JPEG_ram_020a5834._8352_4_,&uStack_d);
+  switch(uVar3) {
+  case 0x1b:
+    uVar1 = 0;
+    uVar2 = 0xffffffff;
+    break;
+  default:
+    goto switchD_ram_0201cfc4_caseD_1c;
+  case 0x1e:
+    uVar1 = 0xffffffff;
+    goto LAB_ram_0201cfec;
+  case 0x1f:
+    uVar1 = 1;
+LAB_ram_0201cfec:
+    uVar2 = 0;
+    break;
+  case 0x22:
+    uVar1 = 0;
+    uVar2 = 1;
+    break;
+  case 0x25:
+    goto switchD_ram_0201cfc4_caseD_25;
+  case 0x27:
+    ui_mode_request(1,0);
+    goto switchD_ram_0201cfc4_caseD_25;
+  }
+  ui_grid_on_click(uVar1,uVar2);
+  goto switchD_ram_0201cfc4_caseD_1c;
+switchD_ram_0201cfc4_caseD_25:
+  FUN_ram_0201c550(JPEG_ram_020a5834._8744_4_);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201d028  FUN_ram_0201d028  size 20 (GhidraScript)  
+
+void FUN_ram_0201d028(void)
+
+{
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201d03c  FUN_ram_0201d03c  size 60 (GhidraScript)  
+
+void FUN_ram_0201d03c(void)
+
+{
+  FUN_ram_020335dc(0,&stack0x00000000);
+  dispLayerUninit(1);
+  XOSTimeDly(0x14);
+  dispLayerInit(1);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201d078  FUN_ram_0201d078  size 104 (GhidraScript)  
+
+void FUN_ram_0201d078(void)
+
+{
+  FUN_ram_020335dc(1,&stack0x00000000);
+  dispLayerUninit(1);
+  XOSTimeDly(0x14);
+  dispLayerInit(1);
+  ax32xx_csiEnable(0);
+  ui_state_apply(7);
+  FUN_ram_020133ac(&PTR_DAT_ram_02093bd4_ram_02093bc4,1,&DAT_ram_020923f4);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201d0e0  FUN_ram_0201d0e0  size 136 (GhidraScript)  
+
+void FUN_ram_0201d0e0(uint param_1,undefined4 param_2,undefined4 param_3)
+
+{
+  int iVar1;
+  code *pcVar2;
+  int iVar3;
+  int iVar4;
+  uint uVar5;
+  
+  iVar3 = 0x10;
+  iVar4 = 0;
+  do {
+    iVar1 = iVar4 + iVar3 >> 1;
+    uVar5 = *(uint *)(iVar1 * 8 + 0x2078048);
+    if (param_1 == uVar5) {
+      pcVar2 = *(code **)(iVar1 * 8 + 0x207804c);
+      if (pcVar2 == (code *)0x0) {
+        return;
+      }
+      (*pcVar2)(param_2,param_3,&stack0x00000000);
+      return;
+    }
+    if (uVar5 < param_1) {
+      iVar4 = iVar1 + 1;
+    }
+    else {
+      iVar3 = iVar1 + -1;
+    }
+  } while (iVar4 <= iVar3);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201d168  FUN_ram_0201d168  size 92 (GhidraScript)  
+
+void FUN_ram_0201d168(void)
+
+{
+  FUN_ram_020595b4(FUN_ram_0201d0e0,&stack0x00000000);
+  FUN_ram_020133ac(&PTR_DAT_ram_020949bc_ram_020949ac,0);
+  JPEG_ram_020a5834._8832_4_ = FUN_ram_02003d0c(8);
+  FUN_ram_02003cd0(8,0x81000039);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201d1c4  FUN_ram_0201d1c4  size 52 (GhidraScript)  
+
+void FUN_ram_0201d1c4(void)
+
+{
+  if (JPEG_ram_020a5834._8342_1_ == 0) {
+    FUN_ram_020596f8(&stack0x00000000);
+  }
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201d1f8  FUN_ram_0201d1f8  size 108 (GhidraScript)  
+
+void FUN_ram_0201d1f8(void)
+
+{
+  undefined4 uVar1;
+  
+  FUN_ram_02059678(&stack0x00000000);
+  FUN_ram_02003cd0(8,JPEG_ram_020a5834._8832_4_);
+  if (JPEG_ram_020a5834._8316_1_ == 0) {
+    uVar1 = 0x81000055;
+  }
+  else {
+    uVar1 = 0x81000056;
+  }
+  FUN_ram_02003cd0(0x23,uVar1);
+  FUN_ram_02003a1c();
+  FUN_ram_02006c74(8);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201d264  FUN_ram_0201d264  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201d264(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201d27c  FUN_ram_0201d27c  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201d27c(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201d294  FUN_ram_0201d294  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201d294(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201d2ac  FUN_ram_0201d2ac  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201d2ac(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201d2c4  FUN_ram_0201d2c4  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201d2c4(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201d2dc  FUN_ram_0201d2dc  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201d2dc(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201d2f4  FUN_ram_0201d2f4  size 424 (GhidraScript)  
+
+void FUN_ram_0201d2f4(undefined4 param_1,int param_2,undefined4 param_3,int param_4)
+
+{
+  undefined4 uVar1;
+  undefined4 uVar2;
+  
+  if (param_2 == 0) {
+    uVar1 = win_find_child_by_id(5,&stack0x00000000);
+    winSetVisible(uVar1,0);
+    uVar1 = win_find_child_by_id(param_1,6);
+    winSetVisible(uVar1,0);
+    uVar1 = win_find_child_by_id(param_1,7);
+    winSetVisible(uVar1,0);
+    uVar1 = win_find_child_by_id(param_1,8);
+    winSetVisible(uVar1,0);
+    uVar2 = win_find_child_by_id(param_1,9);
+    uVar1 = 0;
+  }
+  else {
+    uVar1 = win_find_child_by_id(5,&stack0x00000000);
+    winSetVisible(uVar1,1);
+    uVar1 = win_find_child_by_id(param_1,6);
+    FUN_ram_02023580(uVar1,param_3);
+    uVar1 = win_find_child_by_id(param_1,6);
+    winSetVisible(uVar1,1);
+    uVar1 = win_find_child_by_id(param_1,7);
+    FUN_ram_02023580(uVar1,param_4);
+    uVar1 = win_find_child_by_id(param_1,7);
+    winSetVisible(uVar1,1);
+    uVar1 = win_find_child_by_id(param_1,8);
+    FUN_ram_02023580(uVar1,param_4);
+    uVar1 = win_find_child_by_id(param_1,8);
+    winSetVisible(uVar1,1);
+    if (param_4 != -0x7effff3d) {
+      return;
+    }
+    uVar1 = win_find_child_by_id(param_1,9);
+    FUN_ram_02023580(uVar1
+...[truncated] (GhidraScript)  
+##### ram:0201d49c  FUN_ram_0201d49c  size 408 (GhidraScript)  
+
+undefined4 FUN_ram_0201d49c(undefined4 param_1)
+
+{
+  undefined1 uVar1;
+  undefined1 uVar2;
+  undefined2 uVar3;
+  int iVar4;
+  undefined4 uVar5;
+  
+  if ((JPEG_ram_020a5834._8340_1_ == 0) ||
+     (iVar4 = FUN_ram_0201e5ec(&stack0x00000000), (uint)(iVar4 - JPEG_ram_020a5834._8344_4_) < 0x1f5
+     )) {
+    iVar4 = 0;
+  }
+  else {
+    FUN_ram_020596f8();
+    uVar3 = JPEG_ram_020a5834._8318_2_;
+    uVar2 = JPEG_ram_020a5834._8316_1_;
+    uVar1 = JPEG_ram_020a5834._8217_1_;
+    uVar5 = FUN_ram_020598f4();
+    iVar4 = FUN_ram_0204ca68(0,uVar3,uVar2,uVar1,uVar5);
+    tick_auto_poweroff(1);
+    FUN_ram_0200d7f0(1);
+    FUN_ram_02046438();
+    JPEG_ram_020a5834._8340_1_ = 0;
+    if (iVar4 == 8) {
+      uVar5 = 0x81000058;
+      goto LAB_ram_0201d5e8;
+    }
+    if (iVar4 == 9) {
+      uVar5 = 0x81000059;
+      goto LAB_ram_0201d5e8;
+    }
+    if (iVar4 == 0xc) {
+      uVar5 = 0x810000bc;
+      goto LAB_ram_0201d5e8;
+    }
+    if (iVar4 == 0xf) {
+      uVar5 = 0x810000c3;
+      goto LAB_ram_0201d5e8;
+    }
+  }
+  if (6 < (iVar4 - 1U & 0xff)) {
+    return 0;
+  }
+  uVar5 = 0x810000c5;
+LAB_ram_0201d5e8:
+  FUN_ram_0201d2f4(param_1,1,0x81000085,uVar5);
+  FUN_ram_0204d228(1);
+  XOSTimeDly(2000);
+  F
+...[truncated] (GhidraScript)  
+##### ram:0201d634  FUN_ram_0201d634  size 404 (GhidraScript)  
+
+undefined4 FUN_ram_0201d634(undefined4 param_1)
+
+{
+  int iVar1;
+  undefined4 uVar2;
+  undefined2 uStack_14;
+  undefined2 uStack_12;
+  
+  iVar1 = dispLayerGetFrame(0);
+  if (iVar1 != 0) {
+    display_get_mode(&uStack_14,&uStack_12);
+    hal_dispframeVideoCfg(iVar1,0,uStack_14,uStack_12);
+    FUN_ram_0201e7d0(0,*(undefined4 *)(iVar1 + 4),*(undefined4 *)(iVar1 + 8),uStack_14,uStack_12);
+    FUN_ram_020252b0(*(undefined4 *)(iVar1 + 4),
+                     (int)((uint)*(ushort *)(iVar1 + 0x20) * (uint)*(ushort *)(iVar1 + 0x22) * 3) >>
+                     1);
+    dispLayerShow(iVar1,0,0,0xff);
+  }
+  uVar2 = win_find_child_by_id(param_1,0);
+  FUN_ram_02023580(uVar2,0x810000bd);
+  uVar2 = win_find_child_by_id(param_1,1);
+  FUN_ram_02023580(uVar2,0x810000be);
+  uVar2 = win_find_child_by_id(param_1,2);
+  FUN_ram_02023580(uVar2,0x810000bf);
+  uVar2 = win_find_child_by_id(param_1,3);
+  FUN_ram_02023580(uVar2,0x810000c0);
+  uVar2 = win_find_child_by_id(param_1,0);
+  winSetVisible(uVar2,1);
+  uVar2 = win_find_child_by_id(param_1,1);
+  winSetVisible(uVar2,1);
+  uVar2 = win_find_child_by_id(param_1,2);
+  winSetVisible(uVar2,1);
+  uVar2 = win_find_child_by_id(param_1,3);
+  winSetVisible(uVar2,1)
+...[truncated] (GhidraScript)  
+##### ram:0201d7c8  FUN_ram_0201d7c8  size 100 (GhidraScript)  
+
+undefined4 FUN_ram_0201d7c8(int param_1,int *param_2)
+
+{
+  if ((param_1 == 1) && (*param_2 == 0)) {
+    ui_mode_request(6,&stack0x00000000);
+    if (JPEG_ram_020a5834._8326_1_ == 0) {
+      JPEG_ram_020a5834._8327_1_ = JPEG_ram_020a5834._8326_1_;
+      JPEG_ram_020a5834._8326_1_ = 2;
+    }
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201d82c  FUN_ram_0201d82c  size 40 (GhidraScript)  
+
+void FUN_ram_0201d82c(sbyte *param_1)
+
+{
+  for (; *param_1 != 0; param_1 = param_1 + 1) {
+  }
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201d854  FUN_ram_0201d854  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201d854(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201d86c  FUN_ram_0201d86c  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201d86c(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201d884  FUN_ram_0201d884  size 324 (GhidraScript)  
+
+void FUN_ram_0201d884(undefined4 param_1)
+
+{
+  sbyte sVar1;
+  int iVar2;
+  undefined4 uVar3;
+  
+  if (JPEG_ram_020a5834._8219_1_ != 0) {
+    sVar1 = JPEG_ram_020a5834._8328_1_ + 1;
+    JPEG_ram_020a5834._8328_1_ = JPEG_ram_020a5834._8328_1_ + 1;
+    if ('\x03' < (char)sVar1) {
+      JPEG_ram_020a5834._8328_1_ = 0;
+    }
+    uVar3 = win_find_child_by_id(param_1,0,&stack0x00000000);
+    iVar2 = (char)JPEG_ram_020a5834._8328_1_ + 0x80000022;
+    goto LAB_ram_0201d994;
+  }
+  if (JPEG_ram_020a5834._8217_1_ != 4) {
+    if (JPEG_ram_020a5834._8217_1_ == 3) {
+      uVar3 = win_find_child_by_id(&stack0x00000000);
+      iVar2 = -0x7fffffdc;
+      goto LAB_ram_0201d994;
+    }
+    if (JPEG_ram_020a5834._8217_1_ == 2) {
+      uVar3 = win_find_child_by_id(&stack0x00000000);
+      iVar2 = -0x7fffffd9;
+      goto LAB_ram_0201d994;
+    }
+    if (JPEG_ram_020a5834._8217_1_ == 1) {
+      uVar3 = win_find_child_by_id(&stack0x00000000);
+      iVar2 = -0x7fffffde;
+      goto LAB_ram_0201d994;
+    }
+    if (JPEG_ram_020a5834._8217_1_ == 0) {
+      uVar3 = win_find_child_by_id(0,&stack0x00000000);
+      iVar2 = -0x7fffffdf;
+      goto LAB_ram_0201d994;
+    }
+  }
+  uVar3 = win_find_child_by_id(param_1,0,&
+...[truncated] (GhidraScript)  
+##### ram:0201d9c8  FUN_ram_0201d9c8  size 56 (GhidraScript)  
+
+undefined4 FUN_ram_0201d9c8(void)
+
+{
+  if (JPEG_ram_020a5834._8219_1_ == 1) {
+    FUN_ram_0201d884(&stack0x00000000);
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201da00  FUN_ram_0201da00  size 64 (GhidraScript)  
+
+undefined4 FUN_ram_0201da00(undefined4 param_1,int param_2,int *param_3)
+
+{
+  undefined4 uStack_c;
+  
+  if ((param_2 == 1) && (*param_3 == 0)) {
+    uStack_c = param_1;
+    winSetbgColor(&uStack_c);
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201da40  FUN_ram_0201da40  size 108 (GhidraScript)  
+
+undefined4 FUN_ram_0201da40(undefined4 param_1,int param_2,int *param_3)
+
+{
+  undefined4 uStack_10;
+  
+  if ((param_2 == 1) && (*param_3 == 0)) {
+    uStack_10 = param_1;
+    FUN_ram_02003cd0(0x22,uRam0209cb1c);
+    JPEG_ram_020a5834._8318_2_ = uRam0209cb1c;
+    winSetbgColor(&uStack_10);
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201daac  FUN_ram_0201daac  size 448 (GhidraScript)  
+
+void FUN_ram_0201daac(undefined4 param_1,uint param_2)
+
+{
+  undefined4 uVar1;
+  uint uVar2;
+  uint uVar3;
+  
+  uVar1 = win_find_child_by_id(1,&stack0x00000000);
+  winSetStrInfor(uVar1,0,2,0xfb);
+  uVar1 = win_find_child_by_id(param_1,2);
+  winSetStrInfor(uVar1,0,2,0xfb);
+  uVar1 = win_find_child_by_id(param_1,3);
+  winSetStrInfor(uVar1,0,2,0xfb);
+  uVar1 = win_find_child_by_id(param_1,4);
+  winSetStrInfor(uVar1,0,2,0xfb);
+  uVar1 = win_find_child_by_id(param_1,1);
+  winSetVisible(uVar1,0);
+  uVar1 = win_find_child_by_id(param_1,2);
+  winSetVisible(uVar1,0);
+  uVar1 = win_find_child_by_id(param_1,3);
+  winSetVisible(uVar1,0);
+  uVar1 = win_find_child_by_id(param_1,4);
+  winSetVisible(uVar1,0);
+  uVar2 = 0;
+  while ((int)uVar2 <= (int)(4 - (param_2 & 0xfffffffc))) {
+    uVar3 = uVar2 + 1;
+    uVar1 = win_find_child_by_id(param_1,uVar3);
+    FUN_ram_02023580(uVar1,uVar2 + (param_2 & 0xfffffffc) + 0x8100001f);
+    uVar1 = win_find_child_by_id(param_1,uVar3);
+    winSetVisible(uVar1,1);
+    uVar2 = uVar3 & 0xff;
+  }
+  uVar1 = win_find_child_by_id(param_1,(param_2 & 3) + 1);
+  winSetStrInfor(uVar1,0,2,0xfe);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201dc6c  FUN_ram_0201dc6c  size 116 (GhidraScript)  
+
+undefined4 FUN_ram_0201dc6c(int param_1,int *param_2)
+
+{
+  if ((param_1 == 1) && (*param_2 == 0)) {
+    if (sRam0209cb1c == 0) {
+      sRam0209cb1c = 4;
+    }
+    else {
+      sRam0209cb1c = sRam0209cb1c + -1;
+    }
+    if ((char)sRam0209cb1c < '\x05') {
+      FUN_ram_0201daac(&stack0x00000000);
+    }
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201dce0  FUN_ram_0201dce0  size 104 (GhidraScript)  
+
+undefined4 FUN_ram_0201dce0(int param_1,int *param_2)
+
+{
+  if ((param_1 == 1) && (*param_2 == 0)) {
+    if (uRam0209cb1c < 4) {
+      uRam0209cb1c = uRam0209cb1c + 1;
+    }
+    else {
+      uRam0209cb1c = 0;
+    }
+    if ((char)uRam0209cb1c < '\x05') {
+      FUN_ram_0201daac(&stack0x00000000);
+    }
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201dd48  FUN_ram_0201dd48  size 100 (GhidraScript)  
+
+undefined4 FUN_ram_0201dd48(undefined4 param_1)
+
+{
+  uRam0209cb1c = FUN_ram_02003d0c(0x22,&stack0x00000000);
+  FUN_ram_0201d884(param_1);
+  if ((char)uRam0209cb1c < '\x05') {
+    FUN_ram_0201daac(param_1);
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201ddac  FUN_ram_0201ddac  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201ddac(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201ddc4  FUN_ram_0201ddc4  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201ddc4(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201dddc  FUN_ram_0201dddc  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201dddc(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201ddf4  FUN_ram_0201ddf4  size 24 (GhidraScript)  
+
+undefined4 FUN_ram_0201ddf4(void)
+
+{
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201de0c  menuUsbOpenWin  size 212 (GhidraScript)  
+
+/* name propagated from the original KC02 build by masked-opcode match */
+
+undefined4 menuUsbOpenWin(undefined4 param_1)
+
+{
+  undefined4 uVar1;
+  
+  uVar1 = win_find_child_by_id(0,&stack0x00000000);
+  FUN_ram_0201fff4(uVar1,3,0x20);
+  uVar1 = win_find_child_by_id(param_1,0);
+  itemManageCreateItem(uVar1,itemCreatemenuOption,getMenuUsbResInfor,3);
+  uVar1 = win_find_child_by_id(param_1,0);
+  itemManageSetCharInfor(uVar1,0,2,0xfb);
+  uVar1 = win_find_child_by_id(param_1,0);
+  FUN_ram_02020fdc(uVar1,0xf5);
+  uVar1 = win_find_child_by_id(param_1,0);
+  FUN_ram_02021118(uVar1,0xf1);
+  uVar1 = win_find_child_by_id(param_1,0);
+  itemManageSetCurItem(uVar1,0);
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201dee0  getMenuUsbResInfor  size 148 (GhidraScript)  
+
+/* name propagated from the original KC02 build by masked-opcode match */
+
+undefined4 getMenuUsbResInfor(uint param_1,undefined4 *param_2,undefined4 *param_3)
+
+{
+  undefined4 uVar1;
+  
+  if (param_2 != (undefined4 *)0x0) {
+    *param_2 = 0x7fffffff;
+  }
+  if (param_1 == 0) {
+    if (param_3 == (undefined4 *)0x0) {
+      return 0;
+    }
+    uVar1 = 0x81000067;
+  }
+  else if (param_1 == 1) {
+    if (param_3 == (undefined4 *)0x0) {
+      return 0;
+    }
+    uVar1 = 0x81000068;
+  }
+  else {
+    if ((int)(-(param_1 ^ 2) | param_1 ^ 2) < 0) {
+      return 0;
+    }
+    if (-1 < (int)((uint)param_3 | -(int)param_3)) {
+      return 0;
+    }
+    uVar1 = 0x81000042;
+  }
+  *param_3 = uVar1;
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201df74  FUN_ram_0201df74  size 60 (GhidraScript)  
+
+undefined4 FUN_ram_0201df74(void)
+
+{
+  if (JPEG_ram_020a5834._8219_1_ == 0) {
+    ui_mode_request(1,&stack0x00000000);
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201dfb0  FUN_ram_0201dfb0  size 68 (GhidraScript)  
+
+undefined4 FUN_ram_0201dfb0(int param_1,uint *param_2)
+
+{
+  undefined4 uVar1;
+  
+  if ((param_1 == 1) && (*param_2 < 2)) {
+    uVar1 = win_find_child_by_id(0,&stack0x00000000);
+    itemManageNextItem(uVar1);
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201dff4  menuUsbKeyMsgUp  size 64 (GhidraScript)  
+
+/* name propagated from the original KC02 build by masked-opcode match */
+
+undefined4 menuUsbKeyMsgUp(int param_1,int *param_2)
+
+{
+  undefined4 uVar1;
+  
+  if ((param_1 == 1) && (*param_2 == 0)) {
+    uVar1 = win_find_child_by_id(&stack0x00000000);
+    itemManagePreItem(uVar1);
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201e034  menu_open_item_mode  size 116 (GhidraScript)  
+
+/* name propagated from the original KC02 build by masked-opcode match */
+
+undefined4 menu_open_item_mode(int param_1,int *param_2)
+
+{
+  undefined4 uVar1;
+  int iVar2;
+  
+  if ((param_1 == 1) && (*param_2 == 0)) {
+    uVar1 = win_find_child_by_id(0,&stack0x00000000);
+    iVar2 = itemManageGetCurrentItem(uVar1);
+    if ((iVar2 == 0) || (iVar2 == 1)) {
+      uVar1 = 0xb;
+    }
+    else {
+      uVar1 = 6;
+      iVar2 = 0;
+    }
+    ui_mode_request(uVar1,iVar2);
+  }
+  return 0;
+}
+
+ (GhidraScript)  
+##### ram:0201e0a8  FUN_ram_0201e0a8  size 64 (GhidraScript)  
+
+void FUN_ram_0201e0a8(void)
+
+{
+  int iVar1;
+  undefined1 *puVar2;
+  
+  iVar1 = 0;
+  do {
+    puVar2 = &DAT_ram_0209cb20 + iVar1;
+    iVar1 = iVar1 + 8;
+    *puVar2 = 0;
+  } while (iVar1 != 0x40);
+  return;
+}
+
+ (GhidraScript)  
+##### ram:0201e0e8  FUN_ram_0201e0e8  size 136 (GhidraScript)  
+
+undefined1 * FUN_ram_0201e0e8(int param_1)
+
+{
+  sbyte *psVar1;
+  int iVar2;
+  
+  psVar1 = &DAT_ram_0209cb20;
+  iVar2 = 0;
+  do {
+    if (*psVar1 == 0) {
+      iVar2 = iVar2 * 8;
+      *(int *)(iVar2 + 0x209cb24) = param_1;
+      (&DAT_ram_0209cb20)[iVar2] = 1;
+      if (param_1 == 0) {
+        *(undefined1 *)(iVar2 + 0x209cb21) = 0;
+      }
+      else {
+        *(undefined1 *)(iVar2 + 0x209cb21) = 1;
+      }
+      return &DAT_ram_0209cb20 + iVar2;
+    }
+    iVar2 = iVar2 + 1;
+    psVar1 = psVar1 + 8;
+  } while (iVar2 != 8);
+  return (undefined1 *)0x0;
+}
+
+ (GhidraScript)  
+##### ram:0201e170  FUN_ram_0201e170  size 56 (GhidraScript)  
+
+void FUN_ram_0201e170(sbyte *param_1)
+
+{
+  if ((param_1 != (sbyte *)0x0) && (*param_1 != 0)) {
+    *param_1 = 0;
+  }
+  return;
+}
+
+ (GhidraScript)  
+REPORT: decompiled 43 functions in [0x201cf30,0x201e1a8) (GhidraScript)  
+INFO  REPORT: Save succeeded for processed file: /hmollimt-z12-10da5dbf.bin (HeadlessAnalyzer)  

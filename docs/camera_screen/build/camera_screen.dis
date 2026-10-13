@@ -1,0 +1,2475 @@
+
+/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.elf:     file format elf32-or1kle
+
+
+Disassembly of section .text:
+
+02300000 <selected_template_resource>:
+ 2300000:	0d 02 60 18 	l.movhi r3,0x20d
+ 2300004:	fc 17 e1 d7 	l.sw -4(r1),r2
+ 2300008:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 230000c:	ca 41 63 a8 	l.ori r3,r3,0x41ca
+ 2300010:	83 00 40 18 	l.movhi r2,0x83
+ 2300014:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2300018:	54 09 42 a8 	l.ori r2,r2,0x954
+ 230001c:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2300020:	00 10 63 e0 	l.add r3,r3,r2
+ 2300024:	02 00 63 b8 	l.slli r3,r3,0x2
+ 2300028:	00 00 63 85 	l.lwz r11,0(r3)
+ 230002c:	08 00 21 9c 	l.addi r1,r1,8
+ 2300030:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2300034:	fc ff 41 84 	l.lwz r2,-4(r1)
+ 2300038:	00 48 00 44 	l.jr r9
+
+0230003c <camera_msg_noop>:
+ 230003c:	fc 0f e1 d7 	l.sw -4(r1),r1
+ 2300040:	fc ff 21 9c 	l.addi r1,r1,-4
+ 2300044:	00 00 60 9d 	l.addi r11,r0,0
+ 2300048:	04 00 21 9c 	l.addi r1,r1,4
+ 230004c:	fc ff 21 84 	l.lwz r1,-4(r1)
+ 2300050:	00 48 00 44 	l.jr r9
+
+02300054 <post_storage_notification>:
+ 2300054:	0d 02 60 18 	l.movhi r3,0x20d
+ 2300058:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 230005c:	e0 41 63 a8 	l.ori r3,r3,0x41e0
+ 2300060:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2300064:	00 00 63 84 	l.lwz r3,0(r3)
+ 2300068:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 230006c:	01 00 80 9c 	l.addi r4,r0,1
+ 2300070:	76 85 f4 07 	l.jal 2021648 <fw_queue_post>
+ 2300074:	08 00 21 9c 	l.addi r1,r1,8
+ 2300078:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 230007c:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2300080:	00 48 00 44 	l.jr r9
+
+02300084 <set_widget_resource>:
+ 2300084:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300088:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 230008c:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2300090:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2300094:	00 00 45 a8 	l.ori r2,r5,0x0
+ 2300098:	2f 94 f4 07 	l.jal 2025154 <fw_child>
+ 230009c:	00 00 82 a8 	l.ori r4,r2,0x0
+ 23000a0:	00 00 6b a8 	l.ori r3,r11,0x0
+ 23000a4:	1a a6 f4 07 	l.jal 202990c <fw_set_resid>
+ 23000a8:	0c 00 21 9c 	l.addi r1,r1,12
+ 23000ac:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23000b0:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 23000b4:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 23000b8:	00 48 00 44 	l.jr r9
+
+023000bc <set_widget_visible>:
+ 23000bc:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23000c0:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 23000c4:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 23000c8:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 23000cc:	00 00 45 a8 	l.ori r2,r5,0x0
+ 23000d0:	21 94 f4 07 	l.jal 2025154 <fw_child>
+ 23000d4:	00 00 82 a8 	l.ori r4,r2,0x0
+ 23000d8:	00 00 6b a8 	l.ori r3,r11,0x0
+ 23000dc:	dc a5 f4 07 	l.jal 202984c <fw_visible>
+ 23000e0:	0c 00 21 9c 	l.addi r1,r1,12
+ 23000e4:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23000e8:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 23000ec:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 23000f0:	00 48 00 44 	l.jr r9
+
+023000f4 <camera_window_exit>:
+ 23000f4:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23000f8:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 23000fc:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2300100:	22 e0 f5 07 	l.jal 2078188 <fw_glyphs_free>
+ 2300104:	0c 02 60 18 	l.movhi r3,0x20c
+ 2300108:	00 00 60 9d 	l.addi r11,r0,0
+ 230010c:	98 cd 83 a8 	l.ori r4,r3,0xcd98
+ 2300110:	80 87 63 a8 	l.ori r3,r3,0x8780
+ 2300114:	00 58 04 d4 	l.sw 0(r4),r11
+ 2300118:	00 58 03 d8 	l.sb 0(r3),r11
+ 230011c:	08 00 21 9c 	l.addi r1,r1,8
+ 2300120:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300124:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2300128:	00 48 00 44 	l.jr r9
+
+0230012c <set_status_led>:
+ 230012c:	0d 02 80 18 	l.movhi r4,0x20d
+ 2300130:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300134:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2300138:	7d 41 84 a8 	l.ori r4,r4,0x417d
+ 230013c:	00 00 a3 a8 	l.ori r5,r3,0x0
+ 2300140:	00 00 84 8c 	l.lbz r4,0(r4)
+ 2300144:	18 00 64 b8 	l.slli r3,r4,0x18
+ 2300148:	00 20 80 18 	l.movhi r4,0x2000
+ 230014c:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2300150:	98 00 63 b8 	l.srai r3,r3,0x18
+ 2300154:	0a 00 84 a8 	l.ori r4,r4,0xa
+ 2300158:	3d 0a f4 07 	l.jal 2002a4c <fw_board_ioctl>
+ 230015c:	08 00 21 9c 	l.addi r1,r1,8
+ 2300160:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300164:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2300168:	00 48 00 44 	l.jr r9
+
+0230016c <zoom_is_restricted>:
+ 230016c:	0d 02 60 18 	l.movhi r3,0x20d
+ 2300170:	fc 0f e1 d7 	l.sw -4(r1),r1
+ 2300174:	c5 41 83 a8 	l.ori r4,r3,0x41c5
+ 2300178:	fc ff 21 9c 	l.addi r1,r1,-4
+ 230017c:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2300180:	02 00 05 bc 	l.sfeqi r5,2
+ 2300184:	01 00 60 9d 	l.addi r11,r0,1
+ 2300188:	0f 00 00 10 	l.bf 23001c4 <zoom_is_restricted+0x58>
+ 230018c:	00 00 84 8c 	l.lbz r4,0(r4)
+ 2300190:	03 00 04 bc 	l.sfeqi r4,3
+ 2300194:	0c 00 00 10 	l.bf 23001c4 <zoom_is_restricted+0x58>
+ 2300198:	c7 41 63 a8 	l.ori r3,r3,0x41c7
+ 230019c:	00 00 60 9d 	l.addi r11,r0,0
+ 23001a0:	00 00 83 8c 	l.lbz r4,0(r3)
+ 23001a4:	06 00 a4 bc 	l.sfleui r4,6
+ 23001a8:	07 00 00 10 	l.bf 23001c4 <zoom_is_restricted+0x58>
+ 23001ac:	00 00 83 8c 	l.lbz r4,0(r3)
+ 23001b0:	08 00 a4 bc 	l.sfleui r4,8
+ 23001b4:	01 00 60 9c 	l.addi r3,r0,1
+ 23001b8:	02 00 00 10 	l.bf 23001c0 <zoom_is_restricted+0x54>
+ 23001bc:	00 00 6b a8 	l.ori r3,r11,0x0
+ 23001c0:	00 00 63 a9 	l.ori r11,r3,0x0
+ 23001c4:	04 00 21 9c 	l.addi r1,r1,4
+ 23001c8:	fc ff 21 84 	l.lwz r1,-4(r1)
+ 23001cc:	00 48 00 44 	l.jr r9
+
+023001d0 <camera_back>:
+ 23001d0:	01 00 84 ac 	l.xori r4,r4,1
+ 23001d4:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23001d8:	02 20 60 e0 	l.sub r3,r0,r4
+ 23001dc:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 23001e0:	04 20 83 e0 	l.or r4,r3,r4
+ 23001e4:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 23001e8:	00 00 84 bd 	l.sfltsi r4,0
+ 23001ec:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 23001f0:	14 00 00 10 	l.bf 2300240 <camera_back+0x70>
+ 23001f4:	02 28 60 e0 	l.sub r3,r0,r5
+ 23001f8:	04 18 65 e0 	l.or r3,r5,r3
+ 23001fc:	00 00 83 bd 	l.sfltsi r3,0
+ 2300200:	10 00 00 0c 	l.bnf 2300240 <camera_back+0x70>
+ 2300204:	00 00 85 84 	l.lwz r4,0(r5)
+ 2300208:	00 00 24 bc 	l.sfnei r4,0
+ 230020c:	0d 00 00 10 	l.bf 2300240 <camera_back+0x70>
+ 2300210:	06 00 60 9c 	l.addi r3,r0,6
+ 2300214:	bd 1f f4 07 	l.jal 2008108 <fw_mode_request>
+ 2300218:	0d 02 60 18 	l.movhi r3,0x20d
+ 230021c:	d4 41 a3 a8 	l.ori r5,r3,0x41d4
+ 2300220:	00 00 85 8c 	l.lbz r4,0(r5)
+ 2300224:	ff 00 84 a4 	l.andi r4,r4,0xff
+ 2300228:	00 00 24 bc 	l.sfnei r4,0
+ 230022c:	05 00 00 10 	l.bf 2300240 <camera_back+0x70>
+ 2300230:	d5 41 63 a8 	l.ori r3,r3,0x41d5
+ 2300234:	02 00 40 9c 	l.addi r2,r0,2
+ 2300238:	00 20 03 d8 	l.sb 0(r3),r4
+ 230023c:	00 10 05 d8 	l.sb 0(r5),r2
+ 2300240:	0c 00 21 9c 	l.addi r1,r1,12
+ 2300244:	00 00 60 9d 	l.addi r11,r0,0
+ 2300248:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 230024c:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2300250:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2300254:	00 48 00 44 	l.jr r9
+
+02300258 <set_capture_light>:
+ 2300258:	0c 02 80 18 	l.movhi r4,0x20c
+ 230025c:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300260:	98 cd 84 a8 	l.ori r4,r4,0xcd98
+ 2300264:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2300268:	00 00 84 84 	l.lwz r4,0(r4)
+ 230026c:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2300270:	01 00 24 bc 	l.sfnei r4,1
+ 2300274:	0a 00 00 10 	l.bf 230029c <set_capture_light+0x44>
+ 2300278:	00 00 a3 a8 	l.ori r5,r3,0x0
+ 230027c:	0d 02 60 18 	l.movhi r3,0x20d
+ 2300280:	00 20 80 18 	l.movhi r4,0x2000
+ 2300284:	7c 41 63 a8 	l.ori r3,r3,0x417c
+ 2300288:	11 00 84 a8 	l.ori r4,r4,0x11
+ 230028c:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2300290:	18 00 63 b8 	l.slli r3,r3,0x18
+ 2300294:	98 00 63 b8 	l.srai r3,r3,0x18
+ 2300298:	ed 09 f4 07 	l.jal 2002a4c <fw_board_ioctl>
+ 230029c:	08 00 21 9c 	l.addi r1,r1,8
+ 23002a0:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23002a4:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 23002a8:	00 48 00 44 	l.jr r9
+
+023002ac <camera_countdown.part.7>:
+ 23002ac:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23002b0:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 23002b4:	10 00 80 9c 	l.addi r4,r0,16
+ 23002b8:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 23002bc:	00 00 a0 9c 	l.addi r5,r0,0
+ 23002c0:	7f ff ff 07 	l.jal 23000bc <set_widget_visible>
+ 23002c4:	01 00 60 9c 	l.addi r3,r0,1
+ 23002c8:	7f 6d f5 07 	l.jal 205b8c4 <fw_present>
+ 23002cc:	08 00 21 9c 	l.addi r1,r1,8
+ 23002d0:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23002d4:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 23002d8:	00 48 00 44 	l.jr r9
+
+023002dc <camera_status_visibility.part.13>:
+ 23002dc:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23002e0:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 23002e4:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 23002e8:	13 00 80 9c 	l.addi r4,r0,19
+ 23002ec:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 23002f0:	00 00 a0 9c 	l.addi r5,r0,0
+ 23002f4:	00 00 43 a8 	l.ori r2,r3,0x0
+ 23002f8:	71 ff ff 07 	l.jal 23000bc <set_widget_visible>
+ 23002fc:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300300:	14 00 80 9c 	l.addi r4,r0,20
+ 2300304:	00 00 a0 9c 	l.addi r5,r0,0
+ 2300308:	6d ff ff 07 	l.jal 23000bc <set_widget_visible>
+ 230030c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300310:	15 00 80 9c 	l.addi r4,r0,21
+ 2300314:	00 00 a0 9c 	l.addi r5,r0,0
+ 2300318:	69 ff ff 07 	l.jal 23000bc <set_widget_visible>
+ 230031c:	0c 00 21 9c 	l.addi r1,r1,12
+ 2300320:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300324:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2300328:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 230032c:	00 48 00 44 	l.jr r9
+
+02300330 <camera_mode_enter>:
+ 2300330:	f0 17 e1 d7 	l.sw -16(r1),r2
+ 2300334:	0c 02 40 18 	l.movhi r2,0x20c
+ 2300338:	f8 97 e1 d7 	l.sw -8(r1),r18
+ 230033c:	8c cd 42 a8 	l.ori r2,r2,0xcd8c
+ 2300340:	01 00 40 9e 	l.addi r18,r0,1
+ 2300344:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300348:	f4 77 e1 d7 	l.sw -12(r1),r14
+ 230034c:	ec 0f e1 d7 	l.sw -20(r1),r1
+ 2300350:	00 90 02 d4 	l.sw 0(r2),r18
+ 2300354:	ec ff 21 9c 	l.addi r1,r1,-20
+ 2300358:	0d 02 c0 19 	l.movhi r14,0x20d
+ 230035c:	0a 00 f5 07 	l.jal 2040384 <fw_encoder_init>
+ 2300360:	11 21 f5 07 	l.jal 20487a4 <fw_sensor_adjust>
+ 2300364:	00 00 80 9c 	l.addi r4,r0,0
+ 2300368:	08 00 60 9c 	l.addi r3,r0,8
+ 230036c:	00 00 40 9c 	l.addi r2,r0,0
+ 2300370:	4b 57 f5 07 	l.jal 205609c <fw_record_config>
+ 2300374:	00 00 60 9c 	l.addi r3,r0,0
+ 2300378:	3d 17 f5 07 	l.jal 204606c <fw_frame_mode>
+ 230037c:	ca 41 6e a8 	l.ori r3,r14,0x41ca
+ 2300380:	00 10 03 d8 	l.sb 0(r3),r2
+ 2300384:	c6 41 6e a8 	l.ori r3,r14,0x41c6
+ 2300388:	00 10 03 d8 	l.sb 0(r3),r2
+ 230038c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300390:	4c 61 f5 07 	l.jal 20588c0 <fw_color_preset>
+ 2300394:	74 41 6e a8 	l.ori r3,r14,0x4174
+ 2300398:	00 00 82 a8 	l.ori r4,r2,0x0
+ 230039c:	00 10 03 d8 	l.sb 0(r3),r2
+ 23003a0:	00 00 62 a8 	l.ori r3,r2,0x0
+ 23003a4:	95 11 f4 07 	l.jal 20049f8 <fw_crop_start>
+ 23003a8:	73 41 6e a8 	l.ori r3,r14,0x4173
+ 23003ac:	00 10 03 d8 	l.sb 0(r3),r2
+ 23003b0:	00 00 62 a8 	l.ori r3,r2,0x0
+ 23003b4:	64 11 f4 07 	l.jal 2004944 <fw_ui_state>
+ 23003b8:	00 00 62 a8 	l.ori r3,r2,0x0
+ 23003bc:	73 10 f4 07 	l.jal 2004588 <fw_layer_init>
+ 23003c0:	c4 41 6e a8 	l.ori r3,r14,0x41c4
+ 23003c4:	00 00 82 a8 	l.ori r4,r2,0x0
+ 23003c8:	00 90 03 d8 	l.sb 0(r3),r18
+ 23003cc:	c5 41 6e a8 	l.ori r3,r14,0x41c5
+ 23003d0:	c7 41 ce a9 	l.ori r14,r14,0x41c7
+ 23003d4:	00 10 03 d8 	l.sb 0(r3),r2
+ 23003d8:	30 02 60 18 	l.movhi r3,0x230
+ 23003dc:	00 10 0e d8 	l.sb 0(r14),r2
+ 23003e0:	40 26 63 a8 	l.ori r3,r3,0x2640
+ 23003e4:	c8 47 f4 07 	l.jal 2012304 <fw_window_open>
+ 23003e8:	32 00 60 9c 	l.addi r3,r0,50
+ 23003ec:	32 85 f4 07 	l.jal 20218b4 <fw_delay>
+ 23003f0:	00 00 72 a8 	l.ori r3,r18,0x0
+ 23003f4:	bc d2 f4 07 	l.jal 2034ee4 <fw_csi_enable>
+ 23003f8:	32 00 60 9c 	l.addi r3,r0,50
+ 23003fc:	2e 85 f4 07 	l.jal 20218b4 <fw_delay>
+ 2300400:	14 00 21 9c 	l.addi r1,r1,20
+ 2300404:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300408:	ec ff 21 84 	l.lwz r1,-20(r1)
+ 230040c:	f0 ff 41 84 	l.lwz r2,-16(r1)
+ 2300410:	f4 ff c1 85 	l.lwz r14,-12(r1)
+ 2300414:	f8 ff 41 86 	l.lwz r18,-8(r1)
+ 2300418:	00 48 00 44 	l.jr r9
+
+0230041c <camera_mode_exit>:
+ 230041c:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2300420:	0c 02 40 18 	l.movhi r2,0x20c
+ 2300424:	00 00 60 9c 	l.addi r3,r0,0
+ 2300428:	8c cd 42 a8 	l.ori r2,r2,0xcd8c
+ 230042c:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300430:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2300434:	00 18 02 d4 	l.sw 0(r2),r3
+ 2300438:	0d 02 40 18 	l.movhi r2,0x20d
+ 230043c:	00 00 80 9c 	l.addi r4,r0,0
+ 2300440:	c4 41 62 a8 	l.ori r3,r2,0x41c4
+ 2300444:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2300448:	00 20 03 d8 	l.sb 0(r3),r4
+ 230044c:	c5 41 62 a8 	l.ori r3,r2,0x41c5
+ 2300450:	00 20 03 d8 	l.sb 0(r3),r4
+ 2300454:	c7 41 62 a8 	l.ori r3,r2,0x41c7
+ 2300458:	00 20 03 d8 	l.sb 0(r3),r4
+ 230045c:	00 00 80 9c 	l.addi r4,r0,0
+ 2300460:	08 00 60 9c 	l.addi r3,r0,8
+ 2300464:	0e 57 f5 07 	l.jal 205609c <fw_record_config>
+ 2300468:	00 00 60 9c 	l.addi r3,r0,0
+ 230046c:	00 17 f5 07 	l.jal 204606c <fw_frame_mode>
+ 2300470:	c6 41 62 a8 	l.ori r3,r2,0x41c6
+ 2300474:	00 00 80 9c 	l.addi r4,r0,0
+ 2300478:	c8 41 42 a8 	l.ori r2,r2,0x41c8
+ 230047c:	00 20 03 d8 	l.sb 0(r3),r4
+ 2300480:	00 00 60 9c 	l.addi r3,r0,0
+ 2300484:	0f 61 f5 07 	l.jal 20588c0 <fw_color_preset>
+ 2300488:	00 00 62 8c 	l.lbz r3,0(r2)
+ 230048c:	00 00 03 bc 	l.sfeqi r3,0
+ 2300490:	0b 00 00 0c 	l.bnf 23004bc <camera_mode_exit+0xa0>
+ 2300494:	01 00 60 9c 	l.addi r3,r0,1
+ 2300498:	00 18 02 d8 	l.sb 0(r2),r3
+ 230049c:	a1 88 f4 07 	l.jal 2022720 <fw_frame_get>
+ 23004a0:	00 00 0b bc 	l.sfeqi r11,0
+ 23004a4:	00 00 6b a8 	l.ori r3,r11,0x0
+ 23004a8:	05 00 00 10 	l.bf 23004bc <camera_mode_exit+0xa0>
+ 23004ac:	02 00 80 9c 	l.addi r4,r0,2
+ 23004b0:	00 20 02 d8 	l.sb 0(r2),r4
+ 23004b4:	64 e6 f4 07 	l.jal 2039e44 <fw_frame_submit>
+ 23004b8:	e5 e8 f4 07 	l.jal 203a84c <fw_frame_rearm>
+ 23004bc:	0d 02 40 18 	l.movhi r2,0x20d
+ 23004c0:	73 41 62 a8 	l.ori r3,r2,0x4173
+ 23004c4:	70 41 42 a8 	l.ori r2,r2,0x4170
+ 23004c8:	00 00 63 8c 	l.lbz r3,0(r3)
+ 23004cc:	1e 11 f4 07 	l.jal 2004944 <fw_ui_state>
+ 23004d0:	00 00 60 9c 	l.addi r3,r0,0
+ 23004d4:	37 0f f4 07 	l.jal 20041b0 <fw_layer_uninit>
+ 23004d8:	ff 58 f5 07 	l.jal 20568d4 <fw_exit_stub>
+ 23004dc:	8c 52 f5 07 	l.jal 2054f0c <fw_record_reset>
+ 23004e0:	00 00 62 8c 	l.lbz r3,0(r2)
+ 23004e4:	03 00 23 bc 	l.sfnei r3,3
+ 23004e8:	03 00 00 10 	l.bf 23004f4 <camera_mode_exit+0xd8>
+ 23004ec:	04 00 60 9c 	l.addi r3,r0,4
+ 23004f0:	00 18 02 d8 	l.sb 0(r2),r3
+ 23004f4:	0c 00 21 9c 	l.addi r1,r1,12
+ 23004f8:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23004fc:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2300500:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2300504:	00 48 00 44 	l.jr r9
+
+02300508 <camera_open_file>:
+ 2300508:	ec 17 e1 d7 	l.sw -20(r1),r2
+ 230050c:	0d 02 40 18 	l.movhi r2,0x20d
+ 2300510:	f0 77 e1 d7 	l.sw -16(r1),r14
+ 2300514:	f8 a7 e1 d7 	l.sw -8(r1),r20
+ 2300518:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 230051c:	e8 0f e1 d7 	l.sw -24(r1),r1
+ 2300520:	f4 97 e1 d7 	l.sw -12(r1),r18
+ 2300524:	70 41 c2 a9 	l.ori r14,r2,0x4170
+ 2300528:	e8 ff 21 9c 	l.addi r1,r1,-24
+ 230052c:	00 00 6e 8c 	l.lbz r3,0(r14)
+ 2300530:	04 00 03 bc 	l.sfeqi r3,4
+ 2300534:	00 00 84 aa 	l.ori r20,r4,0x0
+ 2300538:	04 00 00 10 	l.bf 2300548 <camera_open_file+0x40>
+ 230053c:	c6 fe ff 07 	l.jal 2300054 <post_storage_notification>
+ 2300540:	ff ff a0 9c 	l.addi r5,r0,-1
+ 2300544:	1d 00 00 00 	l.j 23005b8 <camera_open_file+0xb0>
+ 2300548:	a4 41 42 a8 	l.ori r2,r2,0x41a4
+ 230054c:	07 02 40 1a 	l.movhi r18,0x207
+ 2300550:	00 00 62 84 	l.lwz r3,0(r2)
+ 2300554:	59 b8 92 a8 	l.ori r4,r18,0xb859
+ 2300558:	00 14 a0 9c 	l.addi r5,r0,5120
+ 230055c:	08 03 f4 07 	l.jal 200117c <fw_space_check>
+ 2300560:	00 00 6b bd 	l.sfgesi r11,0
+ 2300564:	08 00 00 0c 	l.bnf 2300584 <camera_open_file+0x7c>
+ 2300568:	00 00 62 84 	l.lwz r3,0(r2)
+ 230056c:	70 b8 92 a8 	l.ori r4,r18,0xb870
+ 2300570:	59 b8 b2 a8 	l.ori r5,r18,0xb859
+ 2300574:	0b 06 f4 07 	l.jal 2001da0 <fw_filename_create>
+ 2300578:	00 00 2b bc 	l.sfnei r11,0
+ 230057c:	00 00 4b a8 	l.ori r2,r11,0x0
+ 2300580:	06 00 00 10 	l.bf 2300598 <camera_open_file+0x90>
+ 2300584:	03 00 40 9c 	l.addi r2,r0,3
+ 2300588:	00 10 0e d8 	l.sb 0(r14),r2
+ 230058c:	b2 fe ff 07 	l.jal 2300054 <post_storage_notification>
+ 2300590:	fe ff a0 9c 	l.addi r5,r0,-2
+ 2300594:	09 00 00 00 	l.j 23005b8 <camera_open_file+0xb0>
+ 2300598:	1b f2 f4 07 	l.jal 203ce04 <fw_sd_lock>
+ 230059c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 23005a0:	07 00 80 9c 	l.addi r4,r0,7
+ 23005a4:	05 b0 f5 07 	l.jal 206c5b8 <fw_open>
+ 23005a8:	00 00 14 bc 	l.sfeqi r20,0
+ 23005ac:	00 00 ab a8 	l.ori r5,r11,0x0
+ 23005b0:	02 00 00 10 	l.bf 23005b8 <camera_open_file+0xb0>
+ 23005b4:	00 10 14 d4 	l.sw 0(r20),r2
+ 23005b8:	18 00 21 9c 	l.addi r1,r1,24
+ 23005bc:	00 00 65 a9 	l.ori r11,r5,0x0
+ 23005c0:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23005c4:	e8 ff 21 84 	l.lwz r1,-24(r1)
+ 23005c8:	ec ff 41 84 	l.lwz r2,-20(r1)
+ 23005cc:	f0 ff c1 85 	l.lwz r14,-16(r1)
+ 23005d0:	f4 ff 41 86 	l.lwz r18,-12(r1)
+ 23005d4:	f8 ff 81 86 	l.lwz r20,-8(r1)
+ 23005d8:	00 48 00 44 	l.jr r9
+
+023005dc <camera_capture_file>:
+ 23005dc:	e4 17 e1 d7 	l.sw -28(r1),r2
+ 23005e0:	0e 02 40 18 	l.movhi r2,0x20e
+ 23005e4:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23005e8:	e8 77 e1 d7 	l.sw -24(r1),r14
+ 23005ec:	ec 97 e1 d7 	l.sw -20(r1),r18
+ 23005f0:	f0 a7 e1 d7 	l.sw -16(r1),r20
+ 23005f4:	f4 b7 e1 d7 	l.sw -12(r1),r22
+ 23005f8:	f8 c7 e1 d7 	l.sw -8(r1),r24
+ 23005fc:	e0 0f e1 d7 	l.sw -32(r1),r1
+ 2300600:	81 31 42 a8 	l.ori r2,r2,0x3181
+ 2300604:	c8 ff 21 9c 	l.addi r1,r1,-56
+ 2300608:	00 00 62 8c 	l.lbz r3,0(r2)
+ 230060c:	18 00 63 b8 	l.slli r3,r3,0x18
+ 2300610:	ff ff c0 9e 	l.addi r22,r0,-1
+ 2300614:	98 00 63 b8 	l.srai r3,r3,0x18
+ 2300618:	39 f6 f4 07 	l.jal 203defc <fw_watermark_close>
+ 230061c:	7e f6 f4 07 	l.jal 203e014 <fw_watermark_open>
+ 2300620:	ff 00 6b a5 	l.andi r11,r11,0xff
+ 2300624:	0e 00 60 9c 	l.addi r3,r0,14
+ 2300628:	00 58 02 d8 	l.sb 0(r2),r11
+ 230062c:	00 00 40 9c 	l.addi r2,r0,0
+ 2300630:	a1 17 f4 07 	l.jal 20064b4 <fw_setting_value>
+ 2300634:	18 00 60 9c 	l.addi r3,r0,24
+ 2300638:	ff 00 0b a7 	l.andi r24,r11,0xff
+ 230063c:	9e 17 f4 07 	l.jal 20064b4 <fw_setting_value>
+ 2300640:	50 00 8b ba 	l.srli r20,r11,0x10
+ 2300644:	ff ff 4b a6 	l.andi r18,r11,0xffff
+ 2300648:	d0 56 f5 07 	l.jal 2056188 <fw_encode_flag>
+ 230064c:	02 58 c0 e1 	l.sub r14,r0,r11
+ 2300650:	e0 01 60 9c 	l.addi r3,r0,480
+ 2300654:	04 58 6e e1 	l.or r11,r14,r11
+ 2300658:	5f 00 cb b9 	l.srli r14,r11,0x1f
+ 230065c:	6d f7 f4 07 	l.jal 203e410 <fw_watermark_position>
+ 2300660:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300664:	14 00 81 9c 	l.addi r4,r1,20
+ 2300668:	14 10 01 d4 	l.sw 20(r1),r2
+ 230066c:	a7 ff ff 07 	l.jal 2300508 <camera_open_file>
+ 2300670:	00 00 8b bd 	l.sfltsi r11,0
+ 2300674:	00 00 4b a8 	l.ori r2,r11,0x0
+ 2300678:	40 00 00 10 	l.bf 2300778 <camera_capture_file+0x19c>
+ 230067c:	0d 02 60 18 	l.movhi r3,0x20d
+ 2300680:	00 00 80 9c 	l.addi r4,r0,0
+ 2300684:	c4 41 63 a8 	l.ori r3,r3,0x41c4
+ 2300688:	00 05 b4 bc 	l.sfleui r20,1280
+ 230068c:	00 20 03 d8 	l.sb 0(r3),r4
+ 2300690:	0c 02 60 18 	l.movhi r3,0x20c
+ 2300694:	01 00 80 9c 	l.addi r4,r0,1
+ 2300698:	90 cd 63 a8 	l.ori r3,r3,0xcd90
+ 230069c:	03 00 e0 9c 	l.addi r7,r0,3
+ 23006a0:	00 20 03 d4 	l.sw 0(r3),r4
+ 23006a4:	14 00 61 84 	l.lwz r3,20(r1)
+ 23006a8:	08 00 00 10 	l.bf 23006c8 <camera_capture_file+0xec>
+ 23006ac:	00 0a b4 bc 	l.sfleui r20,2560
+ 23006b0:	04 00 e0 9c 	l.addi r7,r0,4
+ 23006b4:	05 00 00 10 	l.bf 23006c8 <camera_capture_file+0xec>
+ 23006b8:	80 0c b4 bc 	l.sfleui r20,3200
+ 23006bc:	06 00 e0 9c 	l.addi r7,r0,6
+ 23006c0:	02 00 00 10 	l.bf 23006c8 <camera_capture_file+0xec>
+ 23006c4:	00 00 e0 9c 	l.addi r7,r0,0
+ 23006c8:	14 00 80 9c 	l.addi r4,r0,20
+ 23006cc:	00 70 01 d4 	l.sw 0(r1),r14
+ 23006d0:	04 20 01 d4 	l.sw 4(r1),r4
+ 23006d4:	94 02 80 9c 	l.addi r4,r0,660
+ 23006d8:	00 00 b4 a8 	l.ori r5,r20,0x0
+ 23006dc:	08 20 01 d4 	l.sw 8(r1),r4
+ 23006e0:	00 00 80 9c 	l.addi r4,r0,0
+ 23006e4:	00 00 d2 a8 	l.ori r6,r18,0x0
+ 23006e8:	0c 20 01 d4 	l.sw 12(r1),r4
+ 23006ec:	10 20 01 d4 	l.sw 16(r1),r4
+ 23006f0:	00 00 18 a9 	l.ori r8,r24,0x0
+ 23006f4:	00 00 82 a8 	l.ori r4,r2,0x0
+ 23006f8:	0d 02 c0 19 	l.movhi r14,0x20d
+ 23006fc:	27 da f5 07 	l.jal 2076f98 <fw_encode_file>
+ 2300700:	0c 02 60 18 	l.movhi r3,0x20c
+ 2300704:	00 00 80 9c 	l.addi r4,r0,0
+ 2300708:	90 cd 63 a8 	l.ori r3,r3,0xcd90
+ 230070c:	00 00 6b bd 	l.sfgesi r11,0
+ 2300710:	00 20 03 d4 	l.sw 0(r3),r4
+ 2300714:	c4 41 6e a8 	l.ori r3,r14,0x41c4
+ 2300718:	01 00 80 9c 	l.addi r4,r0,1
+ 230071c:	00 20 03 d8 	l.sb 0(r3),r4
+ 2300720:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300724:	06 00 00 10 	l.bf 230073c <camera_capture_file+0x160>
+ 2300728:	d6 af f5 07 	l.jal 206c680 <fw_close>
+ 230072c:	14 00 61 84 	l.lwz r3,20(r1)
+ 2300730:	ff ff c0 9e 	l.addi r22,r0,-1
+ 2300734:	f9 c8 f5 07 	l.jal 2072b18 <fw_unlink>
+ 2300738:	10 00 00 00 	l.j 2300778 <camera_capture_file+0x19c>
+ 230073c:	ef b0 f5 07 	l.jal 206caf8 <fw_file_size>
+ 2300740:	ff ff 60 9c 	l.addi r3,r0,-1
+ 2300744:	00 00 8b a8 	l.ori r4,r11,0x0
+ 2300748:	a4 41 ce a9 	l.ori r14,r14,0x41a4
+ 230074c:	fe 32 f4 07 	l.jal 200d344 <fw_account_space>
+ 2300750:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300754:	00 00 c0 9e 	l.addi r22,r0,0
+ 2300758:	ca af f5 07 	l.jal 206c680 <fw_close>
+ 230075c:	14 00 a1 84 	l.lwz r5,20(r1)
+ 2300760:	07 02 80 18 	l.movhi r4,0x207
+ 2300764:	00 00 6e 84 	l.lwz r3,0(r14)
+ 2300768:	59 b8 84 a8 	l.ori r4,r4,0xb859
+ 230076c:	06 00 a5 9c 	l.addi r5,r5,6
+ 2300770:	0c 04 f4 07 	l.jal 20017a0 <fw_file_add>
+ 2300774:	dd ef f4 07 	l.jal 203c6e8 <fw_sd_stop>
+ 2300778:	b3 f1 f4 07 	l.jal 203ce44 <fw_sd_unlock>
+ 230077c:	38 00 21 9c 	l.addi r1,r1,56
+ 2300780:	00 00 76 a9 	l.ori r11,r22,0x0
+ 2300784:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300788:	e0 ff 21 84 	l.lwz r1,-32(r1)
+ 230078c:	e4 ff 41 84 	l.lwz r2,-28(r1)
+ 2300790:	e8 ff c1 85 	l.lwz r14,-24(r1)
+ 2300794:	ec ff 41 86 	l.lwz r18,-20(r1)
+ 2300798:	f0 ff 81 86 	l.lwz r20,-16(r1)
+ 230079c:	f4 ff c1 86 	l.lwz r22,-12(r1)
+ 23007a0:	f8 ff 01 87 	l.lwz r24,-8(r1)
+ 23007a4:	00 48 00 44 	l.jr r9
+
+023007a8 <camera_encode_frame>:
+ 23007a8:	d8 17 e1 d7 	l.sw -40(r1),r2
+ 23007ac:	02 18 40 e0 	l.sub r2,r0,r3
+ 23007b0:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23007b4:	04 10 43 e0 	l.or r2,r3,r2
+ 23007b8:	d4 0f e1 d7 	l.sw -44(r1),r1
+ 23007bc:	dc 77 e1 d7 	l.sw -36(r1),r14
+ 23007c0:	e0 97 e1 d7 	l.sw -32(r1),r18
+ 23007c4:	e4 a7 e1 d7 	l.sw -28(r1),r20
+ 23007c8:	e8 b7 e1 d7 	l.sw -24(r1),r22
+ 23007cc:	ec c7 e1 d7 	l.sw -20(r1),r24
+ 23007d0:	f0 d7 e1 d7 	l.sw -16(r1),r26
+ 23007d4:	f4 e7 e1 d7 	l.sw -12(r1),r28
+ 23007d8:	f8 f7 e1 d7 	l.sw -8(r1),r30
+ 23007dc:	00 00 62 bd 	l.sfgesi r2,0
+ 23007e0:	a0 ff 21 9c 	l.addi r1,r1,-96
+ 23007e4:	07 00 00 10 	l.bf 2300800 <camera_encode_frame+0x58>
+ 23007e8:	02 20 c0 e1 	l.sub r14,r0,r4
+ 23007ec:	04 70 c4 e1 	l.or r14,r4,r14
+ 23007f0:	ff ff ce ad 	l.xori r14,r14,-1
+ 23007f4:	5f 00 ce b9 	l.srli r14,r14,0x1f
+ 23007f8:	00 00 0e bc 	l.sfeqi r14,0
+ 23007fc:	03 00 00 10 	l.bf 2300808 <camera_encode_frame+0x60>
+ 2300800:	ff ff 60 9d 	l.addi r11,r0,-1
+ 2300804:	1c 01 00 00 	l.j 2300c74 <camera_encode_frame+0x4cc>
+ 2300808:	0e 02 40 1a 	l.movhi r18,0x20e
+ 230080c:	00 70 03 d4 	l.sw 0(r3),r14
+ 2300810:	00 70 04 d4 	l.sw 0(r4),r14
+ 2300814:	81 31 52 aa 	l.ori r18,r18,0x3181
+ 2300818:	00 00 c3 ab 	l.ori r30,r3,0x0
+ 230081c:	00 00 72 8c 	l.lbz r3,0(r18)
+ 2300820:	18 00 63 b8 	l.slli r3,r3,0x18
+ 2300824:	00 00 44 a8 	l.ori r2,r4,0x0
+ 2300828:	98 00 63 b8 	l.srai r3,r3,0x18
+ 230082c:	b4 f5 f4 07 	l.jal 203defc <fw_watermark_close>
+ 2300830:	f9 f5 f4 07 	l.jal 203e014 <fw_watermark_open>
+ 2300834:	ff 00 6b a5 	l.andi r11,r11,0xff
+ 2300838:	0e 00 60 9c 	l.addi r3,r0,14
+ 230083c:	00 58 12 d8 	l.sb 0(r18),r11
+ 2300840:	1d 17 f4 07 	l.jal 20064b4 <fw_setting_value>
+ 2300844:	18 00 60 9c 	l.addi r3,r0,24
+ 2300848:	00 00 8b aa 	l.ori r20,r11,0x0
+ 230084c:	1a 17 f4 07 	l.jal 20064b4 <fw_setting_value>
+ 2300850:	50 00 cb ba 	l.srli r22,r11,0x10
+ 2300854:	ff ff 0b a7 	l.andi r24,r11,0xffff
+ 2300858:	4c 56 f5 07 	l.jal 2056188 <fw_encode_flag>
+ 230085c:	02 58 40 e2 	l.sub r18,r0,r11
+ 2300860:	00 00 76 a8 	l.ori r3,r22,0x0
+ 2300864:	04 58 72 e1 	l.or r11,r18,r11
+ 2300868:	00 00 98 a8 	l.ori r4,r24,0x0
+ 230086c:	5f 00 4b ba 	l.srli r18,r11,0x1f
+ 2300870:	02 ff f4 07 	l.jal 2040478 <fw_capture_size_snapshot>
+ 2300874:	4d fe f4 07 	l.jal 20401a8 <fw_encoder_mem_init>
+ 2300878:	00 00 8b bd 	l.sfltsi r11,0
+ 230087c:	e1 ff ff 13 	l.bf 2300800 <camera_encode_frame+0x58>
+ 2300880:	04 00 61 9c 	l.addi r3,r1,4
+ 2300884:	06 00 81 9c 	l.addi r4,r1,6
+ 2300888:	04 70 01 dc 	l.sh 4(r1),r14
+ 230088c:	06 70 01 dc 	l.sh 6(r1),r14
+ 2300890:	5b de f4 07 	l.jal 20381fc <fw_csi_resolution>
+ 2300894:	00 05 b6 bc 	l.sfleui r22,1280
+ 2300898:	04 00 61 94 	l.lhz r3,4(r1)
+ 230089c:	06 00 81 94 	l.lhz r4,6(r1)
+ 23008a0:	03 00 40 9f 	l.addi r26,r0,3
+ 23008a4:	08 00 00 10 	l.bf 23008c4 <camera_encode_frame+0x11c>
+ 23008a8:	00 0a b6 bc 	l.sfleui r22,2560
+ 23008ac:	04 00 40 9f 	l.addi r26,r0,4
+ 23008b0:	05 00 00 10 	l.bf 23008c4 <camera_encode_frame+0x11c>
+ 23008b4:	80 0c b6 bc 	l.sfleui r22,3200
+ 23008b8:	06 00 40 9f 	l.addi r26,r0,6
+ 23008bc:	02 00 00 10 	l.bf 23008c4 <camera_encode_frame+0x11c>
+ 23008c0:	00 00 4e ab 	l.ori r26,r14,0x0
+ 23008c4:	00 00 c0 9c 	l.addi r6,r0,0
+ 23008c8:	00 00 ba a8 	l.ori r5,r26,0x0
+ 23008cc:	00 00 f2 a8 	l.ori r7,r18,0x0
+ 23008d0:	00 00 06 a9 	l.ori r8,r6,0x0
+ 23008d4:	e6 00 f5 07 	l.jal 2040c6c <fw_encode_start>
+ 23008d8:	08 00 60 18 	l.movhi r3,0x8
+ 23008dc:	40 00 80 9c 	l.addi r4,r0,64
+ 23008e0:	39 f7 f4 07 	l.jal 203e5c4 <fw_alloc>
+ 23008e4:	00 00 60 9c 	l.addi r3,r0,0
+ 23008e8:	00 00 cb a9 	l.ori r14,r11,0x0
+ 23008ec:	0c 18 01 d4 	l.sw 12(r1),r3
+ 23008f0:	10 18 01 d4 	l.sw 16(r1),r3
+ 23008f4:	14 18 01 d4 	l.sw 20(r1),r3
+ 23008f8:	18 18 01 d4 	l.sw 24(r1),r3
+ 23008fc:	e6 83 f4 07 	l.jal 2021894 <fw_time>
+ 2300900:	00 00 2e bc 	l.sfnei r14,0
+ 2300904:	00 58 01 d4 	l.sw 0(r1),r11
+ 2300908:	08 00 00 10 	l.bf 2300928 <camera_encode_frame+0x180>
+ 230090c:	fe ff c0 9d 	l.addi r14,r0,-2
+ 2300910:	18 00 00 00 	l.j 2300970 <camera_encode_frame+0x1c8>
+ 2300914:	e0 83 f4 07 	l.jal 2021894 <fw_time>
+ 2300918:	00 00 81 84 	l.lwz r4,0(r1)
+ 230091c:	d0 07 64 9c 	l.addi r3,r4,2000
+ 2300920:	00 18 ab e4 	l.sfleu r11,r3
+ 2300924:	10 00 00 0c 	l.bnf 2300964 <camera_encode_frame+0x1bc>
+ 2300928:	00 00 60 9c 	l.addi r3,r0,0
+ 230092c:	0c 00 81 9c 	l.addi r4,r1,12
+ 2300930:	10 00 a1 9c 	l.addi r5,r1,16
+ 2300934:	14 00 c1 9c 	l.addi r6,r1,20
+ 2300938:	18 00 e1 9c 	l.addi r7,r1,24
+ 230093c:	64 03 f5 07 	l.jal 20416cc <fw_encoded_get>
+ 2300940:	00 00 2b bc 	l.sfnei r11,0
+ 2300944:	00 00 8b ab 	l.ori r28,r11,0x0
+ 2300948:	f3 ff ff 0f 	l.bnf 2300914 <camera_encode_frame+0x16c>
+ 230094c:	10 00 a1 84 	l.lwz r5,16(r1)
+ 2300950:	08 00 60 18 	l.movhi r3,0x8
+ 2300954:	00 18 45 e4 	l.sfgtu r5,r3
+ 2300958:	09 00 00 0c 	l.bnf 230097c <camera_encode_frame+0x1d4>
+ 230095c:	00 00 7c a8 	l.ori r3,r28,0x0
+ 2300960:	b7 03 f5 07 	l.jal 204183c <fw_encoded_release>
+ 2300964:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2300968:	4b f7 f4 07 	l.jal 203e694 <fw_free>
+ 230096c:	ff ff c0 9d 	l.addi r14,r0,-1
+ 2300970:	9f fe f4 07 	l.jal 20403ec <fw_encoder_uninit>
+ 2300974:	00 00 6e a9 	l.ori r11,r14,0x0
+ 2300978:	bf 00 00 00 	l.j 2300c74 <camera_encode_frame+0x4cc>
+ 230097c:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2300980:	00 00 9c a8 	l.ori r4,r28,0x0
+ 2300984:	ff 00 94 a6 	l.andi r20,r20,0xff
+ 2300988:	4a de f5 07 	l.jal 20782b0 <fw_copy>
+ 230098c:	00 00 7c a8 	l.ori r3,r28,0x0
+ 2300990:	ab 03 f5 07 	l.jal 204183c <fw_encoded_release>
+ 2300994:	00 00 14 bc 	l.sfeqi r20,0
+ 2300998:	05 00 00 10 	l.bf 23009ac <camera_encode_frame+0x204>
+ 230099c:	00 00 76 a8 	l.ori r3,r22,0x0
+ 23009a0:	00 00 98 a8 	l.ori r4,r24,0x0
+ 23009a4:	00 00 a0 9c 	l.addi r5,r0,0
+ 23009a8:	95 50 f5 07 	l.jal 2054bfc <fw_watermark_update>
+ 23009ac:	0d 02 60 18 	l.movhi r3,0x20d
+ 23009b0:	10 42 83 a8 	l.ori r4,r3,0x4210
+ 23009b4:	00 00 a4 84 	l.lwz r5,0(r4)
+ 23009b8:	04 42 83 a8 	l.ori r4,r3,0x4204
+ 23009bc:	00 00 c4 94 	l.lhz r6,0(r4)
+ 23009c0:	06 42 83 a8 	l.ori r4,r3,0x4206
+ 23009c4:	14 42 63 a8 	l.ori r3,r3,0x4214
+ 23009c8:	00 00 84 94 	l.lhz r4,0(r4)
+ 23009cc:	06 33 84 e0 	l.mul r4,r4,r6
+ 23009d0:	00 28 84 e0 	l.add r4,r4,r5
+ 23009d4:	00 20 03 d4 	l.sw 0(r3),r4
+ 23009d8:	00 00 6e a8 	l.ori r3,r14,0x0
+ 23009dc:	10 00 81 84 	l.lwz r4,16(r1)
+ 23009e0:	9e a9 f4 07 	l.jal 202b058 <fw_cache_writeback>
+ 23009e4:	01 00 60 9c 	l.addi r3,r0,1
+ 23009e8:	3f d1 f4 07 	l.jal 2034ee4 <fw_csi_enable>
+ 23009ec:	07 00 60 9c 	l.addi r3,r0,7
+ 23009f0:	d5 0f f4 07 	l.jal 2004944 <fw_ui_state>
+ 23009f4:	14 00 60 9c 	l.addi r3,r0,20
+ 23009f8:	af 83 f4 07 	l.jal 20218b4 <fw_delay>
+ 23009fc:	a6 83 f4 07 	l.jal 2021894 <fw_time>
+ 2300a00:	00 00 60 9c 	l.addi r3,r0,0
+ 2300a04:	1c 00 a1 9c 	l.addi r5,r1,28
+ 2300a08:	00 18 85 e0 	l.add r4,r5,r3
+ 2300a0c:	00 00 a0 9c 	l.addi r5,r0,0
+ 2300a10:	01 00 63 9c 	l.addi r3,r3,1
+ 2300a14:	00 28 04 d8 	l.sb 0(r4),r5
+ 2300a18:	18 00 23 bc 	l.sfnei r3,24
+ 2300a1c:	fa ff ff 13 	l.bf 2300a04 <camera_encode_frame+0x25c>
+ 2300a20:	01 00 60 9c 	l.addi r3,r0,1
+ 2300a24:	1d 18 01 d8 	l.sb 29(r1),r3
+ 2300a28:	0d 02 60 18 	l.movhi r3,0x20d
+ 2300a2c:	10 42 83 a8 	l.ori r4,r3,0x4210
+ 2300a30:	00 00 84 84 	l.lwz r4,0(r4)
+ 2300a34:	20 20 01 d4 	l.sw 32(r1),r4
+ 2300a38:	14 42 83 a8 	l.ori r4,r3,0x4214
+ 2300a3c:	00 00 84 84 	l.lwz r4,0(r4)
+ 2300a40:	2c 70 01 d4 	l.sw 44(r1),r14
+ 2300a44:	24 20 01 d4 	l.sw 36(r1),r4
+ 2300a48:	02 00 80 9c 	l.addi r4,r0,2
+ 2300a4c:	28 20 01 dc 	l.sh 40(r1),r4
+ 2300a50:	04 42 83 a8 	l.ori r4,r3,0x4204
+ 2300a54:	06 42 63 a8 	l.ori r3,r3,0x4206
+ 2300a58:	00 00 84 94 	l.lhz r4,0(r4)
+ 2300a5c:	30 20 01 dc 	l.sh 48(r1),r4
+ 2300a60:	00 00 63 94 	l.lhz r3,0(r3)
+ 2300a64:	32 18 01 dc 	l.sh 50(r1),r3
+ 2300a68:	1c 00 61 9c 	l.addi r3,r1,28
+ 2300a6c:	3f 56 f5 07 	l.jal 2056368 <fw_jpeg_decode>
+ 2300a70:	00 00 8b bd 	l.sfltsi r11,0
+ 2300a74:	00 00 0b ab 	l.ori r24,r11,0x0
+ 2300a78:	08 00 00 10 	l.bf 2300a98 <camera_encode_frame+0x2f0>
+ 2300a7c:	00 00 a0 9c 	l.addi r5,r0,0
+ 2300a80:	08 28 01 dc 	l.sh 8(r1),r5
+ 2300a84:	0a 28 01 dc 	l.sh 10(r1),r5
+ 2300a88:	83 83 f4 07 	l.jal 2021894 <fw_time>
+ 2300a8c:	08 00 61 9c 	l.addi r3,r1,8
+ 2300a90:	0a 00 81 9c 	l.addi r4,r1,10
+ 2300a94:	62 57 f5 07 	l.jal 205681c <fw_decode_resolution>
+ 2300a98:	01 00 60 9c 	l.addi r3,r0,1
+ 2300a9c:	0d 02 c0 1a 	l.movhi r22,0x20d
+ 2300aa0:	11 d1 f4 07 	l.jal 2034ee4 <fw_csi_enable>
+ 2300aa4:	73 41 76 a8 	l.ori r3,r22,0x4173
+ 2300aa8:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2300aac:	a6 0f f4 07 	l.jal 2004944 <fw_ui_state>
+ 2300ab0:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2300ab4:	ff ff c0 9d 	l.addi r14,r0,-1
+ 2300ab8:	f7 f6 f4 07 	l.jal 203e694 <fw_free>
+ 2300abc:	00 00 98 bd 	l.sfltsi r24,0
+ 2300ac0:	ac ff ff 13 	l.bf 2300970 <camera_encode_frame+0x1c8>
+ 2300ac4:	fa 41 76 a8 	l.ori r3,r22,0x41fa
+ 2300ac8:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2300acc:	01 00 23 bc 	l.sfnei r3,1
+ 2300ad0:	04 00 00 10 	l.bf 2300ae0 <camera_encode_frame+0x338>
+ 2300ad4:	10 42 d6 aa 	l.ori r22,r22,0x4210
+ 2300ad8:	00 00 76 84 	l.lwz r3,0(r22)
+ 2300adc:	9d 15 f5 07 	l.jal 2046150 <fw_image_transform>
+ 2300ae0:	0d 02 c0 18 	l.movhi r6,0x20d
+ 2300ae4:	c5 41 66 a8 	l.ori r3,r6,0x41c5
+ 2300ae8:	00 00 83 8c 	l.lbz r4,0(r3)
+ 2300aec:	02 00 24 bc 	l.sfnei r4,2
+ 2300af0:	0b 00 00 10 	l.bf 2300b1c <camera_encode_frame+0x374>
+ 2300af4:	10 42 66 a8 	l.ori r3,r6,0x4210
+ 2300af8:	14 42 86 a8 	l.ori r4,r6,0x4214
+ 2300afc:	04 42 a6 a8 	l.ori r5,r6,0x4204
+ 2300b00:	06 42 c6 a8 	l.ori r6,r6,0x4206
+ 2300b04:	00 00 63 84 	l.lwz r3,0(r3)
+ 2300b08:	00 00 84 84 	l.lwz r4,0(r4)
+ 2300b0c:	00 00 a5 94 	l.lhz r5,0(r5)
+ 2300b10:	00 00 c6 94 	l.lhz r6,0(r6)
+ 2300b14:	0b 87 f4 07 	l.jal 2022740 <fw_effect>
+ 2300b18:	18 00 00 00 	l.j 2300b78 <camera_encode_frame+0x3d0>
+ 2300b1c:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2300b20:	00 00 23 bc 	l.sfnei r3,0
+ 2300b24:	15 00 00 10 	l.bf 2300b78 <camera_encode_frame+0x3d0>
+ 2300b28:	c7 41 e6 a8 	l.ori r7,r6,0x41c7
+ 2300b2c:	00 00 67 8c 	l.lbz r3,0(r7)
+ 2300b30:	06 00 a3 bc 	l.sfleui r3,6
+ 2300b34:	11 00 00 10 	l.bf 2300b78 <camera_encode_frame+0x3d0>
+ 2300b38:	00 00 67 8c 	l.lbz r3,0(r7)
+ 2300b3c:	08 00 43 bc 	l.sfgtui r3,8
+ 2300b40:	0e 00 00 10 	l.bf 2300b78 <camera_encode_frame+0x3d0>
+ 2300b44:	10 42 66 a8 	l.ori r3,r6,0x4210
+ 2300b48:	14 42 86 a8 	l.ori r4,r6,0x4214
+ 2300b4c:	04 42 a6 a8 	l.ori r5,r6,0x4204
+ 2300b50:	06 42 c6 a8 	l.ori r6,r6,0x4206
+ 2300b54:	00 00 63 84 	l.lwz r3,0(r3)
+ 2300b58:	00 00 84 84 	l.lwz r4,0(r4)
+ 2300b5c:	00 00 a5 94 	l.lhz r5,0(r5)
+ 2300b60:	00 00 c6 94 	l.lhz r6,0(r6)
+ 2300b64:	00 00 e7 8c 	l.lbz r7,0(r7)
+ 2300b68:	07 00 e7 ac 	l.xori r7,r7,7
+ 2300b6c:	02 38 e0 e0 	l.sub r7,r0,r7
+ 2300b70:	5f 00 e7 b8 	l.srli r7,r7,0x1f
+ 2300b74:	30 86 f4 07 	l.jal 2022434 <fw_edge>
+ 2300b78:	00 00 14 bc 	l.sfeqi r20,0
+ 2300b7c:	09 00 00 10 	l.bf 2300ba0 <camera_encode_frame+0x3f8>
+ 2300b80:	0d 02 60 18 	l.movhi r3,0x20d
+ 2300b84:	00 00 c0 9c 	l.addi r6,r0,0
+ 2300b88:	10 42 63 a8 	l.ori r3,r3,0x4210
+ 2300b8c:	14 00 80 9c 	l.addi r4,r0,20
+ 2300b90:	00 00 63 84 	l.lwz r3,0(r3)
+ 2300b94:	80 02 a0 9c 	l.addi r5,r0,640
+ 2300b98:	00 00 e6 a8 	l.ori r7,r6,0x0
+ 2300b9c:	d5 dc f5 07 	l.jal 2077ef0 <fw_watermark_stamp>
+ 2300ba0:	0d 02 a0 18 	l.movhi r5,0x20d
+ 2300ba4:	10 42 65 a8 	l.ori r3,r5,0x4210
+ 2300ba8:	04 42 85 a8 	l.ori r4,r5,0x4204
+ 2300bac:	06 42 a5 a8 	l.ori r5,r5,0x4206
+ 2300bb0:	00 00 63 84 	l.lwz r3,0(r3)
+ 2300bb4:	00 00 84 94 	l.lhz r4,0(r4)
+ 2300bb8:	00 00 a5 94 	l.lhz r5,0(r5)
+ 2300bbc:	06 2b 84 e0 	l.mul r4,r4,r5
+ 2300bc0:	00 20 a4 e0 	l.add r5,r4,r4
+ 2300bc4:	00 20 85 e0 	l.add r4,r5,r4
+ 2300bc8:	41 00 84 b8 	l.srli r4,r4,0x1
+ 2300bcc:	23 a9 f4 07 	l.jal 202b058 <fw_cache_writeback>
+ 2300bd0:	04 00 61 94 	l.lhz r3,4(r1)
+ 2300bd4:	06 00 81 94 	l.lhz r4,6(r1)
+ 2300bd8:	00 00 ba a8 	l.ori r5,r26,0x0
+ 2300bdc:	00 00 d4 a8 	l.ori r6,r20,0x0
+ 2300be0:	00 00 f2 a8 	l.ori r7,r18,0x0
+ 2300be4:	01 00 00 9d 	l.addi r8,r0,1
+ 2300be8:	21 00 f5 07 	l.jal 2040c6c <fw_encode_start>
+ 2300bec:	2a 83 f4 07 	l.jal 2021894 <fw_time>
+ 2300bf0:	d0 07 cb 9d 	l.addi r14,r11,2000
+ 2300bf4:	00 00 60 9c 	l.addi r3,r0,0
+ 2300bf8:	0c 00 81 9c 	l.addi r4,r1,12
+ 2300bfc:	10 00 a1 9c 	l.addi r5,r1,16
+ 2300c00:	14 00 c1 9c 	l.addi r6,r1,20
+ 2300c04:	18 00 e1 9c 	l.addi r7,r1,24
+ 2300c08:	b1 02 f5 07 	l.jal 20416cc <fw_encoded_get>
+ 2300c0c:	00 00 2b bc 	l.sfnei r11,0
+ 2300c10:	00 00 6b a8 	l.ori r3,r11,0x0
+ 2300c14:	05 00 00 10 	l.bf 2300c28 <camera_encode_frame+0x480>
+ 2300c18:	1f 83 f4 07 	l.jal 2021894 <fw_time>
+ 2300c1c:	00 70 ab e4 	l.sfleu r11,r14
+ 2300c20:	f5 ff ff 13 	l.bf 2300bf4 <camera_encode_frame+0x44c>
+ 2300c24:	52 ff ff 03 	l.j 230096c <camera_encode_frame+0x1c4>
+ 2300c28:	05 03 f5 07 	l.jal 204183c <fw_encoded_release>
+ 2300c2c:	10 00 61 84 	l.lwz r3,16(r1)
+ 2300c30:	20 00 80 9c 	l.addi r4,r0,32
+ 2300c34:	64 f6 f4 07 	l.jal 203e5c4 <fw_alloc>
+ 2300c38:	00 00 0b bc 	l.sfeqi r11,0
+ 2300c3c:	00 00 cb a9 	l.ori r14,r11,0x0
+ 2300c40:	33 ff ff 13 	l.bf 230090c <camera_encode_frame+0x164>
+ 2300c44:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2300c48:	0c 00 81 84 	l.lwz r4,12(r1)
+ 2300c4c:	10 00 a1 84 	l.lwz r5,16(r1)
+ 2300c50:	98 dd f5 07 	l.jal 20782b0 <fw_copy>
+ 2300c54:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2300c58:	10 00 81 84 	l.lwz r4,16(r1)
+ 2300c5c:	1e a9 f4 07 	l.jal 202b0d4 <fw_cache_flush>
+ 2300c60:	10 00 61 84 	l.lwz r3,16(r1)
+ 2300c64:	00 70 1e d4 	l.sw 0(r30),r14
+ 2300c68:	00 18 02 d4 	l.sw 0(r2),r3
+ 2300c6c:	00 00 c0 9d 	l.addi r14,r0,0
+ 2300c70:	40 ff ff 03 	l.j 2300970 <camera_encode_frame+0x1c8>
+ 2300c74:	60 00 21 9c 	l.addi r1,r1,96
+ 2300c78:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300c7c:	d4 ff 21 84 	l.lwz r1,-44(r1)
+ 2300c80:	d8 ff 41 84 	l.lwz r2,-40(r1)
+ 2300c84:	dc ff c1 85 	l.lwz r14,-36(r1)
+ 2300c88:	e0 ff 41 86 	l.lwz r18,-32(r1)
+ 2300c8c:	e4 ff 81 86 	l.lwz r20,-28(r1)
+ 2300c90:	e8 ff c1 86 	l.lwz r22,-24(r1)
+ 2300c94:	ec ff 01 87 	l.lwz r24,-20(r1)
+ 2300c98:	f0 ff 41 87 	l.lwz r26,-16(r1)
+ 2300c9c:	f4 ff 81 87 	l.lwz r28,-12(r1)
+ 2300ca0:	f8 ff c1 87 	l.lwz r30,-8(r1)
+ 2300ca4:	00 48 00 44 	l.jr r9
+
+02300ca8 <camera_refresh_battery>:
+ 2300ca8:	0d 02 80 18 	l.movhi r4,0x20d
+ 2300cac:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2300cb0:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300cb4:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2300cb8:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2300cbc:	6e 41 64 a8 	l.ori r3,r4,0x416e
+ 2300cc0:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2300cc4:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2300cc8:	00 00 03 bc 	l.sfeqi r3,0
+ 2300ccc:	0f 00 00 10 	l.bf 2300d08 <camera_refresh_battery+0x60>
+ 2300cd0:	d6 41 84 a8 	l.ori r4,r4,0x41d6
+ 2300cd4:	00 00 64 8c 	l.lbz r3,0(r4)
+ 2300cd8:	01 00 63 9c 	l.addi r3,r3,1
+ 2300cdc:	ff 00 63 a4 	l.andi r3,r3,0xff
+ 2300ce0:	00 18 04 d8 	l.sb 0(r4),r3
+ 2300ce4:	00 00 64 8c 	l.lbz r3,0(r4)
+ 2300ce8:	03 00 a3 bc 	l.sfleui r3,3
+ 2300cec:	03 00 00 10 	l.bf 2300cf8 <camera_refresh_battery+0x50>
+ 2300cf0:	00 00 60 9c 	l.addi r3,r0,0
+ 2300cf4:	00 18 04 d8 	l.sb 0(r4),r3
+ 2300cf8:	00 80 60 18 	l.movhi r3,0x8000
+ 2300cfc:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2300d00:	22 00 63 a8 	l.ori r3,r3,0x22
+ 2300d04:	08 00 00 00 	l.j 2300d24 <camera_refresh_battery+0x7c>
+ 2300d08:	6c 41 84 a8 	l.ori r4,r4,0x416c
+ 2300d0c:	00 00 64 8c 	l.lbz r3,0(r4)
+ 2300d10:	03 00 43 bc 	l.sfgtui r3,3
+ 2300d14:	06 00 00 10 	l.bf 2300d2c <camera_refresh_battery+0x84>
+ 2300d18:	00 80 60 18 	l.movhi r3,0x8000
+ 2300d1c:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2300d20:	21 00 63 a8 	l.ori r3,r3,0x21
+ 2300d24:	00 18 a5 e0 	l.add r5,r5,r3
+ 2300d28:	03 00 00 00 	l.j 2300d34 <camera_refresh_battery+0x8c>
+ 2300d2c:	00 80 a0 18 	l.movhi r5,0x8000
+ 2300d30:	25 00 a5 a8 	l.ori r5,r5,0x25
+ 2300d34:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300d38:	0a 00 80 9c 	l.addi r4,r0,10
+ 2300d3c:	d2 fc ff 07 	l.jal 2300084 <set_widget_resource>
+ 2300d40:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300d44:	0a 00 80 9c 	l.addi r4,r0,10
+ 2300d48:	01 00 a0 9c 	l.addi r5,r0,1
+ 2300d4c:	dc fc ff 07 	l.jal 23000bc <set_widget_visible>
+ 2300d50:	0c 00 21 9c 	l.addi r1,r1,12
+ 2300d54:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300d58:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2300d5c:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2300d60:	00 48 00 44 	l.jr r9
+
+02300d64 <camera_msg_battery_conditional>:
+ 2300d64:	0d 02 80 18 	l.movhi r4,0x20d
+ 2300d68:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300d6c:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2300d70:	6e 41 84 a8 	l.ori r4,r4,0x416e
+ 2300d74:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2300d78:	00 00 84 8c 	l.lbz r4,0(r4)
+ 2300d7c:	00 00 24 bc 	l.sfnei r4,0
+ 2300d80:	02 00 00 10 	l.bf 2300d88 <camera_msg_battery_conditional+0x24>
+ 2300d84:	c9 ff ff 07 	l.jal 2300ca8 <camera_refresh_battery>
+ 2300d88:	08 00 21 9c 	l.addi r1,r1,8
+ 2300d8c:	00 00 60 9d 	l.addi r11,r0,0
+ 2300d90:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300d94:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2300d98:	00 48 00 44 	l.jr r9
+
+02300d9c <camera_msg_battery>:
+ 2300d9c:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300da0:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2300da4:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2300da8:	c0 ff ff 07 	l.jal 2300ca8 <camera_refresh_battery>
+ 2300dac:	08 00 21 9c 	l.addi r1,r1,8
+ 2300db0:	00 00 60 9d 	l.addi r11,r0,0
+ 2300db4:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300db8:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2300dbc:	00 48 00 44 	l.jr r9
+
+02300dc0 <camera_msg_clock>:
+ 2300dc0:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300dc4:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2300dc8:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2300dcc:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2300dd0:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2300dd4:	43 eb f4 07 	l.jal 203bae0 <fw_rtc_get>
+ 2300dd8:	00 00 6b a8 	l.ori r3,r11,0x0
+ 2300ddc:	5d eb f4 07 	l.jal 203bb50 <fw_rtc_string>
+ 2300de0:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300de4:	0c 00 80 9c 	l.addi r4,r0,12
+ 2300de8:	00 00 ab a8 	l.ori r5,r11,0x0
+ 2300dec:	a6 fc ff 07 	l.jal 2300084 <set_widget_resource>
+ 2300df0:	0d 02 80 18 	l.movhi r4,0x20d
+ 2300df4:	6e 41 84 a8 	l.ori r4,r4,0x416e
+ 2300df8:	00 00 64 8c 	l.lbz r3,0(r4)
+ 2300dfc:	01 00 23 bc 	l.sfnei r3,1
+ 2300e00:	03 00 00 10 	l.bf 2300e0c <camera_msg_clock+0x4c>
+ 2300e04:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300e08:	a8 ff ff 07 	l.jal 2300ca8 <camera_refresh_battery>
+ 2300e0c:	0c 00 21 9c 	l.addi r1,r1,12
+ 2300e10:	00 00 60 9d 	l.addi r11,r0,0
+ 2300e14:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300e18:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2300e1c:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2300e20:	00 48 00 44 	l.jr r9
+
+02300e24 <camera_refresh_scene>:
+ 2300e24:	0d 02 80 18 	l.movhi r4,0x20d
+ 2300e28:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2300e2c:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300e30:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2300e34:	c7 41 84 a8 	l.ori r4,r4,0x41c7
+ 2300e38:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2300e3c:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2300e40:	08 00 45 bc 	l.sfgtui r5,8
+ 2300e44:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2300e48:	14 00 00 10 	l.bf 2300e98 <camera_refresh_scene+0x74>
+ 2300e4c:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2300e50:	00 00 05 bc 	l.sfeqi r5,0
+ 2300e54:	09 00 00 10 	l.bf 2300e78 <camera_refresh_scene+0x54>
+ 2300e58:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2300e5c:	30 02 80 18 	l.movhi r4,0x230
+ 2300e60:	02 00 a5 b8 	l.slli r5,r5,0x2
+ 2300e64:	9c 25 84 a8 	l.ori r4,r4,0x259c
+ 2300e68:	00 20 a5 e0 	l.add r5,r5,r4
+ 2300e6c:	0f 00 80 9c 	l.addi r4,r0,15
+ 2300e70:	00 00 a5 84 	l.lwz r5,0(r5)
+ 2300e74:	84 fc ff 07 	l.jal 2300084 <set_widget_resource>
+ 2300e78:	0d 02 60 18 	l.movhi r3,0x20d
+ 2300e7c:	0f 00 80 9c 	l.addi r4,r0,15
+ 2300e80:	c7 41 63 a8 	l.ori r3,r3,0x41c7
+ 2300e84:	00 00 a3 8c 	l.lbz r5,0(r3)
+ 2300e88:	02 28 a0 e0 	l.sub r5,r0,r5
+ 2300e8c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300e90:	5f 00 a5 b8 	l.srli r5,r5,0x1f
+ 2300e94:	8a fc ff 07 	l.jal 23000bc <set_widget_visible>
+ 2300e98:	0c 00 21 9c 	l.addi r1,r1,12
+ 2300e9c:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300ea0:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2300ea4:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2300ea8:	00 48 00 44 	l.jr r9
+
+02300eac <camera_refresh_light>:
+ 2300eac:	0c 02 80 18 	l.movhi r4,0x20c
+ 2300eb0:	f4 17 e1 d7 	l.sw -12(r1),r2
+ 2300eb4:	98 cd a4 a8 	l.ori r5,r4,0xcd98
+ 2300eb8:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300ebc:	00 00 c5 84 	l.lwz r6,0(r5)
+ 2300ec0:	f0 0f e1 d7 	l.sw -16(r1),r1
+ 2300ec4:	f8 77 e1 d7 	l.sw -8(r1),r14
+ 2300ec8:	00 00 06 bc 	l.sfeqi r6,0
+ 2300ecc:	f0 ff 21 9c 	l.addi r1,r1,-16
+ 2300ed0:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2300ed4:	04 00 00 10 	l.bf 2300ee4 <camera_refresh_light+0x38>
+ 2300ed8:	00 00 c5 84 	l.lwz r6,0(r5)
+ 2300edc:	02 00 26 bc 	l.sfnei r6,2
+ 2300ee0:	14 00 00 10 	l.bf 2300f30 <camera_refresh_light+0x84>
+ 2300ee4:	98 cd 84 a8 	l.ori r4,r4,0xcd98
+ 2300ee8:	00 80 a0 18 	l.movhi r5,0x8000
+ 2300eec:	00 00 64 84 	l.lwz r3,0(r4)
+ 2300ef0:	00 00 03 bc 	l.sfeqi r3,0
+ 2300ef4:	03 00 00 10 	l.bf 2300f00 <camera_refresh_light+0x54>
+ 2300ef8:	2b 00 a5 a8 	l.ori r5,r5,0x2b
+ 2300efc:	02 00 00 00 	l.j 2300f04 <camera_refresh_light+0x58>
+ 2300f00:	2a 00 a5 a8 	l.ori r5,r5,0x2a
+ 2300f04:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300f08:	19 00 80 9c 	l.addi r4,r0,25
+ 2300f0c:	5e fc ff 07 	l.jal 2300084 <set_widget_resource>
+ 2300f10:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300f14:	1a 00 80 9c 	l.addi r4,r0,26
+ 2300f18:	00 00 a0 9c 	l.addi r5,r0,0
+ 2300f1c:	68 fc ff 07 	l.jal 23000bc <set_widget_visible>
+ 2300f20:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300f24:	19 00 80 9c 	l.addi r4,r0,25
+ 2300f28:	01 00 a0 9c 	l.addi r5,r0,1
+ 2300f2c:	0f 00 00 00 	l.j 2300f68 <camera_refresh_light+0xbc>
+ 2300f30:	00 00 c5 85 	l.lwz r14,0(r5)
+ 2300f34:	01 00 2e bc 	l.sfnei r14,1
+ 2300f38:	0d 00 00 10 	l.bf 2300f6c <camera_refresh_light+0xc0>
+ 2300f3c:	00 80 a0 18 	l.movhi r5,0x8000
+ 2300f40:	1a 00 80 9c 	l.addi r4,r0,26
+ 2300f44:	26 00 a5 a8 	l.ori r5,r5,0x26
+ 2300f48:	4f fc ff 07 	l.jal 2300084 <set_widget_resource>
+ 2300f4c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300f50:	19 00 80 9c 	l.addi r4,r0,25
+ 2300f54:	00 00 a0 9c 	l.addi r5,r0,0
+ 2300f58:	59 fc ff 07 	l.jal 23000bc <set_widget_visible>
+ 2300f5c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2300f60:	1a 00 80 9c 	l.addi r4,r0,26
+ 2300f64:	00 00 ae a8 	l.ori r5,r14,0x0
+ 2300f68:	55 fc ff 07 	l.jal 23000bc <set_widget_visible>
+ 2300f6c:	10 00 21 9c 	l.addi r1,r1,16
+ 2300f70:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2300f74:	f0 ff 21 84 	l.lwz r1,-16(r1)
+ 2300f78:	f4 ff 41 84 	l.lwz r2,-12(r1)
+ 2300f7c:	f8 ff c1 85 	l.lwz r14,-8(r1)
+ 2300f80:	00 48 00 44 	l.jr r9
+
+02300f84 <camera_right>:
+ 2300f84:	01 00 84 ac 	l.xori r4,r4,1
+ 2300f88:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2300f8c:	02 20 40 e0 	l.sub r2,r0,r4
+ 2300f90:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2300f94:	04 20 82 e0 	l.or r4,r2,r4
+ 2300f98:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2300f9c:	00 00 84 bd 	l.sfltsi r4,0
+ 2300fa0:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2300fa4:	2f 00 00 10 	l.bf 2301060 <camera_right+0xdc>
+ 2300fa8:	02 28 80 e0 	l.sub r4,r0,r5
+ 2300fac:	04 20 85 e0 	l.or r4,r5,r4
+ 2300fb0:	00 00 64 bd 	l.sfgesi r4,0
+ 2300fb4:	2b 00 00 10 	l.bf 2301060 <camera_right+0xdc>
+ 2300fb8:	00 00 a5 84 	l.lwz r5,0(r5)
+ 2300fbc:	00 00 25 bc 	l.sfnei r5,0
+ 2300fc0:	28 00 00 10 	l.bf 2301060 <camera_right+0xdc>
+ 2300fc4:	0c 02 80 18 	l.movhi r4,0x20c
+ 2300fc8:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2300fcc:	98 cd 84 a8 	l.ori r4,r4,0xcd98
+ 2300fd0:	00 00 64 84 	l.lwz r3,0(r4)
+ 2300fd4:	00 00 23 bc 	l.sfnei r3,0
+ 2300fd8:	03 00 00 10 	l.bf 2300fe4 <camera_right+0x60>
+ 2300fdc:	01 00 60 9c 	l.addi r3,r0,1
+ 2300fe0:	05 00 00 00 	l.j 2300ff4 <camera_right+0x70>
+ 2300fe4:	00 00 64 84 	l.lwz r3,0(r4)
+ 2300fe8:	01 00 23 bc 	l.sfnei r3,1
+ 2300fec:	04 00 00 10 	l.bf 2300ffc <camera_right+0x78>
+ 2300ff0:	02 00 60 9c 	l.addi r3,r0,2
+ 2300ff4:	00 18 04 d4 	l.sw 0(r4),r3
+ 2300ff8:	0a 00 00 00 	l.j 2301020 <camera_right+0x9c>
+ 2300ffc:	0d 02 60 18 	l.movhi r3,0x20d
+ 2301000:	00 28 04 d4 	l.sw 0(r4),r5
+ 2301004:	7c 41 63 a8 	l.ori r3,r3,0x417c
+ 2301008:	00 20 80 18 	l.movhi r4,0x2000
+ 230100c:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2301010:	18 00 63 b8 	l.slli r3,r3,0x18
+ 2301014:	11 00 84 a8 	l.ori r4,r4,0x11
+ 2301018:	98 00 63 b8 	l.srai r3,r3,0x18
+ 230101c:	8c 06 f4 07 	l.jal 2002a4c <fw_board_ioctl>
+ 2301020:	0c 02 60 18 	l.movhi r3,0x20c
+ 2301024:	98 cd 63 a8 	l.ori r3,r3,0xcd98
+ 2301028:	00 00 63 84 	l.lwz r3,0(r3)
+ 230102c:	02 00 23 bc 	l.sfnei r3,2
+ 2301030:	0a 00 00 10 	l.bf 2301058 <camera_right+0xd4>
+ 2301034:	0d 02 60 18 	l.movhi r3,0x20d
+ 2301038:	00 20 80 18 	l.movhi r4,0x2000
+ 230103c:	7c 41 63 a8 	l.ori r3,r3,0x417c
+ 2301040:	11 00 84 a8 	l.ori r4,r4,0x11
+ 2301044:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2301048:	18 00 63 b8 	l.slli r3,r3,0x18
+ 230104c:	01 00 a0 9c 	l.addi r5,r0,1
+ 2301050:	98 00 63 b8 	l.srai r3,r3,0x18
+ 2301054:	7e 06 f4 07 	l.jal 2002a4c <fw_board_ioctl>
+ 2301058:	00 00 62 a8 	l.ori r3,r2,0x0
+ 230105c:	94 ff ff 07 	l.jal 2300eac <camera_refresh_light>
+ 2301060:	0c 00 21 9c 	l.addi r1,r1,12
+ 2301064:	00 00 60 9d 	l.addi r11,r0,0
+ 2301068:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 230106c:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2301070:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2301074:	00 48 00 44 	l.jr r9
+
+02301078 <camera_refresh_zoom>:
+ 2301078:	0d 02 80 18 	l.movhi r4,0x20d
+ 230107c:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301080:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2301084:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2301088:	74 41 84 a8 	l.ori r4,r4,0x4174
+ 230108c:	0a 00 a0 9c 	l.addi r5,r0,10
+ 2301090:	00 00 84 8c 	l.lbz r4,0(r4)
+ 2301094:	01 00 84 9c 	l.addi r4,r4,1
+ 2301098:	f0 ff 21 9c 	l.addi r1,r1,-16
+ 230109c:	ff 00 84 a4 	l.andi r4,r4,0xff
+ 23010a0:	00 00 43 a8 	l.ori r2,r3,0x0
+ 23010a4:	0a 2b c4 e0 	l.divu r6,r4,r5
+ 23010a8:	0a 2b a6 e0 	l.divu r5,r6,r5
+ 23010ac:	00 28 a5 e0 	l.add r5,r5,r5
+ 23010b0:	02 00 e5 b8 	l.slli r7,r5,0x2
+ 23010b4:	00 38 a5 e0 	l.add r5,r5,r7
+ 23010b8:	02 28 a6 e0 	l.sub r5,r6,r5
+ 23010bc:	00 30 c6 e0 	l.add r6,r6,r6
+ 23010c0:	30 00 a5 9c 	l.addi r5,r5,48
+ 23010c4:	00 28 01 d8 	l.sb 0(r1),r5
+ 23010c8:	02 00 a6 b8 	l.slli r5,r6,0x2
+ 23010cc:	00 28 c6 e0 	l.add r6,r6,r5
+ 23010d0:	00 00 a1 a8 	l.ori r5,r1,0x0
+ 23010d4:	02 30 84 e0 	l.sub r4,r4,r6
+ 23010d8:	30 00 84 9c 	l.addi r4,r4,48
+ 23010dc:	01 20 01 d8 	l.sb 1(r1),r4
+ 23010e0:	58 00 80 9c 	l.addi r4,r0,88
+ 23010e4:	02 20 01 d8 	l.sb 2(r1),r4
+ 23010e8:	00 00 80 9c 	l.addi r4,r0,0
+ 23010ec:	03 20 01 d8 	l.sb 3(r1),r4
+ 23010f0:	16 00 80 9c 	l.addi r4,r0,22
+ 23010f4:	e4 fb ff 07 	l.jal 2300084 <set_widget_resource>
+ 23010f8:	00 00 62 a8 	l.ori r3,r2,0x0
+ 23010fc:	16 00 80 9c 	l.addi r4,r0,22
+ 2301100:	01 00 a0 9c 	l.addi r5,r0,1
+ 2301104:	ee fb ff 07 	l.jal 23000bc <set_widget_visible>
+ 2301108:	01 00 60 9c 	l.addi r3,r0,1
+ 230110c:	ee 69 f5 07 	l.jal 205b8c4 <fw_present>
+ 2301110:	10 00 21 9c 	l.addi r1,r1,16
+ 2301114:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301118:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 230111c:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2301120:	00 48 00 44 	l.jr r9
+
+02301124 <refresh_after_preset_change>:
+ 2301124:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2301128:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 230112c:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2301130:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2301134:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301138:	0d fc ff 07 	l.jal 230016c <zoom_is_restricted>
+ 230113c:	00 00 0b bc 	l.sfeqi r11,0
+ 2301140:	10 00 00 10 	l.bf 2301180 <refresh_after_preset_change+0x5c>
+ 2301144:	0d 02 80 18 	l.movhi r4,0x20d
+ 2301148:	74 41 84 a8 	l.ori r4,r4,0x4174
+ 230114c:	00 00 64 8c 	l.lbz r3,0(r4)
+ 2301150:	00 00 03 bc 	l.sfeqi r3,0
+ 2301154:	0b 00 00 10 	l.bf 2301180 <refresh_after_preset_change+0x5c>
+ 2301158:	00 00 60 9c 	l.addi r3,r0,0
+ 230115c:	00 18 04 d8 	l.sb 0(r4),r3
+ 2301160:	00 00 60 9c 	l.addi r3,r0,0
+ 2301164:	00 00 83 a8 	l.ori r4,r3,0x0
+ 2301168:	24 0e f4 07 	l.jal 20049f8 <fw_crop_start>
+ 230116c:	a5 fb ff 07 	l.jal 2300000 <selected_template_resource>
+ 2301170:	00 00 6b a8 	l.ori r3,r11,0x0
+ 2301174:	0e 12 f5 07 	l.jal 20459ac <fw_template_resize>
+ 2301178:	00 00 62 a8 	l.ori r3,r2,0x0
+ 230117c:	bf ff ff 07 	l.jal 2301078 <camera_refresh_zoom>
+ 2301180:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301184:	28 ff ff 07 	l.jal 2300e24 <camera_refresh_scene>
+ 2301188:	0c 00 21 9c 	l.addi r1,r1,12
+ 230118c:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301190:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2301194:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2301198:	00 48 00 44 	l.jr r9
+
+0230119c <camera_refresh_remaining>:
+ 230119c:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 23011a0:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23011a4:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 23011a8:	00 00 43 a8 	l.ori r2,r3,0x0
+ 23011ac:	ec ff 21 9c 	l.addi r1,r1,-20
+ 23011b0:	18 00 60 9c 	l.addi r3,r0,24
+ 23011b4:	c0 14 f4 07 	l.jal 20064b4 <fw_setting_value>
+ 23011b8:	ff ff 8b a4 	l.andi r4,r11,0xffff
+ 23011bc:	50 00 6b b9 	l.srli r11,r11,0x10
+ 23011c0:	0e 00 60 18 	l.movhi r3,0xe
+ 23011c4:	78 00 a0 9c 	l.addi r5,r0,120
+ 23011c8:	06 5b 64 e1 	l.mul r11,r4,r11
+ 23011cc:	00 10 63 a8 	l.ori r3,r3,0x1000
+ 23011d0:	00 18 ab e4 	l.sfleu r11,r3
+ 23011d4:	11 00 00 10 	l.bf 2301218 <camera_refresh_remaining+0x7c>
+ 23011d8:	38 00 60 18 	l.movhi r3,0x38
+ 23011dc:	04 01 a0 9c 	l.addi r5,r0,260
+ 23011e0:	00 40 63 a8 	l.ori r3,r3,0x4000
+ 23011e4:	00 18 ab e4 	l.sfleu r11,r3
+ 23011e8:	0c 00 00 10 	l.bf 2301218 <camera_refresh_remaining+0x7c>
+ 23011ec:	57 00 60 18 	l.movhi r3,0x57
+ 23011f0:	54 01 a0 9c 	l.addi r5,r0,340
+ 23011f4:	00 e4 63 a8 	l.ori r3,r3,0xe400
+ 23011f8:	00 18 ab e4 	l.sfleu r11,r3
+ 23011fc:	07 00 00 10 	l.bf 2301218 <camera_refresh_remaining+0x7c>
+ 2301200:	7d 00 60 18 	l.movhi r3,0x7d
+ 2301204:	90 01 a0 9c 	l.addi r5,r0,400
+ 2301208:	80 3e 63 a8 	l.ori r3,r3,0x3e80
+ 230120c:	00 18 ab e4 	l.sfleu r11,r3
+ 2301210:	02 00 00 10 	l.bf 2301218 <camera_refresh_remaining+0x7c>
+ 2301214:	f4 01 a0 9c 	l.addi r5,r0,500
+ 2301218:	0d 02 60 18 	l.movhi r3,0x20d
+ 230121c:	70 41 83 a8 	l.ori r4,r3,0x4170
+ 2301220:	00 00 c4 8c 	l.lbz r6,0(r4)
+ 2301224:	04 00 26 bc 	l.sfnei r6,4
+ 2301228:	00 00 80 9c 	l.addi r4,r0,0
+ 230122c:	04 00 00 10 	l.bf 230123c <camera_refresh_remaining+0xa0>
+ 2301230:	b8 41 63 a8 	l.ori r3,r3,0x41b8
+ 2301234:	00 00 83 84 	l.lwz r4,0(r3)
+ 2301238:	0a 2b 84 e0 	l.divu r4,r4,r5
+ 230123c:	00 00 60 9c 	l.addi r3,r0,0
+ 2301240:	05 00 a0 9c 	l.addi r5,r0,5
+ 2301244:	06 18 01 d8 	l.sb 6(r1),r3
+ 2301248:	0a 00 60 9d 	l.addi r11,r0,10
+ 230124c:	00 00 61 9c 	l.addi r3,r1,0
+ 2301250:	00 28 03 e1 	l.add r8,r3,r5
+ 2301254:	0a 5b 64 e0 	l.divu r3,r4,r11
+ 2301258:	00 18 e3 e0 	l.add r7,r3,r3
+ 230125c:	ff ff a5 9c 	l.addi r5,r5,-1
+ 2301260:	02 00 c7 b8 	l.slli r6,r7,0x2
+ 2301264:	ff ff 25 bc 	l.sfnei r5,-1
+ 2301268:	00 30 c7 e0 	l.add r6,r7,r6
+ 230126c:	02 30 84 e0 	l.sub r4,r4,r6
+ 2301270:	30 00 84 9c 	l.addi r4,r4,48
+ 2301274:	00 20 08 d8 	l.sb 0(r8),r4
+ 2301278:	00 00 83 a8 	l.ori r4,r3,0x0
+ 230127c:	f4 ff ff 13 	l.bf 230124c <camera_refresh_remaining+0xb0>
+ 2301280:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301284:	00 00 a1 a8 	l.ori r5,r1,0x0
+ 2301288:	18 00 80 9c 	l.addi r4,r0,24
+ 230128c:	7e fb ff 07 	l.jal 2300084 <set_widget_resource>
+ 2301290:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301294:	18 00 80 9c 	l.addi r4,r0,24
+ 2301298:	01 00 a0 9c 	l.addi r5,r0,1
+ 230129c:	88 fb ff 07 	l.jal 23000bc <set_widget_visible>
+ 23012a0:	01 00 60 9c 	l.addi r3,r0,1
+ 23012a4:	88 69 f5 07 	l.jal 205b8c4 <fw_present>
+ 23012a8:	14 00 21 9c 	l.addi r1,r1,20
+ 23012ac:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23012b0:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 23012b4:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 23012b8:	00 48 00 44 	l.jr r9
+
+023012bc <camera_countdown>:
+ 23012bc:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 23012c0:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23012c4:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 23012c8:	00 00 24 bc 	l.sfnei r4,0
+ 23012cc:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 23012d0:	00 00 43 a8 	l.ori r2,r3,0x0
+ 23012d4:	03 00 00 10 	l.bf 23012e0 <camera_countdown+0x24>
+ 23012d8:	f5 fb ff 07 	l.jal 23002ac <camera_countdown.part.7>
+ 23012dc:	1b 00 00 00 	l.j 2301348 <camera_countdown+0x8c>
+ 23012e0:	ff ff a5 9c 	l.addi r5,r5,-1
+ 23012e4:	09 00 a5 bc 	l.sfleui r5,9
+ 23012e8:	07 00 00 10 	l.bf 2301304 <camera_countdown+0x48>
+ 23012ec:	10 00 80 9c 	l.addi r4,r0,16
+ 23012f0:	00 00 a0 9c 	l.addi r5,r0,0
+ 23012f4:	72 fb ff 07 	l.jal 23000bc <set_widget_visible>
+ 23012f8:	01 00 60 9c 	l.addi r3,r0,1
+ 23012fc:	72 69 f5 07 	l.jal 205b8c4 <fw_present>
+ 2301300:	12 00 00 00 	l.j 2301348 <camera_countdown+0x8c>
+ 2301304:	30 02 80 18 	l.movhi r4,0x230
+ 2301308:	02 00 a5 b8 	l.slli r5,r5,0x2
+ 230130c:	74 25 84 a8 	l.ori r4,r4,0x2574
+ 2301310:	00 20 a5 e0 	l.add r5,r5,r4
+ 2301314:	10 00 80 9c 	l.addi r4,r0,16
+ 2301318:	00 00 a5 84 	l.lwz r5,0(r5)
+ 230131c:	5a fb ff 07 	l.jal 2300084 <set_widget_resource>
+ 2301320:	10 00 80 9c 	l.addi r4,r0,16
+ 2301324:	01 00 a0 9c 	l.addi r5,r0,1
+ 2301328:	00 00 62 a8 	l.ori r3,r2,0x0
+ 230132c:	64 fb ff 07 	l.jal 23000bc <set_widget_visible>
+ 2301330:	01 00 60 9c 	l.addi r3,r0,1
+ 2301334:	64 69 f5 07 	l.jal 205b8c4 <fw_present>
+ 2301338:	29 00 60 9c 	l.addi r3,r0,41
+ 230133c:	01 00 80 9c 	l.addi r4,r0,1
+ 2301340:	00 00 a0 9c 	l.addi r5,r0,0
+ 2301344:	a0 17 f4 07 	l.jal 20071c4 <fw_audio_play>
+ 2301348:	0c 00 21 9c 	l.addi r1,r1,12
+ 230134c:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301350:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2301354:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2301358:	00 48 00 44 	l.jr r9
+
+0230135c <camera_refresh_indicator>:
+ 230135c:	0d 02 80 18 	l.movhi r4,0x20d
+ 2301360:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2301364:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301368:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 230136c:	d9 41 84 a8 	l.ori r4,r4,0x41d9
+ 2301370:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2301374:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2301378:	ff 00 a5 a4 	l.andi r5,r5,0xff
+ 230137c:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301380:	00 00 25 bc 	l.sfnei r5,0
+ 2301384:	03 00 00 10 	l.bf 2301390 <camera_refresh_indicator+0x34>
+ 2301388:	17 00 80 9c 	l.addi r4,r0,23
+ 230138c:	12 00 00 00 	l.j 23013d4 <camera_refresh_indicator+0x78>
+ 2301390:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2301394:	01 00 25 bc 	l.sfnei r5,1
+ 2301398:	05 00 00 10 	l.bf 23013ac <camera_refresh_indicator+0x50>
+ 230139c:	00 80 a0 18 	l.movhi r5,0x8000
+ 23013a0:	17 00 80 9c 	l.addi r4,r0,23
+ 23013a4:	42 00 a5 a8 	l.ori r5,r5,0x42
+ 23013a8:	07 00 00 00 	l.j 23013c4 <camera_refresh_indicator+0x68>
+ 23013ac:	00 00 84 8c 	l.lbz r4,0(r4)
+ 23013b0:	02 00 24 bc 	l.sfnei r4,2
+ 23013b4:	05 00 00 10 	l.bf 23013c8 <camera_refresh_indicator+0x6c>
+ 23013b8:	00 80 a0 18 	l.movhi r5,0x8000
+ 23013bc:	17 00 80 9c 	l.addi r4,r0,23
+ 23013c0:	41 00 a5 a8 	l.ori r5,r5,0x41
+ 23013c4:	30 fb ff 07 	l.jal 2300084 <set_widget_resource>
+ 23013c8:	00 00 62 a8 	l.ori r3,r2,0x0
+ 23013cc:	17 00 80 9c 	l.addi r4,r0,23
+ 23013d0:	01 00 a0 9c 	l.addi r5,r0,1
+ 23013d4:	3a fb ff 07 	l.jal 23000bc <set_widget_visible>
+ 23013d8:	0c 00 21 9c 	l.addi r1,r1,12
+ 23013dc:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23013e0:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 23013e4:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 23013e8:	00 48 00 44 	l.jr r9
+
+023013ec <handle_zoom_step>:
+ 23013ec:	01 00 84 ac 	l.xori r4,r4,1
+ 23013f0:	f0 17 e1 d7 	l.sw -16(r1),r2
+ 23013f4:	02 20 40 e0 	l.sub r2,r0,r4
+ 23013f8:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23013fc:	04 20 82 e0 	l.or r4,r2,r4
+ 2301400:	ec 0f e1 d7 	l.sw -20(r1),r1
+ 2301404:	f4 77 e1 d7 	l.sw -12(r1),r14
+ 2301408:	f8 97 e1 d7 	l.sw -8(r1),r18
+ 230140c:	00 00 84 bd 	l.sfltsi r4,0
+ 2301410:	ec ff 21 9c 	l.addi r1,r1,-20
+ 2301414:	36 00 00 10 	l.bf 23014ec <handle_zoom_step+0x100>
+ 2301418:	02 28 80 e0 	l.sub r4,r0,r5
+ 230141c:	04 20 85 e0 	l.or r4,r5,r4
+ 2301420:	ff ff 84 ac 	l.xori r4,r4,-1
+ 2301424:	5f 00 84 b8 	l.srli r4,r4,0x1f
+ 2301428:	00 00 24 bc 	l.sfnei r4,0
+ 230142c:	30 00 00 10 	l.bf 23014ec <handle_zoom_step+0x100>
+ 2301430:	00 00 45 86 	l.lwz r18,0(r5)
+ 2301434:	01 00 32 bc 	l.sfnei r18,1
+ 2301438:	2e 00 00 10 	l.bf 23014f0 <handle_zoom_step+0x104>
+ 230143c:	00 00 c6 a9 	l.ori r14,r6,0x0
+ 2301440:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301444:	4a fb ff 07 	l.jal 230016c <zoom_is_restricted>
+ 2301448:	00 00 2b bc 	l.sfnei r11,0
+ 230144c:	00 00 92 a8 	l.ori r4,r18,0x0
+ 2301450:	28 00 00 10 	l.bf 23014f0 <handle_zoom_step+0x104>
+ 2301454:	0d 02 80 18 	l.movhi r4,0x20d
+ 2301458:	00 00 ae bd 	l.sflesi r14,0
+ 230145c:	74 41 84 a8 	l.ori r4,r4,0x4174
+ 2301460:	00 00 64 8c 	l.lbz r3,0(r4)
+ 2301464:	06 00 00 10 	l.bf 230147c <handle_zoom_step+0x90>
+ 2301468:	0e 00 43 bc 	l.sfgtui r3,14
+ 230146c:	0a 00 00 10 	l.bf 2301494 <handle_zoom_step+0xa8>
+ 2301470:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2301474:	01 00 a5 9c 	l.addi r5,r5,1
+ 2301478:	05 00 00 00 	l.j 230148c <handle_zoom_step+0xa0>
+ 230147c:	00 00 03 bc 	l.sfeqi r3,0
+ 2301480:	05 00 00 10 	l.bf 2301494 <handle_zoom_step+0xa8>
+ 2301484:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2301488:	ff ff a5 9c 	l.addi r5,r5,-1
+ 230148c:	ff 00 a5 a4 	l.andi r5,r5,0xff
+ 2301490:	00 28 04 d8 	l.sb 0(r4),r5
+ 2301494:	0d 02 c0 19 	l.movhi r14,0x20d
+ 2301498:	00 00 80 9c 	l.addi r4,r0,0
+ 230149c:	74 41 6e a8 	l.ori r3,r14,0x4174
+ 23014a0:	c5 41 ce a9 	l.ori r14,r14,0x41c5
+ 23014a4:	00 00 63 8c 	l.lbz r3,0(r3)
+ 23014a8:	54 0d f4 07 	l.jal 20049f8 <fw_crop_start>
+ 23014ac:	00 00 6e 8c 	l.lbz r3,0(r14)
+ 23014b0:	03 00 23 bc 	l.sfnei r3,3
+ 23014b4:	04 00 00 10 	l.bf 23014c4 <handle_zoom_step+0xd8>
+ 23014b8:	d2 fa ff 07 	l.jal 2300000 <selected_template_resource>
+ 23014bc:	00 00 6b a8 	l.ori r3,r11,0x0
+ 23014c0:	3b 11 f5 07 	l.jal 20459ac <fw_template_resize>
+ 23014c4:	0d 02 60 18 	l.movhi r3,0x20d
+ 23014c8:	01 00 80 9c 	l.addi r4,r0,1
+ 23014cc:	d9 41 63 a8 	l.ori r3,r3,0x41d9
+ 23014d0:	00 20 03 d8 	l.sb 0(r3),r4
+ 23014d4:	00 00 62 a8 	l.ori r3,r2,0x0
+ 23014d8:	a1 ff ff 07 	l.jal 230135c <camera_refresh_indicator>
+ 23014dc:	00 00 62 a8 	l.ori r3,r2,0x0
+ 23014e0:	e6 fe ff 07 	l.jal 2301078 <camera_refresh_zoom>
+ 23014e4:	01 00 80 9c 	l.addi r4,r0,1
+ 23014e8:	02 00 00 00 	l.j 23014f0 <handle_zoom_step+0x104>
+ 23014ec:	00 00 80 9c 	l.addi r4,r0,0
+ 23014f0:	14 00 21 9c 	l.addi r1,r1,20
+ 23014f4:	00 00 64 a9 	l.ori r11,r4,0x0
+ 23014f8:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23014fc:	ec ff 21 84 	l.lwz r1,-20(r1)
+ 2301500:	f0 ff 41 84 	l.lwz r2,-16(r1)
+ 2301504:	f4 ff c1 85 	l.lwz r14,-12(r1)
+ 2301508:	f8 ff 41 86 	l.lwz r18,-8(r1)
+ 230150c:	00 48 00 44 	l.jr r9
+
+02301510 <finish_zoom_indicator>:
+ 2301510:	f4 97 e1 d7 	l.sw -12(r1),r18
+ 2301514:	0d 02 40 1a 	l.movhi r18,0x20d
+ 2301518:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 230151c:	e8 0f e1 d7 	l.sw -24(r1),r1
+ 2301520:	ec 17 e1 d7 	l.sw -20(r1),r2
+ 2301524:	f0 77 e1 d7 	l.sw -16(r1),r14
+ 2301528:	f8 a7 e1 d7 	l.sw -8(r1),r20
+ 230152c:	d9 41 52 aa 	l.ori r18,r18,0x41d9
+ 2301530:	e8 ff 21 9c 	l.addi r1,r1,-24
+ 2301534:	00 00 d2 8d 	l.lbz r14,0(r18)
+ 2301538:	ff 00 ce a5 	l.andi r14,r14,0xff
+ 230153c:	00 00 60 9d 	l.addi r11,r0,0
+ 2301540:	01 00 2e bc 	l.sfnei r14,1
+ 2301544:	10 00 00 10 	l.bf 2301584 <finish_zoom_indicator+0x74>
+ 2301548:	0c 02 40 18 	l.movhi r2,0x20c
+ 230154c:	00 00 83 aa 	l.ori r20,r3,0x0
+ 2301550:	d1 80 f4 07 	l.jal 2021894 <fw_time>
+ 2301554:	a4 cd 62 a8 	l.ori r3,r2,0xcda4
+ 2301558:	00 58 03 d4 	l.sw 0(r3),r11
+ 230155c:	02 00 60 9c 	l.addi r3,r0,2
+ 2301560:	00 18 12 d8 	l.sb 0(r18),r3
+ 2301564:	00 00 74 a8 	l.ori r3,r20,0x0
+ 2301568:	7d ff ff 07 	l.jal 230135c <camera_refresh_indicator>
+ 230156c:	a0 cd 62 a8 	l.ori r3,r2,0xcda0
+ 2301570:	9c cd 42 a8 	l.ori r2,r2,0xcd9c
+ 2301574:	00 00 63 84 	l.lwz r3,0(r3)
+ 2301578:	00 00 82 84 	l.lwz r4,0(r2)
+ 230157c:	a5 17 f4 07 	l.jal 2007410 <fw_audio_buffer>
+ 2301580:	00 00 6e a9 	l.ori r11,r14,0x0
+ 2301584:	18 00 21 9c 	l.addi r1,r1,24
+ 2301588:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 230158c:	e8 ff 21 84 	l.lwz r1,-24(r1)
+ 2301590:	ec ff 41 84 	l.lwz r2,-20(r1)
+ 2301594:	f0 ff c1 85 	l.lwz r14,-16(r1)
+ 2301598:	f4 ff 41 86 	l.lwz r18,-12(r1)
+ 230159c:	f8 ff 81 86 	l.lwz r20,-8(r1)
+ 23015a0:	00 48 00 44 	l.jr r9
+
+023015a4 <camera_down>:
+ 23015a4:	01 00 84 ac 	l.xori r4,r4,1
+ 23015a8:	e8 17 e1 d7 	l.sw -24(r1),r2
+ 23015ac:	02 20 c0 e0 	l.sub r6,r0,r4
+ 23015b0:	f4 a7 e1 d7 	l.sw -12(r1),r20
+ 23015b4:	04 20 86 e0 	l.or r4,r6,r4
+ 23015b8:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23015bc:	e4 0f e1 d7 	l.sw -28(r1),r1
+ 23015c0:	ec 77 e1 d7 	l.sw -20(r1),r14
+ 23015c4:	f0 97 e1 d7 	l.sw -16(r1),r18
+ 23015c8:	f8 b7 e1 d7 	l.sw -8(r1),r22
+ 23015cc:	00 00 84 bd 	l.sfltsi r4,0
+ 23015d0:	e4 ff 21 9c 	l.addi r1,r1,-28
+ 23015d4:	00 00 83 aa 	l.ori r20,r3,0x0
+ 23015d8:	00 00 45 a8 	l.ori r2,r5,0x0
+ 23015dc:	76 00 00 10 	l.bf 23017b4 <camera_down+0x210>
+ 23015e0:	02 28 80 e0 	l.sub r4,r0,r5
+ 23015e4:	04 20 85 e0 	l.or r4,r5,r4
+ 23015e8:	00 00 84 bd 	l.sfltsi r4,0
+ 23015ec:	72 00 00 0c 	l.bnf 23017b4 <camera_down+0x210>
+ 23015f0:	01 00 80 9c 	l.addi r4,r0,1
+ 23015f4:	ff ff c0 9c 	l.addi r6,r0,-1
+ 23015f8:	7d ff ff 07 	l.jal 23013ec <handle_zoom_step>
+ 23015fc:	00 00 2b bc 	l.sfnei r11,0
+ 2301600:	6d 00 00 10 	l.bf 23017b4 <camera_down+0x210>
+ 2301604:	00 00 c2 86 	l.lwz r22,0(r2)
+ 2301608:	02 00 36 bc 	l.sfnei r22,2
+ 230160c:	6a 00 00 10 	l.bf 23017b4 <camera_down+0x210>
+ 2301610:	00 00 74 a8 	l.ori r3,r20,0x0
+ 2301614:	bf ff ff 07 	l.jal 2301510 <finish_zoom_indicator>
+ 2301618:	00 00 2b bc 	l.sfnei r11,0
+ 230161c:	00 00 4b aa 	l.ori r18,r11,0x0
+ 2301620:	65 00 00 10 	l.bf 23017b4 <camera_down+0x210>
+ 2301624:	0d 02 40 18 	l.movhi r2,0x20d
+ 2301628:	c5 41 c2 a9 	l.ori r14,r2,0x41c5
+ 230162c:	00 00 6e 8c 	l.lbz r3,0(r14)
+ 2301630:	00 00 23 bc 	l.sfnei r3,0
+ 2301634:	1a 00 00 10 	l.bf 230169c <camera_down+0xf8>
+ 2301638:	c7 41 62 a8 	l.ori r3,r2,0x41c7
+ 230163c:	00 00 83 8c 	l.lbz r4,0(r3)
+ 2301640:	07 00 44 bc 	l.sfgtui r4,7
+ 2301644:	0b 00 00 10 	l.bf 2301670 <camera_down+0xcc>
+ 2301648:	cb 41 42 a8 	l.ori r2,r2,0x41cb
+ 230164c:	00 00 42 8c 	l.lbz r2,0(r2)
+ 2301650:	00 00 22 bc 	l.sfnei r2,0
+ 2301654:	00 00 43 8c 	l.lbz r2,0(r3)
+ 2301658:	2e 00 00 0c 	l.bnf 2301710 <camera_down+0x16c>
+ 230165c:	07 00 02 bc 	l.sfeqi r2,7
+ 2301660:	04 00 00 10 	l.bf 2301670 <camera_down+0xcc>
+ 2301664:	07 00 40 9c 	l.addi r2,r0,7
+ 2301668:	00 10 03 d8 	l.sb 0(r3),r2
+ 230166c:	50 00 00 00 	l.j 23017ac <camera_down+0x208>
+ 2301670:	0d 02 40 18 	l.movhi r2,0x20d
+ 2301674:	00 00 80 9c 	l.addi r4,r0,0
+ 2301678:	c7 41 62 a8 	l.ori r3,r2,0x41c7
+ 230167c:	00 20 03 d8 	l.sb 0(r3),r4
+ 2301680:	c5 41 62 a8 	l.ori r3,r2,0x41c5
+ 2301684:	01 00 80 9c 	l.addi r4,r0,1
+ 2301688:	c6 41 42 a8 	l.ori r2,r2,0x41c6
+ 230168c:	00 20 03 d8 	l.sb 0(r3),r4
+ 2301690:	00 20 02 d8 	l.sb 0(r2),r4
+ 2301694:	01 00 60 9c 	l.addi r3,r0,1
+ 2301698:	14 00 00 00 	l.j 23016e8 <camera_down+0x144>
+ 230169c:	00 00 6e 8c 	l.lbz r3,0(r14)
+ 23016a0:	01 00 23 bc 	l.sfnei r3,1
+ 23016a4:	13 00 00 10 	l.bf 23016f0 <camera_down+0x14c>
+ 23016a8:	c6 41 62 a8 	l.ori r3,r2,0x41c6
+ 23016ac:	00 00 83 8c 	l.lbz r4,0(r3)
+ 23016b0:	04 00 a4 bc 	l.sfleui r4,4
+ 23016b4:	08 00 00 10 	l.bf 23016d4 <camera_down+0x130>
+ 23016b8:	00 58 03 d8 	l.sb 0(r3),r11
+ 23016bc:	c9 41 42 a8 	l.ori r2,r2,0x41c9
+ 23016c0:	00 00 6b a8 	l.ori r3,r11,0x0
+ 23016c4:	7f 5c f5 07 	l.jal 20588c0 <fw_color_preset>
+ 23016c8:	00 90 02 d8 	l.sb 0(r2),r18
+ 23016cc:	00 b0 0e d8 	l.sb 0(r14),r22
+ 23016d0:	37 00 00 00 	l.j 23017ac <camera_down+0x208>
+ 23016d4:	00 00 43 8c 	l.lbz r2,0(r3)
+ 23016d8:	01 00 42 9c 	l.addi r2,r2,1
+ 23016dc:	ff 00 42 a4 	l.andi r2,r2,0xff
+ 23016e0:	00 10 03 d8 	l.sb 0(r3),r2
+ 23016e4:	00 00 63 8c 	l.lbz r3,0(r3)
+ 23016e8:	76 5c f5 07 	l.jal 20588c0 <fw_color_preset>
+ 23016ec:	30 00 00 00 	l.j 23017ac <camera_down+0x208>
+ 23016f0:	00 00 6e 8c 	l.lbz r3,0(r14)
+ 23016f4:	02 00 23 bc 	l.sfnei r3,2
+ 23016f8:	13 00 00 10 	l.bf 2301744 <camera_down+0x1a0>
+ 23016fc:	c9 41 62 a8 	l.ori r3,r2,0x41c9
+ 2301700:	00 00 83 8c 	l.lbz r4,0(r3)
+ 2301704:	06 00 44 bc 	l.sfgtui r4,6
+ 2301708:	05 00 00 10 	l.bf 230171c <camera_down+0x178>
+ 230170c:	00 00 43 8c 	l.lbz r2,0(r3)
+ 2301710:	01 00 42 9c 	l.addi r2,r2,1
+ 2301714:	ff 00 42 a4 	l.andi r2,r2,0xff
+ 2301718:	d4 ff ff 03 	l.j 2301668 <camera_down+0xc4>
+ 230171c:	03 00 60 9c 	l.addi r3,r0,3
+ 2301720:	ca 41 42 a8 	l.ori r2,r2,0x41ca
+ 2301724:	00 18 0e d8 	l.sb 0(r14),r3
+ 2301728:	01 00 60 9c 	l.addi r3,r0,1
+ 230172c:	50 12 f5 07 	l.jal 204606c <fw_frame_mode>
+ 2301730:	08 00 60 9c 	l.addi r3,r0,8
+ 2301734:	01 00 80 9c 	l.addi r4,r0,1
+ 2301738:	59 52 f5 07 	l.jal 205609c <fw_record_config>
+ 230173c:	00 90 02 d8 	l.sb 0(r2),r18
+ 2301740:	18 00 00 00 	l.j 23017a0 <camera_down+0x1fc>
+ 2301744:	00 00 6e 8c 	l.lbz r3,0(r14)
+ 2301748:	03 00 23 bc 	l.sfnei r3,3
+ 230174c:	18 00 00 10 	l.bf 23017ac <camera_down+0x208>
+ 2301750:	ca 41 42 a8 	l.ori r2,r2,0x41ca
+ 2301754:	00 00 62 8c 	l.lbz r3,0(r2)
+ 2301758:	07 00 a3 bc 	l.sfleui r3,7
+ 230175c:	0d 00 00 10 	l.bf 2301790 <camera_down+0x1ec>
+ 2301760:	00 00 80 9c 	l.addi r4,r0,0
+ 2301764:	08 00 60 9c 	l.addi r3,r0,8
+ 2301768:	0d 02 40 18 	l.movhi r2,0x20d
+ 230176c:	4c 52 f5 07 	l.jal 205609c <fw_record_config>
+ 2301770:	00 00 60 9c 	l.addi r3,r0,0
+ 2301774:	3e 12 f5 07 	l.jal 204606c <fw_frame_mode>
+ 2301778:	c5 41 62 a8 	l.ori r3,r2,0x41c5
+ 230177c:	00 00 80 9c 	l.addi r4,r0,0
+ 2301780:	c7 41 42 a8 	l.ori r2,r2,0x41c7
+ 2301784:	00 20 03 d8 	l.sb 0(r3),r4
+ 2301788:	00 20 02 d8 	l.sb 0(r2),r4
+ 230178c:	08 00 00 00 	l.j 23017ac <camera_down+0x208>
+ 2301790:	00 00 82 8c 	l.lbz r4,0(r2)
+ 2301794:	01 00 84 9c 	l.addi r4,r4,1
+ 2301798:	ff 00 84 a4 	l.andi r4,r4,0xff
+ 230179c:	00 20 02 d8 	l.sb 0(r2),r4
+ 23017a0:	18 fa ff 07 	l.jal 2300000 <selected_template_resource>
+ 23017a4:	00 00 6b a8 	l.ori r3,r11,0x0
+ 23017a8:	55 0f f5 07 	l.jal 20454fc <fw_template_load>
+ 23017ac:	00 00 74 a8 	l.ori r3,r20,0x0
+ 23017b0:	5d fe ff 07 	l.jal 2301124 <refresh_after_preset_change>
+ 23017b4:	1c 00 21 9c 	l.addi r1,r1,28
+ 23017b8:	00 00 60 9d 	l.addi r11,r0,0
+ 23017bc:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23017c0:	e4 ff 21 84 	l.lwz r1,-28(r1)
+ 23017c4:	e8 ff 41 84 	l.lwz r2,-24(r1)
+ 23017c8:	ec ff c1 85 	l.lwz r14,-20(r1)
+ 23017cc:	f0 ff 41 86 	l.lwz r18,-16(r1)
+ 23017d0:	f4 ff 81 86 	l.lwz r20,-12(r1)
+ 23017d4:	f8 ff c1 86 	l.lwz r22,-8(r1)
+ 23017d8:	00 48 00 44 	l.jr r9
+
+023017dc <camera_up>:
+ 23017dc:	01 00 84 ac 	l.xori r4,r4,1
+ 23017e0:	ec 17 e1 d7 	l.sw -20(r1),r2
+ 23017e4:	02 20 c0 e0 	l.sub r6,r0,r4
+ 23017e8:	f0 77 e1 d7 	l.sw -16(r1),r14
+ 23017ec:	04 20 86 e0 	l.or r4,r6,r4
+ 23017f0:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23017f4:	e8 0f e1 d7 	l.sw -24(r1),r1
+ 23017f8:	f4 97 e1 d7 	l.sw -12(r1),r18
+ 23017fc:	f8 a7 e1 d7 	l.sw -8(r1),r20
+ 2301800:	00 00 84 bd 	l.sfltsi r4,0
+ 2301804:	e8 ff 21 9c 	l.addi r1,r1,-24
+ 2301808:	00 00 c3 a9 	l.ori r14,r3,0x0
+ 230180c:	00 00 45 a8 	l.ori r2,r5,0x0
+ 2301810:	7f 00 00 10 	l.bf 2301a0c <camera_up+0x230>
+ 2301814:	02 28 80 e0 	l.sub r4,r0,r5
+ 2301818:	04 20 85 e0 	l.or r4,r5,r4
+ 230181c:	00 00 84 bd 	l.sfltsi r4,0
+ 2301820:	7b 00 00 0c 	l.bnf 2301a0c <camera_up+0x230>
+ 2301824:	01 00 80 9c 	l.addi r4,r0,1
+ 2301828:	00 00 c4 a8 	l.ori r6,r4,0x0
+ 230182c:	f0 fe ff 07 	l.jal 23013ec <handle_zoom_step>
+ 2301830:	00 00 2b bc 	l.sfnei r11,0
+ 2301834:	76 00 00 10 	l.bf 2301a0c <camera_up+0x230>
+ 2301838:	00 00 42 84 	l.lwz r2,0(r2)
+ 230183c:	02 00 22 bc 	l.sfnei r2,2
+ 2301840:	73 00 00 10 	l.bf 2301a0c <camera_up+0x230>
+ 2301844:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2301848:	32 ff ff 07 	l.jal 2301510 <finish_zoom_indicator>
+ 230184c:	00 00 2b bc 	l.sfnei r11,0
+ 2301850:	6f 00 00 10 	l.bf 2301a0c <camera_up+0x230>
+ 2301854:	0d 02 40 18 	l.movhi r2,0x20d
+ 2301858:	c5 41 42 aa 	l.ori r18,r2,0x41c5
+ 230185c:	00 00 92 8c 	l.lbz r4,0(r18)
+ 2301860:	ff 00 84 a4 	l.andi r4,r4,0xff
+ 2301864:	00 00 24 bc 	l.sfnei r4,0
+ 2301868:	1b 00 00 10 	l.bf 23018d4 <camera_up+0xf8>
+ 230186c:	c7 41 62 a8 	l.ori r3,r2,0x41c7
+ 2301870:	00 00 a3 8c 	l.lbz r5,0(r3)
+ 2301874:	00 00 05 bc 	l.sfeqi r5,0
+ 2301878:	0c 00 00 10 	l.bf 23018a8 <camera_up+0xcc>
+ 230187c:	cb 41 42 a8 	l.ori r2,r2,0x41cb
+ 2301880:	00 00 a2 8c 	l.lbz r5,0(r2)
+ 2301884:	00 00 25 bc 	l.sfnei r5,0
+ 2301888:	00 00 44 a8 	l.ori r2,r4,0x0
+ 230188c:	04 00 00 10 	l.bf 230189c <camera_up+0xc0>
+ 2301890:	00 00 43 8c 	l.lbz r2,0(r3)
+ 2301894:	ff ff 42 9c 	l.addi r2,r2,-1
+ 2301898:	ff 00 42 a4 	l.andi r2,r2,0xff
+ 230189c:	0d 02 60 18 	l.movhi r3,0x20d
+ 23018a0:	c7 41 63 a8 	l.ori r3,r3,0x41c7
+ 23018a4:	3b 00 00 00 	l.j 2301990 <camera_up+0x1b4>
+ 23018a8:	03 00 60 9c 	l.addi r3,r0,3
+ 23018ac:	ca 41 42 a8 	l.ori r2,r2,0x41ca
+ 23018b0:	00 18 12 d8 	l.sb 0(r18),r3
+ 23018b4:	01 00 60 9c 	l.addi r3,r0,1
+ 23018b8:	ed 11 f5 07 	l.jal 204606c <fw_frame_mode>
+ 23018bc:	01 00 80 9c 	l.addi r4,r0,1
+ 23018c0:	08 00 60 9c 	l.addi r3,r0,8
+ 23018c4:	f6 51 f5 07 	l.jal 205609c <fw_record_config>
+ 23018c8:	08 00 80 9c 	l.addi r4,r0,8
+ 23018cc:	00 20 02 d8 	l.sb 0(r2),r4
+ 23018d0:	4a 00 00 00 	l.j 23019f8 <camera_up+0x21c>
+ 23018d4:	00 00 72 8c 	l.lbz r3,0(r18)
+ 23018d8:	01 00 23 bc 	l.sfnei r3,1
+ 23018dc:	1b 00 00 10 	l.bf 2301948 <camera_up+0x16c>
+ 23018e0:	c6 41 82 aa 	l.ori r20,r2,0x41c6
+ 23018e4:	00 00 74 8c 	l.lbz r3,0(r20)
+ 23018e8:	00 00 23 bc 	l.sfnei r3,0
+ 23018ec:	46 00 00 0c 	l.bnf 2301a04 <camera_up+0x228>
+ 23018f0:	00 00 74 8c 	l.lbz r3,0(r20)
+ 23018f4:	ff ff 63 9c 	l.addi r3,r3,-1
+ 23018f8:	ff 00 63 a4 	l.andi r3,r3,0xff
+ 23018fc:	00 18 14 d8 	l.sb 0(r20),r3
+ 2301900:	00 00 74 8c 	l.lbz r3,0(r20)
+ 2301904:	ef 5b f5 07 	l.jal 20588c0 <fw_color_preset>
+ 2301908:	00 00 94 8e 	l.lbz r20,0(r20)
+ 230190c:	ff 00 94 a6 	l.andi r20,r20,0xff
+ 2301910:	00 00 34 bc 	l.sfnei r20,0
+ 2301914:	3c 00 00 10 	l.bf 2301a04 <camera_up+0x228>
+ 2301918:	00 00 74 a8 	l.ori r3,r20,0x0
+ 230191c:	cb 41 42 a8 	l.ori r2,r2,0x41cb
+ 2301920:	e8 5b f5 07 	l.jal 20588c0 <fw_color_preset>
+ 2301924:	00 a0 12 d8 	l.sb 0(r18),r20
+ 2301928:	07 00 60 9c 	l.addi r3,r0,7
+ 230192c:	00 00 42 8c 	l.lbz r2,0(r2)
+ 2301930:	00 00 22 bc 	l.sfnei r2,0
+ 2301934:	02 00 00 10 	l.bf 230193c <camera_up+0x160>
+ 2301938:	08 00 60 9c 	l.addi r3,r0,8
+ 230193c:	0d 02 40 18 	l.movhi r2,0x20d
+ 2301940:	c7 41 42 a8 	l.ori r2,r2,0x41c7
+ 2301944:	27 00 00 00 	l.j 23019e0 <camera_up+0x204>
+ 2301948:	00 00 72 8c 	l.lbz r3,0(r18)
+ 230194c:	02 00 23 bc 	l.sfnei r3,2
+ 2301950:	12 00 00 10 	l.bf 2301998 <camera_up+0x1bc>
+ 2301954:	c9 41 62 a8 	l.ori r3,r2,0x41c9
+ 2301958:	00 00 83 8c 	l.lbz r4,0(r3)
+ 230195c:	00 00 24 bc 	l.sfnei r4,0
+ 2301960:	09 00 00 10 	l.bf 2301984 <camera_up+0x1a8>
+ 2301964:	01 00 60 9c 	l.addi r3,r0,1
+ 2301968:	c6 41 42 a8 	l.ori r2,r2,0x41c6
+ 230196c:	05 00 80 9c 	l.addi r4,r0,5
+ 2301970:	00 18 12 d8 	l.sb 0(r18),r3
+ 2301974:	00 20 02 d8 	l.sb 0(r2),r4
+ 2301978:	05 00 60 9c 	l.addi r3,r0,5
+ 230197c:	d1 5b f5 07 	l.jal 20588c0 <fw_color_preset>
+ 2301980:	21 00 00 00 	l.j 2301a04 <camera_up+0x228>
+ 2301984:	00 00 43 8c 	l.lbz r2,0(r3)
+ 2301988:	ff ff 42 9c 	l.addi r2,r2,-1
+ 230198c:	ff 00 42 a4 	l.andi r2,r2,0xff
+ 2301990:	00 10 03 d8 	l.sb 0(r3),r2
+ 2301994:	1c 00 00 00 	l.j 2301a04 <camera_up+0x228>
+ 2301998:	00 00 72 8c 	l.lbz r3,0(r18)
+ 230199c:	03 00 23 bc 	l.sfnei r3,3
+ 23019a0:	19 00 00 10 	l.bf 2301a04 <camera_up+0x228>
+ 23019a4:	ca 41 42 a8 	l.ori r2,r2,0x41ca
+ 23019a8:	00 00 62 8c 	l.lbz r3,0(r2)
+ 23019ac:	00 00 23 bc 	l.sfnei r3,0
+ 23019b0:	0e 00 00 10 	l.bf 23019e8 <camera_up+0x20c>
+ 23019b4:	00 00 80 9c 	l.addi r4,r0,0
+ 23019b8:	08 00 60 9c 	l.addi r3,r0,8
+ 23019bc:	0d 02 40 18 	l.movhi r2,0x20d
+ 23019c0:	b7 51 f5 07 	l.jal 205609c <fw_record_config>
+ 23019c4:	00 00 60 9c 	l.addi r3,r0,0
+ 23019c8:	a9 11 f5 07 	l.jal 204606c <fw_frame_mode>
+ 23019cc:	c9 41 62 a8 	l.ori r3,r2,0x41c9
+ 23019d0:	07 00 80 9c 	l.addi r4,r0,7
+ 23019d4:	c5 41 42 a8 	l.ori r2,r2,0x41c5
+ 23019d8:	00 20 03 d8 	l.sb 0(r3),r4
+ 23019dc:	02 00 60 9c 	l.addi r3,r0,2
+ 23019e0:	00 18 02 d8 	l.sb 0(r2),r3
+ 23019e4:	08 00 00 00 	l.j 2301a04 <camera_up+0x228>
+ 23019e8:	00 00 62 8c 	l.lbz r3,0(r2)
+ 23019ec:	ff ff 63 9c 	l.addi r3,r3,-1
+ 23019f0:	ff 00 63 a4 	l.andi r3,r3,0xff
+ 23019f4:	00 18 02 d8 	l.sb 0(r2),r3
+ 23019f8:	82 f9 ff 07 	l.jal 2300000 <selected_template_resource>
+ 23019fc:	00 00 6b a8 	l.ori r3,r11,0x0
+ 2301a00:	bf 0e f5 07 	l.jal 20454fc <fw_template_load>
+ 2301a04:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2301a08:	c7 fd ff 07 	l.jal 2301124 <refresh_after_preset_change>
+ 2301a0c:	18 00 21 9c 	l.addi r1,r1,24
+ 2301a10:	00 00 60 9d 	l.addi r11,r0,0
+ 2301a14:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301a18:	e8 ff 21 84 	l.lwz r1,-24(r1)
+ 2301a1c:	ec ff 41 84 	l.lwz r2,-20(r1)
+ 2301a20:	f0 ff c1 85 	l.lwz r14,-16(r1)
+ 2301a24:	f4 ff 41 86 	l.lwz r18,-12(r1)
+ 2301a28:	f8 ff 81 86 	l.lwz r20,-8(r1)
+ 2301a2c:	00 48 00 44 	l.jr r9
+
+02301a30 <camera_refresh_storage>:
+ 2301a30:	0d 02 80 18 	l.movhi r4,0x20d
+ 2301a34:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301a38:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2301a3c:	70 41 84 a8 	l.ori r4,r4,0x4170
+ 2301a40:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2301a44:	00 00 84 8c 	l.lbz r4,0(r4)
+ 2301a48:	00 00 04 bc 	l.sfeqi r4,0
+ 2301a4c:	00 80 a0 18 	l.movhi r5,0x8000
+ 2301a50:	03 00 00 10 	l.bf 2301a5c <camera_refresh_storage+0x2c>
+ 2301a54:	4c 00 a5 a8 	l.ori r5,r5,0x4c
+ 2301a58:	02 00 00 00 	l.j 2301a60 <camera_refresh_storage+0x30>
+ 2301a5c:	4d 00 a5 a8 	l.ori r5,r5,0x4d
+ 2301a60:	08 00 80 9c 	l.addi r4,r0,8
+ 2301a64:	88 f9 ff 07 	l.jal 2300084 <set_widget_resource>
+ 2301a68:	08 00 21 9c 	l.addi r1,r1,8
+ 2301a6c:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301a70:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2301a74:	00 48 00 44 	l.jr r9
+
+02301a78 <camera_msg_storage>:
+ 2301a78:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301a7c:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2301a80:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2301a84:	ec ff 21 9c 	l.addi r1,r1,-20
+ 2301a88:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301a8c:	e9 ff ff 07 	l.jal 2301a30 <camera_refresh_storage>
+ 2301a90:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301a94:	c2 fd ff 07 	l.jal 230119c <camera_refresh_remaining>
+ 2301a98:	0d 02 60 18 	l.movhi r3,0x20d
+ 2301a9c:	70 41 63 a8 	l.ori r3,r3,0x4170
+ 2301aa0:	00 00 83 8c 	l.lbz r4,0(r3)
+ 2301aa4:	00 00 04 bc 	l.sfeqi r4,0
+ 2301aa8:	0a 00 00 10 	l.bf 2301ad0 <camera_msg_storage+0x58>
+ 2301aac:	00 00 83 8c 	l.lbz r4,0(r3)
+ 2301ab0:	03 00 04 bc 	l.sfeqi r4,3
+ 2301ab4:	0a 00 00 10 	l.bf 2301adc <camera_msg_storage+0x64>
+ 2301ab8:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2301abc:	02 00 03 bc 	l.sfeqi r3,2
+ 2301ac0:	0f 00 00 0c 	l.bnf 2301afc <camera_msg_storage+0x84>
+ 2301ac4:	00 81 60 18 	l.movhi r3,0x8100
+ 2301ac8:	9e 00 63 a8 	l.ori r3,r3,0x9e
+ 2301acc:	06 00 00 00 	l.j 2301ae4 <camera_msg_storage+0x6c>
+ 2301ad0:	00 81 60 18 	l.movhi r3,0x8100
+ 2301ad4:	59 00 63 a8 	l.ori r3,r3,0x59
+ 2301ad8:	03 00 00 00 	l.j 2301ae4 <camera_msg_storage+0x6c>
+ 2301adc:	00 81 60 18 	l.movhi r3,0x8100
+ 2301ae0:	5a 00 63 a8 	l.ori r3,r3,0x5a
+ 2301ae4:	00 18 01 d4 	l.sw 0(r1),r3
+ 2301ae8:	02 00 80 9c 	l.addi r4,r0,2
+ 2301aec:	0c 02 60 18 	l.movhi r3,0x20c
+ 2301af0:	04 20 01 d4 	l.sw 4(r1),r4
+ 2301af4:	34 44 63 a8 	l.ori r3,r3,0x4434
+ 2301af8:	03 42 f4 07 	l.jal 2012304 <fw_window_open>
+ 2301afc:	14 00 21 9c 	l.addi r1,r1,20
+ 2301b00:	00 00 60 9d 	l.addi r11,r0,0
+ 2301b04:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301b08:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2301b0c:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2301b10:	00 48 00 44 	l.jr r9
+
+02301b14 <camera_show_status>:
+ 2301b14:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301b18:	f0 17 e1 d7 	l.sw -16(r1),r2
+ 2301b1c:	f4 77 e1 d7 	l.sw -12(r1),r14
+ 2301b20:	f8 97 e1 d7 	l.sw -8(r1),r18
+ 2301b24:	00 00 c5 a9 	l.ori r14,r5,0x0
+ 2301b28:	00 00 44 aa 	l.ori r18,r4,0x0
+ 2301b2c:	ec 0f e1 d7 	l.sw -20(r1),r1
+ 2301b30:	13 00 80 9c 	l.addi r4,r0,19
+ 2301b34:	ec ff 21 9c 	l.addi r1,r1,-20
+ 2301b38:	01 00 a0 9c 	l.addi r5,r0,1
+ 2301b3c:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301b40:	5f f9 ff 07 	l.jal 23000bc <set_widget_visible>
+ 2301b44:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301b48:	00 00 b2 a8 	l.ori r5,r18,0x0
+ 2301b4c:	14 00 80 9c 	l.addi r4,r0,20
+ 2301b50:	4d f9 ff 07 	l.jal 2300084 <set_widget_resource>
+ 2301b54:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301b58:	14 00 80 9c 	l.addi r4,r0,20
+ 2301b5c:	01 00 a0 9c 	l.addi r5,r0,1
+ 2301b60:	57 f9 ff 07 	l.jal 23000bc <set_widget_visible>
+ 2301b64:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301b68:	00 00 ae a8 	l.ori r5,r14,0x0
+ 2301b6c:	15 00 80 9c 	l.addi r4,r0,21
+ 2301b70:	45 f9 ff 07 	l.jal 2300084 <set_widget_resource>
+ 2301b74:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301b78:	15 00 80 9c 	l.addi r4,r0,21
+ 2301b7c:	01 00 a0 9c 	l.addi r5,r0,1
+ 2301b80:	4f f9 ff 07 	l.jal 23000bc <set_widget_visible>
+ 2301b84:	14 00 21 9c 	l.addi r1,r1,20
+ 2301b88:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301b8c:	ec ff 21 84 	l.lwz r1,-20(r1)
+ 2301b90:	f0 ff 41 84 	l.lwz r2,-16(r1)
+ 2301b94:	f4 ff c1 85 	l.lwz r14,-12(r1)
+ 2301b98:	f8 ff 41 86 	l.lwz r18,-8(r1)
+ 2301b9c:	00 48 00 44 	l.jr r9
+
+02301ba0 <show_print_result>:
+ 2301ba0:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301ba4:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2301ba8:	08 00 04 bc 	l.sfeqi r4,8
+ 2301bac:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2301bb0:	08 00 00 10 	l.bf 2301bd0 <show_print_result+0x30>
+ 2301bb4:	09 00 04 bc 	l.sfeqi r4,9
+ 2301bb8:	09 00 00 10 	l.bf 2301bdc <show_print_result+0x3c>
+ 2301bbc:	0e 00 04 bc 	l.sfeqi r4,14
+ 2301bc0:	10 00 00 0c 	l.bnf 2301c00 <show_print_result+0x60>
+ 2301bc4:	00 81 a0 18 	l.movhi r5,0x8100
+ 2301bc8:	bb 00 a5 a8 	l.ori r5,r5,0xbb
+ 2301bcc:	06 00 00 00 	l.j 2301be4 <show_print_result+0x44>
+ 2301bd0:	00 81 a0 18 	l.movhi r5,0x8100
+ 2301bd4:	57 00 a5 a8 	l.ori r5,r5,0x57
+ 2301bd8:	03 00 00 00 	l.j 2301be4 <show_print_result+0x44>
+ 2301bdc:	00 81 a0 18 	l.movhi r5,0x8100
+ 2301be0:	58 00 a5 a8 	l.ori r5,r5,0x58
+ 2301be4:	00 81 80 18 	l.movhi r4,0x8100
+ 2301be8:	7f 00 84 a8 	l.ori r4,r4,0x7f
+ 2301bec:	ca ff ff 07 	l.jal 2301b14 <camera_show_status>
+ 2301bf0:	01 00 60 9c 	l.addi r3,r0,1
+ 2301bf4:	34 67 f5 07 	l.jal 205b8c4 <fw_present>
+ 2301bf8:	d0 07 60 9c 	l.addi r3,r0,2000
+ 2301bfc:	2e 7f f4 07 	l.jal 20218b4 <fw_delay>
+ 2301c00:	08 00 21 9c 	l.addi r1,r1,8
+ 2301c04:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301c08:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2301c0c:	00 48 00 44 	l.jr r9
+
+02301c10 <camera_status_visibility>:
+ 2301c10:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301c14:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2301c18:	00 00 04 bc 	l.sfeqi r4,0
+ 2301c1c:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2301c20:	05 00 00 10 	l.bf 2301c34 <camera_status_visibility+0x24>
+ 2301c24:	00 00 85 a8 	l.ori r4,r5,0x0
+ 2301c28:	00 00 a6 a8 	l.ori r5,r6,0x0
+ 2301c2c:	ba ff ff 07 	l.jal 2301b14 <camera_show_status>
+ 2301c30:	02 00 00 00 	l.j 2301c38 <camera_status_visibility+0x28>
+ 2301c34:	aa f9 ff 07 	l.jal 23002dc <camera_status_visibility.part.13>
+ 2301c38:	08 00 21 9c 	l.addi r1,r1,8
+ 2301c3c:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301c40:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2301c44:	00 48 00 44 	l.jr r9
+
+02301c48 <camera_refresh_print>:
+ 2301c48:	0d 02 80 18 	l.movhi r4,0x20d
+ 2301c4c:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2301c50:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301c54:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2301c58:	cb 41 84 a8 	l.ori r4,r4,0x41cb
+ 2301c5c:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2301c60:	00 00 84 8c 	l.lbz r4,0(r4)
+ 2301c64:	00 00 04 bc 	l.sfeqi r4,0
+ 2301c68:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301c6c:	05 00 00 10 	l.bf 2301c80 <camera_refresh_print+0x38>
+ 2301c70:	00 80 a0 18 	l.movhi r5,0x8000
+ 2301c74:	11 00 80 9c 	l.addi r4,r0,17
+ 2301c78:	4a 00 a5 a8 	l.ori r5,r5,0x4a
+ 2301c7c:	02 f9 ff 07 	l.jal 2300084 <set_widget_resource>
+ 2301c80:	0d 02 80 18 	l.movhi r4,0x20d
+ 2301c84:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301c88:	cb 41 84 a8 	l.ori r4,r4,0x41cb
+ 2301c8c:	00 00 a4 8c 	l.lbz r5,0(r4)
+ 2301c90:	02 28 a0 e0 	l.sub r5,r0,r5
+ 2301c94:	11 00 80 9c 	l.addi r4,r0,17
+ 2301c98:	5f 00 a5 b8 	l.srli r5,r5,0x1f
+ 2301c9c:	08 f9 ff 07 	l.jal 23000bc <set_widget_visible>
+ 2301ca0:	0c 00 21 9c 	l.addi r1,r1,12
+ 2301ca4:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301ca8:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2301cac:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2301cb0:	00 48 00 44 	l.jr r9
+
+02301cb4 <camera_left>:
+ 2301cb4:	01 00 84 ac 	l.xori r4,r4,1
+ 2301cb8:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2301cbc:	02 20 40 e0 	l.sub r2,r0,r4
+ 2301cc0:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301cc4:	04 20 82 e0 	l.or r4,r2,r4
+ 2301cc8:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2301ccc:	00 00 84 bd 	l.sfltsi r4,0
+ 2301cd0:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2301cd4:	1f 00 00 10 	l.bf 2301d50 <camera_left+0x9c>
+ 2301cd8:	02 28 40 e0 	l.sub r2,r0,r5
+ 2301cdc:	04 10 45 e0 	l.or r2,r5,r2
+ 2301ce0:	00 00 62 bd 	l.sfgesi r2,0
+ 2301ce4:	1b 00 00 10 	l.bf 2301d50 <camera_left+0x9c>
+ 2301ce8:	00 00 a5 84 	l.lwz r5,0(r5)
+ 2301cec:	00 00 25 bc 	l.sfnei r5,0
+ 2301cf0:	18 00 00 10 	l.bf 2301d50 <camera_left+0x9c>
+ 2301cf4:	0d 02 80 18 	l.movhi r4,0x20d
+ 2301cf8:	cb 41 44 a8 	l.ori r2,r4,0x41cb
+ 2301cfc:	00 00 c2 8c 	l.lbz r6,0(r2)
+ 2301d00:	00 00 26 bc 	l.sfnei r6,0
+ 2301d04:	0e 00 00 10 	l.bf 2301d3c <camera_left+0x88>
+ 2301d08:	01 00 a0 9c 	l.addi r5,r0,1
+ 2301d0c:	00 28 02 d8 	l.sb 0(r2),r5
+ 2301d10:	c5 41 44 a8 	l.ori r2,r4,0x41c5
+ 2301d14:	00 00 42 8c 	l.lbz r2,0(r2)
+ 2301d18:	00 00 22 bc 	l.sfnei r2,0
+ 2301d1c:	09 00 00 10 	l.bf 2301d40 <camera_left+0x8c>
+ 2301d20:	c7 41 84 a8 	l.ori r4,r4,0x41c7
+ 2301d24:	00 00 44 8c 	l.lbz r2,0(r4)
+ 2301d28:	00 00 02 bc 	l.sfeqi r2,0
+ 2301d2c:	05 00 00 10 	l.bf 2301d40 <camera_left+0x8c>
+ 2301d30:	07 00 40 9c 	l.addi r2,r0,7
+ 2301d34:	00 10 04 d8 	l.sb 0(r4),r2
+ 2301d38:	02 00 00 00 	l.j 2301d40 <camera_left+0x8c>
+ 2301d3c:	00 28 02 d8 	l.sb 0(r2),r5
+ 2301d40:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301d44:	c1 ff ff 07 	l.jal 2301c48 <camera_refresh_print>
+ 2301d48:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301d4c:	36 fc ff 07 	l.jal 2300e24 <camera_refresh_scene>
+ 2301d50:	0c 00 21 9c 	l.addi r1,r1,12
+ 2301d54:	00 00 60 9d 	l.addi r11,r0,0
+ 2301d58:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301d5c:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2301d60:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2301d64:	00 48 00 44 	l.jr r9
+
+02301d68 <camera_refresh_resolution>:
+ 2301d68:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2301d6c:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301d70:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2301d74:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301d78:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2301d7c:	18 00 60 9c 	l.addi r3,r0,24
+ 2301d80:	2d 08 f4 07 	l.jal 2003e34 <fw_config_get>
+ 2301d84:	00 81 80 18 	l.movhi r4,0x8100
+ 2301d88:	9c 00 84 a8 	l.ori r4,r4,0x9c
+ 2301d8c:	02 58 64 e1 	l.sub r11,r4,r11
+ 2301d90:	0c 00 4b bc 	l.sfgtui r11,12
+ 2301d94:	07 00 00 10 	l.bf 2301db0 <camera_refresh_resolution+0x48>
+ 2301d98:	30 02 60 18 	l.movhi r3,0x230
+ 2301d9c:	02 00 6b b9 	l.slli r11,r11,0x2
+ 2301da0:	40 25 63 a8 	l.ori r3,r3,0x2540
+ 2301da4:	00 18 6b e1 	l.add r11,r11,r3
+ 2301da8:	00 00 ab 84 	l.lwz r5,0(r11)
+ 2301dac:	03 00 00 00 	l.j 2301db8 <camera_refresh_resolution+0x50>
+ 2301db0:	07 02 a0 18 	l.movhi r5,0x207
+ 2301db4:	51 ba a5 a8 	l.ori r5,r5,0xba51
+ 2301db8:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301dbc:	04 00 80 9c 	l.addi r4,r0,4
+ 2301dc0:	b1 f8 ff 07 	l.jal 2300084 <set_widget_resource>
+ 2301dc4:	0c 00 21 9c 	l.addi r1,r1,12
+ 2301dc8:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301dcc:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2301dd0:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2301dd4:	00 48 00 44 	l.jr r9
+
+02301dd8 <camera_window_refresh>:
+ 2301dd8:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301ddc:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 2301de0:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2301de4:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2301de8:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301dec:	df ff ff 07 	l.jal 2301d68 <camera_refresh_resolution>
+ 2301df0:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301df4:	0f ff ff 07 	l.jal 2301a30 <camera_refresh_storage>
+ 2301df8:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301dfc:	ab fb ff 07 	l.jal 2300ca8 <camera_refresh_battery>
+ 2301e00:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e04:	2a f9 ff 07 	l.jal 23002ac <camera_countdown.part.7>
+ 2301e08:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e0c:	34 f9 ff 07 	l.jal 23002dc <camera_status_visibility.part.13>
+ 2301e10:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e14:	8d ff ff 07 	l.jal 2301c48 <camera_refresh_print>
+ 2301e18:	0c 00 21 9c 	l.addi r1,r1,12
+ 2301e1c:	00 00 60 9d 	l.addi r11,r0,0
+ 2301e20:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301e24:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2301e28:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2301e2c:	00 48 00 44 	l.jr r9
+
+02301e30 <camera_window_enter>:
+ 2301e30:	f4 77 e1 d7 	l.sw -12(r1),r14
+ 2301e34:	0c 02 c0 19 	l.movhi r14,0x20c
+ 2301e38:	00 00 80 9c 	l.addi r4,r0,0
+ 2301e3c:	f0 17 e1 d7 	l.sw -16(r1),r2
+ 2301e40:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301e44:	98 cd 6e a8 	l.ori r3,r14,0xcd98
+ 2301e48:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301e4c:	f8 97 e1 d7 	l.sw -8(r1),r18
+ 2301e50:	ec 0f e1 d7 	l.sw -20(r1),r1
+ 2301e54:	00 20 03 d4 	l.sw 0(r3),r4
+ 2301e58:	ec ff 21 9c 	l.addi r1,r1,-20
+ 2301e5c:	a0 cd 4e aa 	l.ori r18,r14,0xcda0
+ 2301e60:	e2 15 f4 07 	l.jal 20075e8 <fw_init_camera_name>
+ 2301e64:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e68:	1d f9 ff 07 	l.jal 23002dc <camera_status_visibility.part.13>
+ 2301e6c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e70:	be ff ff 07 	l.jal 2301d68 <camera_refresh_resolution>
+ 2301e74:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e78:	ee fe ff 07 	l.jal 2301a30 <camera_refresh_storage>
+ 2301e7c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e80:	8a fb ff 07 	l.jal 2300ca8 <camera_refresh_battery>
+ 2301e84:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e88:	e7 fb ff 07 	l.jal 2300e24 <camera_refresh_scene>
+ 2301e8c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e90:	07 f9 ff 07 	l.jal 23002ac <camera_countdown.part.7>
+ 2301e94:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301e98:	6c ff ff 07 	l.jal 2301c48 <camera_refresh_print>
+ 2301e9c:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301ea0:	bf fc ff 07 	l.jal 230119c <camera_refresh_remaining>
+ 2301ea4:	80 87 6e a8 	l.ori r3,r14,0x8780
+ 2301ea8:	01 00 80 9c 	l.addi r4,r0,1
+ 2301eac:	00 20 03 d8 	l.sb 0(r3),r4
+ 2301eb0:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301eb4:	2a fd ff 07 	l.jal 230135c <camera_refresh_indicator>
+ 2301eb8:	00 00 72 84 	l.lwz r3,0(r18)
+ 2301ebc:	00 00 23 bc 	l.sfnei r3,0
+ 2301ec0:	05 00 00 10 	l.bf 2301ed4 <camera_window_enter+0xa4>
+ 2301ec4:	28 00 60 9c 	l.addi r3,r0,40
+ 2301ec8:	9c cd 8e a8 	l.ori r4,r14,0xcd9c
+ 2301ecc:	1e 16 f4 07 	l.jal 2007744 <fw_load_audio>
+ 2301ed0:	00 58 12 d4 	l.sw 0(r18),r11
+ 2301ed4:	0c 02 60 18 	l.movhi r3,0x20c
+ 2301ed8:	98 cd 63 a8 	l.ori r3,r3,0xcd98
+ 2301edc:	00 00 a3 84 	l.lwz r5,0(r3)
+ 2301ee0:	00 00 25 bc 	l.sfnei r5,0
+ 2301ee4:	04 00 00 10 	l.bf 2301ef4 <camera_window_enter+0xc4>
+ 2301ee8:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301eec:	1a 00 80 9c 	l.addi r4,r0,26
+ 2301ef0:	73 f8 ff 07 	l.jal 23000bc <set_widget_visible>
+ 2301ef4:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301ef8:	0d 02 40 18 	l.movhi r2,0x20d
+ 2301efc:	ec fb ff 07 	l.jal 2300eac <camera_refresh_light>
+ 2301f00:	d4 41 82 a8 	l.ori r4,r2,0x41d4
+ 2301f04:	00 00 64 8c 	l.lbz r3,0(r4)
+ 2301f08:	ff 00 63 a4 	l.andi r3,r3,0xff
+ 2301f0c:	00 00 23 bc 	l.sfnei r3,0
+ 2301f10:	05 00 00 10 	l.bf 2301f24 <camera_window_enter+0xf4>
+ 2301f14:	d5 41 42 a8 	l.ori r2,r2,0x41d5
+ 2301f18:	00 18 02 d8 	l.sb 0(r2),r3
+ 2301f1c:	01 00 40 9c 	l.addi r2,r0,1
+ 2301f20:	00 10 04 d8 	l.sb 0(r4),r2
+ 2301f24:	10 00 60 9c 	l.addi r3,r0,16
+ 2301f28:	20 00 80 9c 	l.addi r4,r0,32
+ 2301f2c:	0d 00 a0 9c 	l.addi r5,r0,13
+ 2301f30:	71 d7 f5 07 	l.jal 2077cf4 <fw_glyphs_init>
+ 2301f34:	14 00 21 9c 	l.addi r1,r1,20
+ 2301f38:	00 00 60 9d 	l.addi r11,r0,0
+ 2301f3c:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301f40:	ec ff 21 84 	l.lwz r1,-20(r1)
+ 2301f44:	f0 ff 41 84 	l.lwz r2,-16(r1)
+ 2301f48:	f4 ff c1 85 	l.lwz r14,-12(r1)
+ 2301f4c:	f8 ff 41 86 	l.lwz r18,-8(r1)
+ 2301f50:	00 48 00 44 	l.jr r9
+
+02301f54 <camera_indicator_timeout>:
+ 2301f54:	f8 77 e1 d7 	l.sw -8(r1),r14
+ 2301f58:	0d 02 c0 19 	l.movhi r14,0x20d
+ 2301f5c:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301f60:	f0 0f e1 d7 	l.sw -16(r1),r1
+ 2301f64:	f4 17 e1 d7 	l.sw -12(r1),r2
+ 2301f68:	d9 41 ce a9 	l.ori r14,r14,0x41d9
+ 2301f6c:	f0 ff 21 9c 	l.addi r1,r1,-16
+ 2301f70:	00 00 4e 8c 	l.lbz r2,0(r14)
+ 2301f74:	02 00 02 bc 	l.sfeqi r2,2
+ 2301f78:	0f 00 00 0c 	l.bnf 2301fb4 <camera_indicator_timeout+0x60>
+ 2301f7c:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2301f80:	45 7e f4 07 	l.jal 2021894 <fw_time>
+ 2301f84:	0c 02 60 18 	l.movhi r3,0x20c
+ 2301f88:	a4 cd 63 a8 	l.ori r3,r3,0xcda4
+ 2301f8c:	00 00 63 84 	l.lwz r3,0(r3)
+ 2301f90:	02 18 6b e1 	l.sub r11,r11,r3
+ 2301f94:	20 03 ab bc 	l.sfleui r11,800
+ 2301f98:	07 00 00 10 	l.bf 2301fb4 <camera_indicator_timeout+0x60>
+ 2301f9c:	00 00 60 9c 	l.addi r3,r0,0
+ 2301fa0:	00 18 0e d8 	l.sb 0(r14),r3
+ 2301fa4:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301fa8:	ed fc ff 07 	l.jal 230135c <camera_refresh_indicator>
+ 2301fac:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2301fb0:	32 fc ff 07 	l.jal 2301078 <camera_refresh_zoom>
+ 2301fb4:	10 00 21 9c 	l.addi r1,r1,16
+ 2301fb8:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2301fbc:	f0 ff 21 84 	l.lwz r1,-16(r1)
+ 2301fc0:	f4 ff 41 84 	l.lwz r2,-12(r1)
+ 2301fc4:	f8 ff c1 85 	l.lwz r14,-8(r1)
+ 2301fc8:	00 48 00 44 	l.jr r9
+
+02301fcc <camera_mode_tick>:
+ 2301fcc:	f4 17 e1 d7 	l.sw -12(r1),r2
+ 2301fd0:	30 02 40 18 	l.movhi r2,0x230
+ 2301fd4:	f8 77 e1 d7 	l.sw -8(r1),r14
+ 2301fd8:	40 26 42 a8 	l.ori r2,r2,0x2640
+ 2301fdc:	0d 02 c0 19 	l.movhi r14,0x20d
+ 2301fe0:	08 00 62 84 	l.lwz r3,8(r2)
+ 2301fe4:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2301fe8:	f0 0f e1 d7 	l.sw -16(r1),r1
+ 2301fec:	f0 ff 21 9c 	l.addi r1,r1,-16
+ 2301ff0:	c8 41 4e a8 	l.ori r2,r14,0x41c8
+ 2301ff4:	d8 ff ff 07 	l.jal 2301f54 <camera_indicator_timeout>
+ 2301ff8:	00 00 62 8c 	l.lbz r3,0(r2)
+ 2301ffc:	00 00 03 bc 	l.sfeqi r3,0
+ 2302000:	1d 00 00 0c 	l.bnf 2302074 <camera_mode_tick+0xa8>
+ 2302004:	01 00 60 9c 	l.addi r3,r0,1
+ 2302008:	00 18 02 d8 	l.sb 0(r2),r3
+ 230200c:	c5 81 f4 07 	l.jal 2022720 <fw_frame_get>
+ 2302010:	00 00 0b bc 	l.sfeqi r11,0
+ 2302014:	00 00 4b a8 	l.ori r2,r11,0x0
+ 2302018:	17 00 00 10 	l.bf 2302074 <camera_mode_tick+0xa8>
+ 230201c:	c5 41 ce a9 	l.ori r14,r14,0x41c5
+ 2302020:	00 00 6e 8c 	l.lbz r3,0(r14)
+ 2302024:	02 00 23 bc 	l.sfnei r3,2
+ 2302028:	07 00 00 10 	l.bf 2302044 <camera_mode_tick+0x78>
+ 230202c:	20 00 ab 94 	l.lhz r5,32(r11)
+ 2302030:	22 00 cb 94 	l.lhz r6,34(r11)
+ 2302034:	04 00 6b 84 	l.lwz r3,4(r11)
+ 2302038:	08 00 8b 84 	l.lwz r4,8(r11)
+ 230203c:	c1 81 f4 07 	l.jal 2022740 <fw_effect>
+ 2302040:	06 00 00 00 	l.j 2302058 <camera_mode_tick+0x8c>
+ 2302044:	00 00 6e 8c 	l.lbz r3,0(r14)
+ 2302048:	03 00 23 bc 	l.sfnei r3,3
+ 230204c:	03 00 00 10 	l.bf 2302058 <camera_mode_tick+0x8c>
+ 2302050:	04 00 6b 84 	l.lwz r3,4(r11)
+ 2302054:	18 10 f5 07 	l.jal 20460b4 <fw_group3_effect>
+ 2302058:	0d 02 60 18 	l.movhi r3,0x20d
+ 230205c:	02 00 80 9c 	l.addi r4,r0,2
+ 2302060:	c8 41 63 a8 	l.ori r3,r3,0x41c8
+ 2302064:	00 20 03 d8 	l.sb 0(r3),r4
+ 2302068:	00 00 62 a8 	l.ori r3,r2,0x0
+ 230206c:	76 df f4 07 	l.jal 2039e44 <fw_frame_submit>
+ 2302070:	f7 e1 f4 07 	l.jal 203a84c <fw_frame_rearm>
+ 2302074:	10 00 21 9c 	l.addi r1,r1,16
+ 2302078:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 230207c:	f0 ff 21 84 	l.lwz r1,-16(r1)
+ 2302080:	f4 ff 41 84 	l.lwz r2,-12(r1)
+ 2302084:	f8 ff c1 85 	l.lwz r14,-8(r1)
+ 2302088:	00 48 00 44 	l.jr r9
+
+0230208c <camera_ok>:
+ 230208c:	01 00 84 ac 	l.xori r4,r4,1
+ 2302090:	d8 17 e1 d7 	l.sw -40(r1),r2
+ 2302094:	02 20 40 e0 	l.sub r2,r0,r4
+ 2302098:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 230209c:	04 20 82 e0 	l.or r4,r2,r4
+ 23020a0:	d4 0f e1 d7 	l.sw -44(r1),r1
+ 23020a4:	dc 77 e1 d7 	l.sw -36(r1),r14
+ 23020a8:	e0 97 e1 d7 	l.sw -32(r1),r18
+ 23020ac:	e4 a7 e1 d7 	l.sw -28(r1),r20
+ 23020b0:	e8 b7 e1 d7 	l.sw -24(r1),r22
+ 23020b4:	ec c7 e1 d7 	l.sw -20(r1),r24
+ 23020b8:	f0 d7 e1 d7 	l.sw -16(r1),r26
+ 23020bc:	f4 e7 e1 d7 	l.sw -12(r1),r28
+ 23020c0:	f8 f7 e1 d7 	l.sw -8(r1),r30
+ 23020c4:	00 00 84 bd 	l.sfltsi r4,0
+ 23020c8:	cc ff 21 9c 	l.addi r1,r1,-52
+ 23020cc:	09 01 00 10 	l.bf 23024f0 <camera_ok+0x464>
+ 23020d0:	02 28 40 e0 	l.sub r2,r0,r5
+ 23020d4:	04 10 45 e0 	l.or r2,r5,r2
+ 23020d8:	00 00 62 bd 	l.sfgesi r2,0
+ 23020dc:	05 01 00 10 	l.bf 23024f0 <camera_ok+0x464>
+ 23020e0:	00 00 45 84 	l.lwz r2,0(r5)
+ 23020e4:	00 00 22 bc 	l.sfnei r2,0
+ 23020e8:	02 01 00 10 	l.bf 23024f0 <camera_ok+0x464>
+ 23020ec:	00 00 c3 a9 	l.ori r14,r3,0x0
+ 23020f0:	0d 02 60 18 	l.movhi r3,0x20d
+ 23020f4:	01 00 80 9e 	l.addi r20,r0,1
+ 23020f8:	c5 41 43 a8 	l.ori r2,r3,0x41c5
+ 23020fc:	00 00 42 8c 	l.lbz r2,0(r2)
+ 2302100:	00 00 22 bc 	l.sfnei r2,0
+ 2302104:	18 00 00 10 	l.bf 2302164 <camera_ok+0xd8>
+ 2302108:	c7 41 63 a8 	l.ori r3,r3,0x41c7
+ 230210c:	00 00 43 8c 	l.lbz r2,0(r3)
+ 2302110:	00 a0 02 e4 	l.sfeq r2,r20
+ 2302114:	d4 00 00 10 	l.bf 2302464 <camera_ok+0x3d8>
+ 2302118:	00 00 43 8c 	l.lbz r2,0(r3)
+ 230211c:	02 00 02 bc 	l.sfeqi r2,2
+ 2302120:	d3 00 00 10 	l.bf 230246c <camera_ok+0x3e0>
+ 2302124:	00 00 43 8c 	l.lbz r2,0(r3)
+ 2302128:	ff 00 42 a4 	l.andi r2,r2,0xff
+ 230212c:	03 00 02 bc 	l.sfeqi r2,3
+ 2302130:	d7 00 00 10 	l.bf 230248c <camera_ok+0x400>
+ 2302134:	00 00 43 8c 	l.lbz r2,0(r3)
+ 2302138:	04 00 02 bc 	l.sfeqi r2,4
+ 230213c:	ce 00 00 10 	l.bf 2302474 <camera_ok+0x3e8>
+ 2302140:	00 00 43 8c 	l.lbz r2,0(r3)
+ 2302144:	05 00 02 bc 	l.sfeqi r2,5
+ 2302148:	cd 00 00 10 	l.bf 230247c <camera_ok+0x3f0>
+ 230214c:	00 00 43 8c 	l.lbz r2,0(r3)
+ 2302150:	06 00 02 bc 	l.sfeqi r2,6
+ 2302154:	04 00 00 0c 	l.bnf 2302164 <camera_ok+0xd8>
+ 2302158:	cb 00 00 00 	l.j 2302484 <camera_ok+0x3f8>
+ 230215c:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2302160:	53 f8 ff 07 	l.jal 23002ac <camera_countdown.part.7>
+ 2302164:	0d 02 40 18 	l.movhi r2,0x20d
+ 2302168:	00 81 00 1b 	l.movhi r24,0x8100
+ 230216c:	00 00 c0 9e 	l.addi r22,r0,0
+ 2302170:	70 41 42 ab 	l.ori r26,r2,0x4170
+ 2302174:	7f 00 98 ab 	l.ori r28,r24,0x7f
+ 2302178:	95 ff ff 07 	l.jal 2301fcc <camera_mode_tick>
+ 230217c:	00 00 7a 8c 	l.lbz r3,0(r26)
+ 2302180:	03 00 03 bc 	l.sfeqi r3,3
+ 2302184:	04 00 00 10 	l.bf 2302194 <camera_ok+0x108>
+ 2302188:	00 00 7a 8c 	l.lbz r3,0(r26)
+ 230218c:	04 00 23 bc 	l.sfnei r3,4
+ 2302190:	7f 00 00 10 	l.bf 230238c <camera_ok+0x300>
+ 2302194:	00 00 60 9c 	l.addi r3,r0,0
+ 2302198:	e5 f7 ff 07 	l.jal 230012c <set_status_led>
+ 230219c:	01 00 60 9c 	l.addi r3,r0,1
+ 23021a0:	2e f8 ff 07 	l.jal 2300258 <set_capture_light>
+ 23021a4:	c5 41 62 a8 	l.ori r3,r2,0x41c5
+ 23021a8:	00 00 63 8c 	l.lbz r3,0(r3)
+ 23021ac:	00 00 03 bc 	l.sfeqi r3,0
+ 23021b0:	17 00 00 0c 	l.bnf 230220c <camera_ok+0x180>
+ 23021b4:	c7 41 c2 ab 	l.ori r30,r2,0x41c7
+ 23021b8:	00 00 7e 8c 	l.lbz r3,0(r30)
+ 23021bc:	06 00 a3 bc 	l.sfleui r3,6
+ 23021c0:	13 00 00 10 	l.bf 230220c <camera_ok+0x180>
+ 23021c4:	00 00 7e 8c 	l.lbz r3,0(r30)
+ 23021c8:	08 00 43 bc 	l.sfgtui r3,8
+ 23021cc:	10 00 00 10 	l.bf 230220c <camera_ok+0x180>
+ 23021d0:	54 81 f4 07 	l.jal 2022720 <fw_frame_get>
+ 23021d4:	00 00 0b bc 	l.sfeqi r11,0
+ 23021d8:	00 00 4b aa 	l.ori r18,r11,0x0
+ 23021dc:	0c 00 00 10 	l.bf 230220c <camera_ok+0x180>
+ 23021e0:	00 00 fe 8c 	l.lbz r7,0(r30)
+ 23021e4:	07 00 e7 ac 	l.xori r7,r7,7
+ 23021e8:	20 00 ab 94 	l.lhz r5,32(r11)
+ 23021ec:	02 38 e0 e0 	l.sub r7,r0,r7
+ 23021f0:	22 00 cb 94 	l.lhz r6,34(r11)
+ 23021f4:	5f 00 e7 b8 	l.srli r7,r7,0x1f
+ 23021f8:	04 00 6b 84 	l.lwz r3,4(r11)
+ 23021fc:	08 00 8b 84 	l.lwz r4,8(r11)
+ 2302200:	8d 80 f4 07 	l.jal 2022434 <fw_edge>
+ 2302204:	00 00 72 a8 	l.ori r3,r18,0x0
+ 2302208:	0f df f4 07 	l.jal 2039e44 <fw_frame_submit>
+ 230220c:	00 00 60 9c 	l.addi r3,r0,0
+ 2302210:	35 cb f4 07 	l.jal 2034ee4 <fw_csi_enable>
+ 2302214:	00 00 60 9c 	l.addi r3,r0,0
+ 2302218:	e6 07 f4 07 	l.jal 20041b0 <fw_layer_uninit>
+ 230221c:	f0 f8 ff 07 	l.jal 23005dc <camera_capture_file>
+ 2302220:	2c 00 60 9c 	l.addi r3,r0,44
+ 2302224:	01 00 80 9c 	l.addi r4,r0,1
+ 2302228:	00 00 a0 9c 	l.addi r5,r0,0
+ 230222c:	00 00 cb ab 	l.ori r30,r11,0x0
+ 2302230:	e5 13 f4 07 	l.jal 20071c4 <fw_audio_play>
+ 2302234:	9b 40 f5 07 	l.jal 20524a0 <fw_audio_status>
+ 2302238:	01 00 0b bc 	l.sfeqi r11,1
+ 230223c:	04 00 00 0c 	l.bnf 230224c <camera_ok+0x1c0>
+ 2302240:	0a 00 60 9c 	l.addi r3,r0,10
+ 2302244:	9c 7d f4 07 	l.jal 20218b4 <fw_delay>
+ 2302248:	fb ff ff 03 	l.j 2302234 <camera_ok+0x1a8>
+ 230224c:	01 00 60 9c 	l.addi r3,r0,1
+ 2302250:	25 cb f4 07 	l.jal 2034ee4 <fw_csi_enable>
+ 2302254:	00 00 60 9c 	l.addi r3,r0,0
+ 2302258:	cc 08 f4 07 	l.jal 2004588 <fw_layer_init>
+ 230225c:	01 00 60 9c 	l.addi r3,r0,1
+ 2302260:	b3 f7 ff 07 	l.jal 230012c <set_status_led>
+ 2302264:	00 00 60 9c 	l.addi r3,r0,0
+ 2302268:	fc f7 ff 07 	l.jal 2300258 <set_capture_light>
+ 230226c:	00 00 3e bc 	l.sfnei r30,0
+ 2302270:	77 00 00 10 	l.bf 230244c <camera_ok+0x3c0>
+ 2302274:	82 a6 f4 07 	l.jal 202bc7c <fw_service>
+ 2302278:	00 00 7e a8 	l.ori r3,r30,0x0
+ 230227c:	1a cb f4 07 	l.jal 2034ee4 <fw_csi_enable>
+ 2302280:	07 00 60 9c 	l.addi r3,r0,7
+ 2302284:	b0 09 f4 07 	l.jal 2004944 <fw_ui_state>
+ 2302288:	cb 41 62 a8 	l.ori r3,r2,0x41cb
+ 230228c:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2302290:	00 00 23 bc 	l.sfnei r3,0
+ 2302294:	04 00 00 10 	l.bf 23022a4 <camera_ok+0x218>
+ 2302298:	e8 03 60 9c 	l.addi r3,r0,1000
+ 230229c:	86 7d f4 07 	l.jal 20218b4 <fw_delay>
+ 23022a0:	34 00 00 00 	l.j 2302370 <camera_ok+0x2e4>
+ 23022a4:	a8 41 42 aa 	l.ori r18,r2,0x41a8
+ 23022a8:	00 00 72 84 	l.lwz r3,0(r18)
+ 23022ac:	67 f9 f3 07 	l.jal 2000848 <fw_manager_service>
+ 23022b0:	00 00 ab bd 	l.sflesi r11,0
+ 23022b4:	2f 00 00 10 	l.bf 2302370 <camera_ok+0x2e4>
+ 23022b8:	04 f0 01 d4 	l.sw 4(r1),r30
+ 23022bc:	00 00 72 84 	l.lwz r3,0(r18)
+ 23022c0:	62 f9 f3 07 	l.jal 2000848 <fw_manager_service>
+ 23022c4:	00 00 72 84 	l.lwz r3,0(r18)
+ 23022c8:	00 00 8b a8 	l.ori r4,r11,0x0
+ 23022cc:	04 00 a1 9c 	l.addi r5,r1,4
+ 23022d0:	9a ff f3 07 	l.jal 2002138 <fw_file_path>
+ 23022d4:	00 00 2b bc 	l.sfnei r11,0
+ 23022d8:	00 00 4b aa 	l.ori r18,r11,0x0
+ 23022dc:	25 00 00 0c 	l.bnf 2302370 <camera_ok+0x2e4>
+ 23022e0:	00 00 6b a8 	l.ori r3,r11,0x0
+ 23022e4:	01 00 80 9c 	l.addi r4,r0,1
+ 23022e8:	b4 a8 f5 07 	l.jal 206c5b8 <fw_open>
+ 23022ec:	00 00 8b bd 	l.sfltsi r11,0
+ 23022f0:	00 00 6b a8 	l.ori r3,r11,0x0
+ 23022f4:	1f 00 00 10 	l.bf 2302370 <camera_ok+0x2e4>
+ 23022f8:	e2 a8 f5 07 	l.jal 206c680 <fw_close>
+ 23022fc:	00 00 9c a8 	l.ori r4,r28,0x0
+ 2302300:	56 00 b8 a8 	l.ori r5,r24,0x56
+ 2302304:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2302308:	03 fe ff 07 	l.jal 2301b14 <camera_show_status>
+ 230230c:	01 00 60 9c 	l.addi r3,r0,1
+ 2302310:	6d 65 f5 07 	l.jal 205b8c4 <fw_present>
+ 2302314:	00 00 72 a8 	l.ori r3,r18,0x0
+ 2302318:	01 00 80 9c 	l.addi r4,r0,1
+ 230231c:	a7 a8 f5 07 	l.jal 206c5b8 <fw_open>
+ 2302320:	00 00 8b bd 	l.sfltsi r11,0
+ 2302324:	00 00 4b aa 	l.ori r18,r11,0x0
+ 2302328:	12 00 00 10 	l.bf 2302370 <camera_ok+0x2e4>
+ 230232c:	cd 41 62 a8 	l.ori r3,r2,0x41cd
+ 2302330:	00 00 83 8c 	l.lbz r4,0(r3)
+ 2302334:	cc 41 62 a8 	l.ori r3,r2,0x41cc
+ 2302338:	00 00 a3 8c 	l.lbz r5,0(r3)
+ 230233c:	6c 41 62 a8 	l.ori r3,r2,0x416c
+ 2302340:	00 00 c3 8c 	l.lbz r6,0(r3)
+ 2302344:	00 00 6b a8 	l.ori r3,r11,0x0
+ 2302348:	aa 62 f5 07 	l.jal 205adf0 <fw_print_file>
+ 230234c:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2302350:	00 00 8b a8 	l.ori r4,r11,0x0
+ 2302354:	13 fe ff 07 	l.jal 2301ba0 <show_print_result>
+ 2302358:	00 00 72 a8 	l.ori r3,r18,0x0
+ 230235c:	c9 a8 f5 07 	l.jal 206c680 <fw_close>
+ 2302360:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2302364:	de f7 ff 07 	l.jal 23002dc <camera_status_visibility.part.13>
+ 2302368:	01 00 60 9c 	l.addi r3,r0,1
+ 230236c:	56 65 f5 07 	l.jal 205b8c4 <fw_present>
+ 2302370:	43 a6 f4 07 	l.jal 202bc7c <fw_service>
+ 2302374:	01 00 60 9c 	l.addi r3,r0,1
+ 2302378:	db ca f4 07 	l.jal 2034ee4 <fw_csi_enable>
+ 230237c:	73 41 62 a8 	l.ori r3,r2,0x4173
+ 2302380:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2302384:	70 09 f4 07 	l.jal 2004944 <fw_ui_state>
+ 2302388:	31 00 00 00 	l.j 230244c <camera_ok+0x3c0>
+ 230238c:	cb 41 62 a8 	l.ori r3,r2,0x41cb
+ 2302390:	00 00 63 8c 	l.lbz r3,0(r3)
+ 2302394:	00 00 03 bc 	l.sfeqi r3,0
+ 2302398:	2c 00 00 10 	l.bf 2302448 <camera_ok+0x3bc>
+ 230239c:	00 00 60 9c 	l.addi r3,r0,0
+ 23023a0:	00 18 01 d4 	l.sw 0(r1),r3
+ 23023a4:	04 18 01 d4 	l.sw 4(r1),r3
+ 23023a8:	01 00 60 9c 	l.addi r3,r0,1
+ 23023ac:	ab f7 ff 07 	l.jal 2300258 <set_capture_light>
+ 23023b0:	00 00 60 9c 	l.addi r3,r0,0
+ 23023b4:	5e f7 ff 07 	l.jal 230012c <set_status_led>
+ 23023b8:	04 00 81 9c 	l.addi r4,r1,4
+ 23023bc:	00 00 61 a8 	l.ori r3,r1,0x0
+ 23023c0:	fa f8 ff 07 	l.jal 23007a8 <camera_encode_frame>
+ 23023c4:	01 00 60 9c 	l.addi r3,r0,1
+ 23023c8:	00 00 4b aa 	l.ori r18,r11,0x0
+ 23023cc:	58 f7 ff 07 	l.jal 230012c <set_status_led>
+ 23023d0:	00 00 60 9c 	l.addi r3,r0,0
+ 23023d4:	a1 f7 ff 07 	l.jal 2300258 <set_capture_light>
+ 23023d8:	00 00 32 bc 	l.sfnei r18,0
+ 23023dc:	1c 00 00 10 	l.bf 230244c <camera_ok+0x3c0>
+ 23023e0:	00 00 9c a8 	l.ori r4,r28,0x0
+ 23023e4:	56 00 b8 a8 	l.ori r5,r24,0x56
+ 23023e8:	00 00 6e a8 	l.ori r3,r14,0x0
+ 23023ec:	ca fd ff 07 	l.jal 2301b14 <camera_show_status>
+ 23023f0:	01 00 60 9c 	l.addi r3,r0,1
+ 23023f4:	34 65 f5 07 	l.jal 205b8c4 <fw_present>
+ 23023f8:	e8 03 60 9c 	l.addi r3,r0,1000
+ 23023fc:	2e 7d f4 07 	l.jal 20218b4 <fw_delay>
+ 2302400:	cd 41 62 a8 	l.ori r3,r2,0x41cd
+ 2302404:	00 00 83 8c 	l.lbz r4,0(r3)
+ 2302408:	cc 41 62 a8 	l.ori r3,r2,0x41cc
+ 230240c:	00 00 a3 8c 	l.lbz r5,0(r3)
+ 2302410:	6c 41 62 a8 	l.ori r3,r2,0x416c
+ 2302414:	00 00 c3 8c 	l.lbz r6,0(r3)
+ 2302418:	00 00 61 84 	l.lwz r3,0(r1)
+ 230241c:	38 63 f5 07 	l.jal 205b0fc <fw_print_image>
+ 2302420:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2302424:	00 00 8b a8 	l.ori r4,r11,0x0
+ 2302428:	de fd ff 07 	l.jal 2301ba0 <show_print_result>
+ 230242c:	00 00 61 84 	l.lwz r3,0(r1)
+ 2302430:	99 f0 f4 07 	l.jal 203e694 <fw_free>
+ 2302434:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2302438:	a9 f7 ff 07 	l.jal 23002dc <camera_status_visibility.part.13>
+ 230243c:	01 00 60 9c 	l.addi r3,r0,1
+ 2302440:	21 65 f5 07 	l.jal 205b8c4 <fw_present>
+ 2302444:	02 00 00 00 	l.j 230244c <camera_ok+0x3c0>
+ 2302448:	03 f7 ff 07 	l.jal 2300054 <post_storage_notification>
+ 230244c:	01 00 d6 9e 	l.addi r22,r22,1
+ 2302450:	00 a0 36 e4 	l.sfne r22,r20
+ 2302454:	49 ff ff 13 	l.bf 2302178 <camera_ok+0xec>
+ 2302458:	00 00 6e a8 	l.ori r3,r14,0x0
+ 230245c:	50 fb ff 07 	l.jal 230119c <camera_refresh_remaining>
+ 2302460:	24 00 00 00 	l.j 23024f0 <camera_ok+0x464>
+ 2302464:	03 00 80 9e 	l.addi r20,r0,3
+ 2302468:	3f ff ff 03 	l.j 2302164 <camera_ok+0xd8>
+ 230246c:	05 00 80 9e 	l.addi r20,r0,5
+ 2302470:	3d ff ff 03 	l.j 2302164 <camera_ok+0xd8>
+ 2302474:	05 00 40 9c 	l.addi r2,r0,5
+ 2302478:	05 00 00 00 	l.j 230248c <camera_ok+0x400>
+ 230247c:	0a 00 40 9c 	l.addi r2,r0,10
+ 2302480:	03 00 00 00 	l.j 230248c <camera_ok+0x400>
+ 2302484:	05 00 40 9c 	l.addi r2,r0,5
+ 2302488:	03 00 80 9e 	l.addi r20,r0,3
+ 230248c:	02 7d f4 07 	l.jal 2021894 <fw_time>
+ 2302490:	64 00 60 9c 	l.addi r3,r0,100
+ 2302494:	00 00 4b aa 	l.ori r18,r11,0x0
+ 2302498:	07 7d f4 07 	l.jal 20218b4 <fw_delay>
+ 230249c:	f8 a5 f4 07 	l.jal 202bc7c <fw_service>
+ 23024a0:	00 00 6e a8 	l.ori r3,r14,0x0
+ 23024a4:	01 00 80 9c 	l.addi r4,r0,1
+ 23024a8:	00 00 a2 a8 	l.ori r5,r2,0x0
+ 23024ac:	84 fb ff 07 	l.jal 23012bc <camera_countdown>
+ 23024b0:	f3 a5 f4 07 	l.jal 202bc7c <fw_service>
+ 23024b4:	f8 7c f4 07 	l.jal 2021894 <fw_time>
+ 23024b8:	02 90 6b e1 	l.sub r11,r11,r18
+ 23024bc:	e7 03 ab bc 	l.sfleui r11,999
+ 23024c0:	0a 00 00 10 	l.bf 23024e8 <camera_ok+0x45c>
+ 23024c4:	ff ff 42 9c 	l.addi r2,r2,-1
+ 23024c8:	00 00 6e a8 	l.ori r3,r14,0x0
+ 23024cc:	01 00 80 9c 	l.addi r4,r0,1
+ 23024d0:	00 00 a2 a8 	l.ori r5,r2,0x0
+ 23024d4:	7a fb ff 07 	l.jal 23012bc <camera_countdown>
+ 23024d8:	00 00 02 bc 	l.sfeqi r2,0
+ 23024dc:	20 ff ff 13 	l.bf 230215c <camera_ok+0xd0>
+ 23024e0:	ed 7c f4 07 	l.jal 2021894 <fw_time>
+ 23024e4:	00 00 4b aa 	l.ori r18,r11,0x0
+ 23024e8:	b9 fe ff 07 	l.jal 2301fcc <camera_mode_tick>
+ 23024ec:	f1 ff ff 03 	l.j 23024b0 <camera_ok+0x424>
+ 23024f0:	34 00 21 9c 	l.addi r1,r1,52
+ 23024f4:	00 00 60 9d 	l.addi r11,r0,0
+ 23024f8:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23024fc:	d4 ff 21 84 	l.lwz r1,-44(r1)
+ 2302500:	d8 ff 41 84 	l.lwz r2,-40(r1)
+ 2302504:	dc ff c1 85 	l.lwz r14,-36(r1)
+ 2302508:	e0 ff 41 86 	l.lwz r18,-32(r1)
+ 230250c:	e4 ff 81 86 	l.lwz r20,-28(r1)
+ 2302510:	e8 ff c1 86 	l.lwz r22,-24(r1)
+ 2302514:	ec ff 01 87 	l.lwz r24,-20(r1)
+ 2302518:	f0 ff 41 87 	l.lwz r26,-16(r1)
+ 230251c:	f4 ff 81 87 	l.lwz r28,-12(r1)
+ 2302520:	f8 ff c1 87 	l.lwz r30,-8(r1)
+ 2302524:	00 48 00 44 	l.jr r9

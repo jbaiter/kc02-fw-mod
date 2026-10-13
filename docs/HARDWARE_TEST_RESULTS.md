@@ -3,6 +3,13 @@
 Validation of the offline RE + toolchain on live hardware. Firmware backup md5
 `7236c4c1bd3f12b1d85d33a9bebdf510` untouched throughout. All modifications RAM-only.
 
+> **Hash note.** The `md5 7236c4c1bd3f12b1d85d33a9bebdf510` quoted in early documents is not the
+> hash of the canonical image in this repo. `firmware/original.bin` is
+> `sha256 218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5`
+> (`md5 757f58ae6d2c729469fe873e95df794a`), and every tool and build script pins that sha256.
+> The old md5 described `original_firmware_backup.bin`, an earlier dump; an early dump pair was
+> already known to differ by 8 bytes in one SFAT counter run. See [DOC_AUDIT.md](DOC_AUDIT.md).
+
 ## Night 1 — the dump and the architecture
 
 | Test | Result |
@@ -26,8 +33,12 @@ Night-1 crash post-mortem: the first combined application died on `jalr 0`
    (`0x0200D450`) powers the USB interface down and continues toward
    power-off. **Unplugging while on the SD screen shuts the camera down**;
    unplugging from any other mode is safe.
-2. **Printing is refused while charging** — the message is
+2. **Printing was refused while charging** — the message is
    "Aufgeladen, nicht verfügbar" ("charging, not available"). Unplug to print.
+   **Later correction (2026-10, after the battery repair):** this applies to the USB-only,
+   no-battery state at the time. With the battery connected, printing while charging was confirmed
+   working on hardware, including full-width and dense patterns, with `kc02_battery_check()` still
+   reporting 14 = charging. Treat 14 as "charging", never as "battery absent".
 3. The battery gauge lies under USB load (1 bar plugged / 3 bars unplugged =
    voltage sag artifacts).
 4. While USB mass-storage is serviced, printing through the UI can fail

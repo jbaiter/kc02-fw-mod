@@ -1,0 +1,51 @@
+{
+  "passed": true,
+  "assertions": 6018,
+  "differential_cases": 5956,
+  "original_handlers": [
+    "UP",
+    "DOWN",
+    "LEFT",
+    "RIGHT",
+    "BACK"
+  ],
+  "firmware_sha256": "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5",
+  "original_listing_sha256": "cfb8d69daba9745a80cb8a0cc32fbb670c258032dac41ed621968824f7bef8fb",
+  "original_listing_byte_checked": true,
+  "sanitizers": [
+    "undefined-behavior sanitizer"
+  ],
+  "build_command": [
+    "cc",
+    "-std=c11",
+    "-O1",
+    "-g",
+    "-Wall",
+    "-Wextra",
+    "-Werror",
+    "-DCAMERA_HOST_TEST",
+    "-fPIC",
+    "-shared",
+    "-fsanitize=undefined",
+    "-fno-sanitize-recover=all",
+    "-I/tmp/kc02-camera-readable-tests",
+    "-I/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen",
+    "/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/camera_screen_model.c",
+    "/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/mock_firmware.c",
+    "-o",
+    "/tmp/kc02-camera-readable-tests/camera_host_test.so"
+  ],
+  "source_sha256": {
+    "camera_screen_model.c": "64c99069d9b218ab8d0b80fc68282ff27849c07796e42c31befff4d95486fb9c",
+    "camera_screen.h": "ab5194a87be0dbff5ac6d2f4cb6e3204a6ced8003b00c605fdeb8c43cb194922",
+    "firmware_imports.def": "ea7086f3447ccceccf1094921e151df3d1c4770abcf57adbeaa68dd494d88c14",
+    "generate_widgets.py": "7968ff6f9df82bbe1a90db3d5335260ce8d32bce76531a73c088707df5d8a6b6",
+    "generate_mock_wrappers.py": "3ad61a15fe2b3d06ad9975ed68f4a966079761af22493915368014a7c7feb3fb",
+    "mock_firmware.c": "666cec8496427e5517cd98eccc96a304ae901c4a76d8a3936a32a32a0d50f7c3",
+    "test_camera_screen.py": "fff60a427387db3fb2e1488dba6f05dd857c122e75e7360e5fb3ee484e0261c7"
+  },
+  "limitations": [
+    "Original-handler callees are mocked; controller RAM is compared, not peripheral behavior.",
+    "Not target ABI, preview hardware, JPEG quality, printer or deployment validation."
+  ]
+}

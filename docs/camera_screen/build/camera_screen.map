@@ -1,0 +1,321 @@
+
+Discarded input sections
+
+ .comment       0x0000000000000000       0x12 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .eh_frame      0x0000000000000000      0x584 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+
+Memory Configuration
+
+Name             Origin             Length             Attributes
+*default*        0x0000000000000000 0xffffffffffffffff
+
+Linker script and memory map
+
+                0x0000000002040384                fw_encoder_init = 0x2040384
+                0x00000000020487a4                fw_sensor_adjust = 0x20487a4
+                0x000000000205609c                fw_record_config = 0x205609c
+                0x000000000204606c                fw_frame_mode = 0x204606c
+                0x00000000020588c0                fw_color_preset = 0x20588c0
+                0x00000000020049f8                fw_crop_start = 0x20049f8
+                0x0000000002004944                fw_ui_state = 0x2004944
+                0x0000000002004588                fw_layer_init = 0x2004588
+                0x00000000020041b0                fw_layer_uninit = 0x20041b0
+                0x0000000002012304                fw_window_open = 0x2012304
+                0x00000000020218b4                fw_delay = 0x20218b4
+                0x0000000002034ee4                fw_csi_enable = 0x2034ee4
+                0x0000000002022720                fw_frame_get = 0x2022720
+                0x0000000002039e44                fw_frame_submit = 0x2039e44
+                0x000000000203a84c                fw_frame_rearm = 0x203a84c
+                0x0000000002022740                fw_effect = 0x2022740
+                0x0000000002022434                fw_edge = 0x2022434
+                0x00000000020460b4                fw_group3_effect = 0x20460b4
+                0x0000000002025154                fw_child = 0x2025154
+                0x000000000202990c                fw_set_resid = 0x202990c
+                0x000000000202984c                fw_visible = 0x202984c
+                0x000000000205b8c4                fw_present = 0x205b8c4
+                0x0000000002008108                fw_mode_request = 0x2008108
+                0x00000000020075e8                fw_init_camera_name = 0x20075e8
+                0x0000000002007744                fw_load_audio = 0x2007744
+                0x0000000002007410                fw_audio_buffer = 0x2007410
+                0x0000000002077cf4                fw_glyphs_init = 0x2077cf4
+                0x0000000002078188                fw_glyphs_free = 0x2078188
+                0x00000000020568d4                fw_exit_stub = 0x20568d4
+                0x0000000002054f0c                fw_record_reset = 0x2054f0c
+                0x0000000002021894                fw_time = 0x2021894
+                0x0000000002002a4c                fw_board_ioctl = 0x2002a4c
+                0x0000000002003e34                fw_config_get = 0x2003e34
+                0x00000000020064b4                fw_setting_value = 0x20064b4
+                0x00000000020454fc                fw_template_load = 0x20454fc
+                0x00000000020459ac                fw_template_resize = 0x20459ac
+                0x000000000203bae0                fw_rtc_get = 0x203bae0
+                0x000000000203bb50                fw_rtc_string = 0x203bb50
+                0x00000000020071c4                fw_audio_play = 0x20071c4
+                0x00000000020524a0                fw_audio_status = 0x20524a0
+                0x000000000202bc7c                fw_service = 0x202bc7c
+                0x0000000002021648                fw_queue_post = 0x2021648
+                0x000000000200117c                fw_space_check = 0x200117c
+                0x0000000002001da0                fw_filename_create = 0x2001da0
+                0x00000000020017a0                fw_file_add = 0x20017a0
+                0x000000000203ce04                fw_sd_lock = 0x203ce04
+                0x000000000203ce44                fw_sd_unlock = 0x203ce44
+                0x000000000203c6e8                fw_sd_stop = 0x203c6e8
+                0x000000000206c5b8                fw_open = 0x206c5b8
+                0x000000000206c680                fw_close = 0x206c680
+                0x000000000206caf8                fw_file_size = 0x206caf8
+                0x0000000002072b18                fw_unlink = 0x2072b18
+                0x000000000200d344                fw_account_space = 0x200d344
+                0x0000000002000848                fw_manager_service = 0x2000848
+                0x0000000002002138                fw_file_path = 0x2002138
+                0x000000000205adf0                fw_print_file = 0x205adf0
+                0x000000000205b0fc                fw_print_image = 0x205b0fc
+                0x000000000203defc                fw_watermark_close = 0x203defc
+                0x000000000203e014                fw_watermark_open = 0x203e014
+                0x000000000203e410                fw_watermark_position = 0x203e410
+                0x0000000002056188                fw_encode_flag = 0x2056188
+                0x0000000002076f98                fw_encode_file = 0x2076f98
+                0x0000000002040478                fw_capture_size_snapshot = 0x2040478
+                0x00000000020401a8                fw_encoder_mem_init = 0x20401a8
+                0x00000000020381fc                fw_csi_resolution = 0x20381fc
+                0x0000000002040c6c                fw_encode_start = 0x2040c6c
+                0x000000000203e5c4                fw_alloc = 0x203e5c4
+                0x000000000203e694                fw_free = 0x203e694
+                0x00000000020416cc                fw_encoded_get = 0x20416cc
+                0x000000000204183c                fw_encoded_release = 0x204183c
+                0x0000000002054bfc                fw_watermark_update = 0x2054bfc
+                0x000000000202b058                fw_cache_writeback = 0x202b058
+                0x000000000202b0d4                fw_cache_flush = 0x202b0d4
+                0x0000000002056368                fw_jpeg_decode = 0x2056368
+                0x000000000205681c                fw_decode_resolution = 0x205681c
+                0x0000000002046150                fw_image_transform = 0x2046150
+                0x0000000002077ef0                fw_watermark_stamp = 0x2077ef0
+                0x00000000020403ec                fw_encoder_uninit = 0x20403ec
+                0x00000000020782b0                fw_copy = 0x20782b0
+                0x0000000002300000                . = 0x2300000
+
+.text           0x0000000002300000     0x2528
+ *(.text .text.*)
+ .text          0x0000000002300000        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.selected_template_resource
+                0x0000000002300000       0x3c /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.camera_msg_noop
+                0x000000000230003c       0x18 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x000000000230003c                camera_msg_noop
+ .text.post_storage_notification
+                0x0000000002300054       0x30 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.set_widget_resource
+                0x0000000002300084       0x38 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.set_widget_visible
+                0x00000000023000bc       0x38 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.camera_window_exit
+                0x00000000023000f4       0x38 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x00000000023000f4                camera_window_exit
+ .text.set_status_led
+                0x000000000230012c       0x40 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.zoom_is_restricted
+                0x000000000230016c       0x64 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.camera_back
+                0x00000000023001d0       0x88 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x00000000023001d0                camera_back
+ .text.set_capture_light
+                0x0000000002300258       0x54 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.camera_countdown.part.7
+                0x00000000023002ac       0x30 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.camera_status_visibility.part.13
+                0x00000000023002dc       0x54 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.camera_mode_enter
+                0x0000000002300330       0xec /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002300330                camera_mode_enter
+ .text.camera_mode_exit
+                0x000000000230041c       0xec /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x000000000230041c                camera_mode_exit
+ .text.camera_open_file
+                0x0000000002300508       0xd4 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002300508                camera_open_file
+ .text.camera_capture_file
+                0x00000000023005dc      0x1cc /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x00000000023005dc                camera_capture_file
+ .text.camera_encode_frame
+                0x00000000023007a8      0x500 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x00000000023007a8                camera_encode_frame
+ .text.camera_refresh_battery
+                0x0000000002300ca8       0xbc /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002300ca8                camera_refresh_battery
+ .text.camera_msg_battery_conditional
+                0x0000000002300d64       0x38 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002300d64                camera_msg_battery_conditional
+ .text.camera_msg_battery
+                0x0000000002300d9c       0x24 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002300d9c                camera_msg_battery
+ .text.camera_msg_clock
+                0x0000000002300dc0       0x64 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002300dc0                camera_msg_clock
+ .text.camera_refresh_scene
+                0x0000000002300e24       0x88 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002300e24                camera_refresh_scene
+ .text.camera_refresh_light
+                0x0000000002300eac       0xd8 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002300eac                camera_refresh_light
+ .text.camera_right
+                0x0000000002300f84       0xf4 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002300f84                camera_right
+ .text.camera_refresh_zoom
+                0x0000000002301078       0xac /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301078                camera_refresh_zoom
+ .text.refresh_after_preset_change
+                0x0000000002301124       0x78 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.camera_refresh_remaining
+                0x000000000230119c      0x120 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x000000000230119c                camera_refresh_remaining
+ .text.camera_countdown
+                0x00000000023012bc       0xa0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x00000000023012bc                camera_countdown
+ .text.camera_refresh_indicator
+                0x000000000230135c       0x90 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x000000000230135c                camera_refresh_indicator
+ .text.handle_zoom_step
+                0x00000000023013ec      0x124 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.finish_zoom_indicator
+                0x0000000002301510       0x94 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.camera_down
+                0x00000000023015a4      0x238 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x00000000023015a4                camera_down
+ .text.camera_up
+                0x00000000023017dc      0x254 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x00000000023017dc                camera_up
+ .text.camera_refresh_storage
+                0x0000000002301a30       0x48 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301a30                camera_refresh_storage
+ .text.camera_msg_storage
+                0x0000000002301a78       0x9c /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301a78                camera_msg_storage
+ .text.camera_show_status
+                0x0000000002301b14       0x8c /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301b14                camera_show_status
+ .text.show_print_result
+                0x0000000002301ba0       0x70 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .text.camera_status_visibility
+                0x0000000002301c10       0x38 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301c10                camera_status_visibility
+ .text.camera_refresh_print
+                0x0000000002301c48       0x6c /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301c48                camera_refresh_print
+ .text.camera_left
+                0x0000000002301cb4       0xb4 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301cb4                camera_left
+ .text.camera_refresh_resolution
+                0x0000000002301d68       0x70 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301d68                camera_refresh_resolution
+ .text.camera_window_refresh
+                0x0000000002301dd8       0x58 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301dd8                camera_window_refresh
+ .text.camera_window_enter
+                0x0000000002301e30      0x124 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301e30                camera_window_enter
+ .text.camera_indicator_timeout
+                0x0000000002301f54       0x78 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301f54                camera_indicator_timeout
+ .text.camera_mode_tick
+                0x0000000002301fcc       0xc0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002301fcc                camera_mode_tick
+ .text.camera_ok
+                0x000000000230208c      0x49c /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x000000000230208c                camera_ok
+                0x0000000002302540                . = ALIGN (0x20)
+
+.rodata         0x0000000002302540      0x100
+ *(.rodata .rodata.*)
+ .rodata.resolution_text_addresses.1669
+                0x0000000002302540       0x34 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rodata.countdown_icons.1595
+                0x0000000002302574       0x28 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rodata.scene_icons.1564
+                0x000000000230259c       0x24 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rodata.camera_bindings
+                0x00000000023025c0       0x80 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x00000000023025c0                camera_bindings
+
+.rela.dyn       0x0000000002302640        0x0
+ .rela.text.post_storage_notification
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.set_widget_resource
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.set_widget_visible
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_window_exit
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.set_status_led
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_back
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.set_capture_light
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_countdown.part.7
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_mode_enter
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_mode_exit
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_open_file
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_capture_file
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_encode_frame
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_msg_clock
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_right
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_refresh_zoom
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.refresh_after_preset_change
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_refresh_remaining
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_countdown
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.handle_zoom_step
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.finish_zoom_indicator
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_down
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_up
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_msg_storage
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.show_print_result
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_refresh_resolution
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_window_enter
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_indicator_timeout
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_mode_tick
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .rela.text.camera_ok
+                0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002302640                . = ALIGN (0x20)
+
+.data           0x0000000002302640      0x3d0
+ *(.data .data.*)
+ .data          0x0000000002302640        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ .data.camera_descriptor
+                0x0000000002302640       0x10 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002302640                camera_descriptor
+ .data.camera_widgets
+                0x0000000002302650      0x3c0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+                0x0000000002302650                camera_widgets
+                0x0000000002302a20                . = ALIGN (0x20)
+
+.bss            0x0000000002302a20        0x0
+ *(.bss .bss.*)
+ .bss           0x0000000002302a20        0x0 /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+ *(COMMON)
+
+/DISCARD/
+ *(.eh_frame*)
+ *(.comment*)
+ *(.note*)
+LOAD /home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o
+OUTPUT(/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.elf elf32-or1kle)

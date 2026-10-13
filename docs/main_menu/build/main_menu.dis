@@ -1,0 +1,590 @@
+
+/home/jbaiter/.src/kc02-fw-mod/docs/main_menu/build/main_menu.elf:     file format elf32-or1kle
+
+
+Disassembly of section .text:
+
+02310000 <main_menu_noop>:
+ 2310000:	fc 0f e1 d7 	l.sw -4(r1),r1
+ 2310004:	fc ff 21 9c 	l.addi r1,r1,-4
+ 2310008:	00 00 60 9d 	l.addi r11,r0,0
+ 231000c:	04 00 21 9c 	l.addi r1,r1,4
+ 2310010:	fc ff 21 84 	l.lwz r1,-4(r1)
+ 2310014:	00 48 00 44 	l.jr r9
+
+02310018 <main_menu_window_exit>:
+ 2310018:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 231001c:	0c 02 40 18 	l.movhi r2,0x20c
+ 2310020:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2310024:	cc ce 42 a8 	l.ori r2,r2,0xcecc
+ 2310028:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 231002c:	00 00 62 84 	l.lwz r3,0(r2)
+ 2310030:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2310034:	00 00 03 bc 	l.sfeqi r3,0
+ 2310038:	05 00 00 10 	l.bf 231004c <main_menu_window_exit+0x34>
+ 231003c:	00 00 62 84 	l.lwz r3,0(r2)
+ 2310040:	95 b9 f4 07 	l.jal 203e694 <menu_fw_free>
+ 2310044:	00 00 60 9c 	l.addi r3,r0,0
+ 2310048:	00 18 02 d4 	l.sw 0(r2),r3
+ 231004c:	0c 02 40 18 	l.movhi r2,0x20c
+ 2310050:	b0 ce 42 a8 	l.ori r2,r2,0xceb0
+ 2310054:	00 00 62 84 	l.lwz r3,0(r2)
+ 2310058:	00 00 03 bc 	l.sfeqi r3,0
+ 231005c:	05 00 00 10 	l.bf 2310070 <main_menu_window_exit+0x58>
+ 2310060:	00 00 62 84 	l.lwz r3,0(r2)
+ 2310064:	8c b9 f4 07 	l.jal 203e694 <menu_fw_free>
+ 2310068:	00 00 60 9c 	l.addi r3,r0,0
+ 231006c:	00 18 02 d4 	l.sw 0(r2),r3
+ 2310070:	0c 02 60 18 	l.movhi r3,0x20c
+ 2310074:	04 00 42 9c 	l.addi r2,r2,4
+ 2310078:	c8 ce 63 a8 	l.ori r3,r3,0xcec8
+ 231007c:	00 18 22 e4 	l.sfne r2,r3
+ 2310080:	f5 ff ff 13 	l.bf 2310054 <main_menu_window_exit+0x3c>
+ 2310084:	0c 00 21 9c 	l.addi r1,r1,12
+ 2310088:	00 00 60 9d 	l.addi r11,r0,0
+ 231008c:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2310090:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2310094:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2310098:	00 48 00 44 	l.jr r9
+
+0231009c <main_menu_mode_tick>:
+ 231009c:	fc 0f e1 d7 	l.sw -4(r1),r1
+ 23100a0:	fc ff 21 9c 	l.addi r1,r1,-4
+ 23100a4:	04 00 21 9c 	l.addi r1,r1,4
+ 23100a8:	fc ff 21 84 	l.lwz r1,-4(r1)
+ 23100ac:	00 48 00 44 	l.jr r9
+
+023100b0 <main_menu_mode_exit>:
+ 23100b0:	fc 0f e1 d7 	l.sw -4(r1),r1
+ 23100b4:	fc ff 21 9c 	l.addi r1,r1,-4
+ 23100b8:	04 00 21 9c 	l.addi r1,r1,4
+ 23100bc:	fc ff 21 84 	l.lwz r1,-4(r1)
+ 23100c0:	00 48 00 44 	l.jr r9
+
+023100c4 <main_menu_mode_enter>:
+ 23100c4:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23100c8:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 23100cc:	00 00 60 9c 	l.addi r3,r0,0
+ 23100d0:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 23100d4:	84 93 f4 07 	l.jal 2034ee4 <menu_fw_csi_enable>
+ 23100d8:	07 00 60 9c 	l.addi r3,r0,7
+ 23100dc:	1a d2 f3 07 	l.jal 2004944 <menu_fw_ui_state>
+ 23100e0:	31 02 60 18 	l.movhi r3,0x231
+ 23100e4:	00 00 80 9c 	l.addi r4,r0,0
+ 23100e8:	60 09 63 a8 	l.ori r3,r3,0x960
+ 23100ec:	86 08 f4 07 	l.jal 2012304 <menu_fw_window_open>
+ 23100f0:	08 00 21 9c 	l.addi r1,r1,8
+ 23100f4:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23100f8:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 23100fc:	00 48 00 44 	l.jr r9
+
+02310100 <main_menu_render>:
+ 2310100:	f0 17 e1 d7 	l.sw -16(r1),r2
+ 2310104:	f4 77 e1 d7 	l.sw -12(r1),r14
+ 2310108:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 231010c:	ec 0f e1 d7 	l.sw -20(r1),r1
+ 2310110:	f8 97 e1 d7 	l.sw -8(r1),r18
+ 2310114:	00 00 43 a8 	l.ori r2,r3,0x0
+ 2310118:	d0 ff 21 9c 	l.addi r1,r1,-48
+ 231011c:	00 00 60 9c 	l.addi r3,r0,0
+ 2310120:	b6 d1 f3 07 	l.jal 20047f8 <menu_fw_frame_get>
+ 2310124:	00 00 0b bc 	l.sfeqi r11,0
+ 2310128:	00 00 cb a9 	l.ori r14,r11,0x0
+ 231012c:	52 00 00 10 	l.bf 2310274 <main_menu_render+0x174>
+ 2310130:	18 00 61 9c 	l.addi r3,r1,24
+ 2310134:	1a 00 81 9c 	l.addi r4,r1,26
+ 2310138:	24 a9 f4 07 	l.jal 203a5c8 <menu_fw_lcd_resolution>
+ 231013c:	00 00 80 9c 	l.addi r4,r0,0
+ 2310140:	18 00 c1 94 	l.lhz r6,24(r1)
+ 2310144:	1a 00 e1 94 	l.lhz r7,26(r1)
+ 2310148:	00 00 6e a8 	l.ori r3,r14,0x0
+ 231014c:	00 00 a4 a8 	l.ori r5,r4,0x0
+ 2310150:	e4 d2 f4 07 	l.jal 2044ce0 <menu_fw_frame_config>
+ 2310154:	00 00 22 bc 	l.sfnei r2,0
+ 2310158:	0c 02 40 18 	l.movhi r2,0x20c
+ 231015c:	04 00 4e 86 	l.lwz r18,4(r14)
+ 2310160:	cc ce 82 a8 	l.ori r4,r2,0xcecc
+ 2310164:	c8 ce 62 a8 	l.ori r3,r2,0xcec8
+ 2310168:	00 00 84 84 	l.lwz r4,0(r4)
+ 231016c:	00 00 63 94 	l.lhz r3,0(r3)
+ 2310170:	2b 00 00 10 	l.bf 231021c <main_menu_render+0x11c>
+ 2310174:	ca ce a2 a8 	l.ori r5,r2,0xceca
+ 2310178:	00 00 a5 94 	l.lhz r5,0(r5)
+ 231017c:	06 2b 63 e0 	l.mul r3,r3,r5
+ 2310180:	00 18 a3 e0 	l.add r5,r3,r3
+ 2310184:	00 18 a5 e0 	l.add r5,r5,r3
+ 2310188:	00 00 72 a8 	l.ori r3,r18,0x0
+ 231018c:	41 00 a5 b8 	l.srli r5,r5,0x1
+ 2310190:	48 a0 f5 07 	l.jal 20782b0 <menu_fw_copy>
+ 2310194:	0d 02 60 18 	l.movhi r3,0x20d
+ 2310198:	83 00 a0 18 	l.movhi r5,0x83
+ 231019c:	d3 41 63 a8 	l.ori r3,r3,0x41d3
+ 23101a0:	ac 33 a5 a8 	l.ori r5,r5,0x33ac
+ 23101a4:	00 00 c3 8c 	l.lbz r6,0(r3)
+ 23101a8:	ff 00 c6 a4 	l.andi r6,r6,0xff
+ 23101ac:	ae ce 82 a8 	l.ori r4,r2,0xceae
+ 23101b0:	00 28 66 e0 	l.add r3,r6,r5
+ 23101b4:	ac ce 42 a8 	l.ori r2,r2,0xceac
+ 23101b8:	02 00 63 b8 	l.slli r3,r3,0x2
+ 23101bc:	00 00 04 95 	l.lhz r8,0(r4)
+ 23101c0:	00 00 a2 95 	l.lhz r13,0(r2)
+ 23101c4:	00 00 83 85 	l.lwz r12,0(r3)
+ 23101c8:	00 00 64 95 	l.lhz r11,0(r4)
+ 23101cc:	00 00 62 94 	l.lhz r3,0(r2)
+ 23101d0:	02 00 46 b8 	l.slli r2,r6,0x2
+ 23101d4:	31 02 c0 18 	l.movhi r6,0x231
+ 23101d8:	20 00 8e 94 	l.lhz r4,32(r14)
+ 23101dc:	38 09 c6 a8 	l.ori r6,r6,0x938
+ 23101e0:	22 00 ae 94 	l.lhz r5,34(r14)
+ 23101e4:	00 30 42 e0 	l.add r2,r2,r6
+ 23101e8:	0c 18 01 d4 	l.sw 12(r1),r3
+ 23101ec:	00 00 c2 98 	l.lhs r6,0(r2)
+ 23101f0:	02 00 e2 98 	l.lhs r7,2(r2)
+ 23101f4:	8a 00 40 9c 	l.addi r2,r0,138
+ 23101f8:	00 68 01 d4 	l.sw 0(r1),r13
+ 23101fc:	10 10 01 d4 	l.sw 16(r1),r2
+ 2310200:	81 00 40 9c 	l.addi r2,r0,129
+ 2310204:	04 60 01 d4 	l.sw 4(r1),r12
+ 2310208:	08 58 01 d4 	l.sw 8(r1),r11
+ 231020c:	14 10 01 d4 	l.sw 20(r1),r2
+ 2310210:	00 00 72 a8 	l.ori r3,r18,0x0
+ 2310214:	93 47 f4 07 	l.jal 2022060 <menu_fw_blit>
+ 2310218:	09 00 00 00 	l.j 231023c <main_menu_render+0x13c>
+ 231021c:	ca ce 42 a8 	l.ori r2,r2,0xceca
+ 2310220:	00 00 42 94 	l.lhz r2,0(r2)
+ 2310224:	06 13 43 e0 	l.mul r2,r3,r2
+ 2310228:	00 10 a2 e0 	l.add r5,r2,r2
+ 231022c:	00 00 72 a8 	l.ori r3,r18,0x0
+ 2310230:	00 10 a5 e0 	l.add r5,r5,r2
+ 2310234:	41 00 a5 b8 	l.srli r5,r5,0x1
+ 2310238:	1e a0 f5 07 	l.jal 20782b0 <menu_fw_copy>
+ 231023c:	22 00 8e 94 	l.lhz r4,34(r14)
+ 2310240:	20 00 4e 94 	l.lhz r2,32(r14)
+ 2310244:	06 23 42 e0 	l.mul r2,r2,r4
+ 2310248:	00 10 82 e0 	l.add r4,r2,r2
+ 231024c:	00 00 72 a8 	l.ori r3,r18,0x0
+ 2310250:	00 10 84 e0 	l.add r4,r4,r2
+ 2310254:	41 00 84 b8 	l.srli r4,r4,0x1
+ 2310258:	9f 6b f4 07 	l.jal 202b0d4 <menu_fw_cache_flush>
+ 231025c:	00 00 60 9c 	l.addi r3,r0,0
+ 2310260:	00 00 8e a8 	l.ori r4,r14,0x0
+ 2310264:	00 00 a3 a8 	l.ori r5,r3,0x0
+ 2310268:	00 00 c3 a8 	l.ori r6,r3,0x0
+ 231026c:	ff 00 e0 9c 	l.addi r7,r0,255
+ 2310270:	51 d1 f3 07 	l.jal 20047b4 <menu_fw_frame_show>
+ 2310274:	30 00 21 9c 	l.addi r1,r1,48
+ 2310278:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 231027c:	ec ff 21 84 	l.lwz r1,-20(r1)
+ 2310280:	f0 ff 41 84 	l.lwz r2,-16(r1)
+ 2310284:	f4 ff c1 85 	l.lwz r14,-12(r1)
+ 2310288:	f8 ff 41 86 	l.lwz r18,-8(r1)
+ 231028c:	00 48 00 44 	l.jr r9
+
+02310290 <main_menu_blink>:
+ 2310290:	f0 17 e1 d7 	l.sw -16(r1),r2
+ 2310294:	0c 02 40 18 	l.movhi r2,0x20c
+ 2310298:	f8 97 e1 d7 	l.sw -8(r1),r18
+ 231029c:	d4 ce 42 aa 	l.ori r18,r2,0xced4
+ 23102a0:	f4 77 e1 d7 	l.sw -12(r1),r14
+ 23102a4:	00 00 d2 85 	l.lwz r14,0(r18)
+ 23102a8:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23102ac:	ec 0f e1 d7 	l.sw -20(r1),r1
+ 23102b0:	2c 01 ce 9d 	l.addi r14,r14,300
+ 23102b4:	ec ff 21 9c 	l.addi r1,r1,-20
+ 23102b8:	77 45 f4 07 	l.jal 2021894 <menu_fw_time>
+ 23102bc:	00 58 4e e4 	l.sfgtu r14,r11
+ 23102c0:	0a 00 00 10 	l.bf 23102e8 <main_menu_blink+0x58>
+ 23102c4:	d0 ce 62 a8 	l.ori r3,r2,0xced0
+ 23102c8:	00 00 43 8c 	l.lbz r2,0(r3)
+ 23102cc:	ff ff 42 9c 	l.addi r2,r2,-1
+ 23102d0:	5f 00 42 b8 	l.srli r2,r2,0x1f
+ 23102d4:	00 10 03 d8 	l.sb 0(r3),r2
+ 23102d8:	00 00 63 8c 	l.lbz r3,0(r3)
+ 23102dc:	89 ff ff 07 	l.jal 2310100 <main_menu_render>
+ 23102e0:	6d 45 f4 07 	l.jal 2021894 <menu_fw_time>
+ 23102e4:	00 58 12 d4 	l.sw 0(r18),r11
+ 23102e8:	14 00 21 9c 	l.addi r1,r1,20
+ 23102ec:	00 00 60 9d 	l.addi r11,r0,0
+ 23102f0:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23102f4:	ec ff 21 84 	l.lwz r1,-20(r1)
+ 23102f8:	f0 ff 41 84 	l.lwz r2,-16(r1)
+ 23102fc:	f4 ff c1 85 	l.lwz r14,-12(r1)
+ 2310300:	f8 ff 41 86 	l.lwz r18,-8(r1)
+ 2310304:	00 48 00 44 	l.jr r9
+
+02310308 <repaint_after_navigation>:
+ 2310308:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 231030c:	0c 02 40 18 	l.movhi r2,0x20c
+ 2310310:	00 00 60 9c 	l.addi r3,r0,0
+ 2310314:	d0 ce 82 a8 	l.ori r4,r2,0xced0
+ 2310318:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 231031c:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 2310320:	00 18 04 d8 	l.sb 0(r4),r3
+ 2310324:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 2310328:	d4 ce 42 a8 	l.ori r2,r2,0xced4
+ 231032c:	75 ff ff 07 	l.jal 2310100 <main_menu_render>
+ 2310330:	59 45 f4 07 	l.jal 2021894 <menu_fw_time>
+ 2310334:	00 58 02 d4 	l.sw 0(r2),r11
+ 2310338:	0c 00 21 9c 	l.addi r1,r1,12
+ 231033c:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2310340:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2310344:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2310348:	00 48 00 44 	l.jr r9
+
+0231034c <main_menu_right>:
+ 231034c:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2310350:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2310354:	01 00 24 bc 	l.sfnei r4,1
+ 2310358:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 231035c:	0e 00 00 10 	l.bf 2310394 <main_menu_right+0x48>
+ 2310360:	00 00 85 84 	l.lwz r4,0(r5)
+ 2310364:	00 00 24 bc 	l.sfnei r4,0
+ 2310368:	0b 00 00 10 	l.bf 2310394 <main_menu_right+0x48>
+ 231036c:	0d 02 60 18 	l.movhi r3,0x20d
+ 2310370:	d3 41 63 a8 	l.ori r3,r3,0x41d3
+ 2310374:	00 00 a3 8c 	l.lbz r5,0(r3)
+ 2310378:	04 00 45 bc 	l.sfgtui r5,4
+ 231037c:	04 00 00 10 	l.bf 231038c <main_menu_right+0x40>
+ 2310380:	00 00 83 8c 	l.lbz r4,0(r3)
+ 2310384:	01 00 84 9c 	l.addi r4,r4,1
+ 2310388:	ff 00 84 a4 	l.andi r4,r4,0xff
+ 231038c:	00 20 03 d8 	l.sb 0(r3),r4
+ 2310390:	de ff ff 07 	l.jal 2310308 <repaint_after_navigation>
+ 2310394:	08 00 21 9c 	l.addi r1,r1,8
+ 2310398:	00 00 60 9d 	l.addi r11,r0,0
+ 231039c:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23103a0:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 23103a4:	00 48 00 44 	l.jr r9
+
+023103a8 <main_menu_left>:
+ 23103a8:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 23103ac:	f4 0f e1 d7 	l.sw -12(r1),r1
+ 23103b0:	f8 17 e1 d7 	l.sw -8(r1),r2
+ 23103b4:	01 00 24 bc 	l.sfnei r4,1
+ 23103b8:	f4 ff 21 9c 	l.addi r1,r1,-12
+ 23103bc:	11 00 00 10 	l.bf 2310400 <main_menu_left+0x58>
+ 23103c0:	00 00 65 84 	l.lwz r3,0(r5)
+ 23103c4:	00 00 23 bc 	l.sfnei r3,0
+ 23103c8:	0e 00 00 10 	l.bf 2310400 <main_menu_left+0x58>
+ 23103cc:	0d 02 60 18 	l.movhi r3,0x20d
+ 23103d0:	d3 41 63 a8 	l.ori r3,r3,0x41d3
+ 23103d4:	00 00 83 8c 	l.lbz r4,0(r3)
+ 23103d8:	00 00 24 bc 	l.sfnei r4,0
+ 23103dc:	04 00 00 10 	l.bf 23103ec <main_menu_left+0x44>
+ 23103e0:	05 00 40 9c 	l.addi r2,r0,5
+ 23103e4:	00 10 03 d8 	l.sb 0(r3),r2
+ 23103e8:	05 00 00 00 	l.j 23103fc <main_menu_left+0x54>
+ 23103ec:	00 00 83 8c 	l.lbz r4,0(r3)
+ 23103f0:	ff ff 84 9c 	l.addi r4,r4,-1
+ 23103f4:	ff 00 84 a4 	l.andi r4,r4,0xff
+ 23103f8:	00 20 03 d8 	l.sb 0(r3),r4
+ 23103fc:	c3 ff ff 07 	l.jal 2310308 <repaint_after_navigation>
+ 2310400:	0c 00 21 9c 	l.addi r1,r1,12
+ 2310404:	00 00 60 9d 	l.addi r11,r0,0
+ 2310408:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 231040c:	f4 ff 21 84 	l.lwz r1,-12(r1)
+ 2310410:	f8 ff 41 84 	l.lwz r2,-8(r1)
+ 2310414:	00 48 00 44 	l.jr r9
+
+02310418 <main_menu_down>:
+ 2310418:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 231041c:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 2310420:	01 00 24 bc 	l.sfnei r4,1
+ 2310424:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2310428:	12 00 00 10 	l.bf 2310470 <main_menu_down+0x58>
+ 231042c:	00 00 65 84 	l.lwz r3,0(r5)
+ 2310430:	00 00 23 bc 	l.sfnei r3,0
+ 2310434:	0f 00 00 10 	l.bf 2310470 <main_menu_down+0x58>
+ 2310438:	0d 02 80 18 	l.movhi r4,0x20d
+ 231043c:	d3 41 a4 a8 	l.ori r5,r4,0x41d3
+ 2310440:	00 00 65 8c 	l.lbz r3,0(r5)
+ 2310444:	00 00 c5 8c 	l.lbz r6,0(r5)
+ 2310448:	02 00 a6 bc 	l.sfleui r6,2
+ 231044c:	ff 00 63 a4 	l.andi r3,r3,0xff
+ 2310450:	03 00 a0 9c 	l.addi r5,r0,3
+ 2310454:	02 00 00 10 	l.bf 231045c <main_menu_down+0x44>
+ 2310458:	fd 00 a0 9c 	l.addi r5,r0,253
+ 231045c:	00 18 65 e0 	l.add r3,r5,r3
+ 2310460:	d3 41 84 a8 	l.ori r4,r4,0x41d3
+ 2310464:	ff 00 63 a4 	l.andi r3,r3,0xff
+ 2310468:	00 18 04 d8 	l.sb 0(r4),r3
+ 231046c:	a7 ff ff 07 	l.jal 2310308 <repaint_after_navigation>
+ 2310470:	08 00 21 9c 	l.addi r1,r1,8
+ 2310474:	00 00 60 9d 	l.addi r11,r0,0
+ 2310478:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 231047c:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 2310480:	00 48 00 44 	l.jr r9
+
+02310484 <main_menu_up>:
+ 2310484:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2310488:	f8 0f e1 d7 	l.sw -8(r1),r1
+ 231048c:	01 00 24 bc 	l.sfnei r4,1
+ 2310490:	f8 ff 21 9c 	l.addi r1,r1,-8
+ 2310494:	12 00 00 10 	l.bf 23104dc <main_menu_up+0x58>
+ 2310498:	00 00 65 84 	l.lwz r3,0(r5)
+ 231049c:	00 00 23 bc 	l.sfnei r3,0
+ 23104a0:	0f 00 00 10 	l.bf 23104dc <main_menu_up+0x58>
+ 23104a4:	0d 02 80 18 	l.movhi r4,0x20d
+ 23104a8:	d3 41 a4 a8 	l.ori r5,r4,0x41d3
+ 23104ac:	00 00 65 8c 	l.lbz r3,0(r5)
+ 23104b0:	00 00 c5 8c 	l.lbz r6,0(r5)
+ 23104b4:	02 00 a6 bc 	l.sfleui r6,2
+ 23104b8:	ff 00 63 a4 	l.andi r3,r3,0xff
+ 23104bc:	03 00 a0 9c 	l.addi r5,r0,3
+ 23104c0:	02 00 00 10 	l.bf 23104c8 <main_menu_up+0x44>
+ 23104c4:	fd 00 a0 9c 	l.addi r5,r0,253
+ 23104c8:	00 18 65 e0 	l.add r3,r5,r3
+ 23104cc:	d3 41 84 a8 	l.ori r4,r4,0x41d3
+ 23104d0:	ff 00 63 a4 	l.andi r3,r3,0xff
+ 23104d4:	00 18 04 d8 	l.sb 0(r4),r3
+ 23104d8:	8c ff ff 07 	l.jal 2310308 <repaint_after_navigation>
+ 23104dc:	08 00 21 9c 	l.addi r1,r1,8
+ 23104e0:	00 00 60 9d 	l.addi r11,r0,0
+ 23104e4:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 23104e8:	f8 ff 21 84 	l.lwz r1,-8(r1)
+ 23104ec:	00 48 00 44 	l.jr r9
+
+023104f0 <main_menu_set_labels_visible>:
+ 23104f0:	f0 17 e1 d7 	l.sw -16(r1),r2
+ 23104f4:	02 20 40 e0 	l.sub r2,r0,r4
+ 23104f8:	f4 77 e1 d7 	l.sw -12(r1),r14
+ 23104fc:	04 20 82 e0 	l.or r4,r2,r4
+ 2310500:	f8 97 e1 d7 	l.sw -8(r1),r18
+ 2310504:	5f 00 44 b8 	l.srli r2,r4,0x1f
+ 2310508:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 231050c:	ec 0f e1 d7 	l.sw -20(r1),r1
+ 2310510:	00 00 43 aa 	l.ori r18,r3,0x0
+ 2310514:	ec ff 21 9c 	l.addi r1,r1,-20
+ 2310518:	00 00 c0 9d 	l.addi r14,r0,0
+ 231051c:	00 00 8e a8 	l.ori r4,r14,0x0
+ 2310520:	00 00 72 a8 	l.ori r3,r18,0x0
+ 2310524:	01 00 ce 9d 	l.addi r14,r14,1
+ 2310528:	0b 53 f4 07 	l.jal 2025154 <menu_fw_child>
+ 231052c:	00 00 82 a8 	l.ori r4,r2,0x0
+ 2310530:	00 00 6b a8 	l.ori r3,r11,0x0
+ 2310534:	c6 64 f4 07 	l.jal 202984c <menu_fw_visible>
+ 2310538:	06 00 2e bc 	l.sfnei r14,6
+ 231053c:	f8 ff ff 13 	l.bf 231051c <main_menu_set_labels_visible+0x2c>
+ 2310540:	14 00 21 9c 	l.addi r1,r1,20
+ 2310544:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2310548:	ec ff 21 84 	l.lwz r1,-20(r1)
+ 231054c:	f0 ff 41 84 	l.lwz r2,-16(r1)
+ 2310550:	f4 ff c1 85 	l.lwz r14,-12(r1)
+ 2310554:	f8 ff 41 86 	l.lwz r18,-8(r1)
+ 2310558:	00 48 00 44 	l.jr r9
+
+0231055c <main_menu_window_enter>:
+ 231055c:	e4 17 e1 d7 	l.sw -28(r1),r2
+ 2310560:	0c 02 40 18 	l.movhi r2,0x20c
+ 2310564:	e8 77 e1 d7 	l.sw -24(r1),r14
+ 2310568:	00 00 80 9c 	l.addi r4,r0,0
+ 231056c:	00 00 c3 a9 	l.ori r14,r3,0x0
+ 2310570:	d0 ce 62 a8 	l.ori r3,r2,0xced0
+ 2310574:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2310578:	e0 0f e1 d7 	l.sw -32(r1),r1
+ 231057c:	ec 97 e1 d7 	l.sw -20(r1),r18
+ 2310580:	f0 a7 e1 d7 	l.sw -16(r1),r20
+ 2310584:	f4 b7 e1 d7 	l.sw -12(r1),r22
+ 2310588:	f8 c7 e1 d7 	l.sw -8(r1),r24
+ 231058c:	00 20 03 d8 	l.sb 0(r3),r4
+ 2310590:	0d 02 60 18 	l.movhi r3,0x20d
+ 2310594:	e0 ff 21 9c 	l.addi r1,r1,-32
+ 2310598:	d3 41 63 a8 	l.ori r3,r3,0x41d3
+ 231059c:	00 00 83 8c 	l.lbz r4,0(r3)
+ 23105a0:	05 00 a4 bc 	l.sfleui r4,5
+ 23105a4:	03 00 00 10 	l.bf 23105b0 <main_menu_window_enter+0x54>
+ 23105a8:	00 00 80 9d 	l.addi r12,r0,0
+ 23105ac:	00 60 03 d8 	l.sb 0(r3),r12
+ 23105b0:	ca ce 62 a8 	l.ori r3,r2,0xceca
+ 23105b4:	c8 ce 82 a8 	l.ori r4,r2,0xcec8
+ 23105b8:	c8 ce 42 aa 	l.ori r18,r2,0xcec8
+ 23105bc:	ca ce 82 aa 	l.ori r20,r2,0xceca
+ 23105c0:	02 a8 f4 07 	l.jal 203a5c8 <menu_fw_lcd_resolution>
+ 23105c4:	00 00 72 94 	l.lhz r3,0(r18)
+ 23105c8:	00 00 94 94 	l.lhz r4,0(r20)
+ 23105cc:	06 23 83 e0 	l.mul r4,r3,r4
+ 23105d0:	00 20 64 e0 	l.add r3,r4,r4
+ 23105d4:	cc ce 42 a8 	l.ori r2,r2,0xcecc
+ 23105d8:	00 20 63 e0 	l.add r3,r3,r4
+ 23105dc:	20 00 80 9c 	l.addi r4,r0,32
+ 23105e0:	41 00 63 b8 	l.srli r3,r3,0x1
+ 23105e4:	0c 02 c0 1a 	l.movhi r22,0x20c
+ 23105e8:	f7 b7 f4 07 	l.jal 203e5c4 <menu_fw_alloc>
+ 23105ec:	00 58 02 d4 	l.sw 0(r2),r11
+ 23105f0:	00 00 62 84 	l.lwz r3,0(r2)
+ 23105f4:	00 00 23 bc 	l.sfnei r3,0
+ 23105f8:	44 00 00 0c 	l.bnf 2310708 <main_menu_window_enter+0x1ac>
+ 23105fc:	00 00 82 84 	l.lwz r4,0(r2)
+ 2310600:	00 00 a2 84 	l.lwz r5,0(r2)
+ 2310604:	00 00 74 94 	l.lhz r3,0(r20)
+ 2310608:	00 00 52 94 	l.lhz r2,0(r18)
+ 231060c:	06 1b 42 e0 	l.mul r2,r2,r3
+ 2310610:	00 00 d4 94 	l.lhz r6,0(r20)
+ 2310614:	00 00 f2 94 	l.lhz r7,0(r18)
+ 2310618:	00 28 a2 e0 	l.add r5,r2,r5
+ 231061c:	20 00 60 9c 	l.addi r3,r0,32
+ 2310620:	60 00 40 9c 	l.addi r2,r0,96
+ 2310624:	ae ce 96 aa 	l.ori r20,r22,0xceae
+ 2310628:	ac ce 56 aa 	l.ori r18,r22,0xceac
+ 231062c:	13 45 f4 07 	l.jal 2021a78 <menu_fw_decode_background>
+ 2310630:	00 10 14 dc 	l.sh 0(r20),r2
+ 2310634:	00 10 12 dc 	l.sh 0(r18),r2
+ 2310638:	00 6c 60 9c 	l.addi r3,r0,27648
+ 231063c:	20 00 80 9c 	l.addi r4,r0,32
+ 2310640:	e1 b7 f4 07 	l.jal 203e5c4 <menu_fw_alloc>
+ 2310644:	00 00 0b bc 	l.sfeqi r11,0
+ 2310648:	00 00 0b ab 	l.ori r24,r11,0x0
+ 231064c:	2f 00 00 10 	l.bf 2310708 <main_menu_window_enter+0x1ac>
+ 2310650:	b0 ce 56 a8 	l.ori r2,r22,0xceb0
+ 2310654:	00 00 b2 94 	l.lhz r5,0(r18)
+ 2310658:	00 00 74 94 	l.lhz r3,0(r20)
+ 231065c:	06 1b a5 e0 	l.mul r5,r5,r3
+ 2310660:	00 28 65 e0 	l.add r3,r5,r5
+ 2310664:	20 00 80 9c 	l.addi r4,r0,32
+ 2310668:	00 28 63 e0 	l.add r3,r3,r5
+ 231066c:	0c 02 c0 1a 	l.movhi r22,0x20c
+ 2310670:	41 00 63 b8 	l.srli r3,r3,0x1
+ 2310674:	d4 b7 f4 07 	l.jal 203e5c4 <menu_fw_alloc>
+ 2310678:	00 58 02 d4 	l.sw 0(r2),r11
+ 231067c:	00 00 62 84 	l.lwz r3,0(r2)
+ 2310680:	00 00 03 bc 	l.sfeqi r3,0
+ 2310684:	21 00 00 10 	l.bf 2310708 <main_menu_window_enter+0x1ac>
+ 2310688:	00 00 a2 84 	l.lwz r5,0(r2)
+ 231068c:	00 00 62 85 	l.lwz r11,0(r2)
+ 2310690:	00 00 d4 94 	l.lhz r6,0(r20)
+ 2310694:	00 00 72 94 	l.lhz r3,0(r18)
+ 2310698:	06 33 c3 e0 	l.mul r6,r3,r6
+ 231069c:	f3 fd 80 19 	l.movhi r12,0xfdf3
+ 23106a0:	00 00 f4 94 	l.lhz r7,0(r20)
+ 23106a4:	50 31 8c a9 	l.ori r12,r12,0x3150
+ 23106a8:	00 00 12 95 	l.lhz r8,0(r18)
+ 23106ac:	00 60 82 e0 	l.add r4,r2,r12
+ 23106b0:	31 02 80 19 	l.movhi r12,0x231
+ 23106b4:	00 30 cb e0 	l.add r6,r11,r6
+ 23106b8:	20 09 8c a9 	l.ori r12,r12,0x920
+ 23106bc:	04 00 42 9c 	l.addi r2,r2,4
+ 23106c0:	00 60 84 e0 	l.add r4,r4,r12
+ 23106c4:	00 00 64 84 	l.lwz r3,0(r4)
+ 23106c8:	00 00 98 a8 	l.ori r4,r24,0x0
+ 23106cc:	8d 45 f4 07 	l.jal 2021d00 <menu_fw_decode_icon>
+ 23106d0:	c8 ce 76 a8 	l.ori r3,r22,0xcec8
+ 23106d4:	00 18 22 e4 	l.sfne r2,r3
+ 23106d8:	df ff ff 13 	l.bf 2310654 <main_menu_window_enter+0xf8>
+ 23106dc:	00 00 78 a8 	l.ori r3,r24,0x0
+ 23106e0:	d0 ce 56 a8 	l.ori r2,r22,0xced0
+ 23106e4:	ec b7 f4 07 	l.jal 203e694 <menu_fw_free>
+ 23106e8:	00 00 62 8c 	l.lbz r3,0(r2)
+ 23106ec:	d4 ce d6 aa 	l.ori r22,r22,0xced4
+ 23106f0:	84 fe ff 07 	l.jal 2310100 <main_menu_render>
+ 23106f4:	68 44 f4 07 	l.jal 2021894 <menu_fw_time>
+ 23106f8:	00 00 6e a8 	l.ori r3,r14,0x0
+ 23106fc:	00 58 16 d4 	l.sw 0(r22),r11
+ 2310700:	01 00 80 9c 	l.addi r4,r0,1
+ 2310704:	7b ff ff 07 	l.jal 23104f0 <main_menu_set_labels_visible>
+ 2310708:	20 00 21 9c 	l.addi r1,r1,32
+ 231070c:	00 00 60 9d 	l.addi r11,r0,0
+ 2310710:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2310714:	e0 ff 21 84 	l.lwz r1,-32(r1)
+ 2310718:	e4 ff 41 84 	l.lwz r2,-28(r1)
+ 231071c:	e8 ff c1 85 	l.lwz r14,-24(r1)
+ 2310720:	ec ff 41 86 	l.lwz r18,-20(r1)
+ 2310724:	f0 ff 81 86 	l.lwz r20,-16(r1)
+ 2310728:	f4 ff c1 86 	l.lwz r22,-12(r1)
+ 231072c:	f8 ff 01 87 	l.lwz r24,-8(r1)
+ 2310730:	00 48 00 44 	l.jr r9
+
+02310734 <main_menu_ok>:
+ 2310734:	f4 77 e1 d7 	l.sw -12(r1),r14
+ 2310738:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 231073c:	ec 0f e1 d7 	l.sw -20(r1),r1
+ 2310740:	f0 17 e1 d7 	l.sw -16(r1),r2
+ 2310744:	f8 97 e1 d7 	l.sw -8(r1),r18
+ 2310748:	01 00 04 bc 	l.sfeqi r4,1
+ 231074c:	ec ff 21 9c 	l.addi r1,r1,-20
+ 2310750:	00 00 c4 a9 	l.ori r14,r4,0x0
+ 2310754:	33 00 00 0c 	l.bnf 2310820 <main_menu_ok+0xec>
+ 2310758:	00 00 45 86 	l.lwz r18,0(r5)
+ 231075c:	00 00 32 bc 	l.sfnei r18,0
+ 2310760:	30 00 00 10 	l.bf 2310820 <main_menu_ok+0xec>
+ 2310764:	00 00 92 a8 	l.ori r4,r18,0x0
+ 2310768:	0d 02 40 18 	l.movhi r2,0x20d
+ 231076c:	61 ff ff 07 	l.jal 23104f0 <main_menu_set_labels_visible>
+ 2310770:	00 00 6e a8 	l.ori r3,r14,0x0
+ 2310774:	54 2c f5 07 	l.jal 205b8c4 <menu_fw_present>
+ 2310778:	d3 41 a2 a8 	l.ori r5,r2,0x41d3
+ 231077c:	00 00 65 8c 	l.lbz r3,0(r5)
+ 2310780:	00 00 03 bc 	l.sfeqi r3,0
+ 2310784:	1e 00 00 10 	l.bf 23107fc <main_menu_ok+0xc8>
+ 2310788:	00 00 65 8c 	l.lbz r3,0(r5)
+ 231078c:	01 00 03 bc 	l.sfeqi r3,1
+ 2310790:	1d 00 00 10 	l.bf 2310804 <main_menu_ok+0xd0>
+ 2310794:	00 00 65 8c 	l.lbz r3,0(r5)
+ 2310798:	02 00 23 bc 	l.sfnei r3,2
+ 231079c:	0d 00 00 10 	l.bf 23107d0 <main_menu_ok+0x9c>
+ 23107a0:	05 00 60 9c 	l.addi r3,r0,5
+ 23107a4:	00 00 92 a8 	l.ori r4,r18,0x0
+ 23107a8:	58 de f3 07 	l.jal 2008108 <menu_fw_mode_request>
+ 23107ac:	d4 41 62 a8 	l.ori r3,r2,0x41d4
+ 23107b0:	00 00 a3 8c 	l.lbz r5,0(r3)
+ 23107b4:	ff 00 a5 a4 	l.andi r5,r5,0xff
+ 23107b8:	00 00 25 bc 	l.sfnei r5,0
+ 23107bc:	19 00 00 10 	l.bf 2310820 <main_menu_ok+0xec>
+ 23107c0:	d5 41 42 a8 	l.ori r2,r2,0x41d5
+ 23107c4:	00 70 03 d8 	l.sb 0(r3),r14
+ 23107c8:	00 28 02 d8 	l.sb 0(r2),r5
+ 23107cc:	15 00 00 00 	l.j 2310820 <main_menu_ok+0xec>
+ 23107d0:	00 00 45 8c 	l.lbz r2,0(r5)
+ 23107d4:	03 00 02 bc 	l.sfeqi r2,3
+ 23107d8:	0d 00 00 10 	l.bf 231080c <main_menu_ok+0xd8>
+ 23107dc:	00 00 45 8c 	l.lbz r2,0(r5)
+ 23107e0:	04 00 02 bc 	l.sfeqi r2,4
+ 23107e4:	0c 00 00 10 	l.bf 2310814 <main_menu_ok+0xe0>
+ 23107e8:	00 00 45 8c 	l.lbz r2,0(r5)
+ 23107ec:	05 00 22 bc 	l.sfnei r2,5
+ 23107f0:	09 00 60 9c 	l.addi r3,r0,9
+ 23107f4:	0b 00 00 10 	l.bf 2310820 <main_menu_ok+0xec>
+ 23107f8:	08 00 00 00 	l.j 2310818 <main_menu_ok+0xe4>
+ 23107fc:	03 00 60 9c 	l.addi r3,r0,3
+ 2310800:	06 00 00 00 	l.j 2310818 <main_menu_ok+0xe4>
+ 2310804:	02 00 60 9c 	l.addi r3,r0,2
+ 2310808:	04 00 00 00 	l.j 2310818 <main_menu_ok+0xe4>
+ 231080c:	04 00 60 9c 	l.addi r3,r0,4
+ 2310810:	02 00 00 00 	l.j 2310818 <main_menu_ok+0xe4>
+ 2310814:	07 00 60 9c 	l.addi r3,r0,7
+ 2310818:	00 00 80 9c 	l.addi r4,r0,0
+ 231081c:	3b de f3 07 	l.jal 2008108 <menu_fw_mode_request>
+ 2310820:	14 00 21 9c 	l.addi r1,r1,20
+ 2310824:	00 00 60 9d 	l.addi r11,r0,0
+ 2310828:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 231082c:	ec ff 21 84 	l.lwz r1,-20(r1)
+ 2310830:	f0 ff 41 84 	l.lwz r2,-16(r1)
+ 2310834:	f4 ff c1 85 	l.lwz r14,-12(r1)
+ 2310838:	f8 ff 41 86 	l.lwz r18,-8(r1)
+ 231083c:	00 48 00 44 	l.jr r9
+
+02310840 <main_menu_playback_shortcut>:
+ 2310840:	fc 4f e1 d7 	l.sw -4(r1),r9
+ 2310844:	f0 0f e1 d7 	l.sw -16(r1),r1
+ 2310848:	f4 17 e1 d7 	l.sw -12(r1),r2
+ 231084c:	f8 77 e1 d7 	l.sw -8(r1),r14
+ 2310850:	01 00 24 bc 	l.sfnei r4,1
+ 2310854:	f0 ff 21 9c 	l.addi r1,r1,-16
+ 2310858:	0c 00 00 10 	l.bf 2310888 <main_menu_playback_shortcut+0x48>
+ 231085c:	00 00 c5 85 	l.lwz r14,0(r5)
+ 2310860:	00 00 2e bc 	l.sfnei r14,0
+ 2310864:	09 00 00 10 	l.bf 2310888 <main_menu_playback_shortcut+0x48>
+ 2310868:	00 00 44 a8 	l.ori r2,r4,0x0
+ 231086c:	00 00 8e a8 	l.ori r4,r14,0x0
+ 2310870:	20 ff ff 07 	l.jal 23104f0 <main_menu_set_labels_visible>
+ 2310874:	00 00 62 a8 	l.ori r3,r2,0x0
+ 2310878:	13 2c f5 07 	l.jal 205b8c4 <menu_fw_present>
+ 231087c:	04 00 60 9c 	l.addi r3,r0,4
+ 2310880:	00 00 8e a8 	l.ori r4,r14,0x0
+ 2310884:	21 de f3 07 	l.jal 2008108 <menu_fw_mode_request>
+ 2310888:	10 00 21 9c 	l.addi r1,r1,16
+ 231088c:	00 00 60 9d 	l.addi r11,r0,0
+ 2310890:	fc ff 21 85 	l.lwz r9,-4(r1)
+ 2310894:	f0 ff 21 84 	l.lwz r1,-16(r1)
+ 2310898:	f4 ff 41 84 	l.lwz r2,-12(r1)
+ 231089c:	f8 ff c1 85 	l.lwz r14,-8(r1)
+ 23108a0:	00 48 00 44 	l.jr r9

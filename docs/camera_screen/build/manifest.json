@@ -1,0 +1,705 @@
+{
+  "firmware_sha256": "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5",
+  "elf32_little_endian_openrisc": true,
+  "base": "0x02300000",
+  "binary_size": 10768,
+  "binary_sha256": "df8b32bfc25eb4a3bb1c424ccaeceb62d1c84eaa8bff4c03bde0c345d92f265b",
+  "entrypoints": {
+    "camera_mode_enter": {
+      "original": "0x020082f4",
+      "replacement": "0x02300330"
+    },
+    "camera_mode_exit": {
+      "original": "0x020083c8",
+      "replacement": "0x0230041c"
+    },
+    "camera_mode_tick": {
+      "original": "0x020084a0",
+      "replacement": "0x02301fcc"
+    },
+    "camera_open_file": {
+      "original": "0x02008550",
+      "replacement": "0x02300508"
+    },
+    "camera_capture_file": {
+      "original": "0x02008630",
+      "replacement": "0x023005dc"
+    },
+    "camera_encode_frame": {
+      "original": "0x020087e8",
+      "replacement": "0x023007a8"
+    },
+    "camera_msg_noop": {
+      "original": "0x02008bd4",
+      "replacement": "0x0230003c"
+    },
+    "camera_refresh_battery": {
+      "original": "0x02008bec",
+      "replacement": "0x02300ca8"
+    },
+    "camera_msg_battery_conditional": {
+      "original": "0x02008d3c",
+      "replacement": "0x02300d64"
+    },
+    "camera_msg_battery": {
+      "original": "0x02008d74",
+      "replacement": "0x02300d9c"
+    },
+    "camera_refresh_scene": {
+      "original": "0x02008d98",
+      "replacement": "0x02300e24"
+    },
+    "camera_refresh_light": {
+      "original": "0x02008f0c",
+      "replacement": "0x02300eac"
+    },
+    "camera_refresh_zoom": {
+      "original": "0x02009050",
+      "replacement": "0x02301078"
+    },
+    "camera_msg_clock": {
+      "original": "0x02009108",
+      "replacement": "0x02300dc0"
+    },
+    "camera_refresh_remaining": {
+      "original": "0x0200917c",
+      "replacement": "0x0230119c"
+    },
+    "camera_countdown": {
+      "original": "0x02009358",
+      "replacement": "0x023012bc"
+    },
+    "camera_window_exit": {
+      "original": "0x0200947c",
+      "replacement": "0x023000f4"
+    },
+    "camera_refresh_indicator": {
+      "original": "0x020094b8",
+      "replacement": "0x0230135c"
+    },
+    "camera_down": {
+      "original": "0x02009568",
+      "replacement": "0x023015a4"
+    },
+    "camera_up": {
+      "original": "0x02009890",
+      "replacement": "0x023017dc"
+    },
+    "camera_refresh_storage": {
+      "original": "0x02009bc0",
+      "replacement": "0x02301a30"
+    },
+    "camera_show_status": {
+      "original": "0x02009c1c",
+      "replacement": "0x02301b14"
+    },
+    "camera_status_visibility": {
+      "original": "0x02009ccc",
+      "replacement": "0x02301c10"
+    },
+    "camera_refresh_print": {
+      "original": "0x02009d5c",
+      "replacement": "0x02301c48"
+    },
+    "camera_left": {
+      "original": "0x02009de0",
+      "replacement": "0x02301cb4"
+    },
+    "camera_msg_storage": {
+      "original": "0x02009e70",
+      "replacement": "0x02301a78"
+    },
+    "camera_back": {
+      "original": "0x02009f08",
+      "replacement": "0x023001d0"
+    },
+    "camera_right": {
+      "original": "0x02009f6c",
+      "replacement": "0x02300f84"
+    },
+    "camera_refresh_resolution": {
+      "original": "0x0200a030",
+      "replacement": "0x02301d68"
+    },
+    "camera_window_refresh": {
+      "original": "0x0200a310",
+      "replacement": "0x02301dd8"
+    },
+    "camera_window_enter": {
+      "original": "0x0200a37c",
+      "replacement": "0x02301e30"
+    },
+    "camera_ok": {
+      "original": "0x0200a4bc",
+      "replacement": "0x0230208c"
+    },
+    "camera_indicator_timeout": {
+      "original": "0x0200aa8c",
+      "replacement": "0x02301f54"
+    }
+  },
+  "mode_callback_hook_candidates": [
+    {
+      "slot": "0x020c2adc",
+      "original": "0x020082f4",
+      "replacement": "0x02300330"
+    },
+    {
+      "slot": "0x020c2ae0",
+      "original": "0x020083c8",
+      "replacement": "0x0230041c"
+    },
+    {
+      "slot": "0x020c2ae4",
+      "original": "0x020084a0",
+      "replacement": "0x02301fcc"
+    }
+  ],
+  "imports": [
+    {
+      "name": "fw_encoder_init",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x02040384"
+    },
+    {
+      "name": "fw_sensor_adjust",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x020487a4"
+    },
+    {
+      "name": "fw_record_config",
+      "return_type": "void",
+      "parameters": "uint32_t key, uint32_t value",
+      "address": "0x0205609c"
+    },
+    {
+      "name": "fw_frame_mode",
+      "return_type": "void",
+      "parameters": "uint32_t value",
+      "address": "0x0204606c"
+    },
+    {
+      "name": "fw_color_preset",
+      "return_type": "void",
+      "parameters": "uint32_t value",
+      "address": "0x020588c0"
+    },
+    {
+      "name": "fw_crop_start",
+      "return_type": "void",
+      "parameters": "uint32_t zoom, uint32_t channel",
+      "address": "0x020049f8"
+    },
+    {
+      "name": "fw_ui_state",
+      "return_type": "void",
+      "parameters": "uint32_t value",
+      "address": "0x02004944"
+    },
+    {
+      "name": "fw_layer_init",
+      "return_type": "void",
+      "parameters": "uint32_t layer",
+      "address": "0x02004588"
+    },
+    {
+      "name": "fw_layer_uninit",
+      "return_type": "void",
+      "parameters": "uint32_t layer",
+      "address": "0x020041b0"
+    },
+    {
+      "name": "fw_window_open",
+      "return_type": "CameraWindow",
+      "parameters": "CameraDescriptor *descriptor, uint32_t argc, ...",
+      "address": "0x02012304"
+    },
+    {
+      "name": "fw_delay",
+      "return_type": "void",
+      "parameters": "uint32_t ticks",
+      "address": "0x020218b4"
+    },
+    {
+      "name": "fw_csi_enable",
+      "return_type": "void",
+      "parameters": "uint32_t on",
+      "address": "0x02034ee4"
+    },
+    {
+      "name": "fw_frame_get",
+      "return_type": "void *",
+      "parameters": "void",
+      "address": "0x02022720"
+    },
+    {
+      "name": "fw_frame_submit",
+      "return_type": "void",
+      "parameters": "void *frame",
+      "address": "0x02039e44"
+    },
+    {
+      "name": "fw_frame_rearm",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x0203a84c"
+    },
+    {
+      "name": "fw_effect",
+      "return_type": "void",
+      "parameters": "void *y, void *uv, uint32_t width, uint32_t height",
+      "address": "0x02022740"
+    },
+    {
+      "name": "fw_edge",
+      "return_type": "void",
+      "parameters": "void *y, void *uv, uint32_t width, uint32_t height, uint32_t variant",
+      "address": "0x02022434"
+    },
+    {
+      "name": "fw_group3_effect",
+      "return_type": "void",
+      "parameters": "void *y",
+      "address": "0x020460b4"
+    },
+    {
+      "name": "fw_child",
+      "return_type": "CameraWindow",
+      "parameters": "CameraWindow root, uint32_t id",
+      "address": "0x02025154"
+    },
+    {
+      "name": "fw_set_resid",
+      "return_type": "void",
+      "parameters": "CameraWindow widget, camera_word resource",
+      "address": "0x0202990c"
+    },
+    {
+      "name": "fw_visible",
+      "return_type": "void",
+      "parameters": "CameraWindow widget, uint32_t visible",
+      "address": "0x0202984c"
+    },
+    {
+      "name": "fw_present",
+      "return_type": "void",
+      "parameters": "uint32_t force",
+      "address": "0x0205b8c4"
+    },
+    {
+      "name": "fw_mode_request",
+      "return_type": "void",
+      "parameters": "uint32_t mode, uint32_t arg",
+      "address": "0x02008108"
+    },
+    {
+      "name": "fw_init_camera_name",
+      "return_type": "void *",
+      "parameters": "void",
+      "address": "0x020075e8"
+    },
+    {
+      "name": "fw_load_audio",
+      "return_type": "void *",
+      "parameters": "uint32_t resource, uint32_t *length",
+      "address": "0x02007744"
+    },
+    {
+      "name": "fw_audio_buffer",
+      "return_type": "void",
+      "parameters": "void *buffer, uint32_t length",
+      "address": "0x02007410"
+    },
+    {
+      "name": "fw_glyphs_init",
+      "return_type": "void",
+      "parameters": "uint32_t width, uint32_t height, uint32_t count",
+      "address": "0x02077cf4"
+    },
+    {
+      "name": "fw_glyphs_free",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x02078188"
+    },
+    {
+      "name": "fw_exit_stub",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x020568d4"
+    },
+    {
+      "name": "fw_record_reset",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x02054f0c"
+    },
+    {
+      "name": "fw_time",
+      "return_type": "uint32_t",
+      "parameters": "void",
+      "address": "0x02021894"
+    },
+    {
+      "name": "fw_board_ioctl",
+      "return_type": "int32_t",
+      "parameters": "int32_t device, uint32_t command, camera_word value",
+      "address": "0x02002a4c"
+    },
+    {
+      "name": "fw_config_get",
+      "return_type": "int32_t",
+      "parameters": "uint32_t key",
+      "address": "0x02003e34"
+    },
+    {
+      "name": "fw_setting_value",
+      "return_type": "uint32_t",
+      "parameters": "uint32_t key",
+      "address": "0x020064b4"
+    },
+    {
+      "name": "fw_template_load",
+      "return_type": "int32_t",
+      "parameters": "uint32_t resource",
+      "address": "0x020454fc"
+    },
+    {
+      "name": "fw_template_resize",
+      "return_type": "int32_t",
+      "parameters": "uint32_t resource",
+      "address": "0x020459ac"
+    },
+    {
+      "name": "fw_rtc_get",
+      "return_type": "void *",
+      "parameters": "void",
+      "address": "0x0203bae0"
+    },
+    {
+      "name": "fw_rtc_string",
+      "return_type": "char *",
+      "parameters": "void *rtc",
+      "address": "0x0203bb50"
+    },
+    {
+      "name": "fw_audio_play",
+      "return_type": "uint32_t",
+      "parameters": "uint32_t resource, uint32_t wait_previous, uint32_t wait_complete",
+      "address": "0x020071c4"
+    },
+    {
+      "name": "fw_audio_status",
+      "return_type": "int32_t",
+      "parameters": "void",
+      "address": "0x020524a0"
+    },
+    {
+      "name": "fw_service",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x0202bc7c"
+    },
+    {
+      "name": "fw_queue_post",
+      "return_type": "int32_t",
+      "parameters": "camera_word queue, camera_word message",
+      "address": "0x02021648"
+    },
+    {
+      "name": "fw_space_check",
+      "return_type": "int32_t",
+      "parameters": "camera_word manager, const char *directory, uint32_t reserve",
+      "address": "0x0200117c"
+    },
+    {
+      "name": "fw_filename_create",
+      "return_type": "char *",
+      "parameters": "camera_word manager, const void *pattern, const char *directory",
+      "address": "0x02001da0"
+    },
+    {
+      "name": "fw_file_add",
+      "return_type": "void",
+      "parameters": "camera_word manager, const char *directory, const char *name",
+      "address": "0x020017a0"
+    },
+    {
+      "name": "fw_sd_lock",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x0203ce04"
+    },
+    {
+      "name": "fw_sd_unlock",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x0203ce44"
+    },
+    {
+      "name": "fw_sd_stop",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x0203c6e8"
+    },
+    {
+      "name": "fw_open",
+      "return_type": "int32_t",
+      "parameters": "const char *name, uint32_t flags",
+      "address": "0x0206c5b8"
+    },
+    {
+      "name": "fw_close",
+      "return_type": "void",
+      "parameters": "int32_t fd",
+      "address": "0x0206c680"
+    },
+    {
+      "name": "fw_file_size",
+      "return_type": "uint32_t",
+      "parameters": "int32_t fd",
+      "address": "0x0206caf8"
+    },
+    {
+      "name": "fw_unlink",
+      "return_type": "int32_t",
+      "parameters": "const char *name",
+      "address": "0x02072b18"
+    },
+    {
+      "name": "fw_account_space",
+      "return_type": "void",
+      "parameters": "uint32_t operation, uint32_t length",
+      "address": "0x0200d344"
+    },
+    {
+      "name": "fw_manager_service",
+      "return_type": "int32_t",
+      "parameters": "camera_word manager",
+      "address": "0x02000848"
+    },
+    {
+      "name": "fw_file_path",
+      "return_type": "char *",
+      "parameters": "camera_word manager, uint32_t index, uint32_t *length",
+      "address": "0x02002138"
+    },
+    {
+      "name": "fw_print_file",
+      "return_type": "int32_t",
+      "parameters": "int32_t fd, uint32_t density, uint32_t layout, uint32_t battery",
+      "address": "0x0205adf0"
+    },
+    {
+      "name": "fw_print_image",
+      "return_type": "int32_t",
+      "parameters": "void *image, uint32_t density, uint32_t layout, uint32_t battery",
+      "address": "0x0205b0fc"
+    },
+    {
+      "name": "fw_watermark_close",
+      "return_type": "void",
+      "parameters": "int32_t id",
+      "address": "0x0203defc"
+    },
+    {
+      "name": "fw_watermark_open",
+      "return_type": "int32_t",
+      "parameters": "void",
+      "address": "0x0203e014"
+    },
+    {
+      "name": "fw_watermark_position",
+      "return_type": "void",
+      "parameters": "uint32_t value",
+      "address": "0x0203e410"
+    },
+    {
+      "name": "fw_encode_flag",
+      "return_type": "uint32_t",
+      "parameters": "void",
+      "address": "0x02056188"
+    },
+    {
+      "name": "fw_encode_file",
+      "return_type": "int32_t",
+      "parameters": "const char *name, int32_t fd, uint32_t width, uint32_t height, uint32_t quality, uint32_t timestamp, uint32_t flag, uint32_t x, uint32_t y, uint32_t a, uint32_t b",
+      "address": "0x02076f98"
+    },
+    {
+      "name": "fw_capture_size_snapshot",
+      "return_type": "void",
+      "parameters": "uint32_t width, uint32_t height",
+      "address": "0x02040478"
+    },
+    {
+      "name": "fw_encoder_mem_init",
+      "return_type": "int32_t",
+      "parameters": "void",
+      "address": "0x020401a8"
+    },
+    {
+      "name": "fw_csi_resolution",
+      "return_type": "void",
+      "parameters": "uint16_t *width, uint16_t *height",
+      "address": "0x020381fc"
+    },
+    {
+      "name": "fw_encode_start",
+      "return_type": "int32_t",
+      "parameters": "uint32_t width, uint32_t height, uint32_t quality, uint32_t timestamp, uint32_t flag, uint32_t manual",
+      "address": "0x02040c6c"
+    },
+    {
+      "name": "fw_alloc",
+      "return_type": "void *",
+      "parameters": "uint32_t size, uint32_t alignment",
+      "address": "0x0203e5c4"
+    },
+    {
+      "name": "fw_free",
+      "return_type": "void",
+      "parameters": "void *pointer",
+      "address": "0x0203e694"
+    },
+    {
+      "name": "fw_encoded_get",
+      "return_type": "void *",
+      "parameters": "camera_word unused, void **buffer, uint32_t *length, uint32_t *a, uint32_t *b",
+      "address": "0x020416cc"
+    },
+    {
+      "name": "fw_encoded_release",
+      "return_type": "void",
+      "parameters": "void *buffer",
+      "address": "0x0204183c"
+    },
+    {
+      "name": "fw_watermark_update",
+      "return_type": "void",
+      "parameters": "uint32_t width, uint32_t height, uint32_t mode",
+      "address": "0x02054bfc"
+    },
+    {
+      "name": "fw_cache_writeback",
+      "return_type": "void",
+      "parameters": "void *pointer, uint32_t length",
+      "address": "0x0202b058"
+    },
+    {
+      "name": "fw_cache_flush",
+      "return_type": "void",
+      "parameters": "void *pointer, uint32_t length",
+      "address": "0x0202b0d4"
+    },
+    {
+      "name": "fw_jpeg_decode",
+      "return_type": "int32_t",
+      "parameters": "const void *request",
+      "address": "0x02056368"
+    },
+    {
+      "name": "fw_decode_resolution",
+      "return_type": "void",
+      "parameters": "uint16_t *width, uint16_t *height",
+      "address": "0x0205681c"
+    },
+    {
+      "name": "fw_image_transform",
+      "return_type": "void",
+      "parameters": "void *y",
+      "address": "0x02046150"
+    },
+    {
+      "name": "fw_watermark_stamp",
+      "return_type": "void",
+      "parameters": "void *unused_y, uint32_t x, uint32_t y, uint32_t a, uint32_t b",
+      "address": "0x02077ef0"
+    },
+    {
+      "name": "fw_encoder_uninit",
+      "return_type": "void",
+      "parameters": "void",
+      "address": "0x020403ec"
+    },
+    {
+      "name": "fw_copy",
+      "return_type": "void *",
+      "parameters": "void *dst, const void *src, uint32_t size",
+      "address": "0x020782b0"
+    }
+  ],
+  "original_external_camera_callsites": [
+    {
+      "callsite": "0x0200e1c8",
+      "target": "0x02008550",
+      "note": "An existing non-camera call to the shared file-opening helper remains stock; do not erase the old region."
+    }
+  ],
+  "widget_bytes_identical": true,
+  "keymap_points_to_recompiled_handlers": true,
+  "undefined_symbols": [],
+  "bss_size": 0,
+  "source_sha256": {
+    "camera_screen_model.c": "64c99069d9b218ab8d0b80fc68282ff27849c07796e42c31befff4d95486fb9c",
+    "camera_screen.h": "ab5194a87be0dbff5ac6d2f4cb6e3204a6ced8003b00c605fdeb8c43cb194922",
+    "firmware_imports.def": "ea7086f3447ccceccf1094921e151df3d1c4770abcf57adbeaa68dd494d88c14",
+    "generate_widgets.py": "7968ff6f9df82bbe1a90db3d5335260ce8d32bce76531a73c088707df5d8a6b6",
+    "build_camera_screen.py": "d6f32256b7082f52805794c95544f6e45e7dc6dab18d1f1525a7778bf3c2de06",
+    "entrypoints.tsv": "8cfc23ca2fdb5864dc6cda13a6cd6d14aa2508469c0071209659f4eb5b292094"
+  },
+  "build_commands": [
+    [
+      "/tmp/ax3292-toolchain/prefix/bin/or1k-elf-gcc",
+      "-mno-delay",
+      "-mhard-div",
+      "-Os",
+      "-std=gnu11",
+      "-ffreestanding",
+      "-fno-builtin",
+      "-fno-common",
+      "-fno-pic",
+      "-fno-stack-protector",
+      "-ffunction-sections",
+      "-fdata-sections",
+      "-Wall",
+      "-Wextra",
+      "-Werror",
+      "-I/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build",
+      "-I/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen",
+      "-c",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/camera_screen_model.c",
+      "-o",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o"
+    ],
+    [
+      "/tmp/ax3292-toolchain/prefix/bin/or1k-elf-ld",
+      "-T",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.ld",
+      "-Map=/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.map",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.o",
+      "-o",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.elf"
+    ],
+    [
+      "/tmp/ax3292-toolchain/prefix/bin/or1k-elf-objcopy",
+      "-O",
+      "binary",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.elf",
+      "/home/jbaiter/.src/kc02-fw-mod/docs/camera_screen/build/camera_screen.bin"
+    ]
+  ],
+  "current_ram_harness_code_budget": 5632,
+  "fits_current_ram_harness": false,
+  "deployment_allowed": false,
+  "placement_verified": false,
+  "on_device_tested": false,
+  "limitations": [
+    "Link base does not reserve RAM; stock allocator may own it.",
+    "Mode hook candidates require runtime verification and cache handling.",
+    "Stock imports remain firmware-specific; host tests do not validate target ABI.",
+    "Capture error paths are hardened and not byte-identical to the original."
+  ]
+}

@@ -1,5 +1,24 @@
 # Firmware Technical Notes — KC02
 
+> **PARTLY SUPERSEDED — READ THIS FIRST (2026-10).** This is an early log from before the
+> platform was identified, and parts of it are **wrong**:
+>
+> * The SoC is **not** a JieLi AC2546 / pi32 core. It is an **AppoTech (Buildwin) AX3292**:
+>   little-endian **OpenRISC 1000 (OR1K) with no delay slots**. The firmware strings `AX3292`,
+>   `329X_V1.0.0` and `BuildwinMedia-Player 1.00` settle it, and the code disassembles and runs
+>   as OR1K. See [../README.md](../README.md) and [BOARD_RE.md](BOARD_RE.md).
+> * The **Disassembly Setup** section below (`pi32:LE:32:default`, the `ghidra-jieli` extension)
+>   is therefore wrong. The current Ghidra language is a custom little-endian no-delay OpenRISC
+>   spec; see [BOARD_RE.md](BOARD_RE.md) and [FIRMWARE_MAP.md](FIRMWARE_MAP.md).
+> * File offsets quoted here predate the verified mapping `CPU = file_offset + 0x01FFDA00`
+>   ([BOOT_MAP.md](BOOT_MAP.md)), so they do not line up with current addresses.
+> * The firmware hash quoted in several early docs (`md5 7236c4c1…`) is **not** the hash of the
+>   canonical image `firmware/original.bin` (`sha256 218c6cdf…`). See [DOC_AUDIT.md](DOC_AUDIT.md).
+>
+> Still useful here: the `DestBin.bin` flashing/validation notes, the Flash #9 failure
+> investigation, and the button ADC measurements. Prefer README.md, BOARD_RE.md, FIRMWARE_MAP.md
+> and the per-screen docs for anything structural.
+
 ## Flashing (DestBin.bin)
 
 ### How It Works

@@ -1,0 +1,23 @@
+{
+  "payload": "artprint",
+  "pattern": 11,
+  "feed_lines": 660,
+  "energy": 3,
+  "threshold": 0,
+  "seed": 3292,
+  "go": 0,
+  "code_bytes": 4336,
+  "code_sha256": "afb22b0782e34b17048ad6128c36ab26f16c41e4e1ee4b29e09692b724a5366e",
+  "packet_sha256": "7a655b397db44992c8ed8c22428ff3e91c5a68eb6a9b3f1d2a2e4e17554e44bc",
+  "started": "2026-10-09T15:17:44.631262+00:00",
+  "device": "0219:3280 (bus 8, address 45)",
+  "magic_ok": true,
+  "canvas": "0x235a200",
+  "feed_lines_echo": 660,
+  "ink_pixels": 42628,
+  "canvas_hash": "0xc2d6fb93",
+  "density": 0,
+  "battery": 2,
+  "print_status": 3869469737,
+  "status": "executed"
+}
