@@ -251,6 +251,18 @@ from each mode's key-hook list and UI object, not from the renderer.
 
 ---
 
+## Naming
+
+The labels used here (`ui_frame_hook`, `key_hook_install_primary`, `key_modeN_*`) are this
+document's own vocabulary. Where they differ from the names in the Ghidra project or in the screen
+reconstructions, [NAMING_RECONCILIATION.md](NAMING_RECONCILIATION.md) records the canonical name per
+address, the aliases, and the evidence. Two of its findings apply directly to this document:
+
+* `0x24` is the **POWER** key (adc centre 12), not a back button. The camera-mode handler for it
+  requests the main menu, which is why it has been described as "back" here and elsewhere.
+* `msgFuncRegister` (`0x02007880`) and `unshieldedMsgFuncRegister` (`0x02007938`) are the vendor
+  SDK's own names for `key_hook_install_primary` / `key_hook_install_system`.
+
 ## 4. Key input path
 
 ### 4.1 Physical buttons → event ids
