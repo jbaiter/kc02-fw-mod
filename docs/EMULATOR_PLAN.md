@@ -122,6 +122,33 @@ So the first device to model is neither the SPI flash nor the LCD: it is the
 boot should continue, and the same trace-driven loop then builds the rest of the
 peripherals on demand — which is the plan's SPI flash and display work.
 
+**M0.6 result — the whole early boot runs.** Driven by the trace, four more
+things went in: UART0, the SPI0 flash controller, the LCD register block, and a
+generic read-back store for the remaining SFR registers (the GPIO and LCD code
+does read-modify-write, so returning zero is not good enough). The stock image
+now:
+
+* prints its boot log — `sdram *saddr=0x2103980,*eaddr=0x27fec00`, `RC128k=0x0`;
+* reads the flash JEDEC ID (`0x9f`) and then the asset tables, byte mode first
+  and then by DMA;
+* initialises clocks, LDO, RTC, DAC, ADC and GPIO;
+* runs the LCD panel init (`LCDCTRL`, `LCDSTA`, 130 `LCDCMD` writes);
+* and lands in the RTOS idle loop at `0x0200c64c` (`delay(50); goto 0x0200c64c`).
+
+Two details were worth the time it took to find them, and both are the kind of
+thing that silently corrupts a flash read rather than failing loudly:
+
+* Chip select is `SPIFGCON` bit 14, and the byte helpers rewrite that register
+  before *every* byte, so the command state machine may only restart on a CS
+  **edge** — resetting on every write turned the address bytes into commands.
+* The vendor SDK sets `SPIFSADR = 0x6000000|0`: the DMA **continues** the
+  address the byte stream already shifted in, so the controller's address field
+  is the low 25 bits and `SPIFSADR` matters only for a standalone DMA.
+
+The firmware now sits in its idle loop, which only the timer interrupt can
+break out of. That is the next step, followed by the interrupt controller, the
+framebuffer dump and the keypad.
+
 RAM is flat: load the boot section at 0x0 if starting from reset, and the
 application at 0x02000000 from the dump. SDRAM is just RAM (8 MiB); the initial
 stack is `0x027FFFFC`; the HAL pool and `.bss` are ordinary RAM.

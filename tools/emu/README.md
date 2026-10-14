@@ -62,13 +62,13 @@ the emulator runs.
 
 ## Status
 
-The firmware runs. `qemu-system-or1k` is patched with an `ax3292` machine
-(no delay slots, little-endian, an SPR bus), and the stock image boots into its
-HAL: clock/LDO/RTC/cache/PIC init, then a UART write, then a poll loop on the
-UART pending register. See [`qemu/README.md`](qemu/README.md) and the M0.5
-section of [`docs/EMULATOR_PLAN.md`](../../docs/EMULATOR_PLAN.md).
+The firmware runs and gets through its whole early boot. `qemu-system-or1k` is
+patched with an `ax3292` machine (no delay slots, little-endian, an SPR bus),
+and the stock image boots: UART log, flash ID and table reads, clock/LDO/RTC/
+DAC/ADC/GPIO init, LCD panel init — then it settles into the RTOS idle loop,
+which needs the timer interrupt. See [`qemu/README.md`](qemu/README.md) for the
+device list and the M0.6 section of
+[`docs/EMULATOR_PLAN.md`](../../docs/EMULATOR_PLAN.md).
 
-**No functional device is modelled yet** — SFR-group reads return zero and
-writes are dropped, so anything that polls a status bit spins. The next device is
-the UART (`0x9088` data, `0x908c` pending), then whichever the trace reaches
-next.
+Next: timer + interrupt controller (to leave the idle loop), then the
+framebuffer dump (display), then SPI flash bulk reads and the keypad.

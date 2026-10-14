@@ -36,8 +36,40 @@ the evidence for each entry.
 
 ## Status
 
-The functional devices (SPI flash, LCD, timer, GPIO, ADC) are **not** modelled
-yet: SFR-group reads return zero and writes are dropped. The trace is what the
-model is being built from. Busy-wait loops that poll a status bit therefore spin
-until the trace limit or the timeout — the first one hit is UART0
-(`0x9088` data, `0x908c` pending).
+Modelled, each added only when the trace blocked on it:
+
+| Device | Registers | Notes |
+|---|---|---|
+| UART0 | `0x9080`–`0x908c` | TX is instantaneous so the `PND` poll succeeds; output goes to stdout (run.py saves it separately from the trace) |
+| SPI0 flash | `0x9000`–`0x925c` | byte mode with a command interpreter (0x9F/0x05/0x03/0x0B), plus DMA. Backed by the dump. The vendor SDK's `SPIFSADR = 0x6000000\|0` means the DMA **continues** the address the byte stream shifted in — that is the subtlety that matters |
+| LCD | `0xA800`–`0xA87f` | generic register file; `LCDSTA` bit 31 reads set (the driver polls it as the completion flag) |
+| everything else | `>= 0x8000` | generic read-back-what-was-written store, which the GPIO and LCD read-modify-write code needs |
+
+What the firmware does now, from a cold start at `0x0200046C`:
+
+```
+sdram *saddr=0x2103980,*eaddr=0x27fec00        <- UART
+RC128k=0x0
+flash ID read (0x9f) -> EF 40 16
+table reads from flash (byte mode + DMA)
+clock/LDO/RTC/DAC/ADC/GPIO init
+LCD panel init: LCDCTRL, LCDSTA, LCDCMD sequence
+...lands in the RTOS idle loop at 0x0200c64c */ delay(50)
+```
+
+It gets through all of that and stops in the idle loop, which only the **timer
+interrupt** can break out of. That is the next device (and then the interrupt
+controller, the framebuffer dump, and the keypad).
+
+## Finding a stall
+
+A stuck firmware loop often touches no registers, so the SPR trace shows nothing.
+Set `AX3292_PC_SAMPLE=1` to have the machine print the PC and GPRs every 500 ms:
+
+```
+pc 0202af94 ppc 0202af90 r1=027fffc0 r2=20000000 r3=00072b99 ... r9=0200c654
+```
+
+`r9` is the return address, which is how the retry loop above was found in one
+step (do not reach for `-d exec`: its per-block logging slows TCG by orders of
+magnitude and puts the sampled PC in the wrong place).

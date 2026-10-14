@@ -1,25 +1,26 @@
 diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 --- a/hw/or1k/ax3292.c	1970-01-01 01:00:00.000000000 +0100
-+++ b/hw/or1k/ax3292.c	2026-10-14 16:37:37.362316586 +0200
-@@ -0,0 +1,258 @@
++++ b/hw/or1k/ax3292.c	2026-10-14 16:51:58.678841525 +0200
+@@ -0,0 +1,669 @@
 +/*
 + * AX3292 (KC02-family camera) machine.
 + *
 + * SPDX-License-Identifier: GPL-2.0-or-later
 + *
-+ * Bare-metal machine for the dumped firmware.  It provides flat RAM and an
-+ * SPR bus.  Everything on this chip is reached through special-purpose
-+ * registers rather than memory, so the "bus" is the SPR hook in
-+ * target/or1k/sys_helper.c.
++ * Bare-metal machine for the dumped firmware.  It provides flat RAM, a
++ * bootable application image and an SPR bus; every peripheral on this chip is
++ * reached through special-purpose registers rather than memory, so the "bus" is
++ * the SPR hook in target/or1k/sys_helper.c.
 + *
-+ * This first cut implements enough of the SPR bus to let the application run
-+ * while logging every access, which is how the device model gets built:
++ * Devices are added on demand, driven by the SPR trace: run the firmware, see
++ * which register it blocks on, model that.  Modelled so far:
 + *
-+ *   - the architectural registers are remapped from the chip's numbering to
-+ *     QEMU's (the chip does not use the OpenRISC spec numbers: SR is 0x18,
-+ *     NPC 0x14, PPC 0x1C, EPCR 0x20, ESR 0x40, EVBA 0x50);
-+ *   - SFR-group peripherals (>= 0x8000) read as zero and drop writes;
-+ *   - every access is logged with its PC while the trace limit lasts.
++ *   UART0   (0x9080)  the boot log; TX is instantaneous so the poll succeeds
++ *   SPI0    (0x9000)  flash controller, byte mode and DMA, backed by the dump
++ *
++ * Architectural SPRs are remapped too, because this chip does not use the
++ * OpenRISC spec numbering: SR 0x18, NPC 0x14, PPC 0x1C, EPCR 0x20, ESR 0x40,
++ * EVBA 0x50, VR 0x00.  See tools/emu/sfr_map.py for the evidence.
 + *
 + * Reference: docs/EMULATOR_PLAN.md, docs/BOOT_MAP.md and the vendor SDK.
 + */
@@ -27,8 +28,10 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +#include "qemu/osdep.h"
 +#include "qemu/error-report.h"
 +#include "qemu/module.h"
++#include "qemu/timer.h"
 +#include "qemu/units.h"
 +#include "qapi/error.h"
++#include "exec/memattrs.h"
 +#include "hw/core/boards.h"
 +#include "hw/core/cpu.h"
 +#include "hw/core/loader.h"
@@ -40,12 +43,13 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +#define TYPE_AX3292_MACHINE MACHINE_TYPE_NAME("ax3292")
 +OBJECT_DECLARE_SIMPLE_TYPE(Ax3292State, AX3292_MACHINE)
 +
-+/* Application image: flash file offset 0x2600 loads at SDRAM 0x02000000.
-+ * The boot code (file 0x520) sets SP to 0x027FFFFC and calls 0x0200046C. */
++/* The boot code (flash file 0x520) sets SP and calls this address. */
 +#define AX3292_ENTRY        0x0200046C
 +#define AX3292_STACK_TOP    0x027FFFFC
 +#define AX3292_SDRAM_BASE   0x02000000
 +#define AX3292_RAM_SIZE     (64 * MiB)
++
++#define AX3292_FLASH_SIZE   (4 * MiB)
 +
 +struct Ax3292State {
 +    MachineState parent;
@@ -56,15 +60,43 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    bool trace;
 +    unsigned long trace_limit;
 +    unsigned long trace_count;
++
++    /* UART0 (SFR2 0x9080) */
++    uint32_t uart_con;
++    uint32_t uart_baud;
++    uint32_t uart_pnd;
++    uint32_t uart_rx;
++
++    /* SPI0 flash controller (SFR2 0x9000) */
++    uint32_t spi_gcon;
++    uint32_t spi_dcon;
++    uint32_t spi_baud;
++    uint32_t spi_dat;        /* byte-mode data */
++    uint32_t spi_sta;
++    uint32_t spi_cnt;
++    uint32_t spi_badr;
++    uint32_t spi_sadr;
++    int spi_state;
++    uint32_t spi_cmd;
++    uint32_t spi_pos;
++    uint32_t spi_addr;
++    bool spi_trace;
++
++    uint8_t *flash;          /* the dump, 4 MiB */
++    size_t flash_size;
++
++    /*
++     * Generic backing store for the SFR-group registers that have no device
++     * model yet.  Reading back what was written matters: the firmware uses
++     * read-modify-write on GPIO and on the LCD control registers.
++     */
++    uint32_t sfr[0x10000 / 4];
++
++    QEMUTimer *sampler;
 +};
 +
-+/* --- SPR bus ------------------------------------------------------------- */
++/* --- register numbers ----------------------------------------------------- */
 +
-+/*
-+ * Architectural registers, in the chip's numbering.  See tools/emu/sfr_map.py:
-+ * the compiler emits the __sfr byte address verbatim as the SPR number, and
-+ * for group 0 that is not the OpenRISC spec numbering.
-+ */
 +enum {
 +    AX3292_SPR_VR   = 0x00,
 +    AX3292_SPR_NPC  = 0x14,
@@ -76,76 +108,411 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    AX3292_SPR_EVBA = 0x50,
 +};
 +
++enum {
++    AX3292_SPI_GCON   = 0x9000,
++    AX3292_SPI_FACON  = 0x9004,
++    AX3292_SPI_PACON  = 0x9008,
++    AX3292_SPI_DCON   = 0x900C,
++    AX3292_SPI_ACT    = 0x9244,
++    AX3292_SPI_STA    = 0x9248,
++    AX3292_SPI_BAUD   = 0x924C,
++    AX3292_SPI_DBUF   = 0x9250,
++    AX3292_SPI_DCNT   = 0x9254,
++    AX3292_SPI_BADR   = 0x9258,
++    AX3292_SPI_SADR   = 0x925C,
++};
++
++enum {
++    AX3292_UART0_CON  = 0x9080,
++    AX3292_UART0_BAUD = 0x9084,
++    AX3292_UART0_DAT  = 0x9088,
++    AX3292_UART0_PND  = 0x908C,
++};
++
++#define AX3292_UART_PND_TX_READY 0x2
++
++/* SFR5 LCD block.  Bit 31 of LCDSTA is the operation-complete flag the driver
++ * polls (`l.sfgesi r3,0` / `l.bf` around 0x02035244); the model finishes
++ * instantly, so it always reads set. */
++#define AX3292_LCD_STA 0xA804
++
++/* SPI flash commands the firmware uses (see the vendor SDK hal_spi.c). */
++#define SPI_CMD_WRITE_ENABLE 0x06
++#define SPI_CMD_READ_STATUS  0x05
++#define SPI_CMD_READ_DATA    0x03
++#define SPI_CMD_FAST_READ    0x0B
++#define SPI_CMD_READ_ID      0x9F
++
++enum {
++    SPI_STATE_IDLE,
++    SPI_STATE_ADDR,
++    SPI_STATE_READ,
++    SPI_STATE_ID,
++    SPI_STATE_STATUS,
++    SPI_STATE_DONE,
++};
++
++/*: A 4 MiB part; the firmware reads it for diagnostics. */
++static const uint8_t ax3292_flash_id[3] = { 0xEF, 0x40, 0x16 };
++
++static bool ax3292_spi_enabled(Ax3292State *s)
++{
++    return s->flash != NULL;
++}
++
++/* --- UART0 ---------------------------------------------------------------- */
++
++/*
++ * The firmware's send path is the vendor SDK's verbatim:
++ *
++ *     UART0DAT = byte;
++ *     while ((UART0PND & 0x2) == 0) { }
++ *     UART0PND |= 1;
++ *
++ * so bit 1 (transmit complete) has to read as set -- the model has no baud rate
++ * and shifts instantly -- and writing ones to UART0PND clears bits.  Output goes
++ * to stdout; tools/emu/run.py keeps it apart from the SPR trace.
++ */
++static void ax3292_uart_tx(uint8_t byte)
++{
++    static char buf[512];
++    static size_t len;
++
++    if (byte == '\r') {
++        return;
++    }
++    buf[len++] = byte;
++    if (byte == '\n' || len == sizeof(buf)) {
++        fwrite(buf, 1, len, stdout);
++        fflush(stdout);
++        len = 0;
++    }
++}
++
++/* --- SPI0 flash ----------------------------------------------------------- */
++
++static void ax3292_spi_reset_xfer(Ax3292State *s)
++{
++    if (s->spi_state != SPI_STATE_IDLE) {
++        fprintf(stderr, "spi: cs edge, xfer reset\n");
++    }
++    s->spi_state = SPI_STATE_IDLE;
++    s->spi_cmd = 0;
++    s->spi_pos = 0;
++    s->spi_addr = 0;
++}
++
++/*: Perform one SPI byte transfer, returning the byte the flash drove. */
++static uint8_t ax3292_spi_transfer(Ax3292State *s, uint8_t out)
++{
++    uint8_t in = 0;
++
++    switch (s->spi_state) {
++    case SPI_STATE_IDLE:
++        s->spi_cmd = out;
++        s->spi_addr = 0;
++        s->spi_pos = 0;
++        switch (out) {
++        case SPI_CMD_READ_DATA:
++        case SPI_CMD_FAST_READ:
++            s->spi_state = SPI_STATE_ADDR;
++            break;
++        case SPI_CMD_READ_ID:
++            s->spi_state = SPI_STATE_ID;
++            break;
++        case SPI_CMD_READ_STATUS:
++            s->spi_state = SPI_STATE_STATUS;
++            break;
++        default:
++            s->spi_state = SPI_STATE_DONE;
++            break;
++        }
++        break;
++
++    case SPI_STATE_ADDR:
++        s->spi_addr = (s->spi_addr << 8) | out;
++        if (++s->spi_pos == 3) {
++            s->spi_pos = 0;
++            s->spi_state = SPI_STATE_READ;
++        }
++        break;
++
++    case SPI_STATE_READ:
++        in = s->flash[(s->spi_addr & (s->flash_size - 1))];
++        s->spi_addr++;
++        break;
++
++    case SPI_STATE_ID:
++        in = s->spi_pos < 3 ? ax3292_flash_id[s->spi_pos] : 0;
++        s->spi_pos++;
++        break;
++
++    case SPI_STATE_STATUS:
++        in = 0;                 /* not busy, no write protection */
++        break;
++
++    default:
++        break;
++    }
++
++    if (s->spi_trace) {
++        fprintf(stderr, "spi: xfer out=%02x in=%02x st=%d\n",
++                out, in, s->spi_state);
++    }
++    return in;
++}
++
++/*: Bulk read: (SPIFDCNT + 1) * 4 bytes from SPIFSADR to SDRAM SPIFBADR. */
++static void ax3292_spi_dma(Ax3292State *s)
++{
++    uint8_t chunk[4096];
++    uint32_t len = (s->spi_cnt + 1) * 4;
++    uint32_t src, dst = s->spi_badr;
++
++    /*
++     * The vendor SDK sets SPIFSADR = 0x6000000|0 and lets the DMA continue
++     * the transfer the byte stream already started: the command and address
++     * bytes shifted in through SPIFDBUF are what selects the flash address.
++     * Only a standalone DMA (no byte command in flight) uses SPIFSADR.
++     */
++    if (s->spi_state == SPI_STATE_READ) {
++        src = s->spi_addr;
++    } else {
++        src = s->spi_sadr & 0x01ffffff;
++    }
++
++    if (len > s->flash_size) {
++        fprintf(stderr, "ax3292: implausible SPI DMA len=%u src=%06x dst=%08x\n",
++                len, src, dst);
++        len = s->flash_size;
++    }
++
++    if (s->spi_trace) {
++        fprintf(stderr, "spi: dma len=%u src=%06x dst=%08x\n", len, src, dst);
++    }
++
++    s->spi_addr = src + len;
++
++    while (len) {
++        uint32_t n = MIN(len, sizeof(chunk));
++        uint32_t i;
++
++        for (i = 0; i < n; i++) {
++            chunk[i] = s->flash[(src + i) & (s->flash_size - 1)];
++        }
++        address_space_write(&address_space_memory, dst,
++                            MEMTXATTRS_UNSPECIFIED, chunk, n);
++        src += n;
++        dst += n;
++        len -= n;
++    }
++
++    s->spi_sta |= 0x2;
++}
++
++/* --- SPR register model --------------------------------------------------- */
++
++static bool ax3292_reg_read(Ax3292State *s, CPUOpenRISCState *env,
++                            uint32_t spr, uint32_t *value);
++
++static bool ax3292_reg_write(Ax3292State *s, CPUOpenRISCState *env,
++                             uint32_t spr, uint32_t v);
++
 +static bool ax3292_spr_access(struct CPUArchState *env, void *opaque,
 +                              bool is_write, uint32_t spr, uint32_t *value)
 +{
 +    Ax3292State *s = opaque;
-+    uint32_t v = *value;
++    bool handled;
 +
-+    if (s->trace && s->trace_count < s->trace_limit) {
-+        s->trace_count++;
-+        fprintf(stderr, "spr %s %04x %08x pc=%08x\n",
-+                is_write ? "W" : "R", spr, v, (uint32_t)env->pc);
++    if (is_write) {
++        handled = ax3292_reg_write(s, env, spr, *value);
++        if (handled && s->trace && s->trace_count < s->trace_limit) {
++            s->trace_count++;
++            fprintf(stderr, "spr W %04x %08x pc=%08x\n",
++                    spr, *value, (uint32_t)env->pc);
++        }
++        return handled;
 +    }
 +
++    handled = ax3292_reg_read(s, env, spr, value);
++    if (handled && s->trace && s->trace_count < s->trace_limit) {
++        s->trace_count++;
++        fprintf(stderr, "spr R %04x %08x pc=%08x\n",
++                spr, *value, (uint32_t)env->pc);
++    }
++    return handled;
++}
++
++static bool ax3292_reg_read(Ax3292State *s, CPUOpenRISCState *env,
++                            uint32_t spr, uint32_t *value)
++{
 +    switch (spr) {
 +    case AX3292_SPR_VR:
-+        if (!is_write) {
-+            *value = 0x65803200;    /* observed on hardware */
-+        }
++        *value = 0x65803200;    /* observed on hardware */
 +        return true;
-+
-+    case AX3292_SPR_NPC:            /* reading NPC gives the current PC */
-+        if (!is_write) {
-+            *value = (uint32_t)env->pc;
-+        }
++    case AX3292_SPR_NPC:
++        *value = (uint32_t)env->pc;
 +        return true;
-+
 +    case AX3292_SPR_SR:
-+        if (is_write) {
-+            cpu_set_sr(env, v);
-+        } else {
-+            *value = cpu_get_sr(env);
-+        }
++        *value = cpu_get_sr(env);
 +        return true;
-+
 +    case AX3292_SPR_PPC:
-+        if (is_write) {
-+            env->ppc = v;
-+        } else {
-+            *value = env->ppc;
-+        }
++        *value = env->ppc;
 +        return true;
-+
 +    case AX3292_SPR_EPCR:
-+        if (is_write) {
-+            env->epcr = v;
-+        } else {
-+            *value = env->epcr;
-+        }
++        *value = env->epcr;
 +        return true;
-+
 +    case AX3292_SPR_EEAR:
-+        if (is_write) {
-+            env->eear = v;
-+        } else {
-+            *value = env->eear;
-+        }
++        *value = env->eear;
 +        return true;
-+
 +    case AX3292_SPR_ESR:
-+        if (is_write) {
-+            env->esr = v;
-+        } else {
-+            *value = env->esr;
-+        }
++        *value = env->esr;
++        return true;
++    case AX3292_SPR_EVBA:
++        *value = env->evbar;
 +        return true;
 +
++    case AX3292_UART0_CON:
++        *value = s->uart_con;
++        return true;
++    case AX3292_UART0_BAUD:
++        *value = s->uart_baud;
++        return true;
++    case AX3292_UART0_DAT:
++        *value = s->uart_rx;
++        return true;
++    case AX3292_UART0_PND:
++        /* TX is instantaneous, so bit 1 always reads set. */
++        *value = s->uart_pnd | AX3292_UART_PND_TX_READY;
++        return true;
++
++    case AX3292_SPI_GCON:
++        *value = s->spi_gcon;
++        return true;
++    case AX3292_SPI_DCON:
++        *value = s->spi_dcon;
++        return true;
++    case AX3292_SPI_ACT:
++    case AX3292_SPI_FACON:
++    case AX3292_SPI_PACON:
++        *value = 0;
++        return true;
++    case AX3292_SPI_STA:
++        /* Bit 0 is the byte-transfer done flag; the engine is instant. */
++        *value = s->spi_sta | 0x1;
++        return true;
++    case AX3292_SPI_BAUD:
++        *value = s->spi_baud;
++        return true;
++    case AX3292_SPI_DBUF:
++        *value = s->spi_dat;
++        return true;
++    case AX3292_SPI_DCNT:
++        *value = s->spi_cnt;
++        return true;
++    case AX3292_SPI_BADR:
++        *value = s->spi_badr;
++        return true;
++    case AX3292_SPI_SADR:
++        *value = s->spi_sadr;
++        return true;
++
++    case AX3292_LCD_STA:
++        *value = s->sfr[spr >> 2] | 0x80000000;
++        return true;
++
++    default:
++        break;
++    }
++
++    if (spr >= 0x8000) {
++        *value = s->sfr[spr >> 2];
++        return true;
++    }
++    return false;
++}
++
++static bool ax3292_reg_write(Ax3292State *s, CPUOpenRISCState *env,
++                             uint32_t spr, uint32_t v)
++{
++    switch (spr) {
++    case AX3292_SPR_SR:
++        cpu_set_sr(env, v);
++        return true;
++    case AX3292_SPR_PPC:
++        env->ppc = v;
++        return true;
++    case AX3292_SPR_EPCR:
++        env->epcr = v;
++        return true;
++    case AX3292_SPR_EEAR:
++        env->eear = v;
++        return true;
++    case AX3292_SPR_ESR:
++        env->esr = v;
++        return true;
 +    case AX3292_SPR_EVBA:
-+        if (is_write) {
-+            env->evbar = v;
-+        } else {
-+            *value = env->evbar;
++        env->evbar = v;
++        return true;
++
++    case AX3292_UART0_CON:
++        s->uart_con = v;
++        return true;
++    case AX3292_UART0_BAUD:
++        s->uart_baud = v;
++        return true;
++    case AX3292_UART0_DAT:
++        ax3292_uart_tx(v & 0xff);
++        s->uart_pnd |= AX3292_UART_PND_TX_READY;
++        return true;
++    case AX3292_UART0_PND:
++        s->uart_pnd &= ~v;      /* write 1 to clear */
++        return true;
++
++    case AX3292_SPI_GCON:
++        /*
++         * Bit 14 is chip select (the vendor SDK's ax32xx_spi0CS0Config).
++         * The byte-mode helpers rewrite this register before every byte, so
++         * the command state machine may only restart on a CS *edge*, not on
++         * every write.
++         */
++        if ((v ^ s->spi_gcon) & 0x4000) {
++            ax3292_spi_reset_xfer(s);
++        }
++        s->spi_gcon = v;
++        return true;
++    case AX3292_SPI_DCON:
++        s->spi_dcon = v;
++        return true;
++    case AX3292_SPI_BAUD:
++        s->spi_baud = v;
++        return true;
++    case AX3292_SPI_DBUF:
++        s->spi_dat = v & 0xff;
++        return true;
++    case AX3292_SPI_STA:
++        s->spi_sta &= ~v;
++        return true;
++    case AX3292_SPI_DCNT:
++        s->spi_cnt = v;
++        return true;
++    case AX3292_SPI_BADR:
++        s->spi_badr = v;
++        return true;
++    case AX3292_SPI_SADR:
++        s->spi_sadr = v;
++        return true;
++
++    case AX3292_SPI_ACT:
++        if ((v & 0x1) && ax3292_spi_enabled(s)) {
++            s->spi_dat = ax3292_spi_transfer(s, s->spi_dat & 0xff);
++            s->spi_sta |= 0x1;
++        }
++        if ((v & 0x2) && ax3292_spi_enabled(s)) {
++            ax3292_spi_dma(s);
++        }
++        if (v & (1u << 17)) {
++            s->spi_sta &= ~0x2;
 +        }
 +        return true;
 +
@@ -154,21 +521,42 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    }
 +
 +    if (spr >= 0x8000) {
-+        /* SFR-group peripheral.  No device model yet: reads as zero. */
-+        if (!is_write) {
-+            *value = 0;
-+        }
++        s->sfr[spr >> 2] = v;
 +        return true;
 +    }
-+
-+    /* Let the built-in architectural SPR handling have it. */
 +    return false;
 +}
 +
-+/* --- machine ------------------------------------------------------------- */
++/* --- machine -------------------------------------------------------------- */
 +
 +/* There is exactly one AX3292 machine per process. */
 +static Ax3292State *ax3292_current;
++
++/*
++ * Periodic PC sample: a stuck firmware loop may touch no registers at all,
++ * which is when this is the only cheap way to find it.  AX3292_PC_SAMPLE=1.
++ */
++static void ax3292_sample(void *opaque)
++{
++    OpenRISCCPU *cpu = opaque;
++    Ax3292State *s = ax3292_current;
++
++    if (s != NULL) {
++        if (s->trace) {
++            fprintf(stderr, "pc %08x ppc %08x spr_ops %lu",
++                    (uint32_t)cpu->env.pc, (uint32_t)cpu->env.ppc,
++                    s->trace_count);
++            for (int i = 1; i <= 6; i++) {
++                fprintf(stderr, " r%d=%08x", i, cpu_get_gpr(&cpu->env, i));
++            }
++            fprintf(stderr, " r9=%08x", cpu_get_gpr(&cpu->env, 9));
++            fputc('\n', stderr);
++        }
++        if (s->sampler != NULL) {
++            timer_mod(s->sampler, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 500);
++        }
++    }
++}
 +
 +static void ax3292_cpu_reset(void *opaque)
 +{
@@ -192,6 +580,7 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    s->trace_limit = 300000;
 +    s->entry = AX3292_ENTRY;
 +    ax3292_current = s;
++
 +    env = getenv("AX3292_ENTRY");
 +    if (env != NULL) {
 +        s->entry = strtoul(env, NULL, 0);
@@ -204,6 +593,22 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    if (env != NULL) {
 +        s->trace_limit = strtoul(env, NULL, 0);
 +    }
++    env = getenv("AX3292_SPI_TRACE");
++    if (env != NULL) {
++        s->spi_trace = atoi(env) != 0;
++    }
++
++    /* The flash backing store is the dump itself. */
++    env = getenv("AX3292_FLASH");
++    if (env != NULL) {
++        gsize len = 0;
++        if (g_file_get_contents(env, (gchar **)&s->flash, &len, NULL) && len > 0) {
++            s->flash_size = len;
++        } else {
++            error_report("could not read flash image '%s'", env);
++            exit(1);
++        }
++    }
 +
 +    memory_region_init_ram(&s->ram, NULL, "ax3292.ram",
 +                           machine->ram_size, &error_fatal);
@@ -215,6 +620,12 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    cpu->env.spr_hook = ax3292_spr_access;
 +    cpu->env.spr_hook_opaque = s;
 +    qemu_register_reset(ax3292_cpu_reset, cpu);
++
++    env = getenv("AX3292_PC_SAMPLE");
++    if (env != NULL && atoi(env) != 0) {
++        s->sampler = timer_new_ms(QEMU_CLOCK_VIRTUAL, ax3292_sample, cpu);
++        timer_mod(s->sampler, qemu_clock_get_ms(QEMU_CLOCK_VIRTUAL) + 500);
++    }
 +
 +    if (machine->kernel_filename) {
 +        size = load_image_targphys(machine->kernel_filename, AX3292_SDRAM_BASE,
@@ -231,8 +642,8 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    }
 +
 +    if (s->trace) {
-+        fprintf(stderr, "ax3292: entry %#x stack %#x trace limit %lu\n",
-+                s->entry, AX3292_STACK_TOP, s->trace_limit);
++        fprintf(stderr, "ax3292: entry %#x stack %#x flash %zu bytes trace %lu\n",
++                s->entry, AX3292_STACK_TOP, s->flash_size, s->trace_limit);
 +    }
 +}
 +
@@ -261,8 +672,8 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +
 +type_init(ax3292_machine_register_types)
 diff -Naur a/hw/or1k/Kconfig b/hw/or1k/Kconfig
---- a/hw/or1k/Kconfig	2026-10-14 16:37:37.354521649 +0200
-+++ b/hw/or1k/Kconfig	2026-10-14 16:37:37.362276099 +0200
+--- a/hw/or1k/Kconfig	2026-10-14 16:51:58.672920786 +0200
++++ b/hw/or1k/Kconfig	2026-10-14 16:51:58.678796731 +0200
 @@ -22,3 +22,8 @@
      select SERIAL_MM
      select SIFIVE_TEST
@@ -273,16 +684,16 @@ diff -Naur a/hw/or1k/Kconfig b/hw/or1k/Kconfig
 +    default y
 +    depends on OR1K
 diff -Naur a/hw/or1k/meson.build b/hw/or1k/meson.build
---- a/hw/or1k/meson.build	2026-10-14 16:37:37.354560702 +0200
-+++ b/hw/or1k/meson.build	2026-10-14 16:37:37.362231846 +0200
+--- a/hw/or1k/meson.build	2026-10-14 16:51:58.672959088 +0200
++++ b/hw/or1k/meson.build	2026-10-14 16:51:58.678762998 +0200
 @@ -5,3 +5,4 @@
  openrisc_ss.add(when: 'CONFIG_OR1K_VIRT', if_true: files('virt.c'))
  
  hw_arch += {'or1k': openrisc_ss}
 +openrisc_ss.add(when: 'CONFIG_AX3292', if_true: files('ax3292.c'))
 diff -Naur a/target/or1k/cpu.h b/target/or1k/cpu.h
---- a/target/or1k/cpu.h	2026-10-14 16:37:37.352908041 +0200
-+++ b/target/or1k/cpu.h	2026-10-14 16:37:37.360007659 +0200
+--- a/target/or1k/cpu.h	2026-10-14 16:51:58.671596953 +0200
++++ b/target/or1k/cpu.h	2026-10-14 16:51:58.677395372 +0200
 @@ -258,6 +258,25 @@
  
      /* Fields from here on are preserved across CPU reset. */
@@ -310,8 +721,8 @@ diff -Naur a/target/or1k/cpu.h b/target/or1k/cpu.h
      uint32_t avr;             /* Architecture version register */
      uint32_t upr;             /* Unit presence register */
 diff -Naur a/target/or1k/sys_helper.c b/target/or1k/sys_helper.c
---- a/target/or1k/sys_helper.c	2026-10-14 16:37:37.352938318 +0200
-+++ b/target/or1k/sys_helper.c	2026-10-14 16:37:37.360744616 +0200
+--- a/target/or1k/sys_helper.c	2026-10-14 16:51:58.671679799 +0200
++++ b/target/or1k/sys_helper.c	2026-10-14 16:51:58.677510028 +0200
 @@ -50,6 +50,17 @@
      int idx;
  #endif
@@ -345,8 +756,8 @@ diff -Naur a/target/or1k/sys_helper.c b/target/or1k/sys_helper.c
      switch (spr) {
      case TO_SPR(0, 20): /* FPCSR */
 diff -Naur a/target/or1k/translate.c b/target/or1k/translate.c
---- a/target/or1k/translate.c	2026-10-14 16:37:37.352969446 +0200
-+++ b/target/or1k/translate.c	2026-10-14 16:37:37.360339223 +0200
+--- a/target/or1k/translate.c	2026-10-14 16:51:58.671708273 +0200
++++ b/target/or1k/translate.c	2026-10-14 16:51:58.677456577 +0200
 @@ -49,6 +49,8 @@
      uint32_t delayed_branch;
      uint32_t cpucfgr;

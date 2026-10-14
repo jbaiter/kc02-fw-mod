@@ -140,16 +140,18 @@ def main(argv: list[str] | None = None) -> int:
     env = dict(os.environ)
     env["AX3292_ENTRY"] = hex(args.entry)
     env["AX3292_SPR_TRACE_LIMIT"] = str(args.trace_limit)
+    env["AX3292_FLASH"] = str(args.image)
 
     cmd = [
         args.qemu, "-M", "ax3292", "-m", "64M",
         "-display", "none", "-monitor", "none", "-serial", "none",
         "-kernel", app_path,
     ]
+    uart_log = Path(str(log) + ".uart")
     print("$ " + " ".join(cmd))
     try:
-        with log.open("wb") as out:
-            proc = subprocess.run(cmd, env=env, stdout=out, stderr=subprocess.STDOUT,
+        with log.open("wb") as errf, uart_log.open("wb") as outf:
+            proc = subprocess.run(cmd, env=env, stdout=outf, stderr=errf,
                                   timeout=args.timeout)
         rc = proc.returncode
     except subprocess.TimeoutExpired:
@@ -158,6 +160,11 @@ def main(argv: list[str] | None = None) -> int:
         os.unlink(app_path)
 
     print(f"qemu exit {rc}; trace -> {log}")
+    if uart_log.exists() and uart_log.stat().st_size:
+        text = uart_log.read_text(errors="replace")
+        print(f"uart -> {uart_log} ({len(text)} bytes)")
+        for line in text.splitlines()[:40]:
+            print("  | " + line)
     decode(log, load_table(args.table))
     return 0
 
