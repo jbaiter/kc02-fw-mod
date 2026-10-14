@@ -4,6 +4,10 @@ Written to survive a context compaction. Everything below is either verified
 against the dump, the vendor SDK, or the vendor's own linked build; where
 something is inferred or unconfirmed it says so.
 
+> **Read the "CURRENT STATE" section at the end of this file first.** It is the
+> authoritative status and supersedes several earlier claims here, which are
+> left in place only to show what was already ruled out.
+
 ## Goal
 
 Run a dumped AX3292 (KC02-family camera) firmware image on the host far enough to
@@ -655,3 +659,241 @@ moment) to recover the command set.
    handshake.  Once that works, switch `AX3292_LCD_EV_FRAME` back to `0x08`
    (the true vsync event, whose callback runs `ax32xx_lcdKick`) and the composed
    frame should scan out.
+
+---
+
+# CURRENT STATE (authoritative — supersedes the sections above)
+
+## Bottom line
+
+The emulator boots the **original firmware**, configures the display, scans the
+keypad, ticks, and drives the UI mode machine. It **renders the application's UI**
+(real menu icons drawn by the firmware, captured to PNG) and **button presses
+reach the UI** (proven end to end). The sensor is faked. Two things still stop it
+being "done": the **boot is only ~40-50% reliable**, and the **compositor is never
+seeded**, so the composed screen never appears.
+
+Repo: branch `reversing`, last commit `2685b83`. The QEMU tree is restored to
+exactly `tools/emu/qemu/0001-ax3292-machine.patch` and builds clean.
+
+## How to run
+
+```sh
+Q=~/.src/qemu-11.1.2/build/qemu-system-or1k
+AX3292_FLASH=$PWD/firmware/original.bin AX3292_SENSOR=1 \
+AX3292_KEYFILE=/tmp/key.txt AX3292_FB='/tmp/fb/f%06u.pgm' AX3292_FB_EVERY=25 \
+$Q -M ax3292 -m 64M -accel tcg,thread=multi \
+   -display none -monitor none -serial none -kernel /tmp/app.bin
+```
+
+`/tmp/key.txt` holds one number, re-read on every keypad ADC conversion, so
+buttons can be injected live: write `386` to press OK, `1023` to release.
+`AX3292_SENSOR=1` fakes the image sensor. `AX3292_FB` writes a 640x480 PGM with
+the four rotate buffers as a 2x2 grid (srcY, srcUV, tgtY, tgtUV) — read them with
+image crops, **never** with byte slices: each quadrant is 320x240 inside a
+640-wide image, so byte ranges are half-height bands and will mislead you.
+
+Boot success is measurable: **142 B of UART** (prints `memPool blkSize:12 ...`)
+means a clean boot; **56 B** means it stalled during bring-up.
+
+## Requirements audit
+
+| requirement | status | evidence |
+|---|---|---|
+| UI is rendering | **partial** | firmware draws a real camera menu icon into its 320x180 layer (captured); panel geometry in RAM is 320x180 (`0x140` x `0xb4`). Composition never happens (below), and only 1 of ~6 menu icons is drawn. |
+| reacts to button presses | **proven** | inject 386 -> keypad scanner state `0x020c2598` becomes `0x1a` (OK) -> UI mode `0x020ccd50` changes state. Nothing happens without a press. |
+| fake camera sensor | **done** | `AX3292_SENSOR=1`; preview plane measured live: 149/160 distinct states, up to 76,010 non-zero bytes. |
+
+## Blocker A: the boot is ~40-50% reliable
+
+Symptom: 56 B instead of 142 B. Not a crash — the firmware stalls in bring-up,
+and it is **sensitive to host load** and **insensitive to my locking changes**.
+
+The firmware **waits for LCD frame interrupts during bring-up**. Proven both
+ways: delaying the frame event's gate made it fail 100% of the time, and it needs
+them early. So the frame event is load-bearing for the boot.
+
+Diagnosis attempt: a data race on `env->picsr`. The periodic tick runs on the main
+thread holding QEMU's big lock; in MTTCG the vCPU thread executes guest code
+*without* it; both read-modify-write `picsr`, so a lost update means the firmware
+never sees its frame interrupt. Three fixes tried:
+
+| attempt | result |
+|---|---|
+| take the big lock in the SPR hook | **worse** — starves the guest; the firmware hammers device registers ~43k/s |
+| move the tick off `picsr` into an accumulated mask | **worse** — needs the mask cleared at every guest ack; the pass broke delivery |
+| `qatomic_or` / `qatomic_and` on `picsr` | **no improvement** (2/6 clean) |
+
+The atomics not helping is evidence that the race **is not the cause**. Better
+hypothesis: it is **timing, not concurrency**. Frame events arrive at a fixed
+*wall-clock* 100 Hz while the firmware measures its deadlines with its own RTC; if
+emulation speed varies, the firmware blows its own deadline before enough frames
+arrive. That fits load-sensitivity, insensitivity to locking, and the 100%
+failure when the gate was delayed.
+
+**Next step for this:** drive the frame event from *guest progress* (every N
+instructions, or a vCPU-exit/tick-count hooked to execution) rather than wall
+time, so the firmware's sense of time and frame delivery stay consistent. That
+should make the boot reproducible, and everything after it verifiable.
+
+## Blocker B: the compositor is never seeded (bootstrap deadlock)
+
+`*(u32*)0x020ce974` (the display's current frame) stays **NULL**, and the
+compositor's queue at `0x020d1ae0` / `0x020d1aec` stays **empty**.
+
+```c
+void hal_lcdSetFrame(s16 x,s16 y,u16 w,u16 h,void *p_lcd_buffer,u8 scan_mode)  /* 0x0203a0e0 */
+{ hal_lcdDealBuffer(p_lcd_buffer, ...); }
+
+void hal_lcdDealBuffer(void *frame)                                            /* 0x02039e44 */
+{
+  if (frame[0x2a] == 4) {                       /* type 4 = needs composing */
+    p2 = hal_dispframeMalloc(1);
+    if (p2 == NULL) hal_dispframeFree(frame);
+    else            hal_rotateAdd(0, frame, p2);          /* <-- enqueue */
+  } else {
+    ax32xx_intEnable(4, 0);
+    if (DAT_020ce974) hal_dispframeFree(DAT_020ce974);
+    DAT_020ce974 = frame;                                 /* <-- becomes the display frame */
+    if (*(sbyte *)(DAT_020ce980 + 0x27) == 1) ax32xx_deUpdate();
+    ax32xx_intEnable(4, 1);
+  }
+}
+
+void hal_rotateFrameDoneIsr(void)                                              /* 0x02044428 */
+{
+  hal_dispframeFree(_DAT_020d1af8);
+  if (DAT_020d1af4 == 0) hal_lcdSetFrame(0,0,0,0,_DAT_020d1afc,0);
+  else                   hal_osdDealBuffer(_DAT_020d1afc);
+  ...
+  for each of the two queue slots { pick one that is non-empty; clear it;
+                                    hal_rotateKick(buf, ...); }   /* chain next */
+}
+```
+
+Neither branch of `hal_lcdDealBuffer` is ever reached, so nothing submits the
+first frame; `hal_rotateFrameDoneIsr` only runs from rotate-completion **IRQ 23**
+(now raised, but gated on the firmware's own queue being non-empty), so nothing
+completes and nothing is ever submitted.
+
+**Next step for this:** Ghidra xrefs on `hal_rotateAdd`, `hal_lcdSetFrame` and
+`0x020ce974` to find what should submit the *first* frame, and under what
+condition. `hal_rotateKick` (0x02044378) currently executes **zero** times and
+`0x8990` (rotate source Y) is written exactly **once** — a good cheap probe.
+
+## Secondary: only one menu icon
+
+A ~6-item menu draws one icon. Icons come from SPI flash through the SFAT asset
+path (`sfx_play_asset` does an SFAT lookup near `0x0205b408`), so the likely cause
+is the asset load succeeding once and failing after — or the menu legitimately
+drawing only the selected item, which the D-pad test would settle (a DOWN press
+should then change which icon is shown).
+
+## Hardware facts confirmed this session
+
+* **Keypad**: table at `0x020C268C`, 6 entries of 8 bytes, `{u8 key_id; u8 pad;
+  u16 window}`: OK `0x1a`/386, RIGHT `0x1e`/776, LEFT `0x1d`/252, UP `0x1b`/657,
+  DOWN `0x1c`/510, POWER `0x24`/12. `kc02_keypad_scan` (0x020035f8) reads ADC
+  channel 3, matches that table, and needs a 3-sample debounce. State:
+  `0x020c2598` last key, `0x020c87d0` debounce counter, `0x020c8784` last ADC.
+* **ADC**: `ADCCON 0x9170` carries `EN 0x10 | channel` in the low bits, `GO 0x80`
+  to start; `ADCBAUD 0x9174`; `ADCDAT 0x9178`. **Bit `0x40` of ADCCON is a BUSY
+  bit, not a done bit** — `ax32xx_adcRead` (0x0202f85c) spins *while it is set*
+  and only then reads ADCDAT. The model setting it is why no button ever worked.
+* **ADC channel read path**: `hal_adcGetChannel` (0x0203814c) =
+  `ax32xx_adcEnable(ch,1); ax32xx_adcSetBaudrate(1e6); ax32xx_adcConverStart();
+  ax32xx_adcRead();`.
+* **LCD event bits** (`LCDSTA 0xa804`), from `ax32xx_lcdIRQHandler` (0x0203584c):
+  `0x80`->clear `0x8000`, `0x04`->`0x400`, `0x02`->`0x200`, `0x08`->`0x800`
+  (this one also calls `ax32xx_lcdKick()` when `(0xa800 & 0x30) == 0x10`),
+  `0x01`->`0x100`, `0x100010`->`0x1000`. Every bit is cleared by writing it
+  eight positions higher. **Bit 8 is the true vsync**; the model uses bit 2
+  because bit 8 derails the boot.
+* **`ax32xx_lcdKick` (0x02035814)** is only `if (!DAT_020ce1f8) LCDCTRL |= 2` —
+  a frame kick that real hardware self-clears.
+* **LCD/panel**: `LCDCTRL 0xa800` (bit 1 = kick), `LCDCMD 0xa804` (bit 31 =
+  command busy, polled `while (v < 0)`), `0xa858` = command byte, `0xa854` = data,
+  plus `0xa808/0xa80c/0xa85c..0xa86c`. The interface is bit-banged through GPIO4
+  bit `0x10` (select) and bit `4` (clock). Panel geometry **320x180**
+  (`0x020ce984` = 0x140, `0x020ce988` = 0xb4).
+* **Rotate engine**: `ax32xx_rotateStart` (0x02032d58) sets
+  `ROTATECON 0x898c` (`src_mode*2 | 1 | int_en<<2`, then `|= 0x80000000` to start),
+  `ROTATESTA 0x89a8 = 1`, `ROTIMGSIZE 0x89a0 = ((h&~1)-1)<<16 | ((w&~1)-1)`,
+  `ROTSRCYADR 0x8990`, `ROTSRCUVADR 0x8994`, `ROTTGYADR 0x8998`,
+  `ROTTGUVADR 0x899c`, `ROTADDRSTRI 0x89a4 = (dst_stride>>2)<<16 | (src_stride>>2)`,
+  and enables **IRQ 23**. `ax32xx_rotateCheckBusy` (0x02032cec) is
+  `ROTATECON >> 31`; `hal_rotateKick` (0x02044378) polls it **ten times with no
+  delay** and spins forever if still busy — so the busy bit must read as clear
+  immediately.
+* **Layer objects**: table at `0x020ce960`, indexed `(layer+1)*4`; each entry
+  points to an object whose `+0xc` is the real object: `+0` flag, `+1` enable,
+  `+3` type, `+4` x, `+6` y, `+8` h, `+10` w. `hal_lcdSetVCH` (0x0203a11c) writes
+  them.
+* **Audio/DAC** (`IRQ 6`): `ax32xx_dacIRQHandler` tests `DACOBSTA 0x9150` bits
+  1/2/4 and calls the registered ISR with that bit — the event the audio state
+  machine at `0x02051fcc` dispatches on. `DACOBSYNC 0x914c` clears them.
+  `sfx_play_asset` (0x020071c4) waits on `media_busy_get` (0x020524a0, byte
+  `0x020d1c44`).
+* **An unnamed engine** at `0x9880`/`0x9884`: started by writing `0x9884`, polled
+  on **bit 17 of `0x9880`** with a timeout from `0x9908`.
+
+## Tooling notes that save a lot of time
+
+**Ghidra works on our exact image and is far better than objdump.** The canonical
+project is the cache artefact whose id is this dump's sha256:
+
+```
+/home/jbaiter/pi-ghidra-cache/artifacts/218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5/project/pi-ghidra.gpr
+```
+
+Call it with the **whole dump** as `binary` and the **default** cache dir, or it
+tries to re-import a raw `.bin` and fails for want of the custom
+`KC02:LE:32:nodelay` language (loader base `0x01ffda00`):
+
+```js
+ghidra({ action: "batch", binary: "firmware/original.bin",
+         cacheDir: "/home/jbaiter/pi-ghidra-cache",
+         operations: [ { action: "decompile", address: "0x02032d58" },
+                       { action: "references", address: "0x02044378", direction: "to" } ] })
+```
+
+It resolves a mid-function address to its function, accepts `name:` to decompile
+by symbol, and the output cites SDK prototypes. **Coverage gap:** many LCD/panel
+routines are reached only through computed pointers, so no function is defined
+there and `decompile` fails with "Function not found". Use the repo's own helper
+for those:
+
+```sh
+tools/kc02_disasm_region.sh 0x02035000 700 /tmp/lcd_region.tsv
+```
+
+**Naming SPR addresses from the SDK** (this cracked the rotate/panel question):
+parse `#define NAME SFR_AT (SPRGROUP_SFRn + (0xNN<<2))` out of
+`ax32xx/inc/ax329x.h` with `SFR0`=0x8000, `SFR1`=0x8800, `SFR2`=0x9000,
+`SFR3`=0x9800, then look up the address you care about.
+
+## Measurement hygiene (this cost real time)
+
+* **Kill stray emulators before measuring.** Background runs left over from
+  earlier experiments eat CPU and make the boot look *deterministically* broken
+  when it is not. `pgrep -x qemu-system-or1k` to check.
+* **Never `pkill -f qemu-system-or1k`** — the pattern matches the shell running
+  the command and kills it. Use `pkill -x qemu-system-or1k`.
+* Report boot health as a **rate over >=6 runs**, never a single run.
+* The SPR trace truncates at its line limit, and with the 1 kHz work loop it fills
+  2 M lines in ~7 s — so any "this never runs" conclusion from late-run counts is
+  unsafe. Use `AX3292_PROBE` for temporal questions.
+* `AX3292_PROBE` samples 8 guest **RAM** addresses every 10 ticks and prints on
+  change. It cannot read SFRs (they are not in RAM) — probing `0x9140` reads
+  whatever RAM lives at that address and is meaningless.
+
+## Traps already burned (do not repeat)
+
+1. `0x898c` is **ROTATECON**, not a display enable. Its busy bit must clear
+   immediately.
+2. Raising the LCD frame event's bit 8, the rotate IRQ 23, or the frame event too
+   early all derail the boot. Gate them on the firmware's own enable bits.
+3. `AX3292_SDCARD` corrupts app state; leave it off.
+4. `AX3292_TICK_LP` (deliver the tick as LP) makes the app reboot. HP is correct.
+5. Do not take QEMU's big lock per device access — it starves this guest.
+6. `-d exec` and `-icount` are both unusable here (accuracy and speed).
