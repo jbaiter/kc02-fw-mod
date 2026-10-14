@@ -152,3 +152,47 @@ not switch the mode.
 
 Note the app never writes the LCD layer registers, i.e. no framebuffer is ever
 installed, which is why nothing can be displayed yet.
+
+## The boot's retry loop, and the RTOS time base (latest state)
+
+With the artificial SD/key injections removed (they were wrong -- the camera
+shows its UI with no input at all, and injecting "card present" every tick fought
+the app's own state machine until it wrote a pointer value, 0x020ce9fd, into
+PICMR), the app spends all its time in one place.  A PC sample over 30 s lands on
+only 7-8 distinct addresses:
+
+    0x0202bc8c / 0x0202bca4   wdtKick (watchdog)
+    0x020073c4 / 0x020073c8 / 0x020073cc    the retry loop
+    0x020524a0                reads the flag byte at 0x020d1c44
+    0x0202f878                the ADC EOC poll
+
+That loop is
+
+    0x020072c4 .. 0x02007348
+        jal 0x020785a8, jal 0x0202b0d4 (malloc, 0x0203e5c4 walks the free list)
+        jal 0x0205b51c, jal 0x020524c0 (writes the flag)
+        jal 0x02021894 (reads the RTOS time), 0x0202f248, 0x0202f33c, 0x02038498
+        loop while (flag != 1 || time_delta <= 1000)
+
+so it is a ten-second retry of something that never becomes ready, not a dead
+wait on the flag (that byte does read 1, and with IRQ0 kept alive the counters
+advance: 0x020cd6fc steps 0x97 -> 0x98 and the ms counter at 0x020cd700 by 10 per
+tick).
+
+The RTOS time base is the interesting part: the 10 ms counter at 0x020cd700 is
+advanced by exactly one instruction, 0x0202185c, inside the handler at
+0x02021824 -- which the app registers as timerISR[0] (0x020d6af0), i.e. the
+*timer0* interrupt.  Yet the app's own final PICMR (0x8030) masks IRQ0.  Either
+the chip's PIC bit for timer0 is not bit 0 (the SDK's IRQ_TIMER0 is 0, but that is
+a software enum), or something re-enables it later.  AX3292_FORCE_IRQ0=1 ORs
+bit 0 into every PICMR write, which makes the time base run; the app then cycles
+through its retries but still does not draw within 180 s, so what it waits for is
+a device, not time.
+
+The app's heap is sane: pool 0x02103980..0x027fec00 with the free list at
+0x020cec6c, and malloc returns blocks.
+
+Remaining suspects, all unmodelled: the sensor/ISP (H63P over I2C, CSI), USB, and
+the sub-systems serviced from the RTC ISR at 0x02051a00 (the flag's owner).  A
+camera shows its UI with no card and no cable, so the sensor is the prime
+candidate.
