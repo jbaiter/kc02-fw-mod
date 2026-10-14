@@ -333,3 +333,46 @@ leaves only when *(0x020ccbd0) differs from the value it was called with, or whe
 malloc fails; neither happens, so one of the four calls in its body (malloc
 0x0203e5c4, the ADC, 0x0205b51c, 0x02038498) is not completing.  Logging those
 return values is the next step.
+
+## The handshake the app blocks on, and two new instruments
+
+The application does not deadlock in hardware; it spins in a 1 kHz work loop
+waiting for a software flag to be *cleared*. The loop is `0x020071c4..0x020073ec`
+(entered from `main`), and its steady shape is: do work (`0x020785a8`,
+`0x0202b0d4`, `0x0205b51c`, `setFlag(1)`), `wdtKick()`, then repeat while
+`getFlag() == 1`, with a 1000 ms fallback poll.
+
+Two convenience facts for reading this: `getFlag` (`0x020524a0`) is
+`return *(u8*)0x020d1c44`, `setFlag` (`0x020524c0`) is `*(u8*)0x020d1c44 = v`, and
+`l.bnf` after `l.sfnei r11,1` branches when the comparison is false -- i.e. when
+`r11 == 1` -- so the loop continues while the flag is set. Every inline access to
+that flag is in one module, `0x02051e70..0x02052768`, and the module's only
+external caller is `0x02051f4c` <- `0x02091b4c`, the USB/SCSI command path.
+
+Timeline from `AX3292_PROBE`:
+
+    t=1   (10 ms)  ui_mode -> 0x0c, ui_desc -> 0, flag -> 0
+    t=19 (190 ms)                            flag -> 1, then nothing, ever
+
+so the flag is set and never cleared, the UI mode never leaves 12, and `main`
+never reaches its UI pump at `0x02000528`.
+
+Two instruments were added to make this kind of question cheap:
+
+* `AX3292_PROBE=addr[,addr...]` -- up to 8 guest addresses sampled every 10 ticks
+  and printed on change. Temporal, costs nothing, cannot be truncated.
+* `AX3292_PULSE_IRQ=<n>` / `AX3292_PULSE_PERIOD` -- raise one interrupt line for
+  half of every period, only once the display is enabled. A bounded injector for
+  the lines the model does not drive (6, 15, 22, 23). Sweeps of 6, 22 and 23
+  changed nothing; pulsing 15 derails the boot.
+
+Note also the real LCD init is `0x02032db8..0x02032e50`, not `0x0202b504` as an
+earlier version of this file said, and the HP handler table is not the one
+previously assumed -- `fast_isr` (`0x0202aca4`) reads SPR `0x480c`, masks `0x1f`,
+and jumps through the pointer table at `0x020807f4`, whose entry 4 (the LCD
+handler) is `0x0202c738`.
+
+The SPR trace now truncates in about seven seconds (2 M lines, because the flag
+spin calls `wdtKick` ~65 000 times a second), so any "this never runs" conclusion
+drawn from late-run trace counts is unsafe. `AX3292_PROBE` is the honest way to
+ask temporal questions.

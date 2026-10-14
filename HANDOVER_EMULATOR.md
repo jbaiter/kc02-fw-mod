@@ -86,6 +86,9 @@ lately; run.py predates several env knobs.
 | `AX3292_WATCH` / `_WORDS` | off | dump guest RAM when the ISR runs |
 | `AX3292_FB` / `_FB_EVERY` | off | dump the panel as a PGM |
 | `AX3292_RAMDUMP` | off | snapshot 0x02100000+0x700000 (SDRAM pool) |
+| `AX3292_PROBE` | off | 8 comma-separated addresses sampled every 10 ticks, printed on change |
+| `AX3292_PULSE_IRQ` | off | raise one IRQ line for half of every `AX3292_PULSE_PERIOD` ticks |
+| `AX3292_PULSE_PERIOD` | 10 | period in ticks for `AX3292_PULSE_IRQ` (10 = 100 ms) |
 
 ## Verified hardware facts (the model's foundation)
 
@@ -134,6 +137,11 @@ byte address verbatim as the SPR number, so `SPR = (group << 11) | (index << 2)`
 | display enable + layer buffers | `0x898c` bit 31; buffers `0x02104080`, `0x02116c80`, `0x0215a480`, `0x0216e480` |
 | allocator (`malloc`) / heap block | `0x0203e5c4` / `0x020cec48..5c` |
 | the boot/work loop the app spins in | function `0x020071c4`, body `0x020072c4`, poll `0x02007328` |
+| the handshake flag the spin waits on | `0x020d1c44` (byte); `getFlag` `0x020524a0`, `setFlag` `0x020524c0` |
+| the module owning that flag (18 inline accesses) | `0x02051e70..0x02052768` |
+| the only external caller of that module | `0x02051f4c` ← `0x02091b4c` (the USB/SCSI path) |
+| HP dispatch | `fast_isr` `0x0202aca4`: reads SPR **`0x480c`**, `& 0x1f`, jumps via the pointer table at `0x020807f4` |
+| the app's LCD init (the real one) | `0x02032db8..0x02032e50` — **not** `0x0202b504` |
 
 ## The one guest-code correction, and why it is justified
 
@@ -180,32 +188,107 @@ writes) and the firmware loops through `_start`. With it on: 60 EPCR writes in
    display writes" while the config was landing at `0x898c`. It is now `0x89a8`.
 9. `AX3292_SDCARD` fights the app's own state machine (it ended up writing a
    pointer value into PICMR). Leave it off.
+10. **The SPR trace truncates and lies by omission.** It fills its 2 M lines in
+    roughly 7 s, so a region that shows "0 accesses" late in the run may simply
+    be past the cut. Early conclusions along the lines of "the tick handler never
+    runs" came from exactly this. Use `AX3292_PROBE` for anything temporal -- it
+    costs nothing and cannot truncate -- and treat trace counts as a picture of
+    the *first few seconds*, not the run.
+11. **`ram_ptr` is indexed by guest address directly.** The RAM region is one
+    64 MiB block at guest 0, so SDRAM at 0x02000000 is offset 0x02000000. Do not
+    subtract a base.
 
-## Immediate next step
+## Where it is blocked, precisely
 
-The UI work runs in a **task**, not on `main`'s path: frame pointer
-`0x027fff94`, looping at `0x02007328` (calls `wdtKick`), and the return-address
-slot below its frame (`0x027fff90`) holds `0x0004fff6` — not a code address. So it
-is a task entry that never returns, and chasing `main`'s pump call was the wrong
-trail.
+The app gets a long way — clean boot, display configured, keypad scanned,
+interrupts serviced — and then spends the rest of its life in a **1 kHz work loop
+waiting on a software handshake flag that is never cleared**.
 
-Its loop leaves only when `*(0x020ccbd0)` differs from the value it was called
-with, **or** when `malloc` returns NULL. Neither happens. So **one of the four
-calls in its body is not completing**:
+The loop is at `0x020071c4..0x020073ec`, entered from `main`. Its steady shape is:
 
-* `malloc` `0x0203e5c4` (walks the free list at `0x020cec54`)
-* the ADC/key scan (`0x0202f33c`, `0x02038498`)
-* `0x0205b51c` (display path; its neighbours `0x0205b7xx` call the layer setup)
+```
+0x020072c4  work: 0x020785a8, 0x0202b0d4, 0x0205b51c, setFlag(1)
+0x02007320  t0 = time()
+0x02007328  wdtKick()
+0x0200732c  if (getFlag() == 1) goto 0x020072c4     /* keep working */
+            else if (time() - t0 <= 1000) goto 0x02007328
+            else goto 0x020072c4
+```
 
-**Do this:** log the return value of each of those calls in one run. A convenient
-way is to grow `AX3292_PCLOG`-style logging: log `r11`/`r3` when `env->pc` hits
-the instructions right after each `l.jal` (the SPR hook already fires at
-`0x0202f878` for the ADC). The failing call will name itself.
+**The polarity matters here and is easy to get backwards.** `l.bnf` after
+`l.sfnei r11,1` branches when the comparison is *false* — i.e. when `r11 == 1`.
+`getFlag` (`0x020524a0`) is `return *(u8*)0x020d1c44`; `setFlag` (`0x020524c0`) is
+`*(u8*)0x020d1c44 = v`. So while the flag is 1 the loop keeps doing work, and the
+only way out is the flag being **cleared**.
 
-Then: the app's UI is a mode machine (`0x020ccd50` = 12, descriptor NULL, table
-populated for modes 1..10), and mode 6 (main menu) is requested by `main` via
-`ui_mode_request` — which only records the argument *inside mode 6's descriptor*.
-Whoever switches the mode is still unidentified.
+`AX3292_PROBE=0x020ccd50,0x020ccd58,0x020d1c44` tells the whole story in two
+lines:
+
+```
+t=1    (10 ms)  ui_mode -> 0x0c, ui_desc -> 0x00000000, flag -> 0x00
+t=19  (190 ms)                                              flag -> 0x01
+```
+
+and nothing changes for the rest of the run: the flag stays 1, the UI mode stays
+12 (none), the descriptor stays NULL. So the app is *running* — it sets the flag
+at 190 ms and keeps executing the work body — and **the counterpart that should
+clear the flag never runs**. That is why the UI mode machine is never entered:
+`main` never gets past this loop to its UI pump at `0x02000528`.
+
+Every inline access to that flag lives in one module,
+`0x02051e70..0x02052768` (18 of them), and the module's only external caller is
+`0x02051f4c` ← `0x02091b4c` — the USB/SCSI command path.
+
+Interrupts are *not* the answer: the app's PICMR enables bits 0, 4, 5, 6, 15, 22
+and 23, and `AX3292_PULSE_IRQ` sweeps of 6, 22 and 23 change nothing (pulsing 15
+early derails the boot because the USB handler is not ready yet). The two the
+model does drive — 4 (LCDC) and 5 (RTC) — are already firing.
+
+### Next step
+
+Find what should clear `0x020d1c44`. In order:
+
+1. Disassemble `0x02091b4c` and work out what calls it. If it is the USB/SCSI
+   dispatcher, the missing counterpart is the command path — and then the
+   question becomes why the UI is supposed to appear without a host (it is, per
+   the user, so this may be a red herring).
+2. Inspect the two registered LP callbacks the LP dispatcher loads and calls:
+   `*(0x020d6ae0)` (stub `0x0202ac6c`) and `*(0x020d6ae4)` (stub `0x0202ac80`).
+   Whoever installs them and whatever clears the flag are probably the same
+   subsystem.
+3. Consider the sensor/ISP as the counterpart. It is the only peripheral with no
+   model at all, the single image-like window in a full SDRAM dump is *noise*,
+   and the app has configured a preview-shaped layer. `AX3292_PULSE_IRQ` makes
+   sweeping the remaining candidates cheap.
+
+Two things worth knowing before diving in: the app never writes `NPC` (0x14) and
+never writes `SR` from a syscall path, so **it never context-switches** — there is
+no second task to wake. And the UI mode machine itself is intact: `main` requests
+mode 6 (main menu) and the table holds modes 1..10, so once this loop is exited
+the UI has somewhere to go.
+
+### The interrupt map (read off the app's own table)
+
+`fast_isr` (`0x0202aca4`) reads SPR `0x480c`, masks `0x1f`, and jumps through the
+32-bit pointer table at `0x020807f4`. Decoded:
+
+| IRQ | handler | IRQ | handler |
+|---|---|---|---|
+| 0 | `0x0202c978` | 14 | `0x0202ad28` |
+| 1 | `0x0202c9bc` | 15 | `0x0202ad30` |
+| 2 | `0x0202ca00` | 16 | `0x0202ad3c` |
+| 3 | `0x0202ca44` | 18 | `0x0202ad44` |
+| 4 | `0x0202c738` | 21 | `0x0202ad4c` |
+| 9-13 | `0x0202ad84` (returns) | 22 | `0x0202ad54` |
+| | | 23 | `0x0202ad64` |
+| | | 26 | `0x0202ad5c` |
+| | | 27 | `0x0202ad6c` |
+| | | 29 | `0x0202ad74` |
+
+The stubs at `0x0202ace0..0x0202ad84` are the handlers; several tail-call into the
+`0x0202c7xx`/`0x0202c9xx` driver code. Note this fixes an earlier mistake in this
+document: the LCD handler is **`0x0202c738`**, not `0x0203584c` — the latter sits
+in a different dispatcher's table.
 
 ## Things already ruled out (do not redo)
 

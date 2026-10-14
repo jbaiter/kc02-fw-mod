@@ -1,7 +1,7 @@
 diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 --- a/hw/or1k/ax3292.c	1970-01-01 01:00:00.000000000 +0100
-+++ b/hw/or1k/ax3292.c	2026-10-14 20:31:58.239253404 +0200
-@@ -0,0 +1,1287 @@
++++ b/hw/or1k/ax3292.c	2026-10-14 20:46:41.598462566 +0200
+@@ -0,0 +1,1374 @@
 +/*
 + * AX3292 (KC02-family camera) machine.
 + *
@@ -85,6 +85,22 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +     * interrupts only make sense from then on, and raising them earlier
 +     * disturbs the boot. */
 +    bool lcd_enabled;
++
++    /* AX3292_PROBE: a handful of guest addresses sampled once every 10 ticks
++     * (100 ms) and printed whenever they change.  A temporal instrument that
++     * costs nothing and -- unlike the SPR trace -- cannot be truncated. */
++    /* AX3292_PULSE_IRQ: raise one interrupt line for the first half of every
++     * AX3292_PULSE_PERIOD ticks.  A bounded event injector for the interrupt
++     * sources the model does not drive (6, 15, 22, 23 ...), so each can be
++     * tested without a storm derailing the boot. */
++    int pulse_irq;
++    int pulse_period;
++    int pulse_prev;
++
++    uint64_t probe_tick;
++    int probe_n;
++    uint32_t probe[8];
++    uint32_t probe_prev[8];
 +
 +    /* ADC (0x9170): channel select + GO, result in ADCDAT.  Channel 3 is the
 +     * keypad; the value is read from AX3292_KEY (or AX3292_KEYFILE) so keys can
@@ -500,6 +516,49 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +        env->picsr |= 1u << AX3292_IRQ_LCDC;
 +        if (env->picsr & env->picmr) {
 +            cpu_interrupt(cs, CPU_INTERRUPT_HARD);
++        }
++    }
++
++    if (s->pulse_irq >= 0 && s->lcd_enabled) {
++        int on = (int)(s->tick_count % (uint64_t)s->pulse_period)
++                 < (s->pulse_period / 2 + 1);
++        if (on && !s->pulse_prev) {
++            env->picsr |= 1u << s->pulse_irq;
++        } else if (!on && s->pulse_prev) {
++            env->picsr &= ~(1u << s->pulse_irq);
++        }
++        s->pulse_prev = on;
++        if (env->picsr & env->picmr) {
++            cpu_interrupt(cs, CPU_INTERRUPT_HARD);
++        } else if (env->picsr | env->picmr) {
++            cpu_reset_interrupt(env_cpu(env), CPU_INTERRUPT_HARD);
++        }
++    }
++
++    if (s->probe_n) {
++        uint32_t got[8];
++        int i, changed = 0;
++
++        s->probe_tick++;
++        for (i = 0; i < s->probe_n; i++) {
++            uint32_t off = s->probe[i];
++            got[i] = (off + 4 <= AX3292_RAM_SIZE)
++                     ? *(uint32_t *)(s->ram_ptr + off) : 0xdeadbeef;
++            if (got[i] != s->probe_prev[i]) {
++                changed = 1;
++            }
++        }
++        if (changed) {
++            fprintf(stderr, "ax3292: probe t=%" PRIu64 " (%" PRIu64 " ms) pc=%08x",
++                    s->probe_tick, s->probe_tick * 10, (uint32_t)env->pc);
++            for (i = 0; i < s->probe_n; i++) {
++                if (got[i] != s->probe_prev[i]) {
++                    fprintf(stderr, "  [%08x] %08x -> %08x",
++                            s->probe[i], s->probe_prev[i], got[i]);
++                    s->probe_prev[i] = got[i];
++                }
++            }
++            fprintf(stderr, "\n");
 +        }
 +    }
 +
@@ -1083,6 +1142,34 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    }
 +    s->tick_lp = false;   /* HP: the app reboots on an unexpected LP (TICK) interrupt */
 +    s->lcdc_irq = true;     /* the display's frame interrupt; IRQ4 */
++    s->pulse_irq = -1;
++    s->pulse_period = 10;
++    env = getenv("AX3292_PULSE_IRQ");
++    if (env != NULL) {
++        s->pulse_irq = atoi(env);
++    }
++    env = getenv("AX3292_PULSE_PERIOD");
++    if (env != NULL && atoi(env) > 1) {
++        s->pulse_period = atoi(env);
++    }
++
++    env = getenv("AX3292_PROBE");
++    if (env != NULL) {
++        const char *q = env;
++        while (*q && s->probe_n < 8) {
++            char *end;
++            unsigned long a = strtoul(q, &end, 16);
++            if (end == q) {
++                break;
++            }
++            s->probe[s->probe_n] = (uint32_t)a;
++            s->probe_prev[s->probe_n] = 0xffffffffu;
++            s->probe_n++;
++            q = (*end == ',') ? end + 1 : end;
++        }
++        s->probe_tick = 0;
++    }
++
 +    env = getenv("AX3292_LCDC_IRQ");
 +    if (env != NULL) {
 +        s->lcdc_irq = atoi(env) != 0;
@@ -1290,8 +1377,8 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +
 +type_init(ax3292_machine_register_types)
 diff -Naur a/hw/or1k/Kconfig b/hw/or1k/Kconfig
---- a/hw/or1k/Kconfig	2026-10-14 20:31:58.224359340 +0200
-+++ b/hw/or1k/Kconfig	2026-10-14 20:31:58.237815516 +0200
+--- a/hw/or1k/Kconfig	2026-10-14 20:46:41.570468633 +0200
++++ b/hw/or1k/Kconfig	2026-10-14 20:46:41.596339593 +0200
 @@ -22,3 +22,8 @@
      select SERIAL_MM
      select SIFIVE_TEST
@@ -1302,16 +1389,16 @@ diff -Naur a/hw/or1k/Kconfig b/hw/or1k/Kconfig
 +    default y
 +    depends on OR1K
 diff -Naur a/hw/or1k/meson.build b/hw/or1k/meson.build
---- a/hw/or1k/meson.build	2026-10-14 20:31:58.224384387 +0200
-+++ b/hw/or1k/meson.build	2026-10-14 20:31:58.236044794 +0200
+--- a/hw/or1k/meson.build	2026-10-14 20:46:41.570494962 +0200
++++ b/hw/or1k/meson.build	2026-10-14 20:46:41.593913009 +0200
 @@ -5,3 +5,4 @@
  openrisc_ss.add(when: 'CONFIG_OR1K_VIRT', if_true: files('virt.c'))
  
  hw_arch += {'or1k': openrisc_ss}
 +openrisc_ss.add(when: 'CONFIG_AX3292', if_true: files('ax3292.c'))
 diff -Naur a/target/or1k/cpu.h b/target/or1k/cpu.h
---- a/target/or1k/cpu.h	2026-10-14 20:31:58.222989992 +0200
-+++ b/target/or1k/cpu.h	2026-10-14 20:31:58.229848433 +0200
+--- a/target/or1k/cpu.h	2026-10-14 20:46:41.568838988 +0200
++++ b/target/or1k/cpu.h	2026-10-14 20:46:41.583419722 +0200
 @@ -258,6 +258,27 @@
  
      /* Fields from here on are preserved across CPU reset. */
@@ -1341,8 +1428,8 @@ diff -Naur a/target/or1k/cpu.h b/target/or1k/cpu.h
      uint32_t avr;             /* Architecture version register */
      uint32_t upr;             /* Unit presence register */
 diff -Naur a/target/or1k/interrupt.c b/target/or1k/interrupt.c
---- a/target/or1k/interrupt.c	2026-10-14 20:31:58.223029267 +0200
-+++ b/target/or1k/interrupt.c	2026-10-14 20:31:58.234485394 +0200
+--- a/target/or1k/interrupt.c	2026-10-14 20:46:41.568871359 +0200
++++ b/target/or1k/interrupt.c	2026-10-14 20:46:41.591474713 +0200
 @@ -87,10 +87,23 @@
                        cs->cpu_index,
                        int_name[exception]);
@@ -1386,8 +1473,8 @@ diff -Naur a/target/or1k/interrupt.c b/target/or1k/interrupt.c
      }
      if (idx >= 0) {
 diff -Naur a/target/or1k/sys_helper.c b/target/or1k/sys_helper.c
---- a/target/or1k/sys_helper.c	2026-10-14 20:31:58.223055006 +0200
-+++ b/target/or1k/sys_helper.c	2026-10-14 20:31:58.233412280 +0200
+--- a/target/or1k/sys_helper.c	2026-10-14 20:46:41.568895163 +0200
++++ b/target/or1k/sys_helper.c	2026-10-14 20:46:41.589513774 +0200
 @@ -50,6 +50,17 @@
      int idx;
  #endif
@@ -1421,8 +1508,8 @@ diff -Naur a/target/or1k/sys_helper.c b/target/or1k/sys_helper.c
      switch (spr) {
      case TO_SPR(0, 20): /* FPCSR */
 diff -Naur a/target/or1k/translate.c b/target/or1k/translate.c
---- a/target/or1k/translate.c	2026-10-14 20:31:58.223087137 +0200
-+++ b/target/or1k/translate.c	2026-10-14 20:31:58.231806703 +0200
+--- a/target/or1k/translate.c	2026-10-14 20:46:41.568924549 +0200
++++ b/target/or1k/translate.c	2026-10-14 20:46:41.587419782 +0200
 @@ -49,6 +49,8 @@
      uint32_t delayed_branch;
      uint32_t cpucfgr;
