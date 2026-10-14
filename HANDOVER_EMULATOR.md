@@ -458,3 +458,52 @@ dark rule. `layer0` and `layer2` are still empty at the time of the dump.
 4. The audio path is faked (a free-running DAC). It is enough to unblock the
    engine, but `audio_format_setup` (`0x02056f28`) does parse real WAV headers, so
    playback content is not modelled at all.
+
+---
+
+## Where the display work stands (after the audio fix)
+
+`AX3292_FB=<fmt with one %u>` now writes a 640x480 PGM holding the **four layer
+buffers side by side** (layer0 TL, layer1 TR, layer2 BL, layer3 BR), reading the
+addresses from the panel registers (`0x8990`, `0x8994`, `0x8998`, `0x899c`)
+rather than hardcoding them. Side-by-side rather than composited, because the
+blend rule is not known and a guessed composite hides as much as it shows.
+
+Observed, with `AX3292_FB_EVERY=100` (one frame per second):
+
+* Early: **layer1 holds a cleanly rendered camera icon with sparkles** -- a real
+  UI asset drawn by the application's own graphics code. This is the proof the
+  pipeline works.
+* By 9 s: it settles and stops changing. layer1 is then **empty** (the app
+  cleared it), layer0 and layer2 are empty throughout, and **layer3 holds a
+  vertical gradient** -- black for its top 129 rows, then a dithered fade to
+  white. That is not text and not a drawn panel; it reads like an initialised or
+  partially filled buffer.
+
+### Open questions worth settling on hardware
+
+* **The four panel addresses are probably not four layers.** Their spacings are
+  `0x12c00`, `0x43800` and `0x14000` -- only the first equals one 320x240
+  byte-per-pixel plane. The likely reading is Y/Cb/Cr planes of two images (a
+  preview plus an OSD) rather than four stacked layers, which would make the
+  camera icon in `0x02116c80` a luma plane of one of them. Worth confirming:
+  which register is Y, which Cb/Cr, and what the panel actually scans out.
+* **What is mode 1?** The descriptor slot goes `0 -> 0x020c4c18` at 1.8 s (mode 6,
+  main menu) and then to `0x020c3334` at 21 s, which the earlier mapping calls
+  mode 1. Mode 1 has no name in the symbol manifest. The settle into a gradient
+  screen happens around that switch, so the two are probably related.
+* **The gradient.** If it is a fade or a transition, it should be animated; it is
+  static across a 70 s run. That suggests either a missing animation tick or a
+  buffer the app fills and never revisits.
+
+### Still unmodelled
+
+JPEG (JPGA `0x0202c...`/IRQ 16, JPGB IRQ 22), CSI (IRQ 14), AUADC (IRQ 18),
+rotate (IRQ 23), OSD compare (IRQ 27), MCP0-2 (IRQs 19/24/25), EMI (IRQ 26), and
+the USB20 device controller (IRQ 15) beyond a stub. The IRQ names come from
+`ax32xx/inc/ax32xx_int.h`, which is the authoritative list:
+
+    TIMER0-3 0-3, LCDC 4, RTC_WDT 5, DAC 6, GPIO 7, UART0 8, SPI0 9, SDC0/1 10-11,
+    SPI1 12, LVD 13, CSI 14, USB20 15, JPGA 16, IIC0_IIC1 17, AUADC 18, MCP0 19,
+    BTUART 20, DE 21, JPGB 22, ROTATE 23, MCP1 24, MCP2 25, EMI 26, OSDCMP 27,
+    PMU 28, USB11 29, USB11MCP 30, TT_MIPI 31
