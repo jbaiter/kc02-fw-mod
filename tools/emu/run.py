@@ -195,13 +195,22 @@ def main(argv: list[str] | None = None) -> int:
         os.unlink(app_path)
 
     print(f"qemu exit {rc}; trace -> {log}")
+    if rc not in (0, 124, 130):
+        # Startup failures (locked card, missing SDL display, etc.) used to be
+        # hidden in the trace file behind an unhelpful empty SPR histogram.
+        with log.open("rb") as errors:
+            errors.seek(max(0, log.stat().st_size - 8192))
+            text = errors.read().decode(errors="replace")
+        for line in text.splitlines()[-40:]:
+            print(line, file=sys.stderr)
     if uart_log.exists() and uart_log.stat().st_size:
         text = uart_log.read_text(errors="replace")
         print(f"uart -> {uart_log} ({len(text)} bytes)")
         for line in text.splitlines()[:40]:
             print("  | " + line)
-    decode(log, load_table(args.table))
-    return 0
+    if args.trace or not args.interactive:
+        decode(log, load_table(args.table))
+    return rc if rc >= 0 else 128 - rc
 
 
 if __name__ == "__main__":

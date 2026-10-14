@@ -89,8 +89,32 @@ We verified persisted `VIDEO`, `PHOTO`, `MP3` directories and `VIDEO.LST` after 
 cold boot. Reads/writes are synchronous and flush the host stream. Optional
 `AX3292_SD_TRACE=1` logs SD commands and sector transfers. Normal-speed SDHC is
 modelled; CMD6 returns a 64-byte switch-status packet without high-speed support.
-The backing image size must be a multiple of 512 KiB. JPEG encoding and actual
-photo/video capture are not yet verified.
+The backing image size must be a multiple of 512 KiB. If a launch exits with a
+card-lock error, close the other emulator using that image. The launcher prints
+QEMU errors and returns its exit status.
+
+### Take and verify a photo
+
+Open **Kamera** and press **Enter** for the shutter. The firmware encodes the
+fake sensor, saves a photo through SD DMA, and returns to the moving preview.
+Open **Foto** to view it. Two captures and a third cold, viewer-only boot passed;
+the older photo remained byte-for-byte unchanged.
+
+```sh
+python3 tools/emu/capture_smoke.py firmware/original.bin \
+  --output /tmp/kc02-capture-check
+```
+
+This creates its own card and requires Pillow. Each run saves screenshots,
+unmodified photo files, independently decoded JPEG packets and a JSON report.
+Use a new output directory for each test.
+
+KC02 saves a **JRX wrapper**, not a plain standalone JPEG: a stitched preview
+without EOI, the original JPEG, padding, and a final 12-byte APP9/JRX record with
+a big-endian original-image offset. Ordinary JPEG readers can reject the whole
+wrapper. `sd_read.jpeg_packets()` separates the original for host tools and adds
+EOI to a copy of the preview for validation. It does not modify the SD image.
+Stop the guest before inspecting its FAT with `sd_read.FAT16`.
 
 ## Attach GDB
 
@@ -180,9 +204,10 @@ that the UI is running.
 | Rotate | Counterclockwise YUV420 rotation; interleaved chroma pairs; busy clears synchronously, IRQ follows |
 | LCD | Vsync/buffer-commit event bit 3 and shifted W1C acknowledgements |
 | DE | Update handshake, programmed strides/geometry, YUV420 video and RGB565/A5 palette OSD |
-| JPGB | libjpeg-backed baseline decode and nearest-neighbour scaling into guest YUV buffers |
+| JPGA | Baseline 4:2:0 encode from guest YUV buffers, guest quantization/Huffman tables, bounded output DMA and IRQ16; row restart markers support the firmware's stitching |
+| JPGB | libjpeg-backed baseline decode and nearest-neighbour scaling into guest YUV buffers; completes after decoded rows, rather than parsing a following JRX container |
 | I2C / H63P | Sensor register transactions and read-only chip ID `0x0b = 0x48` |
-| CSI | Fake frames written only into programmed DMA buffers at configured preview dimensions; frame-end IRQ14 |
+| CSI | Fake frames written into programmed LCD and full-frame JPEG input buffers; frame-end IRQ14; line-scaler configuration kick self-clears even with CSI stopped |
 | SD | Optional writable raw SDHC image; command/R2 responses, normal-speed switch status, sector DMA and CRC/completion flags. No card when no image is attached |
 
 The panel's scanout is 240×320, mounted 90 degrees clockwise, so QEMU displays
@@ -202,6 +227,7 @@ display console; calling SDL updates from the vCPU caused the black-window bug.
 | `AX3292_SENSOR=1` | Fake H63P sensor |
 | `AX3292_SD_IMAGE=/path/sd.img` | Writable raw SD image; the launcher sets this with `--sd-card` |
 | `AX3292_SD_TRACE=1` | Log card commands and sector DMA |
+| `AX3292_JPEG_TRACE=1` | Log encoder geometry, quality, output DMA size and failures |
 | `AX3292_FB=/tmp/screen.ppm` | Atomically replace an RGB P6 scanout capture |
 | `AX3292_FB_EVERY=5` | Capture interval in 10 ms ticks; minimum 5 |
 | `AX3292_KEYFILE=/tmp/key` | Optional numeric ADC input; overrides native keyboard input |
@@ -219,9 +245,11 @@ tests; do not use broad `pkill` commands while someone is using the emulator.
 ## Limits
 
 This is a functional model, not cycle-accurate silicon. We have verified the
-original KC02 build, not the other dumped cameras. We have not verified SD
-recording, JPEG encoding, USB device behaviour, full ISP processing or audible
-sound. We have verified FAT16 mounting and persistent metadata writes. The JPEG
-model requires the header to remain in the guest input buffer and uses
+original KC02 build, not the other dumped cameras. We have verified FAT16
+mounting, metadata writes, photo capture and viewing across cold boots. Video
+recording, short CSI streaming line rings, USB device behaviour, full ISP
+processing and audible sound remain unsupported or unverified. JPGA supports
+contiguous output DMA and plain/`00dc` framing, not circular-buffer streaming.
+The JPEG model requires the header to remain in the guest input buffer and uses
 approximate chroma resampling. Without an attached SD image, the no-card state
 is intentional.

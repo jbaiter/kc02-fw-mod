@@ -41,6 +41,8 @@ Two traps this tooling encodes:
 | `spr_census.py` | Static census of `l.mfspr`/`l.mtspr` sites in a dump |
 | `run.py` | Slice the application out of a dump and run it headless or in an interactive SDL window |
 | `smoke.py` | Verify cold boot, keypad navigation, fake-camera motion and return to the menu |
+| `capture_smoke.py` | Capture two photos through the firmware, then verify saved JPEG packets and viewing across cold boots |
+| `sd_read.py` | Read FAT16 files and separate JRX JPEG packets from a stopped emulator's card |
 | `qemu/` | The QEMU patch, its build script and notes |
 
 ```sh
@@ -75,4 +77,6 @@ the menu. The native SDL session and three cold headless smoke runs passed.
 We load the application and supply an explicit ROM calibration handoff. The
 model does not patch firmware instructions or seed application UI/card state.
 [The runtime guide](qemu/README.md) records the corrected interrupt, DMA and
-scanout models. Storage, encoding, USB and audible audio remain unverified.
+scanout models. Photo capture now persists through SD DMA and works in the
+original viewer across cold boots. Video recording, USB and audible audio
+remain unverified.
