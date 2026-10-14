@@ -113,3 +113,42 @@ pc 0202af94 ppc 0202af90 r1=027fffc0 r2=20000000 r3=00072b99 ... r9=0200c654
 `r9` is the return address, which is how the retry loop above was found in one
 step (do not reach for `-d exec`: its per-block logging slows TCG by orders of
 magnitude and puts the sampled PC in the wrong place).
+
+## The app's UI machinery (mapped from RAM and the listing)
+
+The firmware's UI is a small mode machine.  All of it runs in SDRAM, so it is
+readable from the listing once the addresses are known:
+
+| what | where |
+|---|---|
+| UI mode variable (current mode; 12 = none) | `0x020ccd50` |
+| previous/requested mode | `0x020ccd4c`, `0x020ccd54` |
+| current mode's descriptor | `0x020ccd58` |
+| mode table, 12 entries | `0x020ccd5c + mode*4` |
+| UI pump (called from `main` at `0x02000528`) | `0x02008188` |
+| mode request | `0x02008108` |
+| per-mode install list -> 46-entry handler table at `0x020ccbd4` | `0x02007938` |
+| LCD layer setup (layer A `0x8900/04/08/0c`, layer B `0x8910/14/1c`) | `0x0202b504`, called from `0x0204fexx` / `0x0205bxxx` |
+
+`0x02008070(id, descriptor)` is not a device registration (I had it wrong at
+first): it fills **the mode table**, so the nine calls at the application entry
+register nine UI modes.  Mode 1's descriptor (`0x020c3334`) has a handler
+pointer at `+8`.
+
+The pump's loop:
+
+1. read the mode; if 11, return;
+2. if the current descriptor is NULL, set `0x020ccd54 = 1` and
+   `0x020ccd58 = table[1]` -- i.e. **it defaults to mode 1**;
+3. call `*(descriptor + 8)`, the mode's setup;
+4. loop.
+
+Live state while the app idles: mode `0x020ccd50 = 12`, descriptor
+`0x020ccd58 = 0`, table entries 1..10 populated with the mode descriptors the
+application registered.  So the pump keeps defaulting to mode 1, whose setup is
+`0x020283cc`, and the UI never reaches the mode `main` asked for (6, main menu)
+-- `ui_mode_request` only records the argument in mode 6's descriptor, it does
+not switch the mode.
+
+Note the app never writes the LCD layer registers, i.e. no framebuffer is ever
+installed, which is why nothing can be displayed yet.
