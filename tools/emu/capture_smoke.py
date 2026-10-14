@@ -48,7 +48,8 @@ def validate(payload):
     return packets, result
 
 
-def exercise(qemu, firmware, card, directory, *, capture):
+def exercise(qemu, firmware, card, directory, *, capture, printer=None,
+             no_paper=False, grayscale=False):
     directory.mkdir(parents=True, exist_ok=False)
     before = photo_files(card)
     app = directory / "app.bin"
@@ -59,6 +60,10 @@ def exercise(qemu, firmware, card, directory, *, capture):
     env.update(AX3292_FLASH=str(firmware.resolve()), AX3292_SENSOR="1",
                AX3292_SD_IMAGE=str(card), AX3292_JPEG_TRACE="1",
                AX3292_FB=str(frame), AX3292_FB_EVERY="5")
+    if printer is not None:
+        env["AX3292_PRINTER_DIR"] = str(printer)
+        if no_paper:
+            env["AX3292_PRINTER_NO_PAPER"] = "1"
     command = [qemu, "-M", "ax3292", "-m", "64M", "-nodefaults",
                "-accel", "tcg,thread=multi", "-display", "none",
                "-monitor", "none", "-serial", "none", "-kernel", str(app),
@@ -112,6 +117,31 @@ def exercise(qemu, firmware, card, directory, *, capture):
                 menu()
 
             menu()
+            if grayscale:
+                # Einstellungen -> Attribute drucken -> Graustufen, all through
+                # real ADC keys. The mode byte below is an observation only.
+                for selection in range(1, 6):
+                    qmp.key("right")
+                    wait_for(proc, lambda: value(0x020d41d3, 1) == selection,
+                             f"select Einstellungen ({selection})")
+                    time.sleep(0.3)
+                qmp.key("ret")
+                wait_for(proc, lambda: value(0x020ccd54) == 9, "settings")
+                time.sleep(0.3)
+                for _ in range(2):
+                    qmp.key("right")
+                    time.sleep(0.3)
+                qmp.key("ret")
+                time.sleep(0.3)
+                qmp.key("down")  # Punktmatrix -> Graustufen
+                time.sleep(0.3)
+                save("00-grayscale-setting")
+                qmp.key("ret")
+                wait_for(proc, lambda: value(0x020d41cc, 1) == 0,
+                         "firmware selects grayscale printer mode")
+                time.sleep(0.3)
+                qmp.key("esc")
+                menu()
             if before:
                 # Verify the old image is viewable BEFORE taking another photo.
                 viewer("01-persisted-viewer")
@@ -151,7 +181,7 @@ def exercise(qemu, firmware, card, directory, *, capture):
                 # instead of mistaking an old camera frame for completion.
                 marker = marker_pixels()
                 wait_for(proc, lambda: bars() and marker_pixels() != marker,
-                         "shutter completes and CSI preview resumes")
+                         "shutter completes and CSI preview resumes", timeout=60)
                 save("03-after-shutter")
                 qmp.key("esc")
                 menu()

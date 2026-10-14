@@ -42,6 +42,7 @@ Two traps this tooling encodes:
 | `run.py` | Slice the application out of a dump and run it headless or in an interactive SDL window |
 | `smoke.py` | Verify cold boot, keypad navigation, fake-camera motion and return to the menu |
 | `capture_smoke.py` | Capture two photos through the firmware, then verify saved JPEG packets and viewing across cold boots |
+| `printer_smoke.py` | Verify firmware dither/grayscale head output and missing-paper behavior, plus capture/viewer persistence |
 | `sd_read.py` | Read FAT16 files and separate JRX JPEG packets from a stopped emulator's card |
 | `qemu/` | The QEMU patch, its build script and notes |
 
@@ -78,5 +79,8 @@ We load the application and supply an explicit ROM calibration handoff. The
 model does not patch firmware instructions or seed application UI/card state.
 [The runtime guide](qemu/README.md) records the corrected interrupt, DMA and
 scanout models. Photo capture now persists through SD DMA and works in the
-original viewer across cold boots. Video recording, USB and audible audio
-remain unverified.
+original viewer across cold boots. Pass `--printer-output DIR` to export thermal
+head PNGs, including the firmware's grayscale/dither output. Dither, grayscale
+selected through the settings UI, and no-paper regressions passed. The PNG models
+strobe duty, not calibrated thermal physics. Video recording, USB and audible
+audio remain unverified.

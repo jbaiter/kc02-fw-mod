@@ -5,8 +5,12 @@ render its UI, so patches can be tested before anything is flashed. Priorities,
 in order: **SPI flash**, **display**, then the minimum else needed to make the UI
 actually run (timer/IRQ, keypad).
 
-Non-goals for Stage 3: USB device emulation, camera/ISP capture, printer physics,
-cycle accuracy, and boot-ROM fidelity. Camera/sensor/printer are hard stubs.
+This is the historical Stage 3 plan. Follow the current
+[runtime guide](../tools/emu/qemu/README.md) for supported features and commands.
+The emulator now supports fake CSI preview, JPEG capture and persistent SD
+viewing, plus GPIO printer raster export in firmware dither/grayscale modes.
+USB device emulation, calibrated printer physics, cycle accuracy and full
+boot-ROM fidelity remain outside the verified scope.
 
 ## What the repo already gives us
 

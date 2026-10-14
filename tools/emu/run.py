@@ -112,10 +112,16 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--qmp", help="optional QEMU QMP address, e.g. unix:/tmp/kc02.qmp,server=on,wait=off")
     ap.add_argument("--gdb", type=int, metavar="PORT", help="GDB server on localhost (guest runs until attached)")
     ap.add_argument("--sd-card", type=Path, help="writable raw SD image (create one with tools/emu/create_sd.py)")
+    ap.add_argument("--printer-output", type=Path, metavar="DIR",
+                    help="emulate paper/cover present and save thermal-head PNGs in DIR")
+    ap.add_argument("--printer-no-paper", action="store_true",
+                    help="with --printer-output, report an empty/open printer")
     ap.add_argument("--log", type=Path, help="SPR trace output (default: alongside the image)")
     ap.add_argument("--decode", action="store_true", help="summarise an existing log instead of running")
     ap.add_argument("--table", type=Path, default=DEFAULT_TABLE)
     args = ap.parse_args(argv)
+    if args.printer_no_paper and args.printer_output is None:
+        ap.error("--printer-no-paper requires --printer-output")
     if args.gdb is not None and not 1 <= args.gdb <= 65535:
         ap.error("--gdb port must be between 1 and 65535")
     if args.sd_card is not None and not args.sd_card.is_file():
@@ -158,6 +164,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.sd_card is not None:
         env["AX3292_SD_IMAGE"] = str(args.sd_card.resolve())
         print(f"SD: {args.sd_card.resolve()} (writable)", flush=True)
+    if args.printer_output is not None:
+        env["AX3292_PRINTER_DIR"] = str(args.printer_output.resolve())
+        if args.printer_no_paper:
+            env["AX3292_PRINTER_NO_PAPER"] = "1"
+        else:
+            env.pop("AX3292_PRINTER_NO_PAPER", None)
+        print(f"Printer: {args.printer_output.resolve()} (thermal-head PNGs)", flush=True)
     env["AX3292_SPR_TRACE"] = "1" if args.trace or not args.interactive else "0"
     sensor_enabled = args.sensor if args.sensor is not None else args.interactive
     if sensor_enabled:

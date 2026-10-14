@@ -4,9 +4,9 @@ Written to survive a context compaction. Everything below is either verified
 against the dump, the vendor SDK, or the vendor's own linked build; where
 something is inferred or unconfirmed it says so.
 
-> **Read the "CURRENT STATE" section at the end of this file first.** It is the
-> authoritative status and supersedes several earlier claims here, which are
-> left in place only to show what was already ruled out.
+> **Read "CURRENT VERIFIED STATE: capture and printer" at the end first.**
+> Earlier status sections are historical and contain superseded diagnoses.
+> Use `tools/emu/qemu/README.md` for current build/run commands.
 
 ## Goal
 
@@ -874,11 +874,9 @@ parse `#define NAME SFR_AT (SPRGROUP_SFRn + (0xNN<<2))` out of
 
 ## Measurement hygiene (this cost real time)
 
-* **Kill stray emulators before measuring.** Background runs left over from
-  earlier experiments eat CPU and make the boot look *deterministically* broken
-  when it is not. `pgrep -x qemu-system-or1k` to check.
-* **Never `pkill -f qemu-system-or1k`** — the pattern matches the shell running
-  the command and kills it. Use `pkill -x qemu-system-or1k`.
+* Check for other running emulators before measuring; competing processes can
+  affect timing. Stop only test processes you own. Do not terminate a user's
+  interactive session without permission, or use broad `pkill` commands.
 * Report boot health as a **rate over >=6 runs**, never a single run.
 * The SPR trace truncates at its line limit, and with the 1 kHz work loop it fills
   2 M lines in ~7 s — so any "this never runs" conclusion from late-run counts is
@@ -897,3 +895,66 @@ parse `#define NAME SFR_AT (SPRGROUP_SFRn + (0xNN<<2))` out of
 4. `AX3292_TICK_LP` (deliver the tick as LP) makes the app reboot. HP is correct.
 5. Do not take QEMU's big lock per device access — it starves this guest.
 6. `-d exec` and `-icount` are both unusable here (accuracy and speed).
+
+# CURRENT VERIFIED STATE: capture and printer
+
+The original firmware runs unchanged: SHA-256
+`218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5`.
+The UI, native keypad, fake H63P/CSI preview, SDHC/FAT16 and photo viewer work.
+Commit `b08198b` added JPGA encoding with guest JPEG tables and restart rows,
+CSI snapshot preservation and a three-cold-boot capture/persistence regression.
+Saved files are JRX wrappers; validate their separated packets without changing
+SD bytes. The nominal 800 mV SRAM calibration is explicit ROM handoff data.
+There are no guest instruction or UI/card-state patches.
+
+Printer implementation:
+
+- `hw/or1k/ax3292-printer.h` records GPIO DATA/CLK, LATCH, STROBE and motor phases.
+  DATA/CLK are `0x800c` bits 15/13, LATCH/supply `0x8004` bits 5/6,
+  STROBE `0x8000` bit 9. Paper/cover is active-low A7 while GPIO direction
+  `0x8040` bit 7 selects input. Missing paper prevents printing.
+- The stock driver clocks 383 dots into a 384-bit head. Preserve the retained
+  bit. PNG tone uses normalized strobe counts; the firmware supplies grayscale
+  and dithering. Four motor steps map to a row, with blank feed included.
+  Raster is bounded to 384×8192. Supply-off publishes complete, numbered PNGs
+  through exclusive `.part` reservations and hard links, preserving old output.
+- JPGB samples DMA data at the kick and publishes completion after a minimum
+  1 ms, through owning-vCPU tick work. Immediate completion precedes SDK
+  post-start IRQ/callback setup; reading mutable registers at a later tick can
+  decode the next UI job instead. IRQ22 respects the global/per-source mask;
+  new DMA clears stale completion. JRX isolation adds EOI only in a host copy.
+- Required host libraries: libjpeg/libpng; SDL2 for the interactive window.
+  The distributable patch includes 13 QEMU sources. Do not rely only on edits
+  in `~/.src/qemu-11.1.2`; regenerate and compare the repo patch after changes.
+
+Launch (create the card once, close any emulator using it before reuse):
+
+```sh
+python3 tools/emu/create_sd.py /tmp/kc02-print-sd.img
+python3 tools/emu/run.py firmware/original.bin --interactive \
+  --sd-card /tmp/kc02-print-sd.img --printer-output /tmp/kc02-prints --gdb 1234
+```
+
+Kamera + Enter captures/saves/prints with stock defaults. Einstellungen →
+Attribute drucken selects Punktmatrix/Graustufen; Drucken toggles printing.
+`--printer-no-paper` requires `--printer-output`. GDB stays on localhost;
+use `tools/emu/gdb.sh`, hardware breakpoints and byte memory reads. Do not share
+locked SD backing files, inspect FAT while a guest writes, or stop user sessions.
+
+Verification on the final implementation:
+
+- `/tmp/kc02-printer-final`: dither and grayscale PNGs, no-paper with no PNG;
+  all three cold boots also capture/view/return and preserve previous photos.
+- `/tmp/kc02-post-printer-capture`: two captures, then a cold viewer-only boot;
+  prior photo bytes unchanged and both JRX JPEG packets decode strictly.
+- `/tmp/kc02-post-printer-viewer`: two boots through four fixture photos.
+- `/tmp/kc02-post-printer-no-card`: automatic UI, real keys, camera motion/back.
+- Full pytest: 132 passed, 5 skipped, 51 subtests; five pre-existing collection
+  warnings. GPIO unit tests compile the header extracted from the repo patch.
+
+Physical thermal spreading, temperature/energy calibration and exact platen
+mechanics remain approximations. No new hardware validation occurred. Video,
+short CSI line rings, USB devices, full ISP/audio and other camera builds remain
+unsupported or unverified. SPI flash backing remains read-only; settings changes
+need not persist across cold boots. Historical bootstrap/CALLFIX/queue/interrupt
+race advice above is not a basis for new fixes.
