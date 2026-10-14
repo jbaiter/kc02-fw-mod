@@ -35,3 +35,7 @@ HANDOFF.md
 
 # Temp files
 /tmp/
+
+# emulator run artifacts (SPR trace and UART log)
+*.spr.log
+*.spr.log.uart
