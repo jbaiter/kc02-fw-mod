@@ -7,6 +7,7 @@ it at a fixed address.  This slices the application out of the dump and runs it.
 
     tools/emu/run.py firmware/original.bin
     tools/emu/run.py firmware/original.bin --decode    # histogram, with names
+    tools/emu/run.py firmware/original.bin --interactive  # SDL window + fake sensor
 
 The machine and its SPR trace come from
 ``tools/emu/qemu/0001-ax3292-machine.patch``; see ``tools/emu/qemu/README.md``.
@@ -102,10 +103,20 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--entry", type=lambda s: int(s, 0), default=DEFAULT_ENTRY)
     ap.add_argument("--trace-limit", type=int, default=300000)
     ap.add_argument("--timeout", type=float, default=60.0)
+    ap.add_argument("--interactive", action="store_true",
+                    help="SDL window with keypad input; run until the window closes")
+    ap.add_argument("--display", help="QEMU display backend (default: sdl if interactive, else none)")
+    ap.add_argument("--sensor", action=argparse.BooleanOptionalAction, default=None,
+                    help="fake H63P sensor with moving colour bars (default: on if interactive)")
+    ap.add_argument("--trace", action="store_true", help="enable SPR tracing in interactive mode")
+    ap.add_argument("--qmp", help="optional QEMU QMP address, e.g. unix:/tmp/kc02.qmp,server=on,wait=off")
+    ap.add_argument("--gdb", type=int, metavar="PORT", help="GDB server on localhost (guest runs until attached)")
     ap.add_argument("--log", type=Path, help="SPR trace output (default: alongside the image)")
     ap.add_argument("--decode", action="store_true", help="summarise an existing log instead of running")
     ap.add_argument("--table", type=Path, default=DEFAULT_TABLE)
     args = ap.parse_args(argv)
+    if args.gdb is not None and not 1 <= args.gdb <= 65535:
+        ap.error("--gdb port must be between 1 and 65535")
 
     log = args.log or args.image.with_suffix(args.image.suffix + ".spr.log")
 
@@ -140,22 +151,40 @@ def main(argv: list[str] | None = None) -> int:
     env = dict(os.environ)
     env["AX3292_ENTRY"] = hex(args.entry)
     env["AX3292_SPR_TRACE_LIMIT"] = str(args.trace_limit)
-    env["AX3292_FLASH"] = str(args.image)
+    env["AX3292_FLASH"] = str(args.image.resolve())
+    env["AX3292_SPR_TRACE"] = "1" if args.trace or not args.interactive else "0"
+    sensor_enabled = args.sensor if args.sensor is not None else args.interactive
+    if sensor_enabled:
+        env["AX3292_SENSOR"] = "1"
+    else:
+        env.pop("AX3292_SENSOR", None)
 
     cmd = [
-        args.qemu, "-M", "ax3292", "-m", "64M",
-        "-display", "none", "-monitor", "none", "-serial", "none",
+        args.qemu, "-M", "ax3292", "-m", "64M", "-nodefaults",
+        "-accel", "tcg,thread=multi",
+        "-name", "KC02 - original firmware",
+        "-display", args.display or ("sdl" if args.interactive else "none"),
+        "-monitor", "none", "-serial", "none",
         "-kernel", app_path,
     ]
+    if args.qmp:
+        cmd.extend(["-qmp", args.qmp])
+    if args.gdb is not None:
+        cmd.extend(["-gdb", f"tcp:127.0.0.1:{args.gdb}"])
     uart_log = Path(str(log) + ".uart")
-    print("$ " + " ".join(cmd))
+    print("$ " + " ".join(cmd), flush=True)
+    if args.interactive:
+        print("Arrow keys: navigate; Enter: OK; Escape: back/power. Use short presses.\n"
+              "Close the QEMU window or press Ctrl-C here to quit.", flush=True)
     try:
         with log.open("wb") as errf, uart_log.open("wb") as outf:
             proc = subprocess.run(cmd, env=env, stdout=outf, stderr=errf,
-                                  timeout=args.timeout)
+                                  timeout=None if args.interactive else args.timeout)
         rc = proc.returncode
     except subprocess.TimeoutExpired:
         rc = 124
+    except KeyboardInterrupt:
+        rc = 130
     finally:
         os.unlink(app_path)
 

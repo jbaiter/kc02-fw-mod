@@ -1,378 +1,183 @@
-# QEMU patch for the AX3292 machine
+# AX3292 QEMU emulator
 
-`build-qemu.sh` fetches QEMU, applies `0001-ax3292-machine.patch` and builds a
-`qemu-system-or1k` with an `ax3292` machine.
+The patched QEMU runs `firmware/original.bin` and displays its colour menu and
+camera UI. Arrow keys reach the firmware's ADC keypad scanner. Enter opens the
+selected item; Escape returns to the menu. A fake H63P sensor supplies moving
+colour bars through CSI DMA.
 
-## Why a patch is needed
+We verified three cold headless runs through menu selection, camera preview,
+motion and return to the menu. We also verified the native SDL window. Screenshots:
+[main menu](../../../docs/images/emulator/menu.png),
+[camera preview](../../../docs/images/emulator/camera.png).
 
-The chip is an OpenRISC ORBIS32 core, so QEMU's `target/or1k` is the right base,
-but upstream differs from it in four ways that all matter. Each difference was
-established from the firmware image and the vendor SDK, not assumed:
+## Run an interactive session
 
-| # | Upstream QEMU | AX3292 | Fix |
-|---|---|---|---|
-| 1 | branches have delay slots | **no delay slots** (`-mno-delay`; in `original.bin`, 55% of branches are immediately followed by another branch, e.g. 878 `l.jal`→`l.jal`) | `nodelay` flag; `delayed_branch` commits in 1 step, and `l.jal`/`l.jalr` link to `pc + 4` |
-| 2 | hardcoded big-endian (`mo_endian()` returns `MO_BE`) | **little-endian** (reset SR has `LEE`) | `little_endian` flag; `mo_endian()` honours it for fetch and data |
-| 3 | unknown SPRs are **silently ignored** — `mtspr` drops the write, `mfspr` returns the destination register's stale value, with no machine hook | every peripheral is an SPR | `spr_hook` on the CPU, consulted before the built-in switch |
-| 4 | group-0 SPR numbers are the OpenRISC spec | different numbering: `SR 0x18`, `NPC 0x14`, `PPC 0x1C`, `EPCR 0x20`, `ESR 0x40`, `EVBA 0x50`, `VR 0x00` | the machine remaps them onto QEMU's CPU state |
-| 5 | exceptions vector to `exception << 8` | an **8-byte stub table** indexed by exception, based at `EVBAR` | `vect_pc = env->evbar + (exception << 3)` |
-
-Difference 5 is easy to miss: upstream's `or1k_reset 0x100`, `or1k_bus_error 0x200`, …
-layout is a vector table this chip does not have. Its dispatch is twelve 8-byte stubs
-at `0x174`..`0x1cc` (VMA), each loading an exception code into `r3` and jumping to a
-common entry at `0x1d4`. The repo's SLEIGH language had the generic or1k vectors
-*removed* for the same reason (see `docs/BOOT_MAP.md`). The machine sets
-`evbar = 0x16c` at reset, which is what the boot ROM does before entering the
-application.
-
-The vendor compiler emits the `__sfr` byte address verbatim as the SPR number, so
-`SPR = (group << 11) | (index << 2)`; `tools/emu/sfr_map.py` holds the table and
-the evidence for each entry.
-
-## What the patch adds
-
-* `target/or1k`: `env->nodelay`, `env->little_endian`, and `env->spr_hook`.
-* `hw/or1k/ax3292.c`: the `ax3292` machine — 64 MiB flat RAM, `-kernel` loaded at
-  `0x02000000`, entry `0x0200046C`, stack `0x027FFFFC`, and an SPR bus that remaps
-  the architectural registers and logs every peripheral access as
-
-  ```
-  spr <R|W> <spr:04x> <value:08x> pc=<pc:08x>
-  ```
-
-  Set `AX3292_SPR_TRACE=0` to silence it, `AX3292_SPR_TRACE_LIMIT=N` to bound it
-  (default 300000), and `AX3292_ENTRY=0x...` to override the entry.
-
-## Timers, interrupts and `-icount`
-
-Two runtime details matter once the firmware starts polling for a tick:
-
-* **Pass `-icount`.** A tight firmware loop (`while (1) delay(50);`) executes as one
-  chain of translation blocks, and QEMU only processes `QEMU_CLOCK_VIRTUAL` timers
-  when it leaves that chain — so a normal run delivered exactly *one* interrupt and
-  then stopped. `-icount shift=6` ties the virtual clock to the instruction count and
-  checks timers at every block boundary, which also makes runs deterministic.
-* **BQL discipline.** Timer callbacks run with the big QEMU lock held; SPR helpers do
-  not. So `cpu_interrupt()` from a helper needs `bql_lock()`/`bql_unlock()` (as
-  QEMU's own PICMR code does) while the timer callback must not take it. Getting this
-  backwards asserts in one direction or the other.
-
-## Status
-
-The firmware boots through its whole early init; the live UI needs the timer
-interrupt, which is where work stopped. What runs today is described below.
-
-Modelled, each added only when the trace blocked on it:
-
-| Device | Registers | Notes |
-|---|---|---|
-| UART0 | `0x9080`–`0x908c` | TX is instantaneous so the `PND` poll succeeds; output goes to stdout (run.py saves it separately from the trace) |
-| SPI0 flash | `0x9000`–`0x925c` | byte mode with a command interpreter (0x9F/0x05/0x03/0x0B), plus DMA. Backed by the dump. The vendor SDK's `SPIFSADR = 0x6000000\|0` means the DMA **continues** the address the byte stream shifted in — that is the subtlety that matters |
-| LCD | `0xA800`–`0xA87f` | generic register file; `LCDSTA` bit 31 reads set (the driver polls it as the completion flag) |
-| everything else | `>= 0x8000` | generic read-back-what-was-written store, which the GPIO and LCD read-modify-write code needs |
-| PIC | `0x4800`–`0x4814` | mask/status/version, plus the timer's IRQ0. QEMU models a PIC too but at different offsets (its PICSR is `0x4802`, the chip's `0x4808`) |
-| TMR0 | `0x9800`–`0x98a8` | period/counter/control and the `BIT(5)` pending flag the ISR clears; drives IRQ0 on a 10 ms virtual tick |
-
-What the firmware does now, from a cold start at `0x0200046C`:
-
-```
-sdram *saddr=0x2103980,*eaddr=0x27fec00        <- UART
-RC128k=0x0
-flash ID read (0x9f) -> EF 40 16
-table reads from flash (byte mode + DMA)
-clock/LDO/RTC/DAC/ADC/GPIO init
-LCD panel init: LCDCTRL, LCDSTA, LCDCMD sequence
-...lands in the RTOS idle loop at 0x0200c64c */ delay(50)
+```sh
+python3 tools/emu/run.py firmware/original.bin --interactive
 ```
 
-It gets through all of that and stops in the idle loop, which only the **timer
-interrupt** can break out of. The timer and PIC are modelled well enough that the
-interrupt is delivered and serviced, but it is dispatched through the boot SRAM's
-exception stubs -- whose full set-up the boot ROM performs via `exception_init`,
-which starting at the application entry skips. Hence the next step: start from the
-reset vector and let the boot code set the exception machinery up, rather than
-entering the application directly.
+Use short presses, around 200 ms. The firmware distinguishes long presses and
+may ignore them for menu navigation. Click the QEMU window to give it keyboard
+focus. Close the window to quit.
 
-Entering through the boot code's own `_start` (`AX3292_ENTRY=0x320`, which calls
-`exception_init` and *then* the application) is the right shape but pulls in the
-boot's SDRAM set-up first: the tuning loop writes an opcode to `SDRHCMD` (`0x98c4`)
-and polls bit 6 for completion, and it is reached before anything else useful.
-Modelling that done bit naively moved the loop around rather than past it, so the
-next step is a small SDRAM-controller model alongside the boot entry. RAM is just
-RAM here, so the tuning results do not have to be *right*, only terminating.
-
-## Finding a stall
-
-A stuck firmware loop often touches no registers, so the SPR trace shows nothing.
-Set `AX3292_PC_SAMPLE=1` to have the machine print the PC and GPRs every 500 ms:
-
-```
-pc 0202af94 ppc 0202af90 r1=027fffc0 r2=20000000 r3=00072b99 ... r9=0200c654
-```
-
-`r9` is the return address, which is how the retry loop above was found in one
-step (do not reach for `-d exec`: its per-block logging slows TCG by orders of
-magnitude and puts the sampled PC in the wrong place).
-
-## The app's UI machinery (mapped from RAM and the listing)
-
-The firmware's UI is a small mode machine.  All of it runs in SDRAM, so it is
-readable from the listing once the addresses are known:
-
-| what | where |
+| Host key | Camera input |
 |---|---|
-| UI mode variable (current mode; 12 = none) | `0x020ccd50` |
-| previous/requested mode | `0x020ccd4c`, `0x020ccd54` |
-| current mode's descriptor | `0x020ccd58` |
-| mode table, 12 entries | `0x020ccd5c + mode*4` |
-| UI pump (called from `main` at `0x02000528`) | `0x02008188` |
-| mode request | `0x02008108` |
-| per-mode install list -> 46-entry handler table at `0x020ccbd4` | `0x02007938` |
-| LCD layer setup (layer A `0x8900/04/08/0c`, layer B `0x8910/14/1c`) | `0x0202b504`, called from `0x0204fexx` / `0x0205bxxx` |
+| Arrow keys | Up, Down, Left, Right |
+| Enter | OK |
+| Escape | Back / power key; a long hold can shut down the guest |
 
-`0x02008070(id, descriptor)` is not a device registration (I had it wrong at
-first): it fills **the mode table**, so the nine calls at the application entry
-register nine UI modes.  Mode 1's descriptor (`0x020c3334`) has a handler
-pointer at `+8`.
+The launcher enables the fake sensor in interactive mode. Pass `--no-sensor` to
+omit it, `--trace` to enable SPR logging, or `--qemu /path/to/qemu-system-or1k` to
+select another patched binary. It saves UART output beside the trace log.
 
-The pump's loop:
+## Build QEMU
 
-1. read the mode; if 11, return;
-2. if the current descriptor is NULL, set `0x020ccd54 = 1` and
-   `0x020ccd58 = table[1]` -- i.e. **it defaults to mode 1**;
-3. call `*(descriptor + 8)`, the mode's setup;
-4. loop.
+Install the development packages for libjpeg and SDL2, plus QEMU's usual build
+dependencies. On Debian, the additional packages are `libjpeg-dev` and
+`libsdl2-dev`.
 
-Live state while the app idles: mode `0x020ccd50 = 12`, descriptor
-`0x020ccd58 = 0`, table entries 1..10 populated with the mode descriptors the
-application registered.  So the pump keeps defaulting to mode 1, whose setup is
-`0x020283cc`, and the UI never reaches the mode `main` asked for (6, main menu)
--- `ui_mode_request` only records the argument in mode 6's descriptor, it does
-not switch the mode.
+```sh
+QEMU_DISPLAY=sdl tools/emu/qemu/build-qemu.sh
+```
 
-Note the app never writes the LCD layer registers, i.e. no framebuffer is ever
-installed, which is why nothing can be displayed yet.
+The script uses QEMU 11.1.2. `QEMU_DISPLAY=none` builds a headless emulator;
+`auto` uses SDL when its development files are available. GTK and OpenGL are not
+required. You can choose a fresh source directory:
 
-## The boot's retry loop, and the RTOS time base (latest state)
+```sh
+QEMU_SRC="$HOME/.src/qemu-ax3292" QEMU_DISPLAY=sdl tools/emu/qemu/build-qemu.sh
+```
 
-With the artificial SD/key injections removed (they were wrong -- the camera
-shows its UI with no input at all, and injecting "card present" every tick fought
-the app's own state machine until it wrote a pointer value, 0x020ce9fd, into
-PICMR), the app spends all its time in one place.  A PC sample over 30 s lands on
-only 7-8 distinct addresses:
+The patch marker records a checksum. If an existing tree has an older patch, the
+script stops rather than mixing revisions. Use a fresh directory; do not remove
+the marker and apply the new patch over modified sources.
 
-    0x0202bc8c / 0x0202bca4   wdtKick (watchdog)
-    0x020073c4 / 0x020073c8 / 0x020073cc    the retry loop
-    0x020524a0                reads the flag byte at 0x020d1c44
-    0x0202f878                the ADC EOC poll
+## Attach GDB
 
-That loop is
+For a new session, enable a localhost GDB server:
 
-    0x020072c4 .. 0x02007348
-        jal 0x020785a8, jal 0x0202b0d4 (malloc, 0x0203e5c4 walks the free list)
-        jal 0x0205b51c, jal 0x020524c0 (writes the flag)
-        jal 0x02021894 (reads the RTOS time), 0x0202f248, 0x0202f33c, 0x02038498
-        loop while (flag != 1 || time_delta <= 1000)
+```sh
+python3 tools/emu/run.py firmware/original.bin --interactive --gdb 1234
+# In another terminal:
+tools/emu/gdb.sh 1234
+```
 
-so it is a ten-second retry of something that never becomes ready, not a dead
-wait on the flag (that byte does read 1, and with IRQ0 kept alive the counters
-advance: 0x020cd6fc steps 0x97 -> 0x98 and the ms counter at 0x020cd700 by 10 per
-tick).
+The wrapper uses `gdb-multiarch` (the host's x86-only GDB cannot debug OpenRISC).
+Connecting pauses QEMU. `continue` resumes it, Ctrl-C stops it, and `detach`
+releases the running guest. For an existing session with QMP, the monitor command
+`gdbserver tcp:127.0.0.1:1234` enables the server without restarting QEMU.
 
-The RTOS time base is the interesting part: the 10 ms counter at 0x020cd700 is
-advanced by exactly one instruction, 0x0202185c, inside the handler at
-0x02021824 -- which the app registers as timerISR[0] (0x020d6af0), i.e. the
-*timer0* interrupt.  Yet the app's own final PICMR (0x8030) masks IRQ0.  Either
-the chip's PIC bit for timer0 is not bit 0 (the SDK's IRQ_TIMER0 is 0, but that is
-a software enum), or something re-enables it later.  AX3292_FORCE_IRQ0=1 ORs
-bit 0 into every PICMR write, which makes the time base run; the app then cycles
-through its retries but still does not draw within 180 s, so what it waits for is
-a device, not time.
+```gdb
+info registers pc r1 r9
+hbreak *0x020079b4
+continue
+# Later:
+detach
+quit
+```
 
-The app's heap is sane: pool 0x02103980..0x027fec00 with the free list at
-0x020cec6c, and malloc returns blocks.
+`0x020079b4` is the original KC02 UI key dispatcher. Prefer hardware breakpoints
+so debugging does not replace guest instructions. This build's upstream OR1K
+GDB stub serialises registers big-endian, despite little-endian guest memory.
+The wrapper selects big-endian to decode PC/GPRs correctly; use `x/16bx ADDRESS`
+for raw memory. Native word reads and instruction disassembly use the wrong
+endianness in this configuration. Use Ghidra for firmware disassembly. The raw
+application image has no ELF symbols, so the initial `??` is expected.
 
-Remaining suspects, all unmodelled: the sensor/ISP (H63P over I2C, CSI), USB, and
-the sub-systems serviced from the RTC ISR at 0x02051a00 (the flag's owner).  A
-camera shows its UI with no card and no cable, so the sensor is the prime
-candidate.
+## Verify the UI without a desktop
 
-## Latest: the only image in RAM is noise
+```sh
+python3 tools/emu/smoke.py firmware/original.bin \
+  --output /tmp/kc02-smoke --runs 3
+```
 
-A full 7 MiB dump of the SDRAM pool (0x02100000..0x02800000) at the end of a
-120 s run contains exactly one image-like window: 76,800 bytes with 256 distinct
-values and a black upper third, at 0x02170800 -- which is the same data as the
-fourth LCD buffer (0x0216e480) seen 0x2380 bytes further in.  So the firmware
-produces one 320x240 buffer full of noise and never paints the UI into the
-framebuffers it configured.
+The harness starts its own headless QEMU processes and uses QMP keypad events:
 
-Everything the firmware touches is modelled except the ISP/sensor, so that noise
-is most likely the capture path doing what it can with an unmodelled sensor.
-The boot flow's work loop (0x020071c4, work at 0x020072c4) is not stuck: its only
-exits are malloc returning NULL (it does not) or a value mismatch, and it loops on
-purpose, waiting for the flag at 0x020d1c44 (which reads 1) with a 1000-unit
-timeout so it re-runs its work about once a second.  The UI pump at 0x02008188 is
-only reached from main at 0x02000528, which the firmware never gets to.
+1. Wait for the automatic menu and six decoded icon buffers.
+2. Press Right and Left, checking the firmware's selection byte through
+   read-only memory snapshots.
+3. Press OK and wait for the colour-bar viewfinder.
+4. Save two frames and check that the sensor marker moves.
+5. Press Escape and check the return to the menu.
 
-Next: log the return values of the loop body's four calls (malloc 0x0203e5c4, the
-ADC, 0x0205b51c, 0x02038498) to find the one that fails, and model the ISP/CSI so
-the capture is not noise.
+Each run saves five RGB PPM screenshots, a QEMU log and `report.json`. The test is
+specific to the original KC02 dump and checks its SHA-256 before starting. It
+neither writes application state nor modifies firmware instructions.
 
-## IMPORTANT: what is and is not the original firmware
+## Boot handoff and CPU changes
 
-The image under test really is the stock dump: /tmp/app.bin is byte-identical to
-firmware/original.bin[0x2600:0xd3200] and the dump's sha256 is 218c6cdf..., the
-original HiMont KC02 recipe.
+The launcher slices the application from flash offsets `0x2600..0xd3200`, loads
+it at `0x02000000`, and enters `0x0200046c` with SP `0x027ffffc`. The machine loads
+low SRAM from flash offset `0x200`, uses 16-byte exception-vector slots with zero
+bias, and aliases SRAM at `0xf0000000` for SR[EPH].
 
-But two of the machine's options modify the *guest* rather than the model, and
-both were on by default at various points while results above were produced:
+We skip ROM/SDRAM calibration. The machine supplies the SDK's nominal 800 mV
+bandgap calibration at SRAM `0x222c`, which the boot ADC routine uses. This is
+explicit boot-handoff data. We removed the earlier `AX3292_CALLFIX` instruction
+rewrite and `AX3292_SDCARD` application-state injection.
 
-* AX3292_CALLFIX rewrote one instruction of the boot section (the HP-interrupt
-  handler's call target) to work around the 4-byte mismatch below.
-* AX3292_FORCE_IRQ0 ORed bit 0 into every write to PICMR.
+The CPU changes support no delay slots, little-endian instruction/data accesses,
+the chip's SPR numbering and a machine SPR hook. HP interrupt entry preserves
+r2–r13 and odd r15–r31 in a hardware shadow bank; `rfe` restores them. The SDK's HP
+wrapper relies on this and saves only r9/EPCR/ESR in software. LP uses SR bit 1;
+HP uses bit 2 and can preempt LP. PICPR (`0x4804`) routes pending sources to
+separate HP and LP vectors. Rotate IRQ23 belongs to LP.
 
-Both are now OFF by default, because with them on the firmware under test is not
-the original image and any "it got further" result is suspect.  In particular the
-"firmware configures the display" milestone was obtained with CALLFIX on and
-should be re-established without it.
+Earlier UART byte counts and "four-byte call mismatch", "first-frame queue
+bootstrap" and "lost interrupt race" diagnoses did not establish the failure.
+Do not reuse those fixes from historical notes. UART length alone does not prove
+that the UI is running.
 
-Without them, the unmodified firmware behaves like this: interrupts are delivered
-(358 INTs, 50 entries into _except_hpint in 20 s) but the handler never returns --
-no EPCR write ever happens -- because the application's HP dispatcher restores r9
-from the red-zone slot -4(r1) and nothing writes that slot.  The dispatcher's
-first instruction, l.sw -4(r1),r9, is one word before the address the boot
-section's l.jal actually branches to.
+## Peripheral model
 
-That is a genuine 4-byte inconsistency in the image between the boot section's
-code layout and its branch encoding -- the quirk BOOT_MAP documents as
-"file = VMA + 0x1fc (vendor build +0x200)".  I swept three low-memory loads
-(0x1fc, 0x200, 0x0) against three application offsets (0x2600, 0x25fc, 0x2604)
-with CALLFIX off; none of the nine makes the handler return.  The vector slots
-need file = VMA + 0x1fc (so the slots' l.j land where the handler expects) while
-the offending l.jal needs +0x200 (so it lands on the prologue).  Resolving which
-of the two is really shifted is the next thing to do.
+| Device | Model |
+|---|---|
+| SPI0 | Read-only flash backing; byte commands and DMA |
+| TMR0 / PIC / RTC | Periodic events, priority routing and acknowledgements |
+| ADC | Busy bit clears; keypad ladder and healthy reference/supply samples |
+| DAC | Buffer-empty completion lets firmware finish its startup sound; no host audio |
+| MCP0–2 | Bounded memory copies, completion bit and W1C acknowledgement |
+| Rotate | Counterclockwise YUV420 rotation; interleaved chroma pairs; busy clears synchronously, IRQ follows |
+| LCD | Vsync/buffer-commit event bit 3 and shifted W1C acknowledgements |
+| DE | Update handshake, programmed strides/geometry, YUV420 video and RGB565/A5 palette OSD |
+| JPGB | libjpeg-backed baseline decode and nearest-neighbour scaling into guest YUV buffers |
+| I2C / H63P | Sensor register transactions and read-only chip ID `0x0b = 0x48` |
+| CSI | Fake frames written only into programmed DMA buffers at configured preview dimensions; frame-end IRQ14 |
+| SD | No attached card; command response reads do not echo command arguments |
 
-## The 4-byte quirk, resolved against the vendor's own build
+The panel's scanout is 240×320, mounted 90 degrees clockwise, so QEMU displays
+320×240. The old 640×480 grid of rotate Y/UV buffers was not a composed screen.
+The current scanout includes firmware text overlays and palette alpha.
 
-The SDK ships the vendor's linked build (ax32_platform_demo/output/ax329x_sdk.lst,
-.bin, .map), which settles the mapping question asked earlier.  Its boot section
-has exactly the VMAs this emulator assumed -- _except_buserr 0x174, _except 0x1d4,
-_except_lpint 0x1e8, _except_hpint 0x2c0, _start 0x320 -- and _start is
-instruction-for-instruction the same as ours:
+Timer callbacks queue device work onto the owning vCPU between guest execution
+blocks. This prevents concurrent DMA/PIC mutations. The IRQ helper acquires BQL
+when needed. A main-thread bottom half uploads the resulting RGB frame to QEMU's
+display console; calling SDL updates from the vCPU caused the black-window bug.
 
-    00000320 <_start>:
-         320: l.ori   r3,r9,0x0
-         324: l.jal   35c <_step_in>
-         32c: l.movhi r1,0x27f ; l.ori r1,r1,0xfffc        <- stack
-         334: l.movhi r2,0x0   ; l.ori r2,r2,0x6a0 ; l.jalr  <- boot init
-         344: l.movhi r2,0x200 ; l.ori r2,r2,0x5fc ; l.jalr  <- the app's main
-         354: l.jal   3a0 <_step_out>
+## Diagnostics
 
-and _except_hpint calls fast_isr:
+| Environment variable | Effect |
+|---|---|
+| `AX3292_FLASH` | Flash image path; the launcher sets it |
+| `AX3292_SENSOR=1` | Fake H63P sensor |
+| `AX3292_FB=/tmp/screen.ppm` | Atomically replace an RGB P6 scanout capture |
+| `AX3292_FB_EVERY=5` | Capture interval in 10 ms ticks; minimum 5 |
+| `AX3292_KEYFILE=/tmp/key` | Optional numeric ADC input; overrides native keyboard input |
+| `AX3292_SPR_TRACE=1` | Enable register trace; default off |
+| `AX3292_SPR_TRACE_LIMIT=300000` | Bound register logging |
+| `AX3292_PC_SAMPLE=1` | PC/GPR sampler; also enable SPR tracing |
+| `AX3292_PROBE=addr,...` | Up to eight hexadecimal RAM addresses, change-only samples |
+| `AX3292_RAMDUMP=/tmp/ram.bin` | Snapshot SDRAM `0x02000000..0x027fffff` every 100 ticks |
+| `AX3292_SFRDUMP=/tmp/sfr.bin` | Snapshot 64 KiB register backing store every 100 ticks |
 
-    000002c0 <_except_hpint>:
-         2d8: l.jal 2019a78 <fast_isr>
+`--qmp unix:/tmp/kc02.qmp,server=on,wait=off` exposes a local QMP socket for
+read-only inspection and keypad automation. Prefer owned, bounded processes for
+tests; do not use broad `pkill` commands while someone is using the emulator.
 
-The vendor's fast_isr begins
+## Limits
 
-    02019a78 <fast_isr>:
-     2019a78: l.sw  -4(r1),r9      <- fills the red-zone slot
-     2019a7c: l.sw  -12(r1),r1
-     2019a80: l.sw  -8(r1),r2
-     2019a84: l.addi r3,r0,18444   <- PICVR
-     2019a88: l.addi r1,r1,-12
-     2019a8c: l.mfspr r3,r3,0x0
-
-Our application has that identical prologue -- but at 0x0202abc4, while our boot's
-l.jal targets 0x0202abc8.  Our boot's *immediate* call to the application's main
-(0x0200046c) is correct, and main's prologue is exactly there with the previous
-function's l.jr r9 right before it.
-
-So the boot section was linked against an application image 4 bytes larger than
-the one in this dump: the gap lies between main and fast_isr, everything below it
-is correct, and our boot's one reference above it is 4 high.  That is the "4-byte
-section-size difference" BOOT_MAP records, and AX3292_CALLFIX subtracts those 4
-bytes from that single call.  With it (and nothing else) the interrupt returns
-properly: 60 EPCR writes in 30 s, one clean boot, the display configured (14
-accesses to 0x89xx, 10 register writes), and the keypad scanned.
-
-Corrections to earlier claims in this file: the display configuration does *not*
-need AX3292_FORCE_IRQ0, and the application does *not* leave timer0 masked -- its
-own PICMR sequence ends at 0x00c08071 with bit 0 (IRQ_TIMER0) set.
-
-## The LCD frame interrupt (the display's completion path)
-
-The display's frame-complete path is interrupt-driven and was missing.  The LCD
-ISR is the IRQ4 entry in the app's handler table (0x0202ac78 -> l.jal 0x0203584c)
-and reads LCDSTA (0xa804) for event bits, clearing each by writing the bit *eight
-positions higher*:
-
-    0x0203584c  LCD ISR:
-      r2 = mfspr(0xa804)
-      if (r2 & 0x80) { LCDSTA = r2 | 0x8000 }     ; clear bit 7 with bit 15
-      if (r2 & 0x04) { LCDSTA = r2 | 0x400        ; clear bit 2 with bit 10
-                       call *(0x020d7ebc + 8) }   ; the frame-complete callback
-      if (r2 & 0x02) { ... }
-      if (r2 & 0x01) { ... }
-
-LCDSTA now reports bit 2 while a frame is outstanding, honours that clear
-encoding, and clearing bit 2 deasserts the IRQ4 line -- the same level-triggered
-shape the RTC needed.  Frame events are only raised once the firmware enables the
-display (0x898c bit 31), because raising them earlier disturbs the boot.
-
-Result with it (and only the one documented boot-section fixup): a clean single
-boot, the display configured (10 writes, 14 accesses to 0x89xx), the LCD ISR
-running (88 times in 30 s), the keypad scanned, and a wide spread of code
-executing (531 distinct SPR PCs).
-
-The UI still does not paint.  The application's UI work runs in a task whose
-frame pointer is 0x027fff94 and which loops at 0x02007328 calling wdtKick; the
-return-address slot below its frame holds 0x0004fff6, not a code address, so it is
-a task entry that never returns rather than a function on main's path.  Its loop
-leaves only when *(0x020ccbd0) differs from the value it was called with, or when
-malloc fails; neither happens, so one of the four calls in its body (malloc
-0x0203e5c4, the ADC, 0x0205b51c, 0x02038498) is not completing.  Logging those
-return values is the next step.
-
-## The handshake the app blocks on, and two new instruments
-
-The application does not deadlock in hardware; it spins in a 1 kHz work loop
-waiting for a software flag to be *cleared*. The loop is `0x020071c4..0x020073ec`
-(entered from `main`), and its steady shape is: do work (`0x020785a8`,
-`0x0202b0d4`, `0x0205b51c`, `setFlag(1)`), `wdtKick()`, then repeat while
-`getFlag() == 1`, with a 1000 ms fallback poll.
-
-Two convenience facts for reading this: `getFlag` (`0x020524a0`) is
-`return *(u8*)0x020d1c44`, `setFlag` (`0x020524c0`) is `*(u8*)0x020d1c44 = v`, and
-`l.bnf` after `l.sfnei r11,1` branches when the comparison is false -- i.e. when
-`r11 == 1` -- so the loop continues while the flag is set. Every inline access to
-that flag is in one module, `0x02051e70..0x02052768`, and the module's only
-external caller is `0x02051f4c` <- `0x02091b4c`, the USB/SCSI command path.
-
-Timeline from `AX3292_PROBE`:
-
-    t=1   (10 ms)  ui_mode -> 0x0c, ui_desc -> 0, flag -> 0
-    t=19 (190 ms)                            flag -> 1, then nothing, ever
-
-so the flag is set and never cleared, the UI mode never leaves 12, and `main`
-never reaches its UI pump at `0x02000528`.
-
-Two instruments were added to make this kind of question cheap:
-
-* `AX3292_PROBE=addr[,addr...]` -- up to 8 guest addresses sampled every 10 ticks
-  and printed on change. Temporal, costs nothing, cannot be truncated.
-* `AX3292_PULSE_IRQ=<n>` / `AX3292_PULSE_PERIOD` -- raise one interrupt line for
-  half of every period, only once the display is enabled. A bounded injector for
-  the lines the model does not drive (6, 15, 22, 23). Sweeps of 6, 22 and 23
-  changed nothing; pulsing 15 derails the boot.
-
-Note also the real LCD init is `0x02032db8..0x02032e50`, not `0x0202b504` as an
-earlier version of this file said, and the HP handler table is not the one
-previously assumed -- `fast_isr` (`0x0202aca4`) reads SPR `0x480c`, masks `0x1f`,
-and jumps through the pointer table at `0x020807f4`, whose entry 4 (the LCD
-handler) is `0x0202c738`.
-
-The SPR trace now truncates in about seven seconds (2 M lines, because the flag
-spin calls `wdtKick` ~65 000 times a second), so any "this never runs" conclusion
-drawn from late-run trace counts is unsafe. `AX3292_PROBE` is the honest way to
-ask temporal questions.
+This is a functional model, not cycle-accurate silicon. We have verified the
+original KC02 build, not the other dumped cameras. We have not verified SD
+recording, JPEG encoding, USB device behaviour, full ISP processing or audible
+sound. The JPEG model requires the header to remain in the guest input buffer
+and uses approximate chroma resampling. The no-card state is intentional.

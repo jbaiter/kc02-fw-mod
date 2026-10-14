@@ -1,8 +1,12 @@
 # AX3292 emulator tooling
 
-Groundwork for running dumped firmware on the host. See
-[`docs/EMULATOR_PLAN.md`](../../docs/EMULATOR_PLAN.md) for the plan and the
-Stage 3 targets (SPI flash and display first).
+The patched QEMU runs the original KC02 colour menu and camera UI with a fake
+sensor and keyboard input. See [the runtime guide](qemu/README.md) for build
+instructions, controls and limitations.
+
+```sh
+python3 tools/emu/run.py firmware/original.bin --interactive
+```
 
 ## SPR addressing (the thing to get right)
 
@@ -35,7 +39,8 @@ Two traps this tooling encodes:
 | `sfr_map.py` | Parse `ax329x.h` into `SPR -> name/group`; look up a number; emit the table |
 | `sfr_map.tsv` | Checked-in table (`name`, `spr`, `group`, `confidence`), regenerate with `--sdk` |
 | `spr_census.py` | Static census of `l.mfspr`/`l.mtspr` sites in a dump |
-| `run.py` | Slice the application out of a dump and run it on the `ax3292` QEMU machine |
+| `run.py` | Slice the application out of a dump and run it headless or in an interactive SDL window |
+| `smoke.py` | Verify cold boot, keypad navigation, fake-camera motion and return to the menu |
 | `qemu/` | The QEMU patch, its build script and notes |
 
 ```sh
@@ -62,17 +67,12 @@ the emulator runs.
 
 ## Status
 
-The firmware runs and gets through its whole early boot. `qemu-system-or1k` is
-patched with an `ax3292` machine (no delay slots, little-endian, an SPR bus),
-and the stock image boots: UART log, flash ID and table reads, clock/LDO/RTC/
-DAC/ADC/GPIO init, LCD panel init — then it settles into the RTOS idle loop,
-which needs the timer interrupt. See [`qemu/README.md`](qemu/README.md) for the
-device list and the M0.6 section of
-[`docs/EMULATOR_PLAN.md`](../../docs/EMULATOR_PLAN.md).
+The original firmware displays its menu without an SD card or button press.
+Short arrow-key presses change the selection; Enter opens the camera view,
+which shows fake CSI colour bars under the firmware's OSD. Escape returns to
+the menu. The native SDL session and three cold headless smoke runs passed.
 
-Next: the timer + interrupt controller are modelled and the interrupt is
-delivered, but servicing it reaches the boot SRAM's exception machinery, which
-the boot ROM installs via `exception_init`. So the next step is to start from
-the **reset vector** and let the boot code set that up before it calls the
-application, rather than entering the application directly. After that: the
-framebuffer dump (display) and the keypad.
+We load the application and supply an explicit ROM calibration handoff. The
+model does not patch firmware instructions or seed application UI/card state.
+[The runtime guide](qemu/README.md) records the corrected interrupt, DMA and
+scanout models. Storage, encoding, USB and audible audio remain unverified.
