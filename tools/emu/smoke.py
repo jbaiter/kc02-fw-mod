@@ -84,7 +84,8 @@ def wait_for(proc, predicate, description: str, timeout: float = 20):
     raise TimeoutError(description)
 
 
-def exercise(qemu: str, image: Path, directory: Path) -> dict:
+def exercise(qemu: str, image: Path, directory: Path,
+             viewer_card: Path | None = None) -> dict:
     directory.mkdir(parents=True, exist_ok=True)
     frame = directory / "screen.ppm"
     app = directory / "app.bin"
@@ -94,6 +95,8 @@ def exercise(qemu: str, image: Path, directory: Path) -> dict:
     env = {k: v for k, v in os.environ.items() if not k.startswith("AX3292_")}
     env.update(AX3292_FLASH=str(image.resolve()), AX3292_SENSOR="1",
                AX3292_SPR_TRACE="0", AX3292_FB=str(frame), AX3292_FB_EVERY="5")
+    if viewer_card is not None:
+        env["AX3292_SD_IMAGE"] = str(viewer_card.resolve())
     command = [qemu, "-M", "ax3292", "-m", "64M", "-nodefaults",
                "-accel", "tcg,thread=multi", "-display", "none",
                "-monitor", "none", "-serial", "none", "-kernel", str(app),
@@ -153,6 +156,55 @@ def exercise(qemu: str, image: Path, directory: Path) -> dict:
             qmp.key("esc")
             wait_for(proc, lambda: value(0x020ccd54) == 6 and not camera_ready(), "ESC returns to menu")
             save("05-back")
+
+            if viewer_card is not None:
+                # Fixtures from create_sd.py --test-images. Foto is item 3.
+                for selection in range(1, 4):
+                    qmp.key("right")
+                    wait_for(proc, lambda: value(0x020d41d3, 1) == selection,
+                             f"select item {selection}")
+                qmp.key("ret")
+
+                def pixel(x, y):
+                    try:
+                        rgb = read_ppm(frame)[2]
+                        return rgb[(y * 320 + x) * 3:][:3]
+                    except (OSError, ValueError):
+                        return bytes(3)
+
+                def portrait_ready():
+                    r, g, b = pixel(160, 85)
+                    return r > 200 and 100 < g < 200 and b < 80
+
+                def bars_ready():
+                    r, g, b = pixel(220, 100)
+                    white = pixel(15, 100)
+                    return r > 200 and g < 60 and b < 60 and min(white) > 230
+
+                def gradient_ready():
+                    r, g, b = pixel(280, 100)
+                    return r > 150 and 60 < g < 180 and b > 100
+
+                def orientation_ready():
+                    r, g, b = pixel(160, 125)
+                    return r > 200 and g > 200 and b < 50
+
+                for name, predicate in [
+                    ("06-viewer-4", portrait_ready),
+                    ("07-viewer-1", bars_ready),
+                    ("08-viewer-2", gradient_ready),
+                    ("09-viewer-3", orientation_ready),
+                ]:
+                    wait_for(proc, lambda: value(0x020ccd54) == 4 and predicate(), name)
+                    save(name)
+                    if name != "09-viewer-3":
+                        qmp.key("down")
+                        # Repeating the same ADC key needs a sampled release;
+                        # the next JPEG may finish before key debounce does.
+                        time.sleep(0.3)
+                qmp.key("esc")
+                wait_for(proc, lambda: value(0x020ccd54) == 6, "viewer ESC returns to menu")
+                save("10-viewer-back")
         finally:
             if qmp is not None:
                 qmp.close()
@@ -166,7 +218,8 @@ def exercise(qemu: str, image: Path, directory: Path) -> dict:
     errors = (directory / "qemu.log").read_text(errors="replace")
     assert "assertion failed" not in errors and "ERROR:" not in errors
     result = {"passed": True, "firmware_sha256": ORIGINAL_SHA256,
-              "command": command, "screenshots": captures}
+              "command": command, "screenshots": captures,
+              "viewer_card": str(viewer_card.resolve()) if viewer_card else None}
     (directory / "report.json").write_text(json.dumps(result, indent=2) + "\n")
     return result
 
@@ -177,6 +230,8 @@ def main():
     parser.add_argument("--qemu", default=DEFAULT_QEMU)
     parser.add_argument("--output", type=Path, required=True)
     parser.add_argument("--runs", type=int, default=1)
+    parser.add_argument("--viewer-card", type=Path,
+                        help="also browse all four create_sd.py --test-images fixtures")
     args = parser.parse_args()
     if args.runs < 1:
         parser.error("--runs must be positive")
@@ -184,8 +239,10 @@ def main():
         parser.error("this smoke test is specific to firmware/original.bin")
     for i in range(args.runs):
         output = args.output.resolve() / f"run-{i + 1}"
-        exercise(args.qemu, args.image, output)
-        print(f"PASS {i + 1}: menu -> RIGHT/LEFT -> camera/motion -> menu ({output})", flush=True)
+        exercise(args.qemu, args.image, output, args.viewer_card)
+        viewer = " -> four SD photos -> menu" if args.viewer_card else ""
+        print(f"PASS {i + 1}: menu -> RIGHT/LEFT -> camera/motion -> menu{viewer} ({output})",
+              flush=True)
 
 
 if __name__ == "__main__":

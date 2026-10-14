@@ -1712,7 +1712,7 @@
 +type_init(ax3292_machine_register_types)
 --- a/hw/or1k/ax3292-jpeg.h
 +++ b/hw/or1k/ax3292-jpeg.h
-@@ -0,0 +1,96 @@
+@@ -0,0 +1,100 @@
 +/* AX3292 JPGB baseline JPEG decode / scale to semiplanar YUV420.
 + * SPDX-License-Identifier: GPL-2.0-or-later
 + * Register contract: SDK ax32xx_mjpegDecode{Input,Output,Size,Enable}.
@@ -1740,7 +1740,11 @@
 +    uint32_t input = s->sfr[0xc020 >> 2];
 +    uint32_t size = s->sfr[0xc078 >> 2];
 +    unsigned w = size >> 16, h = size & 0xffff;
-+    unsigned stride = s->sfr[0xc0c0 >> 2] >> 16;
++    /* The upper half is DMA1's source stride, not the decoded YUV stride.
++     * SDK ax32xx_mjpegDecodeSetSize: bit 12 enables manual output stride;
++     * otherwise rows are packed at the scaled output width. */
++    uint32_t layout = s->sfr[0xc0c0 >> 2];
++    unsigned stride = layout & 0x1000 ? layout & 0xfff : w;
 +    uint32_t ybase = s->sfr[0xc010 >> 2];
 +    uint32_t uvbase = s->sfr[0xc014 >> 2];
 +    uint32_t start = input, end;

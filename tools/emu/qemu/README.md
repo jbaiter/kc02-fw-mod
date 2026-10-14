@@ -60,6 +60,25 @@ python3 tools/emu/run.py firmware/original.bin --interactive \
   --sd-card /tmp/kc02-sd.img --gdb 1234
 ```
 
+To test the **Foto** viewer, add `--test-images` to the creator command. This
+requires Pillow and seeds four baseline 4:2:0 JPEGs in
+`PHOTO/PHO00001.JPG` through `PHOTO/PHO00004.JPG`: colour bars, an RGB gradient,
+orientation markers and a portrait image. KC02 uses the `PHO` prefix and five
+numeric digits (`managerFileNameCreater` / `name2string`, verified in Ghidra).
+Select **Foto**, use **Up/Down** to browse, and **Escape** to return. **Right**
+opens the delete menu. Stop the emulator before changing its mounted image.
+
+Run the viewer regression on this card with:
+
+```sh
+python3 tools/emu/smoke.py firmware/original.bin \
+  --viewer-card /tmp/kc02-sd.img --output /tmp/kc02-viewer-check
+```
+
+Verified viewer screenshots:
+[colour bars](../../../docs/images/emulator/viewer-bars.png),
+[orientation](../../../docs/images/emulator/viewer-orientation.png).
+
 The creator makes a sparse raw image with an MBR and FAT16 partition. It refuses
 to overwrite an existing file. The controller opens an existing regular file
 read/write and locks it against a second emulator. The firmware discovers the
