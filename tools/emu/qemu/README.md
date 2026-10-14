@@ -251,3 +251,51 @@ with CALLFIX off; none of the nine makes the handler return.  The vector slots
 need file = VMA + 0x1fc (so the slots' l.j land where the handler expects) while
 the offending l.jal needs +0x200 (so it lands on the prologue).  Resolving which
 of the two is really shifted is the next thing to do.
+
+## The 4-byte quirk, resolved against the vendor's own build
+
+The SDK ships the vendor's linked build (ax32_platform_demo/output/ax329x_sdk.lst,
+.bin, .map), which settles the mapping question asked earlier.  Its boot section
+has exactly the VMAs this emulator assumed -- _except_buserr 0x174, _except 0x1d4,
+_except_lpint 0x1e8, _except_hpint 0x2c0, _start 0x320 -- and _start is
+instruction-for-instruction the same as ours:
+
+    00000320 <_start>:
+         320: l.ori   r3,r9,0x0
+         324: l.jal   35c <_step_in>
+         32c: l.movhi r1,0x27f ; l.ori r1,r1,0xfffc        <- stack
+         334: l.movhi r2,0x0   ; l.ori r2,r2,0x6a0 ; l.jalr  <- boot init
+         344: l.movhi r2,0x200 ; l.ori r2,r2,0x5fc ; l.jalr  <- the app's main
+         354: l.jal   3a0 <_step_out>
+
+and _except_hpint calls fast_isr:
+
+    000002c0 <_except_hpint>:
+         2d8: l.jal 2019a78 <fast_isr>
+
+The vendor's fast_isr begins
+
+    02019a78 <fast_isr>:
+     2019a78: l.sw  -4(r1),r9      <- fills the red-zone slot
+     2019a7c: l.sw  -12(r1),r1
+     2019a80: l.sw  -8(r1),r2
+     2019a84: l.addi r3,r0,18444   <- PICVR
+     2019a88: l.addi r1,r1,-12
+     2019a8c: l.mfspr r3,r3,0x0
+
+Our application has that identical prologue -- but at 0x0202abc4, while our boot's
+l.jal targets 0x0202abc8.  Our boot's *immediate* call to the application's main
+(0x0200046c) is correct, and main's prologue is exactly there with the previous
+function's l.jr r9 right before it.
+
+So the boot section was linked against an application image 4 bytes larger than
+the one in this dump: the gap lies between main and fast_isr, everything below it
+is correct, and our boot's one reference above it is 4 high.  That is the "4-byte
+section-size difference" BOOT_MAP records, and AX3292_CALLFIX subtracts those 4
+bytes from that single call.  With it (and nothing else) the interrupt returns
+properly: 60 EPCR writes in 30 s, one clean boot, the display configured (14
+accesses to 0x89xx, 10 register writes), and the keypad scanned.
+
+Corrections to earlier claims in this file: the display configuration does *not*
+need AX3292_FORCE_IRQ0, and the application does *not* leave timer0 masked -- its
+own PICMR sequence ends at 0x00c08071 with bit 0 (IRQ_TIMER0) set.
