@@ -299,3 +299,37 @@ accesses to 0x89xx, 10 register writes), and the keypad scanned.
 Corrections to earlier claims in this file: the display configuration does *not*
 need AX3292_FORCE_IRQ0, and the application does *not* leave timer0 masked -- its
 own PICMR sequence ends at 0x00c08071 with bit 0 (IRQ_TIMER0) set.
+
+## The LCD frame interrupt (the display's completion path)
+
+The display's frame-complete path is interrupt-driven and was missing.  The LCD
+ISR is the IRQ4 entry in the app's handler table (0x0202ac78 -> l.jal 0x0203584c)
+and reads LCDSTA (0xa804) for event bits, clearing each by writing the bit *eight
+positions higher*:
+
+    0x0203584c  LCD ISR:
+      r2 = mfspr(0xa804)
+      if (r2 & 0x80) { LCDSTA = r2 | 0x8000 }     ; clear bit 7 with bit 15
+      if (r2 & 0x04) { LCDSTA = r2 | 0x400        ; clear bit 2 with bit 10
+                       call *(0x020d7ebc + 8) }   ; the frame-complete callback
+      if (r2 & 0x02) { ... }
+      if (r2 & 0x01) { ... }
+
+LCDSTA now reports bit 2 while a frame is outstanding, honours that clear
+encoding, and clearing bit 2 deasserts the IRQ4 line -- the same level-triggered
+shape the RTC needed.  Frame events are only raised once the firmware enables the
+display (0x898c bit 31), because raising them earlier disturbs the boot.
+
+Result with it (and only the one documented boot-section fixup): a clean single
+boot, the display configured (10 writes, 14 accesses to 0x89xx), the LCD ISR
+running (88 times in 30 s), the keypad scanned, and a wide spread of code
+executing (531 distinct SPR PCs).
+
+The UI still does not paint.  The application's UI work runs in a task whose
+frame pointer is 0x027fff94 and which loops at 0x02007328 calling wdtKick; the
+return-address slot below its frame holds 0x0004fff6, not a code address, so it is
+a task entry that never returns rather than a function on main's path.  Its loop
+leaves only when *(0x020ccbd0) differs from the value it was called with, or when
+malloc fails; neither happens, so one of the four calls in its body (malloc
+0x0203e5c4, the ADC, 0x0205b51c, 0x02038498) is not completing.  Logging those
+return values is the next step.

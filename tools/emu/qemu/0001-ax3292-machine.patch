@@ -1,7 +1,7 @@
 diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 --- a/hw/or1k/ax3292.c	1970-01-01 01:00:00.000000000 +0100
-+++ b/hw/or1k/ax3292.c	2026-10-14 18:58:12.553986576 +0200
-@@ -0,0 +1,1221 @@
++++ b/hw/or1k/ax3292.c	2026-10-14 20:31:58.239253404 +0200
+@@ -0,0 +1,1287 @@
 +/*
 + * AX3292 (KC02-family camera) machine.
 + *
@@ -76,6 +76,16 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    /* RTC (0x88e0): bits 0/1 of RTCCON are event-pending flags; RTCPND acks. */
 +    uint32_t rtc_con;
 +
++    /* LCDSTA (0xa804) event bits.  The LCD ISR at 0x0203584c reads them and
++     * clears each by writing the bit *eight positions higher* (status bit 2 is
++     * cleared with 0x400, bit 7 with 0x8000).  Clearing bit 2 runs the
++     * registered frame-complete callback at *(0x020d7ebc + 8). */
++    uint32_t lcd_events;
++    /* Set when the firmware enables the display (0x898c bit 31); frame
++     * interrupts only make sense from then on, and raising them earlier
++     * disturbs the boot. */
++    bool lcd_enabled;
++
 +    /* ADC (0x9170): channel select + GO, result in ADCDAT.  Channel 3 is the
 +     * keypad; the value is read from AX3292_KEY (or AX3292_KEYFILE) so keys can
 +     * be injected while the guest runs. */
@@ -145,6 +155,7 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    bool callfix;
 +    bool force_irq0;
 +    bool tick_lp;
++    bool lcdc_irq;
 +
 +    QEMUTimer *sampler;
 +    unsigned sample_ms;
@@ -236,6 +247,9 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +
 +#define AX3292_IRQ_TIMER0  0
 +#define AX3292_IRQ_RTC     5    /* SDK IRQ_RTC_WDT */
++#define AX3292_IRQ_LCDC    4    /* SDK IRQ_LCDC: the display's frame interrupt */
++#define AX3292_LCD_EV_FRAME 0x04 /* LCDSTA bit 2 */
++#define AX3292_LCD_EV_OTHER 0x80 /* LCDSTA bit 7 */
 +#define AX3292_TMR_PND_BIT 0x20    /* the ISR clears BIT(5) */
 +/*: The RTOS tick.  AX3292_TICK_MS=0 disables it. */
 +#define AX3292_TICK_MS_DEFAULT 10
@@ -475,6 +489,20 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +            p[2] = 3;           /* initialised */
 +        }
 +    }
++    /*
++     * The LCDC's frame interrupt.  The firmware enables IRQ4 and IRQ15 as well
++     * as the RTC, and the display path's completion handler is the IRQ4 table
++     * entry (0x0203584c); nothing else in the model raises it, so the frame
++     * never finishes as far as the firmware is concerned.
++     */
++    if (s->lcdc_irq && s->lcd_enabled) {
++        s->lcd_events |= AX3292_LCD_EV_FRAME;
++        env->picsr |= 1u << AX3292_IRQ_LCDC;
++        if (env->picsr & env->picmr) {
++            cpu_interrupt(cs, CPU_INTERRUPT_HARD);
++        }
++    }
++
 +    s->tick_count++;
 +    if (s->trace && (s->tick_count <= 3 || s->tick_count % 200 == 0)) {
 +        fprintf(stderr, "tick %lu pc=%08x sr=%08x picmr=%08x picsr=%08x\n",
@@ -649,7 +677,7 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +        return true;
 +
 +    case AX3292_LCD_STA:
-+        *value = s->sfr[spr >> 2] | 0x80000000;
++        *value = s->sfr[spr >> 2] | 0x80000000 | s->lcd_events;
 +        return true;
 +
 +    case AX3292_USB_CSR0:
@@ -906,6 +934,39 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +        return true;
 +    }
 +
++    case AX3292_LCD_B_CTRL:
++        s->sfr[spr >> 2] = v;
++        return true;
++
++    case 0x898C:                    /* the display control/enable register */
++        s->sfr[spr >> 2] = v;
++        if (v & 0x80000000u) {
++            s->lcd_enabled = true;
++        }
++        return true;
++
++    case AX3292_LCD_STA:
++    {
++        /* Write 1 to bit N+8 to clear event bit N. */
++        uint32_t clr = 0;
++        int b;
++        for (b = 8; b < 32; b++) {
++            if (v & (1u << b)) {
++                clr |= 1u << (b - 8);
++            }
++        }
++        s->lcd_events &= ~clr;
++        s->sfr[spr >> 2] = v;
++        if (!(s->lcd_events & AX3292_LCD_EV_FRAME)) {
++            CPUOpenRISCState *e = env;
++            e->picsr &= ~(1u << AX3292_IRQ_LCDC);
++            if (!(e->picsr & e->picmr)) {
++                cpu_reset_interrupt(env_cpu(e), CPU_INTERRUPT_HARD);
++            }
++        }
++        return true;
++    }
++
 +    case AX3292_RTC_CON:
 +        /* Keep the hardware event flags, store the rest. */
 +        s->rtc_con = (v & ~AX3292_RTC_EVENTS) | (s->rtc_con & AX3292_RTC_EVENTS);
@@ -1021,6 +1082,11 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +        s->sd_present = true;
 +    }
 +    s->tick_lp = false;   /* HP: the app reboots on an unexpected LP (TICK) interrupt */
++    s->lcdc_irq = true;     /* the display's frame interrupt; IRQ4 */
++    env = getenv("AX3292_LCDC_IRQ");
++    if (env != NULL) {
++        s->lcdc_irq = atoi(env) != 0;
++    }
 +    env = getenv("AX3292_TICK_LP");
 +    if (env != NULL) {
 +        s->tick_lp = atoi(env) != 0;
@@ -1224,8 +1290,8 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +
 +type_init(ax3292_machine_register_types)
 diff -Naur a/hw/or1k/Kconfig b/hw/or1k/Kconfig
---- a/hw/or1k/Kconfig	2026-10-14 18:58:12.540223927 +0200
-+++ b/hw/or1k/Kconfig	2026-10-14 18:58:12.552509014 +0200
+--- a/hw/or1k/Kconfig	2026-10-14 20:31:58.224359340 +0200
++++ b/hw/or1k/Kconfig	2026-10-14 20:31:58.237815516 +0200
 @@ -22,3 +22,8 @@
      select SERIAL_MM
      select SIFIVE_TEST
@@ -1236,16 +1302,16 @@ diff -Naur a/hw/or1k/Kconfig b/hw/or1k/Kconfig
 +    default y
 +    depends on OR1K
 diff -Naur a/hw/or1k/meson.build b/hw/or1k/meson.build
---- a/hw/or1k/meson.build	2026-10-14 18:58:12.540264593 +0200
-+++ b/hw/or1k/meson.build	2026-10-14 18:58:12.550723994 +0200
+--- a/hw/or1k/meson.build	2026-10-14 20:31:58.224384387 +0200
++++ b/hw/or1k/meson.build	2026-10-14 20:31:58.236044794 +0200
 @@ -5,3 +5,4 @@
  openrisc_ss.add(when: 'CONFIG_OR1K_VIRT', if_true: files('virt.c'))
  
  hw_arch += {'or1k': openrisc_ss}
 +openrisc_ss.add(when: 'CONFIG_AX3292', if_true: files('ax3292.c'))
 diff -Naur a/target/or1k/cpu.h b/target/or1k/cpu.h
---- a/target/or1k/cpu.h	2026-10-14 18:58:12.538677776 +0200
-+++ b/target/or1k/cpu.h	2026-10-14 18:58:12.544905760 +0200
+--- a/target/or1k/cpu.h	2026-10-14 20:31:58.222989992 +0200
++++ b/target/or1k/cpu.h	2026-10-14 20:31:58.229848433 +0200
 @@ -258,6 +258,27 @@
  
      /* Fields from here on are preserved across CPU reset. */
@@ -1275,8 +1341,8 @@ diff -Naur a/target/or1k/cpu.h b/target/or1k/cpu.h
      uint32_t avr;             /* Architecture version register */
      uint32_t upr;             /* Unit presence register */
 diff -Naur a/target/or1k/interrupt.c b/target/or1k/interrupt.c
---- a/target/or1k/interrupt.c	2026-10-14 18:58:12.538711940 +0200
-+++ b/target/or1k/interrupt.c	2026-10-14 18:58:12.549369183 +0200
+--- a/target/or1k/interrupt.c	2026-10-14 20:31:58.223029267 +0200
++++ b/target/or1k/interrupt.c	2026-10-14 20:31:58.234485394 +0200
 @@ -87,10 +87,23 @@
                        cs->cpu_index,
                        int_name[exception]);
@@ -1320,8 +1386,8 @@ diff -Naur a/target/or1k/interrupt.c b/target/or1k/interrupt.c
      }
      if (idx >= 0) {
 diff -Naur a/target/or1k/sys_helper.c b/target/or1k/sys_helper.c
---- a/target/or1k/sys_helper.c	2026-10-14 18:58:12.538741135 +0200
-+++ b/target/or1k/sys_helper.c	2026-10-14 18:58:12.548097018 +0200
+--- a/target/or1k/sys_helper.c	2026-10-14 20:31:58.223055006 +0200
++++ b/target/or1k/sys_helper.c	2026-10-14 20:31:58.233412280 +0200
 @@ -50,6 +50,17 @@
      int idx;
  #endif
@@ -1355,8 +1421,8 @@ diff -Naur a/target/or1k/sys_helper.c b/target/or1k/sys_helper.c
      switch (spr) {
      case TO_SPR(0, 20): /* FPCSR */
 diff -Naur a/target/or1k/translate.c b/target/or1k/translate.c
---- a/target/or1k/translate.c	2026-10-14 18:58:12.538770110 +0200
-+++ b/target/or1k/translate.c	2026-10-14 18:58:12.546548312 +0200
+--- a/target/or1k/translate.c	2026-10-14 20:31:58.223087137 +0200
++++ b/target/or1k/translate.c	2026-10-14 20:31:58.231806703 +0200
 @@ -49,6 +49,8 @@
      uint32_t delayed_branch;
      uint32_t cpucfgr;
