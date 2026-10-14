@@ -93,6 +93,14 @@ which starting at the application entry skips. Hence the next step: start from t
 reset vector and let the boot code set the exception machinery up, rather than
 entering the application directly.
 
+Entering through the boot code's own `_start` (`AX3292_ENTRY=0x320`, which calls
+`exception_init` and *then* the application) is the right shape but pulls in the
+boot's SDRAM set-up first: the tuning loop writes an opcode to `SDRHCMD` (`0x98c4`)
+and polls bit 6 for completion, and it is reached before anything else useful.
+Modelling that done bit naively moved the loop around rather than past it, so the
+next step is a small SDRAM-controller model alongside the boot entry. RAM is just
+RAM here, so the tuning results do not have to be *right*, only terminating.
+
 ## Finding a stall
 
 A stuck firmware loop often touches no registers, so the SPR trace shows nothing.
