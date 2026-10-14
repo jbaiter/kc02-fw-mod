@@ -196,3 +196,24 @@ Remaining suspects, all unmodelled: the sensor/ISP (H63P over I2C, CSI), USB, an
 the sub-systems serviced from the RTC ISR at 0x02051a00 (the flag's owner).  A
 camera shows its UI with no card and no cable, so the sensor is the prime
 candidate.
+
+## Latest: the only image in RAM is noise
+
+A full 7 MiB dump of the SDRAM pool (0x02100000..0x02800000) at the end of a
+120 s run contains exactly one image-like window: 76,800 bytes with 256 distinct
+values and a black upper third, at 0x02170800 -- which is the same data as the
+fourth LCD buffer (0x0216e480) seen 0x2380 bytes further in.  So the firmware
+produces one 320x240 buffer full of noise and never paints the UI into the
+framebuffers it configured.
+
+Everything the firmware touches is modelled except the ISP/sensor, so that noise
+is most likely the capture path doing what it can with an unmodelled sensor.
+The boot flow's work loop (0x020071c4, work at 0x020072c4) is not stuck: its only
+exits are malloc returning NULL (it does not) or a value mismatch, and it loops on
+purpose, waiting for the flag at 0x020d1c44 (which reads 1) with a 1000-unit
+timeout so it re-runs its work about once a second.  The UI pump at 0x02008188 is
+only reached from main at 0x02000528, which the firmware never gets to.
+
+Next: log the return values of the loop body's four calls (malloc 0x0203e5c4, the
+ADC, 0x0205b51c, 0x02038498) to find the one that fails, and model the ISP/CSI so
+the capture is not noise.
