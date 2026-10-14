@@ -217,3 +217,37 @@ only reached from main at 0x02000528, which the firmware never gets to.
 Next: log the return values of the loop body's four calls (malloc 0x0203e5c4, the
 ADC, 0x0205b51c, 0x02038498) to find the one that fails, and model the ISP/CSI so
 the capture is not noise.
+
+## IMPORTANT: what is and is not the original firmware
+
+The image under test really is the stock dump: /tmp/app.bin is byte-identical to
+firmware/original.bin[0x2600:0xd3200] and the dump's sha256 is 218c6cdf..., the
+original HiMont KC02 recipe.
+
+But two of the machine's options modify the *guest* rather than the model, and
+both were on by default at various points while results above were produced:
+
+* AX3292_CALLFIX rewrote one instruction of the boot section (the HP-interrupt
+  handler's call target) to work around the 4-byte mismatch below.
+* AX3292_FORCE_IRQ0 ORed bit 0 into every write to PICMR.
+
+Both are now OFF by default, because with them on the firmware under test is not
+the original image and any "it got further" result is suspect.  In particular the
+"firmware configures the display" milestone was obtained with CALLFIX on and
+should be re-established without it.
+
+Without them, the unmodified firmware behaves like this: interrupts are delivered
+(358 INTs, 50 entries into _except_hpint in 20 s) but the handler never returns --
+no EPCR write ever happens -- because the application's HP dispatcher restores r9
+from the red-zone slot -4(r1) and nothing writes that slot.  The dispatcher's
+first instruction, l.sw -4(r1),r9, is one word before the address the boot
+section's l.jal actually branches to.
+
+That is a genuine 4-byte inconsistency in the image between the boot section's
+code layout and its branch encoding -- the quirk BOOT_MAP documents as
+"file = VMA + 0x1fc (vendor build +0x200)".  I swept three low-memory loads
+(0x1fc, 0x200, 0x0) against three application offsets (0x2600, 0x25fc, 0x2604)
+with CALLFIX off; none of the nine makes the handler return.  The vector slots
+need file = VMA + 0x1fc (so the slots' l.j land where the handler expects) while
+the offending l.jal needs +0x200 (so it lands on the prologue).  Resolving which
+of the two is really shifted is the next thing to do.
