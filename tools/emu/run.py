@@ -111,12 +111,15 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--trace", action="store_true", help="enable SPR tracing in interactive mode")
     ap.add_argument("--qmp", help="optional QEMU QMP address, e.g. unix:/tmp/kc02.qmp,server=on,wait=off")
     ap.add_argument("--gdb", type=int, metavar="PORT", help="GDB server on localhost (guest runs until attached)")
+    ap.add_argument("--sd-card", type=Path, help="writable raw SD image (create one with tools/emu/create_sd.py)")
     ap.add_argument("--log", type=Path, help="SPR trace output (default: alongside the image)")
     ap.add_argument("--decode", action="store_true", help="summarise an existing log instead of running")
     ap.add_argument("--table", type=Path, default=DEFAULT_TABLE)
     args = ap.parse_args(argv)
     if args.gdb is not None and not 1 <= args.gdb <= 65535:
         ap.error("--gdb port must be between 1 and 65535")
+    if args.sd_card is not None and not args.sd_card.is_file():
+        ap.error("--sd-card must name an existing raw image; use tools/emu/create_sd.py")
 
     log = args.log or args.image.with_suffix(args.image.suffix + ".spr.log")
 
@@ -152,6 +155,9 @@ def main(argv: list[str] | None = None) -> int:
     env["AX3292_ENTRY"] = hex(args.entry)
     env["AX3292_SPR_TRACE_LIMIT"] = str(args.trace_limit)
     env["AX3292_FLASH"] = str(args.image.resolve())
+    if args.sd_card is not None:
+        env["AX3292_SD_IMAGE"] = str(args.sd_card.resolve())
+        print(f"SD: {args.sd_card.resolve()} (writable)", flush=True)
     env["AX3292_SPR_TRACE"] = "1" if args.trace or not args.interactive else "0"
     sensor_enabled = args.sensor if args.sensor is not None else args.interactive
     if sensor_enabled:

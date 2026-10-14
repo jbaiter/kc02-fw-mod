@@ -52,6 +52,27 @@ The patch marker records a checksum. If an existing tree has an older patch, the
 script stops rather than mixing revisions. Use a fresh directory; do not remove
 the marker and apply the new patch over modified sources.
 
+## Attach a writable SD card
+
+```sh
+python3 tools/emu/create_sd.py /tmp/kc02-sd.img --size-mib 64
+python3 tools/emu/run.py firmware/original.bin --interactive \
+  --sd-card /tmp/kc02-sd.img --gdb 1234
+```
+
+The creator makes a sparse raw image with an MBR and FAT16 partition. It refuses
+to overwrite an existing file. The controller opens an existing regular file
+read/write and locks it against a second emulator. The firmware discovers the
+card through SD commands, reads its capacity from CSD, mounts FAT16 and writes
+sectors through DMA. We do not inject card state into application RAM.
+
+We verified persisted `VIDEO`, `PHOTO`, `MP3` directories and `VIDEO.LST` after a
+cold boot. Reads/writes are synchronous and flush the host stream. Optional
+`AX3292_SD_TRACE=1` logs SD commands and sector transfers. Normal-speed SDHC is
+modelled; CMD6 returns a 64-byte switch-status packet without high-speed support.
+The backing image size must be a multiple of 512 KiB. JPEG encoding and actual
+photo/video capture are not yet verified.
+
 ## Attach GDB
 
 For a new session, enable a localhost GDB server:
@@ -143,7 +164,7 @@ that the UI is running.
 | JPGB | libjpeg-backed baseline decode and nearest-neighbour scaling into guest YUV buffers |
 | I2C / H63P | Sensor register transactions and read-only chip ID `0x0b = 0x48` |
 | CSI | Fake frames written only into programmed DMA buffers at configured preview dimensions; frame-end IRQ14 |
-| SD | No attached card; command response reads do not echo command arguments |
+| SD | Optional writable raw SDHC image; command/R2 responses, normal-speed switch status, sector DMA and CRC/completion flags. No card when no image is attached |
 
 The panel's scanout is 240×320, mounted 90 degrees clockwise, so QEMU displays
 320×240. The old 640×480 grid of rotate Y/UV buffers was not a composed screen.
@@ -160,6 +181,8 @@ display console; calling SDL updates from the vCPU caused the black-window bug.
 |---|---|
 | `AX3292_FLASH` | Flash image path; the launcher sets it |
 | `AX3292_SENSOR=1` | Fake H63P sensor |
+| `AX3292_SD_IMAGE=/path/sd.img` | Writable raw SD image; the launcher sets this with `--sd-card` |
+| `AX3292_SD_TRACE=1` | Log card commands and sector DMA |
 | `AX3292_FB=/tmp/screen.ppm` | Atomically replace an RGB P6 scanout capture |
 | `AX3292_FB_EVERY=5` | Capture interval in 10 ms ticks; minimum 5 |
 | `AX3292_KEYFILE=/tmp/key` | Optional numeric ADC input; overrides native keyboard input |
@@ -179,5 +202,7 @@ tests; do not use broad `pkill` commands while someone is using the emulator.
 This is a functional model, not cycle-accurate silicon. We have verified the
 original KC02 build, not the other dumped cameras. We have not verified SD
 recording, JPEG encoding, USB device behaviour, full ISP processing or audible
-sound. The JPEG model requires the header to remain in the guest input buffer
-and uses approximate chroma resampling. The no-card state is intentional.
+sound. We have verified FAT16 mounting and persistent metadata writes. The JPEG
+model requires the header to remain in the guest input buffer and uses
+approximate chroma resampling. Without an attached SD image, the no-card state
+is intentional.
