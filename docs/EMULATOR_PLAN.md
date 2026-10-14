@@ -97,6 +97,31 @@ Useful scaffolding already exists: `tools/emu/sfr_map.py` + `sfr_map.tsv`
 (1065 SPR numbers with names and confidence) and `tools/emu/spr_census.py`, a
 static census of the firmware's SPR accesses that ranks the device backlog.
 
+**M0.5 result — it boots.** `qemu-system-or1k` now builds with a new `ax3292`
+machine (patch and build script under `tools/emu/qemu/`) and runs the stock image
+into the firmware's HAL. Four upstream-versus-device differences had to be fixed,
+and each was established from the image rather than assumed:
+
+| # | Upstream QEMU | AX3292 |
+|---|---|---|
+| 1 | branches have delay slots | none — 55% of branches in `original.bin` are immediately followed by another branch (878 `l.jal`→`l.jal`) |
+| 2 | hardcoded big-endian | little-endian (reset `SR` has `LEE`) |
+| 3 | unknown SPRs silently ignored, no hook | every peripheral is an SPR |
+| 4 | OpenRISC spec group-0 numbering | `SR 0x18`, `NPC 0x14`, `PPC 0x1C`, `EPCR 0x20`, `ESR 0x40`, `EVBA 0x50`, `VR 0x00` |
+
+The boot code (file `0x520`) sets SP to `0x027FFFFC` and calls `0x0200046C`;
+that is the application entry the machine now jumps to. The trace then shows the
+HAL initialising clocks and LDO (`0x8840`/`0x8868`), the RTC (`0x88E0`/`0x88EC`),
+cache control (`0x1800`/`0x2000`) and the interrupt controller
+(`0x4800`/`0x4814`), before writing one byte to UART0 (`0x9088`) and settling
+into a poll loop on the UART pending register (`0x908C`) — 39,871 of the first
+40,000 accesses.
+
+So the first device to model is neither the SPI flash nor the LCD: it is the
+**UART**, which the firmware talks to before anything else. With it modelled the
+boot should continue, and the same trace-driven loop then builds the rest of the
+peripherals on demand — which is the plan's SPI flash and display work.
+
 RAM is flat: load the boot section at 0x0 if starting from reset, and the
 application at 0x02000000 from the dump. SDRAM is just RAM (8 MiB); the initial
 stack is `0x027FFFFC`; the HAL pool and `.bss` are ordinary RAM.

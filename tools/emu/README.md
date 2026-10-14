@@ -35,6 +35,8 @@ Two traps this tooling encodes:
 | `sfr_map.py` | Parse `ax329x.h` into `SPR -> name/group`; look up a number; emit the table |
 | `sfr_map.tsv` | Checked-in table (`name`, `spr`, `group`, `confidence`), regenerate with `--sdk` |
 | `spr_census.py` | Static census of `l.mfspr`/`l.mtspr` sites in a dump |
+| `run.py` | Slice the application out of a dump and run it on the `ax3292` QEMU machine |
+| `qemu/` | The QEMU patch, its build script and notes |
 
 ```sh
 # regenerate the checked-in map from the vendor SDK
@@ -42,6 +44,10 @@ tools/emu/sfr_map.py --sdk /path/to/ax329x.h --emit tsv > tools/emu/sfr_map.tsv
 
 tools/emu/sfr_map.py --lookup 0x9244
 tools/emu/spr_census.py firmware/original.bin
+
+# build QEMU once (~2 min on 16 cores), then run a dump
+tools/emu/qemu/build-qemu.sh
+tools/emu/run.py firmware/original.bin --timeout 15 --trace-limit 40000
 ```
 
 ## Census caveat
@@ -56,8 +62,13 @@ the emulator runs.
 
 ## Status
 
-The emulator itself is not written yet. The next step is a spike that runs the
-application image under QEMU's `or1k-sim` machine, per
-[`docs/EMULATOR_PLAN.md`](../../docs/EMULATOR_PLAN.md). Stock QEMU silently
-ignores unknown SPRs, so that run also decides how the SPR dispatch patch is
-shaped.
+The firmware runs. `qemu-system-or1k` is patched with an `ax3292` machine
+(no delay slots, little-endian, an SPR bus), and the stock image boots into its
+HAL: clock/LDO/RTC/cache/PIC init, then a UART write, then a poll loop on the
+UART pending register. See [`qemu/README.md`](qemu/README.md) and the M0.5
+section of [`docs/EMULATOR_PLAN.md`](../../docs/EMULATOR_PLAN.md).
+
+**No functional device is modelled yet** — SFR-group reads return zero and
+writes are dropped, so anything that polls a status bit spins. The next device is
+the UART (`0x9088` data, `0x908c` pending), then whichever the trace reaches
+next.
