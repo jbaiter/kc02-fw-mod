@@ -507,3 +507,76 @@ the USB20 device controller (IRQ 15) beyond a stub. The IRQ names come from
     SPI1 12, LVD 13, CSI 14, USB20 15, JPGA 16, IIC0_IIC1 17, AUADC 18, MCP0 19,
     BTUART 20, DE 21, JPGB 22, ROTATE 23, MCP1 24, MCP2 25, EMI 26, OSDCMP 27,
     PMU 28, USB11 29, USB11MCP 30, TT_MIPI 31
+
+---
+
+## Using the existing Ghidra project (do this first next time)
+
+The firmware is already imported, analysed and **named** -- do not re-derive
+anything with objdump.  The pi session logs show which project is canonical:
+
+    /home/jbaiter/pi-ghidra-cache/artifacts/218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5/project/pi-ghidra.gpr
+
+That artifact id **is our dump's sha256**, so our own image is analysed (a
+sibling build, `d837019d...`, lives in `pi-ghidra-cache-kc02-or1k` and was
+referenced far more often, but it is not our image).
+
+Call the tool like this -- `binary` must be the **whole dump**, and `cacheDir`
+must be the default cache, or it will try to re-import and fail with "no load
+spec found" because a raw `.bin` needs the custom language:
+
+    ghidra({ action: "batch", binary: "firmware/original.bin",
+             cacheDir: "/home/jbaiter/pi-ghidra-cache",
+             operations: [ { action: "decompile", address: "0x..." } ] })
+
+The project's language is `KC02:LE:32:nodelay` with loader base `0x01ffda00`
+(so file offset 0x2600 lands on CPU 0x02000000).  The decompiler output even
+cites SDK prototypes, which is how the display path below was pinned down.
+`tools/kc02_disasm_region.sh` covers regions with no defined function.
+
+## The display path, from the decompiler
+
+    0x02032d58  ax32xx_rotateStart(u8 src_mode, u32 src_width, u32 src_height,
+                    u8 *dst_y, u8 *dst_uv, u32 dst_stride,
+                    u8 *src_y, u8 *src_uv, u32 src_stride, u8 int_en)
+                ROTATECON = src_mode*2 | 1 | int_en<<2;  ROTATESTA = 1;
+                ROTIMGSIZE = ((h & ~1) - 1) << 16 | ((w & ~1) - 1);
+                ROTSRCYADR = src_y & ~0x3f;   ROTSRCUVADR = src_uv & ~0x3f;
+                ROTTGYADR  = dst_y & ~0x1f;   ROTTGUVADR  = dst_uv & ~0x1f;
+                ROTADDRSTRI = (dst_stride >> 2) << 16 | (src_stride >> 2);
+                ax32xx_intEnable(0x17, int_en);        /* 23 = IRQ_ROTATE */
+                ROTATECON |= 0x80000000;               /* start */
+    0x02032cec  ax32xx_rotateCheckBusy()  ->  ROTATECON >> 31
+    0x02044378  hal_rotateKick(src, *src_img, *dst_img)
+                polls CheckBusy ten times **with no delay between attempts** and
+                spins forever in `do {} while (true)` if it is still busy.
+    0x0203a11c  hal_lcdSetVCH(src, layer, x, y, w, h, vch_en) -- writes the
+                in-RAM layer object at *(*(0x020ce960 + (src+1)*4) + 0xc),
+                fields: +0 flag, +1 enable, +3 type, +4 x, +6 y, +8 h, +10 w.
+
+Consequences for the model, all now implemented:
+
+* `0x898c` is **ROTATECON**, not a display enable (an earlier note here was
+  wrong).  Bit 31 must **clear immediately**: a busy window of even one tick is
+  longer than `hal_rotateKick`'s ten back-to-back polls, so the UI hangs
+  permanently.  This is why the app looked stuck.
+* The engine must actually **copy** the source planes to the destination planes,
+  using ROTIMGSIZE and ROTADDRSTRI, or the composed frame never reaches the
+  panel buffer.  Implemented as a straight per-row copy of both planes; the
+  rotation angle is not applied.
+
+## Where the display work actually stands
+
+The app renders the UI for real: `0x02116c80` has held a cleanly drawn camera
+icon with sparkles, captured through `AX3292_FB` (a 640x480 PGM with the four
+panel buffers side by side -- layer0 TL, layer1 TR, layer2 BL, layer3 BR).
+With the audio, engine, SFR-bounds and rotate fixes, the boot is clean, the UART
+prints `memPool blkSize:12 / freeBlks:500`, the mode machine advances and no
+hang remains.
+
+What is *not* yet right: the icon appears and is then cleared (a mode
+transition), and the destination buffer keeps a stale gradient, so the final
+composed screen has not been captured.  The next step is to follow the UI
+renderers (`ui_render_state_0..5`, and the icon drawing around `0x020517e0`)
+through the decompiler to see which buffer they target, rather than inferring it
+from the rotate registers.

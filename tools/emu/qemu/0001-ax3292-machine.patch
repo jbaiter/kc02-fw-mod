@@ -1,7 +1,7 @@
 diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 --- a/hw/or1k/ax3292.c	1970-01-01 01:00:00.000000000 +0100
-+++ b/hw/or1k/ax3292.c	2026-10-14 21:02:09.275023411 +0200
-@@ -0,0 +1,1522 @@
++++ b/hw/or1k/ax3292.c	2026-10-14 21:09:30.831234719 +0200
+@@ -0,0 +1,1613 @@
 +/*
 + * AX3292 (KC02-family camera) machine.
 + *
@@ -88,6 +88,8 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    bool dac_seen;          /* the firmware has configured the DAC */
 +    uint32_t eng_sta;       /* the 0x9880 completion bits */
 +    int eng_countdown;
++    int rot_countdown;      /* ticks until ROTATECON bit 31 clears */
++    bool rot_irq;           /* report the rotation completion as IRQ 23 */
 +    /* Set when the firmware enables the display (0x898c bit 31); frame
 +     * interrupts only make sense from then on, and raising them earlier
 +     * disturbs the boot. */
@@ -298,6 +300,19 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +#define AX3292_ENG_CTRL    0x9884
 +#define AX3292_ENG_STA     0x9880
 +#define AX3292_ENG_DONE    0x00020000u  /* bit 17 */
++/* The rotate/compose engine (SFR1).  The application's display path programs it
++ * at 0x02032d58 -- source Y and UV planes, target Y and UV planes, image size
++ * and both strides -- and then sets bit 31 of ROTATECON to start it.  The
++ * completion poll (0x02032cec) is exactly `mfspr(0x898c) >> 31`, i.e. "still
++ * busy", and 0x02044378 retries that ten times before giving up.  Bit 31 must
++ * therefore clear, or no frame is ever composed. */
++#define AX3292_ROT_CON     0x898c   /* bit 31 = busy / start */
++#define AX3292_ROT_STA     0x89a8   /* written 1 to start */
++#define AX3292_ROT_SRCY    0x8990
++#define AX3292_ROT_SRCUV   0x8994
++#define AX3292_ROT_TGTY    0x8998
++#define AX3292_ROT_TGTUV   0x899c
++#define AX3292_IRQ_ROTATE  23       /* SDK IRQ_ROTATE; enabled in the app's PICMR */
 +#define AX3292_LCD_EV_FRAME 0x04 /* LCDSTA bit 2 */
 +#define AX3292_LCD_EV_OTHER 0x80 /* LCDSTA bit 7 */
 +#define AX3292_TMR_PND_BIT 0x20    /* the ISR clears BIT(5) */
@@ -649,6 +664,17 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +     */
 +    if (s->eng_countdown > 0 && --s->eng_countdown == 0) {
 +        s->eng_sta |= AX3292_ENG_DONE;
++    }
++
++    if (s->rot_countdown > 0 && --s->rot_countdown == 0) {
++        s->sfr[AX3292_ROT_CON >> 2] &= ~0x80000000u;   /* no longer busy */
++        s->sfr[AX3292_ROT_STA >> 2] = 1;
++        if (s->rot_irq) {
++            env->picsr |= 1u << AX3292_IRQ_ROTATE;
++            if (env->picsr & env->picmr) {
++                cpu_interrupt(cs, CPU_INTERRUPT_HARD);
++            }
++        }
 +    }
 +
 +    if (s->dac_seen && s->tick_count % 5 == 0) {
@@ -1145,10 +1171,74 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +        s->sfr[spr >> 2] = v;
 +        return true;
 +
-+    case 0x898C:                    /* the display control/enable register */
++    case 0x898C:                    /* ROTATECON: bit 31 = start / busy */
 +        s->sfr[spr >> 2] = v;
 +        if (v & 0x80000000u) {
++            /*
++             * An earlier reading called this "the display enable" and set
++             * lcd_enabled from it; it is really the rotate engine's control
++             * register.  Both uses are kept: the frame interrupt is still only
++             * raised once the firmware is driving the display pipeline, and the
++             * busy bit now clears so the completion poll at 0x02032cec
++             * succeeds.
++             */
 +            s->lcd_enabled = true;
++            /*
++             * hal_rotateKick (0x02044378) polls this bit ten times *with no
++             * delay between attempts* and spins forever if it is still set, so
++             * the engine has to read as idle.  Leaving it set for even one tick
++             * (10 ms) is enough to hang the UI permanently.
++             */
++            s->sfr[spr >> 2] = v & ~0x80000000u;
++            s->sfr[AX3292_ROT_STA >> 2] = 1;
++
++            /*
++             * Perform the plane copy the hardware would.  Without it the
++             * composed frame never reaches the destination (panel) buffer and
++             * the screen keeps showing whatever was there before -- which is
++             * exactly what the application looked like it was doing.
++             *
++             * Register semantics from the SDK prototype of ax32xx_rotateStart:
++             *   ROTIMGSIZE  = ((h & ~1) - 1) << 16 | ((w & ~1) - 1)
++             *   ROTADDRSTRI = (dst_stride >> 2) << 16 | (src_stride >> 2)
++             * both strides in bytes, both planes copied.
++             */
++            {
++                uint32_t sz   = s->sfr[0x89a0 >> 2];
++                uint32_t strd = s->sfr[0x89a4 >> 2];
++                uint32_t w    = (sz & 0xffff) + 1;
++                uint32_t h    = ((sz >> 16) & 0xffff) + 1;
++                uint32_t dstr = ((strd >> 16) & 0xffff) * 4;
++                uint32_t sstr = (strd & 0xffff) * 4;
++                const uint32_t pairs[2][2] = {
++                    { AX3292_ROT_SRCY, AX3292_ROT_TGTY },
++                    { AX3292_ROT_SRCUV, AX3292_ROT_TGTUV },
++                };
++                int pi;
++
++                if (w > 320) { w = 320; }
++                if (h > 240) { h = 240; }
++                if (dstr == 0) { dstr = w; }
++                if (sstr == 0) { sstr = w; }
++                for (pi = 0; pi < 2; pi++) {
++                    uint32_t src = s->sfr[pairs[pi][0] >> 2];
++                    uint32_t dst = s->sfr[pairs[pi][1] >> 2];
++                    uint32_t r;
++
++                    if (src == 0 || dst == 0) {
++                        continue;
++                    }
++                    for (r = 0; r < h; r++) {
++                        uint32_t so = src + r * sstr;
++                        uint32_t dobj = dst + r * dstr;
++
++                        if (so + w > AX3292_RAM_SIZE || dobj + w > AX3292_RAM_SIZE) {
++                            break;
++                        }
++                        memmove(s->ram_ptr + dobj, s->ram_ptr + so, w);
++                    }
++                }
++            }
 +        }
 +        return true;
 +
@@ -1292,6 +1382,7 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +    s->lcdc_irq = true;     /* the display's frame interrupt; IRQ4 */
 +    s->pulse_irq = -1;
 +    s->pulse_period = 10;
++    s->rot_irq = true;
 +    env = getenv("AX3292_PULSE_IRQ");
 +    if (env != NULL) {
 +        s->pulse_irq = atoi(env);
@@ -1525,8 +1616,8 @@ diff -Naur a/hw/or1k/ax3292.c b/hw/or1k/ax3292.c
 +
 +type_init(ax3292_machine_register_types)
 diff -Naur a/hw/or1k/Kconfig b/hw/or1k/Kconfig
---- a/hw/or1k/Kconfig	2026-10-14 21:02:09.258958247 +0200
-+++ b/hw/or1k/Kconfig	2026-10-14 21:02:09.273534842 +0200
+--- a/hw/or1k/Kconfig	2026-10-14 21:09:30.816757502 +0200
++++ b/hw/or1k/Kconfig	2026-10-14 21:09:30.829919806 +0200
 @@ -22,3 +22,8 @@
      select SERIAL_MM
      select SIFIVE_TEST
@@ -1537,16 +1628,16 @@ diff -Naur a/hw/or1k/Kconfig b/hw/or1k/Kconfig
 +    default y
 +    depends on OR1K
 diff -Naur a/hw/or1k/meson.build b/hw/or1k/meson.build
---- a/hw/or1k/meson.build	2026-10-14 21:02:09.259001649 +0200
-+++ b/hw/or1k/meson.build	2026-10-14 21:02:09.271827511 +0200
+--- a/hw/or1k/meson.build	2026-10-14 21:09:30.816780535 +0200
++++ b/hw/or1k/meson.build	2026-10-14 21:09:30.828520975 +0200
 @@ -5,3 +5,4 @@
  openrisc_ss.add(when: 'CONFIG_OR1K_VIRT', if_true: files('virt.c'))
  
  hw_arch += {'or1k': openrisc_ss}
 +openrisc_ss.add(when: 'CONFIG_AX3292', if_true: files('ax3292.c'))
 diff -Naur a/target/or1k/cpu.h b/target/or1k/cpu.h
---- a/target/or1k/cpu.h	2026-10-14 21:02:09.256960309 +0200
-+++ b/target/or1k/cpu.h	2026-10-14 21:02:09.264621218 +0200
+--- a/target/or1k/cpu.h	2026-10-14 21:09:30.814684453 +0200
++++ b/target/or1k/cpu.h	2026-10-14 21:09:30.820931051 +0200
 @@ -258,6 +258,27 @@
  
      /* Fields from here on are preserved across CPU reset. */
@@ -1576,8 +1667,8 @@ diff -Naur a/target/or1k/cpu.h b/target/or1k/cpu.h
      uint32_t avr;             /* Architecture version register */
      uint32_t upr;             /* Unit presence register */
 diff -Naur a/target/or1k/interrupt.c b/target/or1k/interrupt.c
---- a/target/or1k/interrupt.c	2026-10-14 21:02:09.257005184 +0200
-+++ b/target/or1k/interrupt.c	2026-10-14 21:02:09.269719957 +0200
+--- a/target/or1k/interrupt.c	2026-10-14 21:09:30.814866746 +0200
++++ b/target/or1k/interrupt.c	2026-10-14 21:09:30.826338000 +0200
 @@ -87,10 +87,23 @@
                        cs->cpu_index,
                        int_name[exception]);
@@ -1621,8 +1712,8 @@ diff -Naur a/target/or1k/interrupt.c b/target/or1k/interrupt.c
      }
      if (idx >= 0) {
 diff -Naur a/target/or1k/sys_helper.c b/target/or1k/sys_helper.c
---- a/target/or1k/sys_helper.c	2026-10-14 21:02:09.257036894 +0200
-+++ b/target/or1k/sys_helper.c	2026-10-14 21:02:09.267864488 +0200
+--- a/target/or1k/sys_helper.c	2026-10-14 21:09:30.815171218 +0200
++++ b/target/or1k/sys_helper.c	2026-10-14 21:09:30.824758920 +0200
 @@ -50,6 +50,17 @@
      int idx;
  #endif
@@ -1656,8 +1747,8 @@ diff -Naur a/target/or1k/sys_helper.c b/target/or1k/sys_helper.c
      switch (spr) {
      case TO_SPR(0, 20): /* FPCSR */
 diff -Naur a/target/or1k/translate.c b/target/or1k/translate.c
---- a/target/or1k/translate.c	2026-10-14 21:02:09.257076468 +0200
-+++ b/target/or1k/translate.c	2026-10-14 21:02:09.266489431 +0200
+--- a/target/or1k/translate.c	2026-10-14 21:09:30.815558236 +0200
++++ b/target/or1k/translate.c	2026-10-14 21:09:30.822888031 +0200
 @@ -49,6 +49,8 @@
      uint32_t delayed_branch;
      uint32_t cpucfgr;
