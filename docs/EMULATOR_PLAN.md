@@ -70,6 +70,33 @@ LCD layer regs seen in firmware: 0x8900..0x891C    (SFR1; resolve which block)
 * Ruled out: Unicorn (no OpenRISC backend); Renode (OpenRISC support
   unconfirmed — verify before relying on it).
 
+**M0 result — answered from source.** QEMU exposes *no* hook, so the patch is
+required, and it is small:
+
+* `target/or1k/sys_helper.c` implements a fixed set of architectural SPRs.
+  Anything else is **silently ignored**: `mtspr` drops the write and `mfspr`
+  returns the destination register's previous value. No trap, no callback. The
+  decode is in `target/or1k/translate.c` (`trans_l_mfspr`/`trans_l_mtspr`,
+  `SPR = rA | K`).
+* QEMU's group-0 numbering is the OpenRISC spec, which this chip does not use:
+  QEMU `SR = 0x11`, chip `SR = 0x18`; QEMU `NPC = 0x10`, chip `0x14`; QEMU
+  `PICSR = 0x4802`, chip `0x4808`. EPCR (`0x20`) and ESR (`0x40`) happen to
+  agree. So the firmware's interrupt enable/disable writes would be dropped,
+  and the chip's `NPC` at `0x14` collides with QEMU's `FPCSR`.
+* `qemu-system-or1k` ships `or1k-sim` (DRAM at 0, UART at `0x90000000`) and
+  `virt`; a 64 MiB `-m` covers the firmware's SDRAM at `0x02000000`.
+
+The patch therefore does two things: (1) give the CPU an SPR-bus hook the
+machine services **before** the built-in switch, and (2) implement a machine
+that maps the AX3292 numbers onto QEMU's CPU state (`0x18`→SR, `0x20`→EPCR,
+`0x40`→ESR, `0x14`→NPC, `0x1C`→PPC, `0x50`→EVBAR, shadow GPRs `0x100`+) and the
+SFR groups (≥ `0x8000`) onto device models. Numbers and names come from
+`tools/emu/sfr_map.py`.
+
+Useful scaffolding already exists: `tools/emu/sfr_map.py` + `sfr_map.tsv`
+(1065 SPR numbers with names and confidence) and `tools/emu/spr_census.py`, a
+static census of the firmware's SPR accesses that ranks the device backlog.
+
 RAM is flat: load the boot section at 0x0 if starting from reset, and the
 application at 0x02000000 from the dump. SDRAM is just RAM (8 MiB); the initial
 stack is `0x027FFFFC`; the HAL pool and `.bss` are ordinary RAM.
