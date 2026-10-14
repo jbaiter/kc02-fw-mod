@@ -314,3 +314,76 @@ in a different dispatcher's table.
 * `tools/emu/qemu/README.md` — the detailed findings narrative (long; this
   handover is the condensed version).
 * `docs/EMULATOR_PLAN.md` — plan + M0/M0.5/M0.6/M0.7 results.
+
+---
+
+## Update: the state machine, and a methodology fix
+
+**The methodology fix matters more than the finding.** `l.jal` is opcode **1**, not
+3, in this encoding (`l.j`=0, `l.jal`=1, `l.bnf`=3, `l.bf`=4; `l.movhi`=6,
+`l.ori`=0x2a, `l.addi`=0x27, `l.sw`=0x37, `l.lwz`=0x38, `l.sb`=0x36). Earlier
+caller scans used 3, so they were finding `l.bnf` sites and silently concluding
+"no callers". Any conclusion of the form "nothing calls X" from before this fix
+should be re-derived. The `movhi`+`ori` scans were correct and stand.
+
+### The flag is a state struct, not a boolean
+
+`0x020d1c44` is the base of a structure the owning module uses as:
+
+| offset | use |
+|---|---|
+| +0 | **state**, compared against **1** and **2** |
+| +1 | 0xff / 0 (a "started" marker) |
+| +2 | 0 |
+| +3 | 100 |
+| +4 | 0 |
+| +16, +20 | zeroed words |
+| +24 | read as a byte |
+| +40, +44 | words |
+
+The writes are visible in the module: `0x02051fa4` sets state 0, `0x02051f1c`
+sets state 0 and +2 = 0, `0x02052084` sets **state 2**, and `0x020524c0` is the
+generic `setFlag`.
+
+### What polls it (opcode-1 scan, authoritative)
+
+`getFlag` (`0x020524a0`) is called from **20 sites**, and they are overwhelmingly
+UI code:
+
+    0x02000350 (startup)   0x0200a6f0   0x0200ab20   0x0200af34   0x0200b004
+    0x0200bc4c   0x0200bd10   0x0200c2a8   0x0200d51c   0x0200d774   0x02015d20
+    plus the loop itself (0x0200732c, 0x020073c8, 0x0200742c, 0x020075b4, 0x02020630, 0x020206e0)
+
+`setFlag` (`0x020524c0`) is called from `0x02006ec4`, `0x02007308`, `0x0201f15c`
+and `0x02020608`.
+
+### The loop is UI/display code, not a task
+
+The loop at `0x020071c4` is a **called function** with four callers:
+
+    0x020074dc   0x0200943c   0x0200a6ec   0x0200ce40
+
+Three of those are in the UI region (`0x0200a000..0x0200d800`), and its body
+callee `0x0205b51c` has 32 callers all in the `0x02005xxx` display region. So this
+is the display/UI update loop, and it is gated on the state reaching **2**.
+
+That reframes the blocker: the app is not stuck in an unrelated task, it is stuck
+in the update loop that would paint the UI, waiting for a state transition that
+some other context has to make.
+
+### Next step
+
+The state-2 setter (`0x02052084`, in the function at `0x02051fcc`) still shows no
+*call* anywhere, so it must be entered indirectly. In order:
+
+1. Find `l.jalr` sites whose target is loaded from a global — that is where a
+   runtime-installed handler would live. Look first in the UI/display code
+   (`0x02005xxx`, `0x0200a000..0x0200d800`) and in `0x02006ec4`'s neighbourhood,
+   since that function both calls `setFlag` and is called from the display path
+   (`0x02038474`) and the sensor path (`0x0202f494`).
+2. Note `0x02006ec4`'s callers: `0x02006c74`, `0x02038474`, `0x0202f494`,
+   `0x0203e694`. That mix (display, ADC, USB) is the shape of a *shared status
+   publisher*, which is a good candidate for whoever should move the state along.
+3. `-d exec` restricted with `-dfilter 0x02051e70+0x1000` would settle whether the
+   module executes at all, at the cost of being slow. It is the cheap way to
+   confirm or kill the "unreachable setter" reading.
