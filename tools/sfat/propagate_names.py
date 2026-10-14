@@ -14,6 +14,11 @@ threshold, is doing the discrimination here.
 
 Usage:
     propagate_names.py <functions.tsv> <image> <original-program> <target-program> <out.tsv>
+
+The file->CPU mapping base is per build and must match the Ghidra import base:
+0x01FFDA00 when the application starts at file 0x2600 (original KC02,
+HMOLLIMT Z-12), and 0x01FFDE00 when it starts at file 0x2200 (MYSTILUCK X8D).
+When the two programs were imported at different bases, pass both maps.
 """
 import argparse
 import struct
@@ -37,11 +42,11 @@ def load_functions(path):
     return per_program
 
 
-def fingerprint(image, entry, size):
+def fingerprint(image, entry, size, base=MAP):
     """Masked opcode/register words of the function body, bounded by size."""
     n = max(1, min(WINDOW, size // 4))
     words = []
-    off = entry - MAP
+    off = entry - base
     if off < 0 or off + 4 * n > len(image):
         return None
     for i in range(n):
@@ -57,6 +62,10 @@ def main():
     ap.add_argument('--target-image', type=Path, required=True)
     ap.add_argument('--original', required=True, help='program name of the original')
     ap.add_argument('--target', required=True, help='program name of the target build')
+    ap.add_argument('--original-map', type=lambda v: int(v, 0), default=MAP,
+                    help='file->CPU base of the original (default 0x01FFDA00)')
+    ap.add_argument('--target-map', type=lambda v: int(v, 0), default=MAP,
+                    help='file->CPU base of the target (X8D = 0x01FFDE00)')
     ap.add_argument('--out', type=Path, required=True)
     a = ap.parse_args()
 
@@ -64,19 +73,19 @@ def main():
     orig_img = a.original_image.read_bytes()
     targ_img = a.target_image.read_bytes()
 
-    def index(image, program):
+    def index(image, program, base):
         table = defaultdict(list)
         for entry, name, size in per_program[program]:
             if size < MIN_SIZE:
                 continue
-            fp = fingerprint(image, entry, size)
+            fp = fingerprint(image, entry, size, base)
             if fp is None:
                 continue
             table[fp].append((entry, name, size))
         return table
 
-    orig = index(orig_img, a.original)
-    targ = index(targ_img, a.target)
+    orig = index(orig_img, a.original, a.original_map)
+    targ = index(targ_img, a.target, a.target_map)
 
     pairs, ambiguous, unmapped = [], 0, 0
     for fp, hits in orig.items():

@@ -66,7 +66,7 @@ The staging sector is saved and restored, so the SD card is left unchanged.
 | `cb_mem_rwex` | `0x020414E8` | memory read/write dispatcher |
 | `cb_mem_read` | `0x020413F0` | memory -> USB |
 | `cb_mem_write` | `0x02041468` | USB -> memory |
-| SPI flash reader | `0x02037004` | `spi_read(offset, buffer, count)` |
+| SPI flash reader | `0x02037404` | `spi_read(offset, buffer, count)` |
 
 The SPI reader is located automatically by scanning the loaded application for
 
@@ -86,7 +86,7 @@ address is needed to dump. Located so far:
 | Device | SPI flash reader | Dump SHA-256 |
 |---|---|---|
 | Original HiMont KC02 | `0x0203D38C` | `218c6cdf…` |
-| MYSTILUCK X8D | `0x02037004` | `3ed8c0f1…` |
+| MYSTILUCK X8D | `0x02037404` | `3ed8c0f1…` |
 | HMOLLIMT Z-12 | `0x02035A10` | `10da5dbf…` |
 
 All three have the identical SPI-reader body and the same fixed USB buffers, so

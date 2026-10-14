@@ -14,6 +14,11 @@ Two signals, both from data already produced by the naming pipeline:
 
 Usage:
     new_regions.py <functions.tsv> <names.tsv> <program> <image> [--min-bytes N] [--top N]
+
+--map is the target's file->CPU mapping base and must match the Ghidra import
+base: 0x01FFDA00 (app starts at file 0x2600; original KC02, HMOLLIMT Z-12) or
+0x01FFDE00 (app starts at file 0x2200; MYSTILUCK X8D). Printed addresses are in
+that base, so an X8D imported at 0x01FFDA00 reports address 0x400 low.
 """
 import argparse
 import struct
@@ -53,6 +58,7 @@ def jal_target(image, offset):
 
 
 def main():
+    global MAP
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('functions', type=Path)
     ap.add_argument('names', type=Path)
@@ -60,7 +66,10 @@ def main():
     ap.add_argument('image', type=Path)
     ap.add_argument('--min-bytes', type=int, default=1024)
     ap.add_argument('--top', type=int, default=10)
+    ap.add_argument('--map', type=lambda v: int(v, 0), default=MAP,
+                    help='target file->CPU base (X8D = 0x01FFDE00)')
     a = ap.parse_args()
+    MAP = a.map
 
     anchors = monotonic([(int(r[0], 16), int(r[1], 16), r[2]) for r in load_rows(a.names)])
     names = {}

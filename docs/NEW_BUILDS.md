@@ -80,7 +80,7 @@ because a short prefix collides across unrelated functions and then fails the un
 Two independent checks, both passed:
 
 * **The SPI reader.** Each build's `hal_spiFlashRead` was located earlier by byte signature, with no
-  reference to the name table: `0x0203D38C` (original), `0x02037004` (X8D), `0x02035A10` (Z-12).
+  reference to the name table: `0x0203D38C` (original), `0x02037404` (X8D), `0x02035A10` (Z-12).
   Propagation independently produced exactly those three addresses under exactly that name.
 * **Semantics.** The function is 200 bytes in all three builds and decompiles to the same sequence -
   the same `ax32xx_spi0SendByte` calls with the same command byte `3` and the same address byte
@@ -98,19 +98,40 @@ The sensor and menu work will be in the remainder.
 
 ### Same platform, same mapping
 
-All three images are little-endian **OpenRISC** of the Buildwin AX329x family, and the mapping is
-**identical**:
+All three images are little-endian **OpenRISC** of the Buildwin AX329x family. The mapping has the
+same form but a **per-build base**, because the application starts at a different file offset in
+each container:
+
+| Build | App starts at file | File -> CPU base | Verified by |
+|---|---|---|---|
+| Original KC02 | `0x2600` | `0x01FFDA00` | established mapping |
+| MYSTILUCK X8D | `0x2200` | `0x01FFDE00` | `flash[0x2200]` is byte-identical to the running RAM image at CPU `0x02000000` |
+| HMOLLIMT Z-12 | `0x2600` | `0x01FFDA00` | located SPI reader `0x02035A10` from file `0x038010` |
 
 ```
-CPU = file_offset + 0x01FFDA00        (application)
+CPU = file_offset + base        base = 0x02000000 - app_start_file_offset
 ```
+
+The X8D is the one that differs: its application loads from file `0x2200`, so every flash-derived
+X8D CPU address is `0x400` lower under the original's `0x01FFDA00` base. **Add `0x400` to any X8D
+address that was computed with the original's base.** Confirmed against the device: the black-box
+memory read of the running X8D places the SPI reader at `0x02037404` (not `0x02037004`).
+
+The tools now take the base explicitly and default to the original's:
+
+* `tools/sfat/or1k_function_starts.py --map 0x01FFDE00` (X8D)
+* `tools/sfat/propagate_names.py --target-map 0x01FFDE00` (X8D)
+* `tools/sfat/new_regions.py --map 0x01FFDE00` (X8D)
+
+When a build is (re)imported into Ghidra, use its correct base so the program's addresses and the
+`--map` value agree.
 
 Confirmed for the new builds, not assumed:
 
 * The Z-12's located SPI reader lands at `0x02035A10` from file `0x038010`, giving the constant
   directly.
 * The X8D's `cmd_ctx` at `0x02085E14` is materialised by **15 real code sites**
-  (`l.movhi`/`l.ori` pairs), so the same constant holds there.
+  (`l.movhi`/`l.ori` pairs). RAM addresses are base-independent, so this one is correct as-is.
 
 So addresses in the two new dumps can be read with the tooling already in the repo. Byte-identical
 code is present in all three builds (cross-correlation of 32-byte chunks matches hundreds of
@@ -123,13 +144,22 @@ all of them.
 the public AX3295B kids-camera teardown whose USB IDs and `BuildwinMedia-Player` string match this
 family.
 
-### Corrected: the X8D SPI reader address
+### The X8D SPI reader address
 
-`BLACKBOX_DUMP.md` and `firmware/README.md` listed the X8D reader as `0x02037404`. The signature
-occurs exactly once, at file `0x039604`, so the correct address is **`0x02037004`**. The documented
-value pointed at `0x039A04`, which does not disassemble as the reader at all. The dumped file's
-sha256 matches what the document claims, so this was a stale address rather than a different build.
-The Z-12's documented `0x02035A10` verifies correctly.
+The X8D application loads from file `0x2200`, not `0x2600`, so its file->CPU base is `0x01FFDE00`
+(see the mapping table above). The SPI-reader signature occurs exactly once, at file `0x039604`,
+which is CPU **`0x02037404`** under that base:
+
+```
+0x039604 + 0x01FFDE00 = 0x02037404
+```
+
+That is the address the black-box dump found on the running device, and that file region
+disassembles as the reader (`l.sw -4(r1),r9; l.sw -20(r1),r2; ...`). Mapping the same file offset with
+the original's `0x01FFDA00` base gives `0x02037004`; an earlier note used that base, so it looked at
+file `0x039A04`, which is unrelated code. The dumped file's sha256 matches what the document claims,
+so this was a base error, not a different build. The Z-12's documented `0x02035A10` verifies
+correctly.
 
 Worth noting: the dump tool locates the reader by scanning for the signature rather than by address,
 so dumps were never wrong. Only the documentation was.
@@ -139,7 +169,7 @@ so dumps were never wrong. Only the documentation was.
 | Build | Table base (file) | Table base (CPU) | Record | Records | Validated |
 |---|---|---|---|---|---|
 | Original KC02 | `0x0D3200` | `0x020D3200` | 8-byte `(rel_offset, size)`, 8-byte header | 97 | 84/97 point at an asset magic |
-| MYSTILUCK X8D | `0x07FA00` | `0x0207D600` | 8-byte `(rel_offset, size)`, 8-byte header | 73 | 54/73 |
+| MYSTILUCK X8D | `0x07FA00` | `0x0207D800` | 8-byte `(rel_offset, size)`, 8-byte header | 73 | 54/73 |
 | HMOLLIMT Z-12 | `0x09FE00` | `0x0209D800` | **16-byte `(rel_offset, size, rel_offset+size, extra)`** | 47 | 41/47 |
 
 The Z-12 is the important difference. Its first asset begins immediately after the table
@@ -191,12 +221,12 @@ Roughly a third of the X8D and nearly half of the Z-12 is inserted code, and it 
 
 | Region | Inserted | Unnamed | Signature |
 |---|---|---|---|
-| `0x0204FD48..0x0205C308` | 0xC180 | 99 | `memcpy`, malloc/free, `ax32xx_mjpegEncodeSizeSet`, `audio_overlap_add`, `close` - a media encode/mux block |
-| `0x0200E934..0x020177FC` | 0x1274 | 187 | `win_find_child_by_id` x216, `winSetVisible`, `winSetbgColor` - **UI** |
-| `0x02006C68..0x0200C4A0` | 0x1640 | 66 | `win_find_child_by_id` x154, `winSetVisible` x65 - **UI**, next to `mode_photo_tick` |
-| `0x0201B334..0x0201EAB4` | 0x2860 | 44 | `asset_decode`, `ui_mode_request`, `XMsgQPost`, `game_random_byte` - **mode/UI** |
-| `0x02047BF4..0x02049A60` | 0x1454 | 24 | `hal_iic08bitAddrWrite`, `hal_iic016bitAddrWrite`, `ax32xx_csiEnable`, `hal_gpioWrite` - **sensor** |
-| `0x020394B8..0x0203A3E4` | 0xEFC | 13 | `hal_mjpegCallback_state`, `mjpeg_adapt_encode_quality`, `hal_audc_stamp_*` - MJPEG/audio |
+| `0x02050148..0x0205C708` | 0xC180 | 99 | `memcpy`, malloc/free, `ax32xx_mjpegEncodeSizeSet`, `audio_overlap_add`, `close` - a media encode/mux block |
+| `0x0200ED34..0x02017BFC` | 0x1274 | 187 | `win_find_child_by_id` x216, `winSetVisible`, `winSetbgColor` - **UI** |
+| `0x02007068..0x0200C8A0` | 0x1640 | 66 | `win_find_child_by_id` x154, `winSetVisible` x65 - **UI**, next to `mode_photo_tick` |
+| `0x0201B734..0x0201EEB4` | 0x2860 | 44 | `asset_decode`, `ui_mode_request`, `XMsgQPost`, `game_random_byte` - **mode/UI** |
+| `0x02047FF4..0x02049E60` | 0x1454 | 24 | `hal_iic08bitAddrWrite`, `hal_iic016bitAddrWrite`, `ax32xx_csiEnable`, `hal_gpioWrite` - **sensor** |
+| `0x020398B8..0x0203A7E4` | 0xEFC | 13 | `hal_mjpegCallback_state`, `mjpeg_adapt_encode_quality`, `hal_audc_stamp_*` - MJPEG/audio |
 
 ### HMOLLIMT Z-12
 
@@ -212,13 +242,13 @@ Roughly a third of the X8D and nearly half of the Z-12 is inserted code, and it 
 ### What this already tells us
 
 * **The second sensor is in the sensor blocks**, and they are the only new regions calling the
-  bit-addressed I2C helpers alongside `ax32xx_csiEnable` and GPIO writes: X8D `0x02047BF4`, Z-12
+  bit-addressed I2C helpers alongside `ax32xx_csiEnable` and GPIO writes: X8D `0x02047FF4`, Z-12
   `0x02047274` and `0x02045B58`. Both builds replaced sensor handling next to
   `Sensor_DebugRegister`, which is exactly where a second sensor's probe and init would go.
 * **The row-based menu is in the UI blocks.** The Z-12's sits immediately after an anchor named
   `ui_grid_init` and is dense with `win_find_child_by_id` / `winSetVisible` / `winSetStrInfor`, i.e.
   it drives existing sUI widgets rather than a new toolkit. The X8D has two UI blocks, and the one at
-  `0x0200E934` calls `win_find_child_by_id` **216 times**, which reads like generated per-row code.
+  `0x0200ED34` calls `win_find_child_by_id` **216 times**, which reads like generated per-row code.
 * **The Z-12's 92 KB block is its own library.** It contains the code that references the
   print-module vocabulary found earlier - image credit/ID checks, a chip UUID, key buffers, a
   Bluetooth printer path (`MasfPrinterImageTIMER_REST_MASF`). It is the single largest inserted
@@ -243,7 +273,7 @@ if (uVar2 == 0xa0 || uVar2 == 0x9b) { ... }     /* new */
 ```
 
 ```c
-/* X8D, FUN_ram_02047f4c (4476 bytes) */
+/* X8D, FUN_ram_0204834c (4476 bytes) */
 uVar1 = *(char *)(sensor_base + 0x40);
 if (uVar1 == 0xa0 || uVar1 == 0x9b) { ... }     /* new */
 ```
@@ -251,7 +281,7 @@ if (uVar1 == 0xa0 || uVar1 == 0x9b) { ... }     /* new */
 | Build | Function | Reads ID at | Handles |
 |---|---|---|---|
 | Original KC02 | none | - | - |
-| MYSTILUCK X8D | `FUN_ram_02047f4c` (4476 B) | base `+0x40` | `0xA0`, `0x9B` |
+| MYSTILUCK X8D | `FUN_ram_0204834c` (4476 B) | base `+0x40` | `0xA0`, `0x9B` |
 | HMOLLIMT Z-12 | `FUN_ram_02047344` (2356 B) | base `+0x50` | `0x48` (no-op), `0xA0`, `0x9B` |
 
 `0x48` is the value the original's own sensor item carries (`H63P`, item `+0x48`), so it is the
@@ -263,13 +293,13 @@ Two IDs rather than one means the code accepts either part; whether that is two 
 back sensor or a front/back pair cannot be told from the IDs alone.
 
 Mechanism: both functions take a small `param_1` selector (1..5) and write a per-ID table of two-byte
-`{register, value}` pairs through a helper (`FUN_ram_020479b4` in the X8D, `FUN_ram_02046c34` in the
+`{register, value}` pairs through a helper (`FUN_ram_02047db4` in the X8D, `FUN_ram_02046c34` in the
 Z-12). So the new sensor is supported by added register tables, not by a different driver path - the
 sensor framework itself is unchanged. Both also call `ax32xx_csiEnable(0)` on entry, so they are
 reconfiguring the CSI path as well as the sensor.
 
 Also present in both: five contiguous 20-byte stub functions immediately after `Sensor_DebugRegister`
-(`FUN_ram_02047C60..0x02047CB0` in the X8D), which look like unfilled slots in a sensor ops table
+(`FUN_ram_02048060..0x020480B0` in the X8D), which look like unfilled slots in a sensor ops table
 rather than real code.
 
 ## The row-based menu: found
@@ -292,8 +322,13 @@ functions.
 So the "new row-based menu" is a new screen composed from existing widgets, with rows as child
 elements and a page loader - which is also why it leaves so little new vocabulary in the strings.
 
-The X8D's equivalent is the block at `0x0200E934..0x020177FC`, which calls `win_find_child_by_id`
-216 times, and a second at `0x02006C68..0x0200C4A0` with 154 such calls.
+The X8D's equivalent is the block at `0x0200ED34..0x02017BFC`, which calls `win_find_child_by_id`
+216 times, and a second at `0x02007068..0x0200C8A0` with 154 such calls.
+
+> **Evidence export base.** The decompiled excerpts in `new_builds/evidence/x8d_sensor.txt` were
+exported from the X8D program imported at `0x01FFDA00`, so the `FUN_*` addresses they show are
+`0x400` low. Add `0x400` for the true CPU address (`FUN_ram_02047f4c` in the file is
+`0x0204834c`; `FUN_ram_020479b4` is `0x02047db4`).
 
 ## The Z-12 has a real Bluetooth UART, and only the Z-12
 

@@ -13,6 +13,11 @@ give Ghidra a superset of entry points so its own disassembly and analysis can t
 
 Usage:
     or1k_function_starts.py <image> --first 0x02000000 --last 0x020D0C00 --out starts.txt
+
+The file->CPU mapping base is per build. It is 0x01FFDA00 when the application
+starts at file 0x2600 (original KC02, HMOLLIMT Z-12), but 0x01FFDE00 when it
+starts at file 0x2200 (MYSTILUCK X8D). Pass --map accordingly; the default is
+0x01FFDA00.
 """
 import argparse
 import struct
@@ -20,7 +25,7 @@ from pathlib import Path
 
 JAL = 0x01
 JR = 0x11
-MAP = 0x01FFDA00          # CPU = file + 0x01FFDA00
+MAP = 0x01FFDA00          # CPU = file + MAP; X8D uses 0x01FFDE00
 
 
 def decode(image, first, last):
@@ -45,12 +50,17 @@ def decode(image, first, last):
 
 
 def main():
+    global MAP
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('image', type=Path)
     ap.add_argument('--first', type=lambda v: int(v, 0), default=0x02000000)
     ap.add_argument('--last', type=lambda v: int(v, 0), default=0x020D0C00)
+    ap.add_argument('--map', type=lambda v: int(v, 0), default=MAP,
+                    help='file->CPU mapping base (default 0x01FFDA00; '
+                         'X8D = 0x01FFDE00, app starts at file 0x2200)')
     ap.add_argument('--out', type=Path)
     a = ap.parse_args()
+    MAP = a.map
     image = a.image.read_bytes()
     calls, after_return, n_ret = decode(image, a.first, a.last)
     starts = sorted(calls | after_return)

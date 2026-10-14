@@ -278,8 +278,10 @@ analyzer settings. Entry candidates have to be decoded from the instruction enco
 (`tools/sfat/or1k_function_starts.py`). And `l.jr rB` keeps `rB` in bits 15..11, not 25..21 - reading
 the wrong field reports zero returns and makes an image look like it has no epilogues.
 
-Also found and fixed: the documented X8D SPI-reader address was `0x02037404`, the real one is
-`0x02037004`. Dumps were never affected because the tool locates it by signature.
+Also corrected: the X8D application loads from file `0x2200`, not `0x2600`, so its file-to-CPU base
+is `0x01FFDE00` and the SPI reader is `0x02037404` (not `0x02037004`). Every X8D address computed
+with the original's `0x01FFDA00` base is `0x400` low. Dumps were never affected because the tool
+locates the reader by signature.
 
 ## 22. USB feature feasibility: WebUSB and printer class
 

@@ -27,7 +27,7 @@ and `SFAT` @ `0x304`, one mass-storage interface (4), and the same
 | Non-`0xFF` bytes | 3.17 MB | 1.90 MB | 3.77 MB |
 | `l.jr r9` functions | ≈2632 | ≈2169 | ≈2420 |
 | JPEG SOI markers | 27 | 41 | 87 |
-| SPI flash reader | `0x0203D38C` | `0x02037004` | `0x02035A10` |
+| SPI flash reader | `0x0203D38C` | `0x02037404` | `0x02035A10` |
 | Update filename | ASCII `DestBin.bin` | ASCII `DestBin.bin` | **UTF-16** `DestBin.bin` |
 | Platform strings | `329X_V1.0.0`, `JRX_20220309` | — | `329X_V1.0.0`, `JRX_20220309` |
 
