@@ -613,3 +613,45 @@ should let bit 8 be used and the composed frame be scanned out.
 `ax32xx_lcdIRQHandler` also shows the callback table: `JPEG_ram_020d7582` with
 callbacks at `_2362_4_`, `_2366_4_`, `_2370_4_`, `_2374_4_`, `_2378_4_` -- i.e. a
 structure at 0x020d7582 with a callback array around offset 0x2360/0x2370.
+
+## Tooling note: Ghidra's coverage gap, and the helper for it
+
+Ghidra has no function defined over much of the LCD/panel driver, so
+`decompile` on e.g. `0x02035758` fails with "Function not found".  That is not a
+setup problem: those routines are reached only through computed pointers, so
+analysis never defined them.  The repo already provides the right tool:
+
+    tools/kc02_disasm_region.sh 0x02035000 700 /tmp/lcd_region.tsv
+
+which imports a read-only copy into a throwaway project with
+`KC02:LE:32:nodelay`, loader base `0x01ffda00`, and linearly disassembles with
+DumpShim.java.  Its output is `addr <tab> mnemonic <tab> text <tab> hex`.
+
+## The panel, as far as it is decoded
+
+The whole LCD block is:
+
+    0xa800  LCDCTRL   the app writes 0x10 (seen), 0x11, 0
+    0xa804  LCDCMD    commands such as 0x809f00 / 0x80889f00; bit 31 = busy,
+                      polled by `do { v = 0xa804; } while (v < 0)`
+    0xa808, 0xa80c    timing/config
+    0xa854, 0xa858    the command data / index pair (0xa858 carries the command)
+    0xa85c..0xa86c    more config, written once
+    GPIO4 bit 0x10 = panel select, bit 4 = clock -- so it is a bit-banged
+    interface, with a blocking wait on bit 31 after every command
+
+The init sequence writes its commands from a loaded table, so the command
+*values* need reading from that table (or from a memory dump at the right
+moment) to recover the command set.
+
+## Next step, concretely
+
+1. Recover the panel command set: the values written to `0xa858` in
+   `0x02035200..0x02035840`, which are loaded from a table just before each
+   write.  Then find the command that carries the framebuffer base address --
+   that is the surface the panel scans out, and therefore the one to capture.
+2. Model the panel: select/clock via GPIO4, accept commands on `0xa858`, clear
+   bit 31 of `0xa804` so the blocking polls return, and support the kick
+   handshake.  Once that works, switch `AX3292_LCD_EV_FRAME` back to `0x08`
+   (the true vsync event, whose callback runs `ax32xx_lcdKick`) and the composed
+   frame should scan out.
