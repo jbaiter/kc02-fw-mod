@@ -580,3 +580,36 @@ composed screen has not been captured.  The next step is to follow the UI
 renderers (`ui_render_state_0..5`, and the icon drawing around `0x020517e0`)
 through the decompiler to see which buffer they target, rather than inferring it
 from the rotate registers.
+
+## The LCD driver, decompiled
+
+    0x02035400  ax32xx_lcdInit()      sysClkSet(0x19,1); msDelay(0x14);
+                                      LCDCTRL(0xa800) = 0; LCDCMD(0xa804) = 0x809f00;
+    0x02035200  panel command write   toggles GPIO4 bit 0x10 (select) and bit 4,
+                                      writes the command to 0xa858, then polls
+                                      0xa804 *while bit 31 is set* (command busy)
+    0x0203584c  ax32xx_lcdIRQHandler() -- the IRQ4 handler, reading LCDSTA 0xa804:
+
+        0x80 -> clear with 0x8000, one callback
+        0x04 -> clear with 0x400,  one callback
+        0x02 -> clear with 0x200,  one callback
+        0x08 -> clear with 0x800,  one callback, AND if (0xa800 & 0x30) == 0x10
+                                   calls ax32xx_lcdKick()
+        0x01 -> clear with 0x100,  one callback
+        0x100010 together -> clear with 0x1000, one callback
+
+    Every bit is cleared by writing it eight positions higher -- the rule this
+    document already recorded, now confirmed from the driver.
+
+**The model raises bit 2, but the true frame/vsync event is bit 8.**  Bit 8 was
+tried and it *regresses*: UART falls from 142 B to 56 B and the layer buffers go
+empty, because bit 8's path calls `ax32xx_lcdKick()`, which drives the panel, and
+the panel is not emulated.  Bit 2's callback is a different one, but it keeps the
+pipeline running far enough to render UI content, so bit 2 stays for now.  **The
+panel is the missing peripheral.**  Modelling it (the GPIO4-bit-banged command
+interface on 0xa858/0xa854, the command set, and the kick handshake) is what
+should let bit 8 be used and the composed frame be scanned out.
+
+`ax32xx_lcdIRQHandler` also shows the callback table: `JPEG_ram_020d7582` with
+callbacks at `_2362_4_`, `_2366_4_`, `_2370_4_`, `_2374_4_`, `_2378_4_` -- i.e. a
+structure at 0x020d7582 with a callback array around offset 0x2360/0x2370.
