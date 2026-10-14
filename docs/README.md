@@ -61,6 +61,7 @@ later work replaced.
 | [USB_FEATURES.md](USB_FEATURES.md) | WebUSB and USB printer-class feasibility, with the descriptor and BOS requirements |
 | [CHILD_MODE.md](CHILD_MODE.md) | Child-lock / child-mode patch and its validation |
 | [HARDWARE_SESSION_GUIDE.md](HARDWARE_SESSION_GUIDE.md) | Step-by-step guide for attaching to the camera and dumping |
+| [EMULATOR_PLAN.md](EMULATOR_PLAN.md) | Plan for an AX3292 firmware emulator (Stage 3: app boot + display + SPI flash) |
 
 ## Historical
 
