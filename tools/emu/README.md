@@ -70,5 +70,9 @@ which needs the timer interrupt. See [`qemu/README.md`](qemu/README.md) for the
 device list and the M0.6 section of
 [`docs/EMULATOR_PLAN.md`](../../docs/EMULATOR_PLAN.md).
 
-Next: timer + interrupt controller (to leave the idle loop), then the
-framebuffer dump (display), then SPI flash bulk reads and the keypad.
+Next: the timer + interrupt controller are modelled and the interrupt is
+delivered, but servicing it reaches the boot SRAM's exception machinery, which
+the boot ROM installs via `exception_init`. So the next step is to start from
+the **reset vector** and let the boot code set that up before it calls the
+application, rather than entering the application directly. After that: the
+framebuffer dump (display) and the keypad.

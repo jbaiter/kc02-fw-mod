@@ -15,6 +15,15 @@ established from the firmware image and the vendor SDK, not assumed:
 | 2 | hardcoded big-endian (`mo_endian()` returns `MO_BE`) | **little-endian** (reset SR has `LEE`) | `little_endian` flag; `mo_endian()` honours it for fetch and data |
 | 3 | unknown SPRs are **silently ignored** — `mtspr` drops the write, `mfspr` returns the destination register's stale value, with no machine hook | every peripheral is an SPR | `spr_hook` on the CPU, consulted before the built-in switch |
 | 4 | group-0 SPR numbers are the OpenRISC spec | different numbering: `SR 0x18`, `NPC 0x14`, `PPC 0x1C`, `EPCR 0x20`, `ESR 0x40`, `EVBA 0x50`, `VR 0x00` | the machine remaps them onto QEMU's CPU state |
+| 5 | exceptions vector to `exception << 8` | an **8-byte stub table** indexed by exception, based at `EVBAR` | `vect_pc = env->evbar + (exception << 3)` |
+
+Difference 5 is easy to miss: upstream's `or1k_reset 0x100`, `or1k_bus_error 0x200`, …
+layout is a vector table this chip does not have. Its dispatch is twelve 8-byte stubs
+at `0x174`..`0x1cc` (VMA), each loading an exception code into `r3` and jumping to a
+common entry at `0x1d4`. The repo's SLEIGH language had the generic or1k vectors
+*removed* for the same reason (see `docs/BOOT_MAP.md`). The machine sets
+`evbar = 0x16c` at reset, which is what the boot ROM does before entering the
+application.
 
 The vendor compiler emits the `__sfr` byte address verbatim as the SPR number, so
 `SPR = (group << 11) | (index << 2)`; `tools/emu/sfr_map.py` holds the table and
@@ -34,7 +43,24 @@ the evidence for each entry.
   Set `AX3292_SPR_TRACE=0` to silence it, `AX3292_SPR_TRACE_LIMIT=N` to bound it
   (default 300000), and `AX3292_ENTRY=0x...` to override the entry.
 
+## Timers, interrupts and `-icount`
+
+Two runtime details matter once the firmware starts polling for a tick:
+
+* **Pass `-icount`.** A tight firmware loop (`while (1) delay(50);`) executes as one
+  chain of translation blocks, and QEMU only processes `QEMU_CLOCK_VIRTUAL` timers
+  when it leaves that chain — so a normal run delivered exactly *one* interrupt and
+  then stopped. `-icount shift=6` ties the virtual clock to the instruction count and
+  checks timers at every block boundary, which also makes runs deterministic.
+* **BQL discipline.** Timer callbacks run with the big QEMU lock held; SPR helpers do
+  not. So `cpu_interrupt()` from a helper needs `bql_lock()`/`bql_unlock()` (as
+  QEMU's own PICMR code does) while the timer callback must not take it. Getting this
+  backwards asserts in one direction or the other.
+
 ## Status
+
+The firmware boots through its whole early init; the live UI needs the timer
+interrupt, which is where work stopped. What runs today is described below.
 
 Modelled, each added only when the trace blocked on it:
 
@@ -44,6 +70,8 @@ Modelled, each added only when the trace blocked on it:
 | SPI0 flash | `0x9000`–`0x925c` | byte mode with a command interpreter (0x9F/0x05/0x03/0x0B), plus DMA. Backed by the dump. The vendor SDK's `SPIFSADR = 0x6000000\|0` means the DMA **continues** the address the byte stream shifted in — that is the subtlety that matters |
 | LCD | `0xA800`–`0xA87f` | generic register file; `LCDSTA` bit 31 reads set (the driver polls it as the completion flag) |
 | everything else | `>= 0x8000` | generic read-back-what-was-written store, which the GPIO and LCD read-modify-write code needs |
+| PIC | `0x4800`–`0x4814` | mask/status/version, plus the timer's IRQ0. QEMU models a PIC too but at different offsets (its PICSR is `0x4802`, the chip's `0x4808`) |
+| TMR0 | `0x9800`–`0x98a8` | period/counter/control and the `BIT(5)` pending flag the ISR clears; drives IRQ0 on a 10 ms virtual tick |
 
 What the firmware does now, from a cold start at `0x0200046C`:
 
@@ -58,8 +86,12 @@ LCD panel init: LCDCTRL, LCDSTA, LCDCMD sequence
 ```
 
 It gets through all of that and stops in the idle loop, which only the **timer
-interrupt** can break out of. That is the next device (and then the interrupt
-controller, the framebuffer dump, and the keypad).
+interrupt** can break out of. The timer and PIC are modelled well enough that the
+interrupt is delivered and serviced, but it is dispatched through the boot SRAM's
+exception stubs -- whose full set-up the boot ROM performs via `exception_init`,
+which starting at the application entry skips. Hence the next step: start from the
+reset vector and let the boot code set the exception machinery up, rather than
+entering the application directly.
 
 ## Finding a stall
 

@@ -149,6 +149,36 @@ The firmware now sits in its idle loop, which only the timer interrupt can
 break out of. That is the next step, followed by the interrupt controller, the
 framebuffer dump and the keypad.
 
+**M0.7 result — the interrupt path, and why it needs the boot ROM.** The timer
+and PIC are modelled (IRQ0, the bit the firmware enables, is raised on a 10 ms
+virtual tick) and the interrupt is delivered and serviced. Three more findings,
+two of them about the emulator and one about the chip:
+
+* **This chip has no OpenRISC vector table.** Upstream vectors to
+  `exception << 8`. The AX3292 dispatches through twelve 8-byte stubs at VMA
+  `0x174`..`0x1CC`, each loading an exception code into `r3` and jumping to a
+  common entry at `0x1D4`; that calls the boot section's dispatcher at `0x1BB4`,
+  which jumps on to `0x1720`. So `vect = EVBAR + exception * 8`, and the machine
+  sets `EVBAR = 0x16C` at reset — which is what the boot ROM does before entering
+  the application. (The repo's SLEIGH language had the generic or1k vectors
+  removed for the same reason.)
+* **Timers need `-icount`.** A tight idle loop executes as one chain of
+  translation blocks, and QEMU only processes `QEMU_CLOCK_VIRTUAL` timers when it
+  leaves that chain, so an ordinary run delivered exactly **one** interrupt and
+  then stopped. `-icount shift=6` ties the virtual clock to the instruction count,
+  checks timers at every block boundary, and makes runs deterministic.
+* **BQL discipline.** Timer callbacks run with the big QEMU lock held; SPR helpers
+  do not. `cpu_interrupt()` from a helper therefore needs `bql_lock()` (as QEMU's
+  own PICMR code does) while the timer callback must not take it. Backwards in
+  either direction asserts.
+
+The interrupt is now delivered, but servicing it lands in the boot SRAM's
+exception machinery — which the boot ROM initialises via `exception_init`. Starting
+at the application entry skips that. So the next step is not another device: it is
+to **start from the reset vector** and let the boot code do its job (SDRAM and
+clock set-up, exception installation) before it calls the application at
+`0x0200046C`, instead of entering the application directly.
+
 RAM is flat: load the boot section at 0x0 if starting from reset, and the
 application at 0x02000000 from the dump. SDRAM is just RAM (8 MiB); the initial
 stack is `0x027FFFFC`; the HAL pool and `.bss` are ordinary RAM.
