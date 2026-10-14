@@ -387,3 +387,74 @@ The state-2 setter (`0x02052084`, in the function at `0x02051fcc`) still shows n
 3. `-d exec` restricted with `-dfilter 0x02051e70+0x1000` would settle whether the
    module executes at all, at the cost of being slow. It is the cheap way to
    confirm or kill the "unreachable setter" reading.
+
+---
+
+## BREAKTHROUGH: the UI renders
+
+The blocker was the **audio engine**, not the display. With three fixes the app now
+boots through to the UI and **paints real graphics**:
+
+1. **Model the DAC (IRQ 6).** `sfx_play_asset` (`0x020071c4`, called by UI code)
+   plays the startup jingle and spins while `media_busy_get()` (`0x020524a0`,
+   byte `0x020d1c44`) is set. That flag is driven by the audio state machine at
+   `0x02051fcc`, whose `event & 4` branch is the "playback finished" transition.
+   The event comes from the generated DAC ISR, `ax32xx_dacIRQHandler`
+   (SDK `ax32xx_dac.c`), which tests `DACOBSTA` (`0x9150`) bits 1/2/4 in order and
+   calls the registered handler with that bit. My model returned a stale store for
+   `DACOBSTA` — always zero — so the handler never fired and the jingle never
+   ended. The DAC now free-runs once configured (TMR0 `0x9140` write latches it),
+   raising the buffer-empty bit; the guest acks through `DACOBSYNC` (`0x914c`),
+   which keeps it level-triggered rather than a storm. **This is the fix that
+   unblocked everything.**
+2. **Model the engine at `0x9880`/`0x9884`.** `0x0206874c..0x02068784` starts it
+   via `0x9884` and polls **bit 17 of `0x9880`**, timing out against the
+   free-running counter at `0x9908`. Nothing in the SDK headers names it, so it is
+   modelled by behaviour: a started operation completes two ticks later, and bit
+   17 is cleared by writing it back.
+3. **Bound the SFR backing store.** The firmware writes SPR `0x100010` (it
+   computes SPR numbers from registers); my generic store indexed
+   `sfr[spr >> 2]` unchecked and **segfaulted QEMU**. The chip silently ignores
+   unimplemented SPRs — a behaviour already documented in this file — so the model
+   now does the same. In gdb this was unambiguous:
+   `ax3292_reg_write(spr=1048592) at ax3292.c:1148  s->sfr[spr >> 2] = v;`
+
+Timeline now (`AX3292_PROBE=0x020d1c44,0x020ccd50,0x020ccd58,0x020d416e`):
+
+    t=1     (10 ms)   state 0, ui_mode 0x0c (none), desc 0
+    t=19    (190 ms)  state 0 -> 1
+    t=22    (220 ms)  state 1 -> 0                      audio done
+    t=182   (1820 ms) desc 0 -> 0x020c4c18              a mode descriptor is installed
+    t=2105 (21050 ms) desc -> 0x020c3334                mode switched
+    t=2107 (21070 ms) state 0 -> 1, then 1 -> 0         and round again
+
+and the UART is no longer just the two-line banner:
+
+    sdram *saddr=0x2103980,*eaddr=0x27fec00
+    RC128k=0x708bfe
+    memPool blkSize:12
+    memPool freeBlks:500 / maxBlks:500 / minFreeBlks:500
+
+### Framebuffers
+
+The four layer buffers at `0x02104080`, `0x02116c80`, `0x0215a480`, `0x0216e480`
+(320x240, one byte per pixel, `0x12c00` apart) are populated by the application
+itself. `layer1` holds **a rendered camera icon with sparkles** — a real UI asset,
+drawn by the app's own graphics code — which is the clearest proof yet that the
+portrait is right end to end. `layer3` holds a partially drawn white panel with a
+dark rule. `layer0` and `layer2` are still empty at the time of the dump.
+
+    AX3292_RAMDUMP=/tmp/ram.bin ...   then slice 0x02100000+0x12c00 per layer
+
+### Next steps
+
+1. Run longer and dump repeatedly: the mode machine is still cycling, so the
+   screen is mid-transition at 45 s. Establish what it settles into.
+2. **Composite the layers** the way the panel does and expose that as the
+   machine's display, so the emulator can be screenshotted directly instead of
+   reading buffers out of a RAM dump.
+3. Wire the keypad for real interaction (`AX3292_KEYFILE`), then the buttons can
+   drive the menu.
+4. The audio path is faked (a free-running DAC). It is enough to unblock the
+   engine, but `audio_format_setup` (`0x02056f28`) does parse real WAV headers, so
+   playback content is not modelled at all.
