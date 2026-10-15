@@ -28,7 +28,7 @@ def build(output, prefix):
              '-fdata-sections', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables',
              '-Wall', '-Wextra', '-Werror', '-I'+str(ROOT/'include')]
     sources = [ROOT/'boards/start.S', ROOT/'boards/ax3292.c',
-               *(ROOT/'src'/n for n in ('ui.c','paint.c','theme.c','input.c','storage.c','sd_hw.c'))]
+               *(ROOT/'src'/n for n in ('ui.c','paint.c','theme.c','input.c','storage.c','sd_hw.c','crc.c'))]
     manifests = {}
     for board_id, board in enumerate(BOARDS):
         folder = output/board

@@ -231,6 +231,45 @@ NAK behaviour, and whether two independent bulk endpoints work at all remain
 unverified: the vendor SDK documents EP0 plus EP1..EP4, but only EP0 and EP1 are
 demonstrated by the stock firmware.
 
+## The card update path
+
+`src/update_sd.c` finds `FIRMWARE.IMG` in the card root, validates it, and hands
+it to the shared update engine. Discovery and validation are separate from
+installation, so a UI can offer a version for confirmation without touching
+anything:
+
+| Result | Meaning |
+|---|---|
+| `READY` | Found and valid, and nothing has been written |
+| `OK` | Committed |
+| `NO_CARD` | No volume mounted |
+| `BUSY` | The host owns the card; not ours to read |
+| `NO_FILE` | No `FIRMWARE.IMG` in the root |
+| `BAD_FILE` | Size, header, board or CRC rejected |
+| `NO_WRITER` | Validated, and there is no NOR backend |
+| `DENIED` | No physical confirmation, or no verified recovery gate |
+| `STALE` | Older than what is already installed |
+| `NO_BOOT` | Neither slot holds a bootable record |
+| `IO` | A read failed, or an erase, program or verify did |
+
+`READY` and `OK` are deliberately different words. A check that reported `OK`
+could be read as "installed", which is the one thing it must never imply.
+
+The reader is a bounded streaming source: a 1.5 MiB image costs no 1.5 MiB
+buffer. The engine reads its source in two ascending passes, so a rewind reopens
+the file rather than pretending to seek, and a forward skip reads and discards in
+fixed steps.
+
+Three refusals carry the weight:
+
+- **`BUSY` while the host owns the card.** Two writers on one FAT is precisely
+  what the ownership rule exists to prevent, so the update does not even read
+  the file.
+- **`NO_WRITER` rather than a refusal or a success.** The image is good and this
+  build cannot install it. Saying so is more useful than either extreme.
+- **`DENIED` without physical confirmation and a verified recovery gate.** This
+  adapter cannot supply either, so it cannot install on its own.
+
 ## Debug authorization
 
 USB cannot grant debug. The USB device implements no vendor request that
@@ -312,7 +351,8 @@ target unit and the stock updater has been proven with an unchanged image.
 |---|---|
 | `~/.cache/kc02-emulator/bu-trap-final` | Breakpoint installed, hit, stepped over, removed and restored; PC sequence matches the assembly in `bringup/selftest.S`, including the taken branch at `+0x10` and the indirect return |
 | `~/.cache/kc02-emulator/bu-usbwait-final` | USB build reaches and holds the polled wait, gate reports code 1 with no card |
-| `~/.cache/kc02-emulator/msc-selftest` | Relocation, checkpoint cycle and the trap/step sequence, `failures: 0x0` |
+| `~/.cache/kc02-emulator/msc-selftest2` | Relocation, checkpoint cycle and the trap/step sequence, `failures: 0x0` |
+| `~/.cache/kc02-emulator/msc-update3` | A card carrying both `DESTBIN.BIN` and `FIRMWARE.IMG` driven through the guest's own SD driver and FAT reader: recovery code 6, and the update path reporting `READY`, version 12 and 10000 validated payload bytes |
 | `~/.cache/kc02-emulator/msc-card` | Gate finds a candidate on a FAT16 card and reports code 6 with fingerprint `0x95eceee0`, matching the host's `zlib.crc32` |
 
 The self-test drives the real RSP engine, the real vectors, the real step logic
@@ -320,6 +360,17 @@ and the real monitor, and checks the exact bytes the monitor puts on the wire.
 Only the transport is stood in for, because the emulator does not model the USB
 controller. Every expectation has its own failure bit, so a failure names itself,
 and the run records `failures: 0x0`.
+
+The card update path is covered by `tests/test_update_sd.py`, which builds a real
+FAT16 card on disk, streams `FIRMWARE.IMG` out of it, and drives the engine into
+a model NOR: version and board reported for confirmation, a lowercase filename
+treated as the same file, nine malformed or mismatched images refused before
+anything is written, a corrupt payload caught by CRC, a card owned by the host
+refused, `NO_WRITER` for a validated file with no backend, the confirmation and
+recovery gates enforced, a real two-pass update committing the inactive slot
+with the active slot untouched, a stale image refused, flash with no bootable
+slot refused, a truncated read and a refused program both committing nothing, and
+the card still readable afterwards.
 
 Mass storage is covered on the host by `tests/test_msc.py`, where a peer acts as
 the USB host: it builds real CBWs, drains the bulk-IN pipe and parses the CSW,
@@ -366,6 +417,9 @@ during this milestone, which is why `le_hex` and `mem_hex` exist in the tests.
   recovery path.
 - The LUN's `sync` callback is absent, so SYNCHRONIZE CACHE reports success
   without proving anything reached the card.
+- The update path has no NOR backend, so it can validate and refuse but never
+  install. Everything downstream of `update_sd_apply`'s writer check is untested
+  on real flash, and the engine's tests use a model.
 - The stage owns the card for the length of the gate. Nothing else has started
   yet, so that is safe today, but a future application launch must not run
   concurrently with an unremounted card.

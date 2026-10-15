@@ -245,11 +245,16 @@ generation, slot index, payload length, payload CRC32, release version, and CRC3
 of the first 28 bytes. The metadata sector and slot index must agree. The payload
 has a fixed RAM load/entry address; no executable header comes from a theme.
 
-The SD adapter must find `/firmware.img` (FAT name `FIRMWARE.IMG`), offer its
-version and compatibility for confirmation, and refuse update while the PC
-owns the card. The WebUSB adapter must stage a complete bounded upload before
-validation, disconnect debug/MSC ownership, obtain the same physical consent,
-and report read-back/commit outcome. Neither adapter is implemented yet.
+The SD adapter now exists in `src/update_sd.c`: it finds `FIRMWARE.IMG` in the
+card root, reports version, board mask and size for confirmation without writing
+anything, refuses while the host owns the card, validates the whole file before
+the engine may mutate a byte, and reports `NO_WRITER` when there is no NOR
+backend rather than a refusal or a success. A successful check reports `READY`,
+never `OK`, so validation cannot be mistaken for installation.
+
+The WebUSB adapter is still to write. It must stage a complete bounded upload
+before validation, disconnect debug and mass-storage ownership, obtain the same
+physical consent, and report the read-back and commit outcome.
 
 ### Legacy `DestBin.bin` candidate inspection
 

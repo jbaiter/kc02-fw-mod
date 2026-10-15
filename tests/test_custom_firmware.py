@@ -53,7 +53,7 @@ def native(tmp_path_factory):
     out=tmp_path_factory.mktemp('luma-core')/'core.so'
     subprocess.run(['cc','-std=c99','-Wall','-Wextra','-Werror','-O1','-g',
                     '-fsanitize=undefined','-fno-sanitize-recover=undefined','-shared','-fPIC',
-                    '-I'+str(FW/'include'),*(str(FW/'src'/n) for n in ('theme.c','input.c','storage.c','ui.c','paint.c','debug.c','update.c')),
+                    '-I'+str(FW/'include'),*(str(FW/'src'/n) for n in ('theme.c','input.c','storage.c','ui.c','paint.c','debug.c','update.c','crc.c')),
                     str(FW/'tests/rsp_harness.c'), '-o',str(out)],check=True)
     lib=C.CDLL(str(out))
     lib.theme_default.argtypes=[C.POINTER(Theme)]

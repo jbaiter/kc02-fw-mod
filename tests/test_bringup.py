@@ -43,7 +43,7 @@ def native(tmp_path_factory):
                     '-I'+str(FW/'include'),
                     *(str(FW/'src'/s) for s in ('debug.c','monitor.c','usb_device.c','ax_usb.c','destbin.c',
                                                 'storage.c','recover.c','or1k_decode.c',
-                                                'msc.c','msc_medium.c')),
+                                                'msc.c','msc_medium.c','update.c','update_sd.c','crc.c')),
                     str(FW/'tests/bringup_harness.c'),'-o',str(libpath)],check=True)
     lib = C.CDLL(str(libpath))
     lib.bringup_h_setup.argtypes = [C.c_void_p,C.c_void_p]

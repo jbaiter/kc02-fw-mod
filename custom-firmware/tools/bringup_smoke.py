@@ -31,6 +31,7 @@ MAGIC = 0x4c554d41
 SELFTEST_PC_COUNT = 7
 STAGE_MONITOR_UP = 3
 RECOVER_NO_CARD = 1
+UPDATE_READY = 0
 
 
 def check_selftest(words):
@@ -60,7 +61,7 @@ def check_selftest(words):
                 wire_head=hex(words[17]))
 
 
-def exercise(qemu, build, output, wait=False, card=None):
+def exercise(qemu, build, output, wait=False, card=None, expect_version=None):
     manifest = json.loads((build/'manifest.json').read_text())
     raw = build/'bringup.ram.bin'
     if hashlib.sha256(raw.read_bytes()).hexdigest() != manifest['sha256']:
@@ -113,9 +114,18 @@ def exercise(qemu, build, output, wait=False, card=None):
                 report.update(last=list(last), usb_enumerated=False,
                               reason='AX3292 USB controller is not part of the QEMU machine',
                               recovery_code=last[5], card_units=last[6],
-                              candidate_crc=hex(last[15]))
+                              candidate_crc=hex(last[15]),
+                              update_result=last[11], update_version=last[12],
+                              update_bytes=last[13], update_validated=last[14])
                 if wait:
                     assert last[5] == RECOVER_NO_CARD, last
+                if expect_version is not None:
+                    # The card carries a FIRMWARE.IMG, so the update path must
+                    # have found and validated it. READY, not OK: nothing has
+                    # been installed.
+                    assert last[11] == UPDATE_READY, last
+                    assert last[12] == expect_version, last
+                    assert last[14] == 1, last
             else:
                 wait_for(proc, lambda: sample()[19] == 8, 'self-test to finish', timeout=60)
                 last = sample()
@@ -155,9 +165,14 @@ def main():
                    help='USB-attached build: prove a clean polled wait')
     p.add_argument('--card', type=Path,
                    help='SD image holding DESTBIN.BIN, to exercise the recovery gate')
+    p.add_argument('--expect-update-version', type=int,
+                   help='assert FIRMWARE.IMG on the card validates as this version')
     a = p.parse_args()
-    summary = exercise(a.qemu, a.build, a.output.resolve(), a.usb_wait, a.card)
-    keys = ('recovery_code', 'card_units', 'candidate_crc', 'relocated_bytes', 'selftest')
+    summary = exercise(a.qemu, a.build, a.output.resolve(), a.usb_wait, a.card,
+                       a.expect_update_version)
+    keys = ('recovery_code', 'card_units', 'candidate_crc', 'update_result',
+            'update_version', 'update_bytes', 'update_validated',
+            'relocated_bytes', 'selftest')
     print(json.dumps({k: summary[k] for k in keys if k in summary}, indent=2))
 
 

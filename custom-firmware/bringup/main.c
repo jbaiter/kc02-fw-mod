@@ -7,6 +7,7 @@
 #include "recover.h"
 #include "sd_hw.h"
 #include "msc_medium.h"
+#include "update_sd.h"
 #ifndef USB_VID
 #define USB_VID 0
 #define USB_PID 0
@@ -51,6 +52,8 @@ void bringup_selftest_start(Monitor *);
 void bringup_step_caller(void);
 #endif
 static u32 capacity;
+/* The board this stage runs on. Original KC02 only for now. */
+static const u32 kind_bit=1;
 static void delay(unsigned n) { while (n--) { __asm__ volatile("l.nop"); } }
 static u32 read_reg(void *ctx, unsigned reg) { (void)ctx; return REG(reg); }
 static void write_reg(void *ctx, unsigned reg, u32 value) { (void)ctx; REG(reg)=value; }
@@ -233,6 +236,19 @@ void bringup_main(void)
         bringup_probe[5]=code;
         bringup_probe[6]=recovery.capacity;
         bringup_probe[15]=recovery.info.crc;
+    }
+    /* The field-update path: find FIRMWARE.IMG and validate it read-only. The
+     * version and size land in the observation words so an operator can see
+     * what is on the card. Nothing is written: there is still no NOR driver,
+     * and the engine's confirmation and recovery gates have not been given. */
+    {
+        static UpdateSdReport candidate;
+        UpdateSdResult found=kind_bit ? update_sd_check(&volume,kind_bit,&candidate)
+                                      : UPDATE_SD_NO_CARD;
+        bringup_probe[11]=found;
+        bringup_probe[12]=candidate.info.version;
+        bringup_probe[13]=candidate.info.bytes;
+        bringup_probe[14]=candidate.validated;
     }
     bringup_probe[1]=2;
     /* Mass storage starts with the card owned locally, so a host that

@@ -170,7 +170,7 @@ register-endianness limitation still applies. See [emulator GDB notes](../tools/
 | GDB over USB | RSP engine, 35 little-endian registers, real `gdb-multiarch` test, plus trap-based breakpoints and single-step validated in QEMU | USB controller enumeration on hardware, verified cache maintenance, AX3292 HP shadow-bank capture, timer-interrupt halt |
 | USB mass storage | Composite descriptors, BOT/SCSI engine, ownership gate with NOT READY semantics, and host-side protocol and endpoint tests | Controller enumeration and timing on real hardware; a faulted staging buffer is a fail-closed guess |
 | WebUSB flashing | Shared image/update engine in NOR tests | Vendor interface/BOS/Windows binding, staging protocol, browser client, physical confirmation and real recovery |
-| `/firmware.img` SD update | Shared image/update engine in NOR tests | File discovery/staging adapter, recovery loader, NOR driver, real interrupted-update tests |
+| `/firmware.img` SD update | Root-file discovery, full validation, `READY`/`OK` separation, ownership refusal, and a real card-driven update into a model NOR | NOR driver and recovery loader; real interrupted-update tests on hardware |
 | Stock-compatible first installation | Offline `DestBin` candidate packer and read-only candidate validation | SD recovery reader, NOR writer, external SPI recovery proof, real stock-updater test with an unchanged image |
 | Boots on actual boards | Compiler validated earlier; application tested only in QEMU | Clock/SDRAM, pinmux, panel and sensor initialization, protected recovery installation |
 

@@ -158,13 +158,3 @@ void print_row(const u16 *image, unsigned y, Ink ink, u8 dots[384])
             (darkness > (unsigned)bayer[(y&3)*4+(x&3)]*16+7 ? 31 : 0);
     }
 }
-u32 crc32(const u8 *p, unsigned size)
-{
-    u32 crc = ~0u;
-    unsigned i;
-    while (size--) {
-        crc ^= *p++;
-        for (i = 0; i < 8; i++) { crc = (crc >> 1) ^ (0xedb88320u & (0u-(crc&1))); }
-    }
-    return ~crc;
-}
