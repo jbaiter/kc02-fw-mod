@@ -637,14 +637,33 @@ void luma_bench_once(void *buffer)
     {
         /* Packet input words start at offset 1792 (the harness ABI). */
         volatile u32 *in = (volatile u32 *)((u8 *)buffer + 1792u);
-        u32 exp = in[5], gain = in[6];
         luma_test_pattern = in[7];
+    }
+    hardware_init();   /* this now runs the software-IIC sensor bring-up */
+
+    /* Exposure and gain are applied HERE, after the bring-up.
+     *
+     * They used to be written BEFORE hardware_init(), which meant the function
+     * pointer at ops+0xc70 was read out of an unpopulated struct -- the call was
+     * guarded by `if (wr)` and silently did nothing. Measured: exposures 0x04,
+     * 0x40 and 0x100 all produced the same plane brightness (90.2 / 91.9 / 90.9),
+     * proving the write never took effect. The sensor therefore ran at whatever
+     * exposure its init table left, which is why the capture was a flat, bright,
+     * blown-out field while the stock's own preview is dark (rows 0-119 mean
+     * 21-34) and carries real vertical detail.
+     *
+     * The ops struct at 0x020e32a0 is populated by sensor_init via sensor_bringup,
+     * so by this point ops+0xc70 is the real fp_exp_gain_wr. */
+    {
+        volatile u32 *in = (volatile u32 *)((u8 *)buffer + 1792u);
+        u32 exp = in[5], gain = in[6];
         if (exp) {
             void (*wr)(u32, u32) = *(void (**)(u32, u32))(0x020e32a0u + 0xc70u);
             if (wr) { wr(exp, gain ? gain : 0x100u); }
         }
     }
-    hardware_init();   /* this now runs the software-IIC sensor bring-up */
+    /* Let the new exposure take effect before the frame is read. */
+    for (volatile unsigned s = 0; s < 200000u; ++s) { lcd_service(); csi_service(); }
     /* Which branch did the VENDOR autodetect take? sensor_autocheck (0x02058170)
      * loads the real H63P ops struct to 0x020e32a0 and the 100-entry init table
      * to 0x020d1ea0 ONLY when its own ID probe matches. Otherwise it quietly
