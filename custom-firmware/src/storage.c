@@ -108,53 +108,186 @@ int fat_read(Fat *f, const char *name, u8 *out, unsigned cap, unsigned *size)
     *size = bytes;
     return 1;
 }
-int fat_create(Fat *f, const char *name, const u8 *bytes, unsigned size)
+static int fat_mark(Fat *f, u32 cluster, u16 value)
 {
-    u8 n[11], block[512], e[32];
-    unsigned i, slot, start = 0, run = 0, needed, done = 0;
-    if (!f->mounted || !f->writable || f->owner != SD_LOCAL || !size || size > 512*1024 ||
-        !name83(name,n) || entry(f,n,e,0) != 0) { return 0; }
-    for (slot = 0; slot < f->root_entries; slot++) {
-        if (!(slot%16) && !f->read(f->root+slot/16,block)) { return 0; }
-        if (!block[(slot%16)*32] || block[(slot%16)*32] == 0xe5) { break; }
+    u8 block[512];
+    unsigned mirror;
+    for (mirror = 0; mirror < f->fats; mirror++) {
+        u32 lba = f->fat + mirror*f->fat_sectors + cluster/256;
+        if (!f->read(lba,block)) { return 0; }
+        set16(block+(cluster%256)*2,value);
+        if (!f->write(lba,block)) { return 0; }
     }
-    if (slot == f->root_entries) { return 0; }
-    needed = (size+f->spc*512-1)/(f->spc*512);
+    return 1;
+}
+int fat_free_chain(Fat *f, u32 start)
+{
+    u8 block[512];
+    u32 cluster = start, visits = 0;
+    while (cluster >= 2 && cluster < f->clusters+2 && visits++ < f->clusters) {
+        u16 next;
+        if (!f->read(f->fat+cluster/256,block)) { return 0; }
+        next = get16(block+(cluster%256)*2);
+        if (!fat_mark(f,cluster,0)) { return 0; }
+        if (next >= 0xfff8) { break; }
+        cluster = next;
+    }
+    return 1;
+}
+/* A directory slot: the existing entry when replacing, else the first free one. */
+static int find_slot(Fat *f, const u8 name[11], unsigned *slot, u32 *old_start)
+{
+    u8 block[512], e[32];
+    unsigned i, free_slot = f->root_entries, existing = 0;
+    int found = entry(f,name,e,&existing);
+    *old_start = 0;
+    if (found < 0) { return 0; }
+    if (found == 1) {
+        *old_start = get16(e+26);
+        *slot = existing;
+        return 1;
+    }
+    for (i = 0; i < f->root_entries; i++) {
+        if (!(i%16) && !f->read(f->root+i/16,block)) { return 0; }
+        if (!block[(i%16)*32] || block[(i%16)*32] == 0xe5) { free_slot = i; break; }
+    }
+    if (free_slot == f->root_entries) { return 0; }
+    *slot = free_slot;
+    return 1;
+}
+int fat_write_begin(Fat *f, const char *name, u32 size, FatWrite *w)
+{
+    u8 n[11], block[512];
+    unsigned i, slot = 0;
+    u32 run = 0, old_start = 0;
+    if (!w) { return 0; }
+    w->open = 0;
+    if (!f->mounted || !f->writable || f->owner != SD_LOCAL || !size ||
+        size > FAT_WRITE_MAX || !name83(name,n)) { return 0; }
+    if (!find_slot(f,n,&slot,&old_start)) { return 0; }
+    for (i = 0; i < 11; i++) { w->name[i] = n[i]; }
+    w->volume = f;
+    w->slot = slot;
+    w->replacing = old_start != 0;
+    w->old_start = old_start;
+    w->size = size;
+    w->written = 0;
+    w->sector_used = 0;
+    w->failed = 0;
+    w->needed = (size + f->spc*512u - 1u)/(f->spc*512u);
+    /* The old chain is still marked, so this scan skips it by construction. */
+    w->start = 0;
     for (i = 2; i < f->clusters+2; i++) {
         if (i == 2 || !(i%256)) { if (!f->read(f->fat+i/256,block)) { return 0; } }
         if (!get16(block+(i%256)*2)) {
-            if (!run) { start = i; }
-            if (++run == needed) { break; }
+            if (!run) { w->start = i; }
+            if (++run == w->needed) { break; }
         } else { run = 0; }
     }
-    if (run != needed) { return 0; }
-    /* File data before allocation, directory entry last. On any write error,
-     * make the mount read-only; don't attempt hazardous rollback writes. */
-    f->writable = 0;
-    for (i = 0; i < needed*f->spc; i++) {
-        unsigned j;
-        for (j = 0; j < 512; j++) { block[j] = done < size ? bytes[done++] : 0; }
-        if (!f->write(f->data+(start-2)*f->spc+i,block)) { return 0; }
-    }
-    for (i = start; i < start+needed; i++) {
-        unsigned mirror;
-        for (mirror = 0; mirror < f->fats; mirror++) {
-            u32 lba = f->fat+mirror*f->fat_sectors+i/256;
-            if (!f->read(lba,block)) { return 0; }
-            set16(block+(i%256)*2,i+1 < start+needed ? i+1 : 0xffff);
-            if (!f->write(lba,block)) { return 0; }
+    if (run != w->needed) { return 0; }
+    w->open = 1;
+    return 1;
+}
+int fat_write_data(FatWrite *w, const u8 *bytes, unsigned size)
+{
+    Fat *f;
+    unsigned i, sector_index;
+    if (!w || !w->open || !bytes) { return 0; }
+    if (w->written + size > w->size) { w->failed = 1; return 0; }
+    f = w->volume;
+    for (i = 0; i < size; i++) {
+        w->sector[w->sector_used++] = bytes[i];
+        w->written++;
+        if (w->sector_used == sizeof(w->sector)) {
+            sector_index = (w->written/512u) - 1u;
+            if (!f->write(f->data + (w->start-2)*f->spc + sector_index, w->sector)) {
+                w->failed = 1;
+                return 0;
+            }
+            w->sector_used = 0;
         }
     }
-    if (!f->read(f->root+slot/16,block)) { return 0; }
-    for (i = 0; i < 32; i++) { e[i] = 0; }
-    for (i = 0; i < 11; i++) { e[i] = n[i]; }
-    e[11] = 0x20;
-    set16(e+24,0x5821); /* Fixed development timestamp: no RTC policy yet. */
-    set16(e+26,start); set32(e+28,size);
-    for (i = 0; i < 32; i++) { block[slot%16*32+i] = e[i]; }
-    if (!f->write(f->root+slot/16,block)) { return 0; }
-    f->writable = 1;
     return 1;
+}
+int fat_write_end(FatWrite *w)
+{
+    Fat *f;
+    u8 block[512], e[32];
+    unsigned i, sector_index;
+    if (!w || !w->open) { return 0; }
+    f = w->volume;
+    if (w->written != w->size) { fat_write_abort(w); return 0; }
+    if (w->sector_used) {
+        for (i = w->sector_used; i < sizeof(w->sector); i++) { w->sector[i] = 0; }
+        sector_index = (w->written - w->sector_used)/512u;
+        if (!f->write(f->data + (w->start-2)*f->spc + sector_index, w->sector)) {
+            w->failed = 1;
+            fat_write_abort(w);
+            return 0;
+        }
+        w->sector_used = 0;
+    }
+    for (i = w->start; i < w->start+w->needed; i++) {
+        if (!fat_mark(f,i,(u16)(i+1 < w->start+w->needed ? i+1 : 0xffff))) {
+            w->failed = 1;
+            fat_write_abort(w);
+            return 0;
+        }
+    }
+    /* The single commit point: one directory sector makes the new file live. */
+    if (!f->read(f->root+w->slot/16,block)) {
+        w->failed = 1;
+        fat_write_abort(w);
+        return 0;
+    }
+    if (w->replacing) {
+        for (i = 0; i < 32; i++) { e[i] = block[(w->slot%16)*32+i]; }
+    } else {
+        for (i = 0; i < 32; i++) { e[i] = 0; }
+        for (i = 0; i < 11; i++) { e[i] = w->name[i]; }
+        e[11] = 0x20;
+        set16(e+24,0x5821); /* Fixed development timestamp: no RTC policy yet. */
+    }
+    set16(e+26,w->start);
+    set32(e+28,w->size);
+    for (i = 0; i < 32; i++) { block[(w->slot%16)*32+i] = e[i]; }
+    if (!f->write(f->root+w->slot/16,block)) {
+        w->failed = 1;
+        fat_write_abort(w);
+        return 0;
+    }
+    w->open = 0;
+    /* Only now is the old chain unreferenced, so only now may it be freed. */
+    if (w->replacing && w->old_start >= 2) {
+        if (!fat_free_chain(f,w->old_start)) { f->writable = 0; }
+    }
+    return 1;
+}
+void fat_write_abort(FatWrite *w)
+{
+    if (!w || !w->open) { return; }
+    /* The directory entry was never touched, so the previous file is intact.
+     * Releasing the new allocation is all that is left to do. */
+    if (!fat_free_chain(w->volume,w->start)) { w->volume->writable = 0; }
+    w->open = 0;
+    if (w->failed) { w->volume->writable = 0; }
+}
+int fat_replace(Fat *f, const char *name, const u8 *bytes, unsigned size)
+{
+    FatWrite w;
+    int ok;
+    if (!fat_write_begin(f,name,size,&w)) { return 0; }
+    ok = fat_write_data(&w,bytes,size) && fat_write_end(&w);
+    if (!ok) { fat_write_abort(&w); }
+    return ok;
+}
+int fat_create(Fat *f, const char *name, const u8 *bytes, unsigned size)
+{
+    u8 n[11], e[32];
+    /* Create-only: replacing a capture would be a bug, so this path refuses an
+     * existing file and fat_replace is the one that may overwrite. */
+    if (!f || !f->mounted || !name83(name,n) || entry(f,n,e,0) != 0) { return 0; }
+    return fat_replace(f,name,bytes,size);
 }
 void photo_name(char out[13], unsigned id)
 {

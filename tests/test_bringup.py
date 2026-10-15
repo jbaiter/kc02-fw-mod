@@ -861,6 +861,17 @@ def card_with(tmp_path, entries):
     return image
 
 
+# C stores these function pointers, so Python must not collect the callbacks
+# while a mount is still using them. Nothing here is a firmware concern: it is a
+# property of passing Python closures into a C library through ctypes.
+_callback_keepalive = []
+
+
+def keep(callback):
+    _callback_keepalive.append(callback)
+    return callback
+
+
 def card_reader(image):
     data=image.read_bytes()
 
@@ -885,7 +896,7 @@ def recover(h,image):
     report=_Report()
     # The caller owns the volume, so ownership and the mount stay in one place.
     volume=C.create_string_buffer(4096)
-    result=h.recover_check(volume,card_reader(image),image.stat().st_size//512*512,
+    result=h.recover_check(volume,keep(card_reader(image)),image.stat().st_size//512*512,
                            C.byref(report))
     return result,report
 
@@ -903,7 +914,7 @@ def test_recover_no_card_and_unreadable_card(h,tmp_path,codes):
     def dead(sector,out): return 0
     report=_Report()
     volume=C.create_string_buffer(4096)
-    assert h.recover_check(volume,dead,1<<20,C.byref(report))==codes['RECOVER_NO_FILESYSTEM']
+    assert h.recover_check(volume,keep(dead),1<<20,C.byref(report))==codes['RECOVER_NO_FILESYSTEM']
     assert h.recover_check(volume,dead,0,C.byref(report))==codes['RECOVER_NO_CARD']
     assert h.recover_check(volume,C.cast(None,SectorRead),1<<20,C.byref(report))==codes['RECOVER_NO_CARD']
     assert h.recover_check(C.cast(None,C.c_void_p),dead,1<<20,C.byref(report))==codes['RECOVER_NO_CARD']
@@ -973,7 +984,7 @@ def test_recover_read_only_mount_refuses_creation(h,tmp_path,codes):
     # never publish a file, so the gate cannot modify the card it inspects.
     image=card_with(tmp_path,[('DESTBIN.BIN',b'x')])
     fat=C.create_string_buffer(4096)
-    assert h.fat_mount(fat,card_reader(image),C.cast(None,SectorWrite),image.stat().st_size)
+    assert h.fat_mount(fat,keep(card_reader(image)),C.cast(None,SectorWrite),image.stat().st_size)
     assert h.fat_create(fat,b'NEW.BIN',b'y',1)==0
     assert recover(h,image)[0]==codes['RECOVER_CANDIDATE_INVALID']  # 1 byte is not 4 MiB
 
@@ -981,10 +992,10 @@ def test_recover_read_only_mount_refuses_creation(h,tmp_path,codes):
 def test_stream_reader_streams_without_whole_file_buffer(h,tmp_path):
     payload=bytes(range(256))*300
     image=card_with(tmp_path,[('BIG.BIN',payload)])
-    read=card_reader(image)
+    read=keep(card_reader(image))
     data=image.read_bytes()
     fat=C.create_string_buffer(4096)
-    assert h.fat_mount(fat,read,C.cast(None,SectorWrite),len(data))
+    assert h.fat_mount(fat,keep(read),C.cast(None,SectorWrite),len(data))
     stream=C.create_string_buffer(4096)
     assert h.fat_stream_open(fat,b'BIG.BIN',stream)
     out=(U8*512)()
@@ -1000,9 +1011,9 @@ def test_stream_reader_streams_without_whole_file_buffer(h,tmp_path):
 
 def test_stream_reader_rejects_short_chain_and_bad_names(h,tmp_path):
     image=card_with(tmp_path,[('BIG.BIN',b'z'*70000)])
-    read=card_reader(image)
+    read=keep(card_reader(image))
     data=image.read_bytes()
     fat=C.create_string_buffer(4096)
-    assert h.fat_mount(fat,read,C.cast(None,SectorWrite),len(data))
+    assert h.fat_mount(fat,keep(read),C.cast(None,SectorWrite),len(data))
     for name in (b'big.bin',b'MISSING.BIN',b'../BIG.BIN',b'TOOLONGNAME.BIN'):
         assert h.fat_stream_open(fat,name,C.create_string_buffer(4096))==0

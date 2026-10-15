@@ -14,7 +14,31 @@ typedef struct {
     int mounted, writable;
     SdOwner owner;
 } Fat;
+#define FAT_WRITE_MAX (512u*1024u)
 int fat_mount(Fat *fs, SectorRead read, SectorWrite write, u32 capacity);
+/* Bounded streaming writer, for files too large to hold in RAM.
+ *
+ * Allocation happens while the file being replaced is still marked in use, so a
+ * free-cluster scan can never land inside the old chain and the new chain can
+ * never overlap it. The directory entry is the single commit point: an abort
+ * frees the new allocation and leaves the old file exactly as it was, so an
+ * interrupted upload does not damage what is already on the card. */
+typedef struct {
+    Fat *volume;
+    u8 name[11];
+    u32 start, needed, written, size, old_start;
+    unsigned slot, replacing, open, failed;
+    unsigned sector_used;
+    u8 sector[512];
+} FatWrite;
+int fat_write_begin(Fat *fs, const char *name, u32 size, FatWrite *w);
+int fat_write_data(FatWrite *w, const u8 *bytes, unsigned size);
+int fat_write_end(FatWrite *w);
+void fat_write_abort(FatWrite *w);
+/* Creates or replaces a root file in one call. */
+int fat_replace(Fat *fs, const char *name, const u8 *bytes, unsigned size);
+/* Frees a chain whose directory entry has already been published. */
+int fat_free_chain(Fat *fs, u32 start);
 /* Forward-only streaming reader for files too large to buffer. One 512-byte
  * staging sector plus one cached FAT sector; no allocation. */
 typedef struct {

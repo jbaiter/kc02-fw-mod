@@ -107,6 +107,24 @@ int theme_parse(Theme *out, const u8 *bytes, unsigned size)
     *out = t; /* Invalid input never partially mutates the active theme. */
     return 1;
 }
+/* Header-only check, so a 230 KB image can be validated from its first 54
+ * bytes and its declared length. bmp_read needs a full 320x240 pixel buffer,
+ * which is exactly what a bounded upload path must not have to allocate. */
+int bmp_check(const u8 *b, unsigned size)
+{
+    unsigned start;
+    i32 height;
+    if (size < 54 || b[0] != 'B' || b[1] != 'M' || le32(b+14) != 40 ||
+        le32(b+18) != LW || le16(b+26) != 1 || le16(b+28) != 24 || le32(b+30)) { return 0; }
+    height = (i32)le32(b+22);
+    start = le32(b+10);
+    if ((height != LH && height != -LH) || start < 54 || start > size ||
+        LW*LH*3u > size-start) { return 0; }
+    /* The declared file size must match what the caller actually has: a header
+     * that claims more than the file holds would truncate the image. */
+    if (le32(b+2) && le32(b+2) != size) { return 0; }
+    return 1;
+}
 int bmp_read(const u8 *b, unsigned size, u16 *out)
 {
     unsigned x, y, start;

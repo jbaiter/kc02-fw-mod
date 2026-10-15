@@ -49,6 +49,8 @@ extern const char *const ink_names[3];
 void theme_default(Theme *t);
 int theme_parse(Theme *out, const u8 *bytes, unsigned size);
 int bmp_read(const u8 *bytes, unsigned size, u16 *out);
+/* Validates a BMP header and declared length without decoding any pixels. */
+int bmp_check(const u8 *bytes, unsigned size);
 unsigned bmp_write(const u16 *pixels, u8 *out, unsigned cap);
 void app_init(App *a, const Platform *p, u32 now);
 void app_event(App *a, const Platform *p, Key key, int held, u32 now,

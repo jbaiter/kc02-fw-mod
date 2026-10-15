@@ -93,6 +93,12 @@ def make_card(tmp_path, entries):
     return image
 
 
+# ctypes collects a callback when Python stops referencing it, even though C
+# still holds its pointer. These mounts outlive the helper, so the callbacks do
+# too. A test-harness concern, not a firmware one.
+_keepalive = []
+
+
 def mount(native, image, write=None):
     data = image.read_bytes()
 
@@ -103,6 +109,7 @@ def mount(native, image, write=None):
         C.memmove(out, data[sector*512:sector*512+512], 512)
         return 1
     volume = C.create_string_buffer(8192)
+    _keepalive.append((read, write, data))
     assert native.fat_mount(volume, read, write or C.cast(None, SectorWrite),
                             image.stat().st_size)
     return volume, read
@@ -329,6 +336,7 @@ def test_a_reader_that_fails_midway_does_not_commit(native, tmp_path):
         C.memmove(out, data[sector*512:sector*512+512], 512)
         return 1
     volume = C.create_string_buffer(8192)
+    _keepalive.append(flaky)
     assert native.fat_mount(volume, flaky, C.cast(None, SectorWrite), len(data))
     nor, flash, previous, writes = nor_model()
     report = Report()
