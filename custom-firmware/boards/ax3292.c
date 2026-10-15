@@ -697,7 +697,27 @@ void luma_bench_once(void *buffer)
      * produced, which was blank because sensor_bringup() runs later in
      * hardware_init and the imager was not streaming yet. That is why every
      * bounded run reported an all-fill or all-zero capture plane. */
-    for (volatile unsigned spin=0; spin<4000000u; spin++) { lcd_service(); csi_service(); }
+    /* Settle for a wall-clock duration, not a fixed spin count.
+     *
+     * This loop used to run 4,000,000 iterations of lcd_service()/csi_service(),
+     * which is not a known amount of TIME and in practice was not long enough: the
+     * digest below then measured an early frame, while the panel -- which runs the
+     * real firmware_main loop for seconds under takeover -- showed a converged,
+     * live scene. Every experiment was being judged against the wrong moment.
+     *
+     * Waits on the real millisecond clock instead, and reports the elapsed time
+     * back through luma_clock_delta (out[25] as clock_ms_across_spin) so the host
+     * can confirm the settle actually happened. */
+    {
+        AxTime t={0,0,0};
+        u32 t0=ax_time_ms(&t,REG(0x9908));
+        for (;;) {
+            lcd_service();
+            csi_service();
+            luma_clock_delta = ax_time_ms(&t,REG(0x9908)) - t0;
+            if (luma_clock_delta >= 3000u) { break; }
+        }
+    }
     luma_beacon[28]=luma_csi_seen;       /* OR of every b00c value seen      */
     luma_beacon[29]=luma_csi_calls;      /* polls that found events          */
     luma_beacon[30]=luma_csi_rearms;     /* re-arms performed                */
