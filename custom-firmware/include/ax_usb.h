@@ -22,7 +22,7 @@
 #define LUMA_AX_USB_H
 #include "usb_device.h"
 #define AX_EP_QUEUE 2048
-#define AX_USB_ENDPOINTS 2
+#define AX_USB_ENDPOINTS 3
 enum {
     AX_USB_CON0=0x9840, AX_USB_CON1=0x9844, AX_USB_EP0=0x984c,
     AX_USB_ADDRESS=0xa000, AX_USB_POWER=0xa004,
@@ -61,10 +61,11 @@ typedef struct {
 typedef struct {
     UsbDevice *usb;
     AxUsbIo io;
-    unsigned state;
+    unsigned state, response_size, response_sent;
     u8 ep0[USB_DEVICE_PACKET] __attribute__((aligned(32)));
     AxUsbEndpoint msc;
     AxUsbEndpoint debug;
+    AxUsbEndpoint update;
 } AxUsb;
 /* The caller supplies an initialized PHY, disabled caches and an exclusive
  * controller. No flash, SD, interrupts, app callbacks or unbounded waits. */
@@ -75,6 +76,10 @@ int ax_usb_msc_send(void *context, const u8 *data, unsigned size);
 int ax_usb_msc_receive(void *context, u8 *out, unsigned size);
 void ax_usb_msc_stall(void *context, int in);
 void ax_usb_msc_reset(void *context);
+/* WebUSB uploads arrive on the third endpoint. They are consumed as a byte
+ * stream, not as packets, because the container parser decides the framing. */
+unsigned ax_usb_update_available(AxUsb *);
+int ax_usb_update_receive(AxUsb *, u8 *out, unsigned size);
 /* True when at least a whole command block has arrived on the storage
  * endpoint, so the caller knows a complete CBW can be read. */
 int ax_usb_msc_cbw_ready(AxUsb *);

@@ -200,7 +200,17 @@ void bringup_h_trap(const u32 *gprs, u32 pc, u32 sr)
 }
 void bringup_h_authorize(void) { monitor_authorize(&monitor); }
 void bringup_h_reset(void) { usb_device_reset(&usb); }
-int bringup_h_setup(const u8 s[8], u8 out[64]) { return usb_device_setup(&usb,s,out); }
+int bringup_h_setup(const u8 s[8], u8 out[64])
+{
+    const u8 *reply;
+    unsigned size=0, i;
+    int n=usb_device_setup(&usb,s);
+    if (n<=0) { return n; }
+    reply=usb_device_response(&usb,&size);
+    if ((unsigned)n>size) { return -1; }
+    for (i=0; i<(unsigned)n; i++) { out[i]=reply[i]; }
+    return n;
+}
 int bringup_h_ack(void) { return usb_device_status_complete(&usb); }
 int bringup_h_feed(const u8 *p, unsigned n) { return usb_device_receive(&usb,p,n); }
 int bringup_h_queue(const u8 *p, unsigned n) { return usb_device_send(&usb,p,n); }

@@ -71,11 +71,16 @@ Implemented today:
 | Mass storage, SCSI transparent BOT | 0, class 08/06/50 | 1 IN/OUT |
 | Local GDB transport | 1, vendor class FF (subclass 0x4c) | 2 IN/OUT |
 
-Still to add, and with an endpoint budget that has to be spent deliberately:
+| WebUSB update/staging | 2, vendor class FF, subclass 0x55 | 3 IN/OUT |
 
-| Function | Interface | Endpoints |
-|---|---|---|
-| WebUSB update/staging | 2, vendor class FF | 3 IN/OUT |
+The update function exists, with its own subclass so a browser can find it
+without guessing. A BOS with the WebUSB platform capability advertises it, which
+required `bcdUSB` to become 0x0210: a BOS cannot exist on a 1.1 device.
+`GET_URL` is implemented and answers with an https URL when one is configured.
+
+Nothing is hosted, so `iLandingPage` is 0 and no URL is claimed. A browser client
+is still to write, and Windows will need an MS OS descriptor binding WinUSB to
+the two vendor interfaces while leaving mass storage with its disk driver.
 
 The WebUSB interface cannot be the mass-storage interface: browsers protect
 class 08 and the OS owns it. WebUSB must not expose the debugger's arbitrary
@@ -252,9 +257,18 @@ the engine may mutate a byte, and reports `NO_WRITER` when there is no NOR
 backend rather than a refusal or a success. A successful check reports `READY`,
 never `OK`, so validation cannot be mistaken for installation.
 
-The WebUSB adapter is still to write. It must stage a complete bounded upload
-before validation, disconnect debug and mass-storage ownership, obtain the same
-physical consent, and report the read-back and commit outcome.
+The WebUSB adapter exists in `src/webusb.c`. It stages a complete bounded
+container on the card under its own name, verifying each file's CRC as the bytes
+arrive, and only then validates and commits:
+
+- Firmware goes through the same `image_validate`/`update_apply` engine as the SD
+  path, and is still refused without a device-local confirmation and a verified
+  recovery gate. A browser cannot confirm its own update.
+- Themes are validated as a set and committed images-first, config-last, so an
+  interruption leaves a theme that still renders.
+
+Staging under `UPDATE.NEW` rather than the final name is deliberate: a
+half-received upload must never overwrite a good image or a working theme.
 
 ### Legacy `DestBin.bin` candidate inspection
 

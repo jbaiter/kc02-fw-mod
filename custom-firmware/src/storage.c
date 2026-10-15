@@ -289,6 +289,70 @@ int fat_create(Fat *f, const char *name, const u8 *bytes, unsigned size)
     if (!f || !f->mounted || !name83(name,n) || entry(f,n,e,0) != 0) { return 0; }
     return fat_replace(f,name,bytes,size);
 }
+void fat_name_dotted(const char padded[11], char out[13])
+{
+    unsigned i, stem=0, last=0, suffix;
+    for (i=0; i<8; i++) { if (padded[i]!=' ') { stem=i+1; } }
+    for (i=8; i<11; i++) { if (padded[i]!=' ') { last=i+1; } }
+    suffix=last>8 ? last-8 : 0;
+    for (i=0; i<stem; i++) { out[i]=padded[i]; }
+    if (suffix) {
+        out[stem]='.';
+        for (i=0; i<suffix; i++) { out[stem+1+i]=padded[8+i]; }
+        out[stem+1+suffix]=0;
+    } else {
+        out[stem]=0;
+    }
+}
+static int upper_name(const char *in, char out[13])
+{
+    unsigned i, n = 0;
+    while (in[n]) { n++; }
+    if (!n || n > 12) { return 0; }
+    for (i = 0; i <= n; i++) {
+        char c = in[i];
+        if (c >= 'a' && c <= 'z') { c = (char)(c - 'a' + 'A'); }
+        out[i] = c;
+    }
+    return 1;
+}
+int file_reader_open(FileReader *r, Fat *volume, const char *name)
+{
+    if (!r || !volume) { return 0; }
+    r->open = 0;
+    if (!upper_name(name, r->name)) { return 0; }
+    if (!fat_stream_open(volume, r->name, &r->stream)) { return 0; }
+    r->volume = volume;
+    r->size = r->stream.size;
+    r->at = 0;
+    r->open = 1;
+    return 1;
+}
+void file_reader_close(FileReader *r)
+{
+    if (r) { r->open = 0; r->at = 0; }
+}
+int file_reader_read(FileReader *r, u32 offset, u8 *out, unsigned size)
+{
+    u8 discard[256];
+    if (!r || !r->open) { return 0; }
+    if (offset < r->at) {
+        /* Forward-only stream: reaching backwards means starting again. */
+        Fat *volume = r->volume;
+        file_reader_close(r);
+        if (!file_reader_open(r, volume, r->name)) { return 0; }
+    }
+    while (r->at < offset) {
+        u32 want = offset - r->at;
+        if (want > sizeof(discard)) { want = sizeof(discard); }
+        if (fat_stream_read(&r->stream, discard, want) != (int)want) { return 0; }
+        r->at += want;
+    }
+    if (offset + size > r->size) { return 0; }
+    if (fat_stream_read(&r->stream, out, size) != (int)size) { return 0; }
+    r->at += size;
+    return 1;
+}
 void photo_name(char out[13], unsigned id)
 {
     int i;

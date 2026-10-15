@@ -8,6 +8,7 @@
 #include "sd_hw.h"
 #include "msc_medium.h"
 #include "update_sd.h"
+#include "webusb.h"
 #ifndef USB_VID
 #define USB_VID 0
 #define USB_PID 0
@@ -51,6 +52,7 @@ extern u8 __application_stack[];
 void bringup_selftest_start(Monitor *);
 void bringup_step_caller(void);
 #endif
+static WebUsb webusb;
 static u32 capacity;
 /* The board this stage runs on. Original KC02 only for now. */
 static const u32 kind_bit=1;
@@ -129,10 +131,56 @@ static void authorize(void)
     else if (key_phase==1 && k==1) { key_phase=2; }
     else if (key_phase==2 && !k) { monitor_authorize(&monitor); key_phase=0; }
 }
+/* WebUSB adapters. The device layer knows nothing about the WebUSB command
+ * numbering, so the mapping lives here. */
+static unsigned webusb_command_of(void *ctx, unsigned request)
+{
+    (void)ctx;
+    switch (request) {
+    case WEBUSB_CMD_BEGIN: return WEBUSB_CMD_BEGIN;
+    case WEBUSB_CMD_COMMIT: return WEBUSB_CMD_COMMIT;
+    case WEBUSB_CMD_ABORT: return WEBUSB_CMD_ABORT;
+    default: return 0;
+    }
+}
+static unsigned webusb_status_of(void *ctx, unsigned request)
+{
+    (void)ctx;
+    return request==WEBUSB_CMD_STATUS ? WEBUSB_CMD_STATUS : 0;
+}
+static void webusb_on_command(void *ctx, unsigned command)
+{
+    (void)ctx;
+    webusb_command(&webusb,command);
+}
+static int webusb_status_reply(void *ctx, u8 *out, unsigned size)
+{
+    (void)ctx;
+    return webusb_status_read(&webusb,out,size);
+}
+/* Drains whatever the update endpoint has collected into the staging engine. */
+static void webusb_service(void)
+{
+    u8 chunk[64];
+    unsigned have;
+    while ((have=ax_usb_update_available(&controller))!=0) {
+        unsigned want=have>sizeof(chunk) ? sizeof(chunk) : have;
+        int got=ax_usb_update_receive(&controller,chunk,want);
+        if (got<=0) { break; }
+        if (!webusb_feed(&webusb,chunk,(unsigned)got)) {
+            /* The container was refused: abort the staging write so nothing
+             * half-written is left behind. */
+            webusb_command(&webusb,WEBUSB_CMD_ABORT);
+            bringup_probe[17]++;
+            break;
+        }
+    }
+}
 static void poll_link(void *ctx)
 {
     (void)ctx;
     if (USB_VID && USB_PID) {
+        webusb_service();
         /* The BOT engine drives its own transfers, so it is advanced from the
          * same place the endpoints are serviced. */
         if (!msc_idle(&storage)) { msc_poll(&storage); }
@@ -250,6 +298,19 @@ void bringup_main(void)
         bringup_probe[13]=candidate.info.bytes;
         bringup_probe[14]=candidate.validated;
     }
+    /* The WebUSB update function. It stages an upload on the card and applies
+     * it only on a separate command; firmware still needs a device-local
+     * confirmation that nothing here can supply, and there is no NOR driver, so
+     * an application would be refused after being validated. */
+    {
+        WebUsbConfig config;
+        config.volume=&volume;
+        config.nor=0;              /* No NOR driver yet, so nothing installs. */
+        config.board_bit=kind_bit;
+        config.locally_confirmed=0;
+        config.recovery_verified=0;
+        webusb_init(&webusb,&config);
+    }
     bringup_probe[1]=2;
     /* Mass storage starts with the card owned locally, so a host that
      * enumerates before configuring sees NOT READY rather than a blank disk.
@@ -269,6 +330,14 @@ void bringup_main(void)
     usb_device_init(&usb,USB_VID,USB_PID,&monitor,monitor_receive,revoke);
     usb.bot_reset=bot_reset;
     usb.revoke=revoke;
+    usb.bos=webusb_bos;
+    usb.landing_url=webusb_url;
+    usb.vendor_code=WEBUSB_VENDOR_CODE;
+    usb.url_request=WEBUSB_GET_URL;
+    usb.update_command=webusb_on_command;
+    usb.update_command_of=webusb_command_of;
+    usb.update_status=webusb_status_reply;
+    usb.update_status_of=webusb_status_of;
     usb.bus_reset=lun_reclaim;
     usb.on_configured=lun_configured;
     if (USB_VID && USB_PID) {

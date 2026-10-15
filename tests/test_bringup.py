@@ -101,9 +101,15 @@ def codes(native):
     return {n:native.bringup_h_recover_code(i) for i,n in enumerate(names)}
 
 
+# The device stages a control reply of up to 128 bytes, and a descriptor may
+# exceed one endpoint packet. A 64-byte receive buffer here would be overrun by
+# the composite configuration descriptor, which is 78 bytes.
+RESPONSE_MAX = 128
+
+
 def setup(h, kind, request, value=0, index=0, size=0, ack=False):
     s = struct.pack('<BBHHH',kind,request,value,index,size)
-    out = (U8*64)()
+    out = (U8*RESPONSE_MAX)()
     n = h.bringup_h_setup(s,out)
     if ack and n>=0:
         h.bringup_h_ack()
@@ -176,16 +182,27 @@ def test_descriptors_and_truncation(h):
     # A composite device: mass storage on interface 0 with EP1, vendor debug on
     # interface 1 with EP2. A browser may claim the vendor interface; it can
     # never be given class 08, which is why they are separate functions.
-    n,cfg=setup(h,0x80,6,0x200,size=64)
-    assert n==55 and struct.unpack_from('<H',cfg,2)[0]==55
-    # Layout: config(9) iface0(9) ep(7) ep(7) iface1(9) ep(7) ep(7) = 55.
-    assert cfg[4]==2                                    # two interfaces
-    assert cfg[9]==9 and cfg[18]==7 and cfg[25]==7      # first function sizes
-    assert cfg[32]==9 and cfg[41]==7 and cfg[48]==7     # second function sizes
+    # 78 bytes, so it does not fit one 64-byte packet: the length is read from
+    # the header, which is what a host does before asking for the rest.
+    n,cfg=setup(h,0x80,6,0x200,size=9)
+    assert n==9 and cfg[0]==9 and cfg[1]==2
+    assert struct.unpack_from('<H',cfg,2)[0]==78
+    n,cfg=setup(h,0x80,6,0x200,size=78)
+    assert n==78
+    # Three functions: config(9) then (iface(9) ep(7) ep(7)) three times = 78.
+    assert cfg[4]==3                                    # three interfaces
+    assert cfg[9]==9 and cfg[18]==7 and cfg[25]==7
+    assert cfg[32]==9 and cfg[41]==7 and cfg[48]==7
+    assert cfg[55]==9 and cfg[64]==7 and cfg[71]==7
     assert cfg[11]==0 and cfg[14:17]==b'\x08\x06\x50' # interface 0: mass storage
     assert cfg[13]==2 and cfg[20]==0x81 and cfg[27]==0x01
     assert cfg[34]==1 and cfg[37:40]==b'\xff\x4c\x01' # interface 1: vendor debug
     assert cfg[36]==2 and cfg[43]==0x82 and cfg[50]==0x02
+    assert cfg[57]==2 and cfg[60:63]==b'\xff\x55\x01' # interface 2: WebUSB update
+    assert cfg[59]==2 and cfg[66]==0x83 and cfg[73]==0x03
+    # A BOS cannot exist on a 1.1 device, so the WebUSB capability would be
+    # invisible without bcdUSB 2.10.
+    assert dev[2:4]==b'\x10\x02'
     assert setup(h,0x80,6,0x200,size=9)[1]==cfg[:9]
     assert setup(h,0x80,6,0x300,size=64)[1]==b'\x04\x03\x09\x04'
     assert setup(h,0x80,6,0x301,index=0x409,size=64)[1][2:].decode('utf-16-le')=='Luma KC02 bring-up'

@@ -21,6 +21,7 @@
 #ifndef LUMA_THEME_BUNDLE_H
 #define LUMA_THEME_BUNDLE_H
 #include "luma.h"
+#include "storage.h"   /* fat_name_dotted and the FAT write limit */
 #define THEME_BUNDLE_MAX 4
 #define THEME_BUNDLE_BYTES (512u*1024u)
 #define THEME_BUNDLE_FILE_MAX (256u*1024u)

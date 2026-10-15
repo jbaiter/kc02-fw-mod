@@ -1,6 +1,6 @@
 /* SPDX-License-Identifier: MIT */
 #include "usb_device.h"
-enum { NONE, ADDRESS, CONFIG, HALT, CLEAR, REVOKE, BOT_RESET };
+enum { NONE, ADDRESS, CONFIG, HALT, CLEAR, REVOKE, BOT_RESET, UPDATE_CMD };
 static unsigned word(const u8 *p) { return p[0]|((unsigned)p[1]<<8); }
 /* Index into UsbDevice.halt, or -1 for an endpoint this device does not have. */
 static int endpoint_index(unsigned endpoint)
@@ -10,23 +10,32 @@ static int endpoint_index(unsigned endpoint)
     case USB_DEVICE_MSC_OUT: return 1;
     case USB_DEVICE_DEBUG_IN: return 2;
     case USB_DEVICE_DEBUG_OUT: return 3;
+    case USB_DEVICE_UPDATE_IN: return 4;
+    case USB_DEVICE_UPDATE_OUT: return 5;
     default: return -1;
     }
 }
-static int descriptor(UsbDevice *u, unsigned value, unsigned language, u8 out[64])
+static int descriptor(UsbDevice *u, unsigned value, unsigned language, u8 out[USB_DEVICE_RESPONSE])
 {
-    static const u8 device[]={18,1,0x10,1,0,0,0,64,0,0,0,0,0,1,0,1,0,1};
+    /* bcdUSB 2.10: a BOS cannot exist on a 1.1 device, so the WebUSB
+     * capability would be invisible without this. */
+    static const u8 device[]={18,1,0x10,2,0,0,0,64,0,0,0,0,0,1,0,1,0,1};
     /* Two interfaces, each with its own class: mass storage then vendor debug.
      * The debug function is deliberately not the storage function, because a
      * browser may claim vendor interfaces but never class 08. */
     static const u8 config[]={
-        9,2,USB_DEVICE_CONFIG_BYTES,0,2,1,0,0x80,50,
+        9,2,USB_DEVICE_CONFIG_BYTES,0,3,1,0,0x80,50,
         9,4,USB_DEVICE_MSC_INTERFACE,0,2,0x08,0x06,0x50,0,
         7,5,USB_DEVICE_MSC_IN,2,USB_DEVICE_PACKET,0,0,
         7,5,USB_DEVICE_MSC_OUT,2,USB_DEVICE_PACKET,0,0,
         9,4,USB_DEVICE_DEBUG_INTERFACE,0,2,0xff,0x4c,1,0,
         7,5,USB_DEVICE_DEBUG_IN,2,USB_DEVICE_PACKET,0,0,
-        7,5,USB_DEVICE_DEBUG_OUT,2,USB_DEVICE_PACKET,0,0};
+        7,5,USB_DEVICE_DEBUG_OUT,2,USB_DEVICE_PACKET,0,0,
+        /* WebUSB updates, on their own interface with their own subclass, so a
+         * browser claims exactly this function and nothing else. */
+        9,4,USB_DEVICE_UPDATE_INTERFACE,0,2,0xff,0x55,1,0,
+        7,5,USB_DEVICE_UPDATE_IN,2,USB_DEVICE_PACKET,0,0,
+        7,5,USB_DEVICE_UPDATE_OUT,2,USB_DEVICE_PACKET,0,0};
     static const char product[]="Luma KC02 bring-up";
     unsigned i, n=0, type=value>>8, index=value&255;
     const u8 *p=0;
@@ -67,10 +76,17 @@ unsigned usb_device_halted(const UsbDevice *u, unsigned endpoint)
     int index=endpoint_index(endpoint);
     return index<0 ? 1 : u->halt[index];
 }
-int usb_device_setup(UsbDevice *u, const u8 s[8], u8 out[64])
+const u8 *usb_device_response(const UsbDevice *u, unsigned *size)
 {
+    if (size) { *size=u->response_size; }
+    return u->response;
+}
+int usb_device_setup(UsbDevice *u, const u8 s[8])
+{
+    u8 *out=u->response;
     unsigned type=s[0], request=s[1], value=word(s+2), index=word(s+4), n=word(s+6);
     int slot, size=-1;
+    u->response_size=u->response_sent=0;
     u->pending=NONE; /* A new SETUP aborts the preceding control transfer. */
     if (!u->vid || !u->pid) { return -1; }
     /* Vendor message from the debug interface only. It revokes access and never
@@ -79,20 +95,59 @@ int usb_device_setup(UsbDevice *u, const u8 s[8], u8 out[64])
         index==USB_DEVICE_DEBUG_INTERFACE) {
         u->pending=REVOKE; return 0;
     }
+    /* Update commands, addressed to the update interface. A browser can only
+     * reach these; the container they act on arrives on that endpoint, and the
+     * decision to apply still needs a device-local confirmation. */
+    if (type==0x41 && !value && !n && u->configured && u->update_command &&
+        u->update_command_of && index==USB_DEVICE_UPDATE_INTERFACE) {
+        unsigned command=u->update_command_of(u->context,request);
+        if (command) { u->pending=UPDATE_CMD; u->value=command; return 0; }
+    }
+    if (type==0xc1 && !value && u->configured && n && u->update_status &&
+        u->update_status_of && index==USB_DEVICE_UPDATE_INTERFACE &&
+        u->update_status_of(u->context,request)) {
+        size=u->update_status(u->context,out,sizeof(u->response));
+        if (size<=0 || (unsigned)size>n) { return size<=0 ? -1 : 0; }
+        u->response_size=(unsigned)size;
+        return size;
+    }
     /* Class requests a mass-storage host sends, addressable only through the
      * storage interface. */
     if (type==0xa1 && request==USB_DEVICE_GET_MAX_LUN && !value && n==1 &&
         index==USB_DEVICE_MSC_INTERFACE && u->configured) {
         out[0]=0;               /* One LUN. */
+        u->response_size=1;
         return 1;
     }
     if (type==0x21 && request==USB_DEVICE_BOT_RESET && !value && !index && !n &&
         u->configured) {
         u->pending=BOT_RESET; return 0;
     }
+    /* BOS, so a browser can find the WebUSB capability. */
+    if (type==0x80 && request==6 && (value>>8)==0x0f && !index && u->bos) {
+        size=(int)u->bos(out,sizeof(u->response));
+        if (size<=0 || (unsigned)size>n) { return size<=0 ? -1 : 0; }
+        u->response_size=(unsigned)size;
+        return size;
+    }
+    /* GET_URL: bmRequestType 0xC0, bRequest = the advertised vendor code,
+     * wValue = iLandingPage, wIndex = 2. The value and index are the other way
+     * round from what they look like they should be. */
+    if (type==0xc0 && request==u->vendor_code && value==1 && index==u->url_request &&
+        u->landing_url) {
+        size=(int)u->landing_url(out,sizeof(u->response));
+        if (size<=0 || (unsigned)size>n) { return size<=0 ? -1 : 0; }
+        u->response_size=(unsigned)size;
+        return size;
+    }
     if (type==0x80 && request==6) {
         size=descriptor(u,value,index,out);
-        return size<0 ? -1 : (unsigned)size>n ? (int)n : size;
+        if (size<0) { return -1; }
+        /* Descriptors are fixed, so a host asking for fewer bytes gets that
+         * many and then asks again for the rest, which is normal. */
+        if ((unsigned)size>n) { size=(int)n; }
+        u->response_size=(unsigned)size;
+        return size;
     }
     if (type==0 && request==5 && value<128 && !index && !n && !u->configured) {
         u->pending=ADDRESS; u->value=value; return 0;
@@ -101,7 +156,7 @@ int usb_device_setup(UsbDevice *u, const u8 s[8], u8 out[64])
         u->pending=CONFIG; u->value=value; return 0;
     }
     if (type==0x80 && request==8 && !value && !index && n==1 && u->address) {
-        out[0]=(u8)u->configured; return 1;
+        out[0]=(u8)u->configured; u->response_size=1; return 1;
     }
     if (request==0 && !value && n==2) {
         /* GET_STATUS: device, interface, or endpoint. */
@@ -111,10 +166,11 @@ int usb_device_setup(UsbDevice *u, const u8 s[8], u8 out[64])
             slot=endpoint_index(index);
             if (slot>=0 && u->configured) { size=u->halt[slot]; }
         }
-        if (size>=0) { out[0]=(u8)size; out[1]=0; return 2; }
+        if (size>=0) { out[0]=(u8)size; out[1]=0; u->response_size=2; return 2; }
     }
-    if (type==0x81 && request==10 && !value && index<2 && n==1 && u->configured) {
-        out[0]=0;               /* Both interfaces have only alt setting 0. */
+    if (type==0x81 && request==10 && !value && index<3 && n==1 && u->configured) {
+        out[0]=0;               /* Every interface has only alt setting 0. */
+        u->response_size=1;
         return 1;
     }
     if (type==1 && request==11 && !value && index<2 && !n && u->configured) { return 0; }
@@ -155,7 +211,11 @@ int usb_device_status_complete(UsbDevice *u)
          * endpoint layer watches for. It does so even when the endpoint was
          * not halted, which is why this is an effect and not a state change. */
         u->halt[u->halt_slot]=u->halt_set;
-        if (!u->halt_set) { effects|=u->halt_slot==2 ? 4 : u->halt_slot==3 ? 8 : 0; }
+        if (!u->halt_set) { effects|=u->halt_slot==4 ? 16 : u->halt_slot==5 ? 32 : 0; }
+        break;
+    case UPDATE_CMD:
+        /* Applied here, after the host has acknowledged the control transfer. */
+        if (u->update_command) { u->update_command(u->context,u->value); }
         break;
     default: break;
     }

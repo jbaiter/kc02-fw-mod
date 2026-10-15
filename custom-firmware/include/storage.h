@@ -49,6 +49,22 @@ typedef struct {
 } FileStream;
 int fat_stream_open(Fat *fs, const char *name, FileStream *stream);
 int fat_stream_read(FileStream *stream, u8 *out, unsigned size);
+/* Random access over a card file, for callers that read a large file in more
+ * than one pass. A rewind costs one reopen plus a bounded skip, so nothing here
+ * allocates and no offset can make it loop without bound. */
+typedef struct {
+    Fat *volume;
+    char name[13];
+    FileStream stream;
+    u32 at, size;
+    int open;
+} FileReader;
+int file_reader_open(FileReader *r, Fat *volume, const char *name);
+int file_reader_read(FileReader *r, u32 offset, u8 *out, unsigned size);
+void file_reader_close(FileReader *r);
+/* "BOOT    BMP" -> "BOOT.BMP". Both the config and the FAT calls use the dotted
+ * form; the padding is a FAT detail and stays one. */
+void fat_name_dotted(const char padded[11], char out[13]);
 int fat_read(Fat *fs, const char *name, u8 *out, unsigned cap, unsigned *size);
 int fat_create(Fat *fs, const char *name, const u8 *bytes, unsigned size);
 unsigned fat_photos(Fat *fs, unsigned *ids, unsigned cap);

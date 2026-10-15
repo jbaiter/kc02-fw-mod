@@ -1,5 +1,9 @@
 /* SPDX-License-Identifier: MIT */
 #include "theme_bundle.h"
+
+/* Entries are compared in the padded 8.3 space, but both callbacks are given
+ * the dotted form the FAT layer and the config both use, so a caller never has
+ * to know about the padding. */
 static unsigned text_length(const char *s) { unsigned n=0; while (s[n]) { n++; } return n; }
 static int same(const char *a, const char *b)
 {
@@ -48,24 +52,6 @@ static int find(const ThemeBundle *bundle, const char *name)
     }
     return -1;
 }
-/* Entries are compared in the padded 8.3 space, but both callbacks are given
- * the dotted form the FAT layer and the config both use, so a caller never has
- * to know about the padding. */
-static void dotted(const char *padded, char out[13])
-{
-    unsigned i, stem=0, suffix=0, last=0;
-    for (i=0; i<8; i++) { if (padded[i]!=' ') { stem=i+1; } }
-    for (i=8; i<11; i++) { if (padded[i]!=' ') { last=i+1; } }
-    suffix=last>8 ? last-8 : 0;
-    for (i=0; i<stem; i++) { out[i]=padded[i]; }
-    if (suffix) {
-        out[stem]='.';
-        for (i=0; i<suffix; i++) { out[stem+1+i]=padded[8+i]; }
-        out[stem+1+suffix]=0;
-    } else {
-        out[stem]=0;
-    }
-}
 static u32 crc_step(u32 crc, const u8 *bytes, unsigned size)
 {
     unsigned i, b;
@@ -109,7 +95,7 @@ static ThemeBundleResult check_image(const ThemeBundle *bundle, const BundleSour
     u32 crc=~0u, done;
     int index=find(bundle,name);
     if (index<0) { return THEME_BUNDLE_MISSING_IMAGE; }
-    dotted(bundle->entry[index].name,file);
+    fat_name_dotted(bundle->entry[index].name,file);
     if (!source->read || !source->read(source->context,file,0,header,sizeof(header))) {
         return THEME_BUNDLE_IO;
     }
@@ -176,7 +162,7 @@ static ThemeBundleResult commit_file(const ThemeEntry *entry, const BundleSource
     u32 done=0;
     void *handle=0;
     if (!writer->begin || !writer->data || !writer->end) { return THEME_BUNDLE_IO; }
-    dotted(entry->name,file);
+    fat_name_dotted(entry->name,file);
     if (!writer->begin(writer->context,file,entry->size,&handle)) {
         return THEME_BUNDLE_IO;
     }

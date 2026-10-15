@@ -22,12 +22,20 @@
 #define USB_DEVICE_QUEUE 4096
 #define USB_DEVICE_MSC_INTERFACE 0
 #define USB_DEVICE_DEBUG_INTERFACE 1
+#define USB_DEVICE_UPDATE_INTERFACE 2
 #define USB_DEVICE_MSC_IN 0x81
 #define USB_DEVICE_MSC_OUT 0x01
 #define USB_DEVICE_DEBUG_IN 0x82
 #define USB_DEVICE_DEBUG_OUT 0x02
-#define USB_DEVICE_ENDPOINTS 4
-#define USB_DEVICE_CONFIG_BYTES 55
+#define USB_DEVICE_UPDATE_IN 0x83
+#define USB_DEVICE_UPDATE_OUT 0x03
+#define USB_DEVICE_ENDPOINTS 6
+#define USB_DEVICE_CONFIG_BYTES 78
+#define USB_DEVICE_BOS_BYTES 29
+/* A control reply can be longer than one endpoint packet: the composite
+ * configuration descriptor is 78 bytes, so it needs two. The reply is staged
+ * here and the endpoint layer streams it. */
+#define USB_DEVICE_RESPONSE 128
 #define USB_DEVICE_REVOKE 0x5f /* Vendor OUT, debug interface, all fields zero. */
 /* Class requests, as a mass-storage host sends them. */
 #define USB_DEVICE_GET_MAX_LUN 0xfe
@@ -38,6 +46,8 @@ typedef struct {
     unsigned halt[USB_DEVICE_ENDPOINTS];
     unsigned pending, value, queued, consumed, fault;
     unsigned halt_slot, halt_set;
+    u8 response[USB_DEVICE_RESPONSE];
+    unsigned response_size, response_sent;
     u8 tx[USB_DEVICE_QUEUE];
     void *context;
     void (*receive)(void *, const u8 *, unsigned);
@@ -51,13 +61,31 @@ typedef struct {
     /* Configuration chosen: the host is ready to be offered the LUN. Named
      * apart from the `configured` state flag, which is what the host asked. */
     void (*on_configured)(void *context);
+    /* WebUSB. The landing page is read by the browser through GET_URL, and the
+     * update commands are addressed to the update interface; the container they
+     * act on arrives on that interface's endpoint, not through control. */
+    /* Provided by the WebUSB layer so this file needs no knowledge of it. */
+    unsigned (*bos)(u8 *out, unsigned cap);
+    unsigned (*landing_url)(u8 *out, unsigned cap);
+    unsigned vendor_code, url_request;
+    /* Vendor commands on the update interface. Applied when the control
+     * transfer completes, so the browser cannot have them take effect before it
+     * has seen the acknowledgement. */
+    void (*update_command)(void *context, unsigned command);
+    /* Which vendor requests the update function recognises. The numbering
+     * belongs to the WebUSB layer, so it stays there. */
+    unsigned (*update_command_of)(void *context, unsigned request);
+    unsigned (*update_status_of)(void *context, unsigned request);
+    /* Fills a status reply for the update interface. */
+    int (*update_status)(void *context, u8 *out, unsigned size);
 } UsbDevice;
 void usb_device_init(UsbDevice *, u16 vid, u16 pid, void *context,
                      void (*receive)(void *, const u8 *, unsigned), void (*revoke)(void *));
 void usb_device_reset(UsbDevice *);
-/* -1 stalls; otherwise the response size (zero means an OUT request or a
- * status-only completion). */
-int usb_device_setup(UsbDevice *, const u8 setup[8], u8 response[64]);
+/* Fills the response buffer and returns its size; -1 stalls, 0 means no data
+ * stage. The caller streams it, because a descriptor may not fit one packet. */
+int usb_device_setup(UsbDevice *, const u8 setup[8]);
+const u8 *usb_device_response(const UsbDevice *, unsigned *size);
 /* Effects: bit 0 reconfigure, bit 1 revoke, bit 2 clear IN toggle,
  * bit 3 clear OUT toggle. Clear-toggle applies even if the endpoint wasn't
  * halted. */

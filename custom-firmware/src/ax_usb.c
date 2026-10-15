@@ -1,7 +1,7 @@
 /* SPDX-License-Identifier: MIT */
 #include "ax_usb.h"
 #include "msc.h"
-enum { IDLE, STATUS_IN, DATA_IN, STATUS_OUT };
+enum { IDLE, STATUS_IN, DATA_IN, DATA_IN_MORE, STATUS_OUT };
 static u32 rd(AxUsb *a, unsigned r) { return a->io.read(a->io.context,r); }
 static void wr(AxUsb *a, unsigned r, u32 v) { a->io.write(a->io.context,r,v); }
 static void address(AxUsb *a, unsigned r, u8 *p)
@@ -27,6 +27,7 @@ static void endpoints(AxUsb *a)
 {
     endpoint_config(a,&a->msc,1);
     endpoint_config(a,&a->debug,2);
+    endpoint_config(a,&a->update,3);
     wr(a,AX_USB_INDEX,0);
     address(a,AX_USB_EP0,a->ep0);
 }
@@ -47,10 +48,26 @@ void ax_usb_init(AxUsb *a, UsbDevice *u, const AxUsbIo *io)
     /* Full speed only. No HS enable, and no 64-byte HS bulk descriptor. */
     if (u->vid && u->pid) { wr(a,AX_USB_POWER,0x40); }
 }
+/* Sends the next chunk of a control reply. Only the last chunk carries
+ * DATAEND, so a descriptor longer than one packet is a sequence rather than a
+ * single truncated transfer. */
+static void ep0_send_chunk(AxUsb *a)
+{
+    const u8 *reply=usb_device_response(a->usb,&a->response_size);
+    unsigned remaining=a->response_size-a->response_sent;
+    unsigned take=remaining>USB_DEVICE_PACKET ? USB_DEVICE_PACKET : remaining;
+    unsigned i;
+    for (i=0; i<take; i++) { a->ep0[i]=reply[a->response_sent+i]; }
+    address(a,AX_USB_EP0,a->ep0);
+    wr(a,AX_USB_CON1,(1u<<13)|take);
+    a->response_sent+=take;
+    a->state=take==remaining ? DATA_IN : DATA_IN_MORE;
+    wr(a,AX_USB_CSR0,(unsigned)(0x02 | (take==remaining ? 0x08 : 0)));
+}
 static void control(AxUsb *a, unsigned tx_irq)
 {
     unsigned csr, count, effects;
-    u8 s[8], response[USB_DEVICE_PACKET];
+    u8 s[8];
     int n;
     wr(a,AX_USB_INDEX,0); csr=rd(a,AX_USB_CSR0);
     if (csr&0x10) { /* SETUPEND aborts the old pending address/configuration. */
@@ -74,7 +91,8 @@ static void control(AxUsb *a, unsigned tx_irq)
         }
         a->state=IDLE;
     }
-    if (a->state==DATA_IN && tx_irq && !(csr&2)) { a->state=STATUS_OUT; }
+    if (a->state==DATA_IN_MORE && tx_irq) { ep0_send_chunk(a); }
+    else if (a->state==DATA_IN && tx_irq && !(csr&2)) { a->state=STATUS_OUT; }
     if (!(csr&1)) { return; } /* CSR0 RX ready is bit 0, TX ready is bit 1. */
     count=rd(a,AX_USB_COUNT_L);
     if (a->state==STATUS_OUT && !count) {
@@ -84,18 +102,19 @@ static void control(AxUsb *a, unsigned tx_irq)
         wr(a,AX_USB_CSR0,0x60); a->usb->pending=0; a->state=IDLE; return;
     }
     for (count=0; count<8; count++) { s[count]=a->ep0[count]; }
-    n=usb_device_setup(a->usb,s,response);
+    n=usb_device_setup(a->usb,s);
     if (n<0) { wr(a,AX_USB_CSR0,0x60); return; } /* service RX + send stall */
     if (!(s[0]&0x80)) {
+        /* No data stage: the zero-length IN is the status stage, and the
+         * command takes effect when the host has acknowledged it. */
         a->state=STATUS_IN;
         wr(a,AX_USB_CSR0,0x48); /* Service RX + DATAEND: automatic IN status. */
         return;
     }
     wr(a,AX_USB_CSR0,0x40);
-    for (count=0; count<(unsigned)n; count++) { a->ep0[count]=response[count]; }
-    address(a,AX_USB_EP0,a->ep0);
-    wr(a,AX_USB_CON1,(1u<<13)|(unsigned)n);
-    a->state=DATA_IN; wr(a,AX_USB_CSR0,0x0a); /* TX ready + DATAEND. */
+    if (n==0) { a->state=STATUS_IN; wr(a,AX_USB_CSR0,0x48); return; }
+    a->response_sent=0;
+    ep0_send_chunk(a);
 }
 /* Shared per-endpoint plumbing: stall transitions, packet collection and TX
  * completion.
@@ -187,6 +206,7 @@ void ax_usb_poll(AxUsb *a)
      * the byte counter advances in the same step as the flag. */
     endpoint_service(a,&a->msc,a->msc.stalled_in,a->msc.stalled_out,0,rx&(1u<<1),0);
     msc_service(a,tx&(1u<<1));
+    endpoint_service(a,&a->update,0,0,0,rx&(1u<<3),0);
     /* The debug endpoint reads straight out of the device queue, and only
      * releases a packet once the hardware says it went out. */
     n=a->debug.transmitting ? 0 : usb_device_peek(a->usb,a->debug.packet_tx);
@@ -232,6 +252,20 @@ int ax_usb_msc_receive(void *context, u8 *out, unsigned size)
 int ax_usb_msc_cbw_ready(AxUsb *a)
 {
     return a->msc.rx_used-a->msc.rx_read>=MSC_CBW_SIZE && !a->msc.fault;
+}
+unsigned ax_usb_update_available(AxUsb *a)
+{
+    return a->update.rx_used-a->update.rx_read;
+}
+int ax_usb_update_receive(AxUsb *a, u8 *out, unsigned size)
+{
+    AxUsbEndpoint *e=&a->update;
+    unsigned have=e->rx_used-e->rx_read, n, i;
+    n=have<size ? have : size;
+    for (i=0; i<n; i++) { out[i]=e->rx[e->rx_read+i]; }
+    e->rx_read+=n;
+    if (e->rx_read==e->rx_used) { e->rx_read=e->rx_used=0; }
+    return (int)n;
 }
 void ax_usb_msc_stall(void *context, int in)
 {

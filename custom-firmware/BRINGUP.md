@@ -270,6 +270,66 @@ Three refusals carry the weight:
 - **`DENIED` without physical confirmation and a verified recovery gate.** This
   adapter cannot supply either, so it cannot install on its own.
 
+## WebUSB: firmware and theme updates from a browser
+
+Three functions share one device, and a browser can claim exactly one of them:
+
+| Function | Interface | Class | Endpoints |
+|---|---|---|---|
+| Mass storage | 0 | 08/06/50 | EP1 IN/OUT |
+| Vendor debug | 1 | ff/4c/01 | EP2 IN/OUT |
+| WebUSB update | 2 | ff/55/01 | EP3 IN/OUT |
+
+The update function has its own subclass, so the browser client can find it
+without guessing, and the debugger's memory access is not reachable from it.
+
+Descriptors follow the specification and Chrome's implementation:
+
+- **BOS** (type 0x0F) with one platform capability (type 0x10, capability 0x05).
+  The WebUSB UUID is written in the little-endian byte order Chrome compares
+  against; reversed, the capability is invisible with no error anywhere.
+- `bcdUSB` had to become 0x0210. A BOS cannot exist on a 1.1 device, so without
+  that change the capability would never be seen.
+- **`GET_URL`**: `bmRequestType` 0xC0, `bRequest` = the advertised vendor code,
+  `wValue` = iLandingPage, `wIndex` = 2. The value and index are the opposite way
+  round from what they look like they should be. Only `https` is offered: a
+  plaintext landing page would let anyone on the path change the page that talks
+  to the device.
+- **No landing page is hosted, so none is claimed.** `iLandingPage` is 0 and
+  `GET_URL` stalls. The mechanism is implemented and tested; only the page is
+  missing, and a URL that does not exist would be worse than none.
+
+### The upload
+
+A browser sends one container on the update endpoint and drives it with three
+control requests: `BEGIN`, `COMMIT`, `ABORT`, plus `STATUS` to poll.
+
+```
+header (24)  "LUMAUPD\0", u16 format, u16 header_bytes, u16 kind (1 firmware,
+             2 theme), u16 count, u32 total_bytes, u32 payload crc32
+entry (20)   name[11] space-padded 8.3, pad, u32 length, u32 crc32
+payload      the file bytes, concatenated in entry order
+```
+
+The entry is 20 bytes and not 16. An 11-byte name plus a pad plus two u32 fields
+does not fit in 16, and a 16-byte entry puts the CRC over the last three bytes of
+the name, corrupting every extension.
+
+The container is written to the card as one staging file, `UPDATE.NEW`, while its
+CRCs are verified as the bytes arrive. Only when it is fully written and checked
+does `COMMIT` do anything:
+
+- **Firmware**: the staged artifact is validated with the same engine the SD path
+  uses and applied through `update_apply`. Applying still needs a device-local
+  confirmation that USB cannot supply, and there is no NOR driver, so a valid
+  image is reported as such and refused.
+- **Theme**: the bundle is validated as a set and then committed, images first
+  and the config last.
+
+Staging under its own name matters: a half-received upload must never overwrite a
+good `FIRMWARE.IMG` or a working theme. A failed CRC aborts the staging write, and
+an abort frees the new allocation without touching what was there.
+
 ## Debug authorization
 
 USB cannot grant debug. The USB device implements no vendor request that
@@ -372,6 +432,15 @@ with the active slot untouched, a stale image refused, flash with no bootable
 slot refused, a truncated read and a refused program both committing nothing, and
 the card still readable afterwards.
 
+WebUSB is covered by `tests/test_webusb.py`, where a peer plays the browser: it
+reads the BOS and the landing page, sends a container on the update endpoint and
+reads the status back. Both update kinds are exercised over a real FAT16 card,
+including that nothing is written before `COMMIT`, that a firmware update reaches
+the inactive NOR slot byte for byte, that a browser cannot confirm its own
+update, that a mangled transfer and eight malformed containers are refused, that
+a theme with an unreferenced file is refused and the file is not created, and
+that an abort leaves the card exactly as it was.
+
 Mass storage is covered on the host by `tests/test_msc.py`, where a peer acts as
 the USB host: it builds real CBWs, drains the bulk-IN pipe and parses the CSW,
 so the tests are protocol conversations rather than calls into the engine's own
@@ -420,6 +489,16 @@ during this milestone, which is why `le_hex` and `mem_hex` exist in the tests.
 - The update path has no NOR backend, so it can validate and refuse but never
   install. Everything downstream of `update_sd_apply`'s writer check is untested
   on real flash, and the engine's tests use a model.
+- **No browser has ever talked to this device.** Chrome's own parsing of the BOS
+  and its handling of `GET_URL` are unverified; what is verified is that the
+  bytes match the specification and that the staging protocol works end to end
+  against a peer. No landing page is hosted, so the browser cannot offer one.
+- The update interface's third endpoint pair is the same assumption as the second:
+  the vendor SDK documents EP0 plus EP1..EP4, and the stock firmware demonstrates
+  only EP0 and EP1.
+- The control reply is now streamed in endpoint-sized packets, because the
+  composite configuration descriptor is 78 bytes and does not fit one packet.
+  That path is exercised in the harness, not on silicon.
 - The stage owns the card for the length of the gate. Nothing else has started
   yet, so that is safe today, but a future application launch must not run
   concurrently with an unremounted card.
