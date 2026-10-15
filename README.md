@@ -23,6 +23,13 @@ SD themes and a RAM-only development build. **It is not ready to flash.** USB
 mass storage, hardware USB GDB, physical printing and recoverable SD/WebUSB
 updates remain required release work; see the project's capability table.
 
+A [first-stage bring-up](custom-firmware/BRINGUP.md) for the original KC02 is
+being built under it: a recovery gate and GDB-over-USB monitor that runs before
+any UI. It preserves the factory boot chain, serves a checkpoint-only debug
+monitor with device-local authorization, and validates a stock-format update
+candidate read-only. It is also not flash-qualified, has no SD reader or NOR
+writer yet, and has never enumerated on real USB.
+
 ## Background
 
 I bought two of these cameras (one to sacrifice) and decided to reverse engineer the firmware to fully revamp UI. 

@@ -917,6 +917,13 @@ static bool ax3292_reg_read(Ax3292State *s, CPUOpenRISCState *env,
                             uint32_t spr, uint32_t *value)
 {
     switch (spr) {
+    case 0x1800:                       /* AX3292 DCCR (not upstream SPR layout) */
+    case 0x2000:                       /* ICCR */
+        /* TODO(approximation): cache-control read-back only. TCG memory/DMA
+         * is coherent; this does not exercise silicon cache-line operations.
+         * Disabled at reset, like the cache-free ROM/application handoff. */
+        *value = s->sfr[spr >> 2];
+        return true;
     case AX3292_SPR_VR:
         *value = 0x65803200;    /* observed on hardware */
         return true;
@@ -1135,6 +1142,10 @@ static bool ax3292_reg_write(Ax3292State *s, CPUOpenRISCState *env,
                              uint32_t spr, uint32_t v)
 {
     switch (spr) {
+    case 0x1800:                       /* DCCR */
+    case 0x2000:                       /* ICCR */
+        s->sfr[spr >> 2] = v;
+        return true;
     case AX3292_SPR_SR:
         cpu_set_sr(env, v);
         return true;

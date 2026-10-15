@@ -35,3 +35,15 @@ See [../README.md](../README.md) for the full list.
 
 Each known approximation carries a `TODO(approximation)` marker, so
 `rg 'TODO\(approximation\)' tools/emu/qemu/ax3292` is a truthful debt list.
+
+## Cache SPRs
+
+The AX3292 keeps its data/instruction cache-control registers in SPR groups 3
+and 4 (`0x1800`, `0x2000`), not in the upstream OpenRISC cache SPR layout. The
+machine now backs those two addresses so cache-aware guest code, such as the
+bring-up bootstrap's dirty-D-cache guard, reads what it wrote.
+
+TCG memory and device DMA are coherent, so the model does not implement
+cache-line invalidate/writeback semantics. The registers are a read/write
+backing store with a `TODO(approximation)` marker; do not read them as proof
+that cache behaviour is emulated.

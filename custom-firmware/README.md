@@ -9,6 +9,12 @@ X8D, and HMOLLIMT Z-12 board profiles.
 bring-up, a USB controller driver, physical printer safety controls, and a
 recovery loader. Do not rename `luma.ram.bin` to `DestBin.bin` or `firmware.img`.
 
+A separate [first-stage bring-up](BRINGUP.md) (`bringup/`) now exists for the
+original KC02: a recovery gate and GDB-over-USB monitor that runs before any UI.
+It is also experimental and not flash-qualified. It preserves the factory boot
+chain, serves a checkpoint-only debug monitor, and validates a stock-format
+update candidate without writing flash.
+
 ![Actual QEMU screenshots: boot, viewport, gallery, settings](../docs/images/luma/first-milestone.png)
 
 The renderer antialiases glyphs, circles, and rounded corners at native
@@ -163,6 +169,7 @@ register-endianness limitation still applies. See [emulator GDB notes](../tools/
 | USB mass storage | Exclusive ownership primitive | Composite descriptors, BOT/SCSI, controller driver and host tests |
 | WebUSB flashing | Shared image/update engine in NOR tests | Vendor interface/BOS/Windows binding, staging protocol, browser client, physical confirmation and real recovery |
 | `/firmware.img` SD update | Shared image/update engine in NOR tests | File discovery/staging adapter, recovery loader, NOR driver, real interrupted-update tests |
+| Stock-compatible first installation | Offline `DestBin` candidate packer and read-only candidate validation | SD recovery reader, NOR writer, external SPI recovery proof, real stock-updater test with an unchanged image |
 | Boots on actual boards | Compiler validated earlier; application tested only in QEMU | Clock/SDRAM, pinmux, panel and sensor initialization, protected recovery installation |
 
 See [architecture and service contracts](DESIGN.md) for the USB/debug/update

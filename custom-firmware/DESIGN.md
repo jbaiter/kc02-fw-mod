@@ -88,7 +88,7 @@ BOT reset recovery, disconnects/timeouts, and physical Linux/Windows/browser
 sessions. Reuse controller code only where licensing permits; the SDK here is
 reference evidence, not redistributable application code.
 
-## USB GDB (protocol engine implemented; target monitor pending)
+## USB GDB (protocol engine and first-stage monitor implemented; no silicon test)
 
 `src/debug.c` implements bounded, acknowledged GDB RSP framing/checksums,
 retransmission, target XML, register and memory access, continue, detach and a
@@ -96,6 +96,34 @@ Ctrl-C callback. It accepts at most 1023 payload bytes and limits a memory
 transaction to 256 bytes. It rejects numeric overflow, malformed hex, out-of-range
 register numbers and unauthorised requests. Unsupported operations return an
 empty response; absent backends return errors.
+
+The first-stage monitor (`bringup/`, `src/monitor.c`, `src/usb_debug.c`,
+`src/ax_usb.c`) now supplies the target side for the original KC02. It runs
+before any application UI, preserves the factory boot chain, and validates a
+stock-format candidate read-only. What it does **and does not** do is documented
+in [BRINGUP.md](BRINGUP.md). In summary:
+
+1. Device-local debug authorization exists: a configured USB device alone
+grants nothing. The keypad sequence release-OK/press-OK/release-OK enables the
+monitor; a bus reset, disconnect, suspend, reconfiguration, vendor revoke or
+protocol fault disables it and leaves the target stopped.
+2. Memory access is restricted: reads to application RAM, writes only to a
+4 KiB scratch window. Stack pointer, link register, PC and SR are immutable.
+3. **The stop point is a cooperative call boundary, not an exception or trap
+handler.** There is no breakpoint, no single-step, no cache maintenance, and no
+AX3292 HP shadow-bank/EPCR/ESR/PIC capture. The protocol engine refuses `s`,
+returns an empty response for `Z`/`z`, and the monitor never advertises a
+capability it cannot perform.
+4. The USB controller driver is a single polled bidirectional bulk endpoint
+plus EP0 control, matching the vendor SDK's documented register map. QEMU does
+not model this controller, so only a stable polled wait is verified in
+emulation. Enumeration, transfer timing, NAK and stall recovery, and disconnect
+behaviour are untested on hardware.
+
+A real `gdb-multiarch` client is tested through the full host chain: GDB to the
+localhost bridge, bridge to the AX3292 register/DMA contract model, model to the
+actual monitor and RSP engine. That test proves the protocol and access policy.
+It is not a physical USB test.
 
 Wire registers: **r0–r31, ppc, npc, sr**, all 32-bit little-endian. The `g`
 response is exactly 280 ASCII hex characters. This matches the target XML;
@@ -203,16 +231,38 @@ owns the card. The WebUSB adapter must stage a complete bounded upload before
 validation, disconnect debug/MSC ownership, obtain the same physical consent,
 and report read-back/commit outcome. Neither adapter is implemented yet.
 
+### Legacy `DestBin.bin` candidate inspection
+
+The first installation cannot use the A/B layout: it has to arrive as a
+stock-format image the factory updater accepts. `src/destbin.c` is a read-only
+inspector for that path, original KC02 only. It checks the BLDR magic, the
+512-byte additive checksum, the `55AA` boot signature, the declared load
+address, region fields, the `SFAT` marker and the full-image CRC, then compares
+a separately snapshotted running prefix against the candidate and refuses any
+change inside the boot/recovery region.
+
+It contains no erase or program callback, no executable loading and no writer.
+CRC is a fingerprint, **not authentication**, and matching the stock layout is
+not proof that a candidate boots. `tools/factory.py` packages a candidate from
+the pinned original dump and enforces that only the factory application copy
+span changes.
+
 ## Next hardware milestones
 
 1. RAM-only physical bring-up of the new clock/timebase, display, keypad and
    SD driver; add proper sensor initialization. Do not infer these from QEMU
-   register read-back.
-2. USB enumeration and MSC in RAM; preserve a known recovery route throughout.
-3. Trap/resume monitor in RAM, then endpoint transport and real USB GDB.
+   register read-back. The first-stage stage already reuses the factory clock,
+   SDRAM and pin configuration instead of redoing bring-up from reset.
+2. A trap-based stop monitor: exception entry that preserves AX3292 HP
+   shadow-bank semantics, EPCR, ESR and PIC state, plus verified breakpoints
+   and no-delay-aware stepping. The current cooperative checkpoint cannot
+   stop at arbitrary code.
+3. USB enumeration and MSC on real hardware; preserve a known recovery route
+   throughout. The debug endpoint transport is written but never enumerated.
 4. Printer interlocks and energy calibration per board before enabling strobes.
-5. Recoverable first loader installation; then verify A/B updates, SD staging
-   and WebUSB, including interrupted updates on sacrificial hardware.
+5. A working SD recovery reader and NOR writer for `DestBin`-format first
+   installation, then the A/B `firmware.img` path with interrupted-update
+   validation on sacrificial hardware.
 
 USB debugging, mass storage, both update paths and three-board hardware support
 are required release criteria. The RAM milestone does not complete them.

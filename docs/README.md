@@ -21,6 +21,7 @@ later work replaced.
 | [NAMING_RECONCILIATION.md](NAMING_RECONCILIATION.md) | One canonical name per address, with aliases and the evidence that decides between them |
 | [../custom-firmware/README.md](../custom-firmware/README.md) | Luma: new three-screen firmware, RAM-only QEMU builds for all three boards, SD themes, validation and hardware release blockers |
 | [../custom-firmware/DESIGN.md](../custom-firmware/DESIGN.md) | Luma USB debug/storage/update contracts; implemented RSP and NOR-test cores versus missing physical backends |
+| [../custom-firmware/BRINGUP.md](../custom-firmware/BRINGUP.md) | Original-KC02 first stage: factory-compatible handoff, checkpoint-only GDB monitor, USB debug authorization, read-only `DestBin` candidate validation |
 | [custom_ui/README.md](custom_ui/README.md) | Earlier stock UI routing patch, separate from Luma: boot to camera, two-tap sequences, POWER returns to camera |
 | [HARDWARE_OBSERVATION.md](HARDWARE_OBSERVATION.md) | Method and results of read-only observation on real hardware, including the region-table correction |
 | [NEW_BUILDS.md](NEW_BUILDS.md) | The two newer units (MYSTILUCK X8D, HMOLLIMT Z-12): mapping, asset tables, what is still unmapped |

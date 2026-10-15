@@ -144,8 +144,7 @@ static void dispatch(Rsp *r)
 }
 void rsp_init(Rsp *r, const DebugOps *ops)
 {
-    *r=(Rsp){0};
-    r->ops=*ops;
+    *r=(Rsp){.ops=*ops};
 }
 void rsp_stop(Rsp *r, unsigned signal)
 {
