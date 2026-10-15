@@ -54,19 +54,23 @@ def forward(client, device, usb, timeout=100):
             client.sendall(data)
 
 
-def revoke(device):
-    # Revoke only, never authorize or resume. Failure leaves status UNKNOWN.
-    device.ctrl_transfer(0x40, 0x5f, 0, 0, b'', timeout=1000)
+def revoke(device, interface):
+    """Revoke only, never authorize or resume, and only through the debug
+    function: the message is addressed to that interface, so it cannot reach the
+    mass-storage function. A failure leaves the session status UNKNOWN."""
+    device.ctrl_transfer(0x40, 0x5f, 0, interface, b'', timeout=1000)
 
 
 def serve(device, usb, interface, port):
     claimed = False
     try:
+        # The storage function carries class 08 and belongs to the OS disk driver;
+        # only the vendor debug function is claimed here.
         if device.is_kernel_driver_active(interface):
             raise ValueError('debug interface has a kernel driver; refusing to detach it')
         usb.util.claim_interface(device, interface)
         claimed = True
-        revoke(device)
+        revoke(device, interface)
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as listener:
             listener.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             listener.bind(('127.0.0.1', port))
@@ -79,7 +83,7 @@ def serve(device, usb, interface, port):
     finally:
         if claimed:
             try:
-                revoke(device)
+                revoke(device, interface)
             except Exception as exc:
                 print(f'WARNING: debug revocation unconfirmed ({exc}); unplug/power-cycle.', file=sys.stderr)
             usb.util.release_interface(device, interface)

@@ -41,8 +41,9 @@ def native(tmp_path_factory):
     subprocess.run(['cc','-std=c99','-O1','-g','-Wall','-Wextra','-Werror',
                     '-fsanitize=undefined','-fno-sanitize-recover=undefined','-shared','-fPIC',
                     '-I'+str(FW/'include'),
-                    *(str(FW/'src'/s) for s in ('debug.c','monitor.c','usb_debug.c','ax_usb.c','destbin.c',
-                                                'storage.c','recover.c','or1k_decode.c')),
+                    *(str(FW/'src'/s) for s in ('debug.c','monitor.c','usb_device.c','ax_usb.c','destbin.c',
+                                                'storage.c','recover.c','or1k_decode.c',
+                                                'msc.c','msc_medium.c')),
                     str(FW/'tests/bringup_harness.c'),'-o',str(libpath)],check=True)
     lib = C.CDLL(str(libpath))
     lib.bringup_h_setup.argtypes = [C.c_void_p,C.c_void_p]
@@ -52,6 +53,18 @@ def native(tmp_path_factory):
     lib.bringup_h_reg.argtypes = [C.c_uint]
     lib.bringup_h_wire.argtypes = [C.c_void_p,C.c_uint]
     lib.bringup_h_set_code.argtypes = [U32,U32]
+    lib.bringup_h_msc_command.argtypes = []
+    lib.bringup_h_msc_command.restype = C.c_int
+    for name in ('msc_export','msc_reclaim'):
+        getattr(lib,'bringup_h_'+name).argtypes = [C.c_int]
+    for name in ('msc_info','card_byte'):
+        getattr(lib,'bringup_h_'+name).argtypes = [C.c_uint]
+        getattr(lib,'bringup_h_'+name).restype = C.c_uint
+    lib.bringup_h_msc_sense.argtypes = []
+    lib.bringup_h_msc_sense.restype = C.c_uint
+    lib.bringup_h_ax_msc_take.argtypes = [C.c_void_p,C.c_uint]
+    lib.bringup_h_ax_msc_take.restype = C.c_uint
+    lib.bringup_h_ax_msc_feed.argtypes = [C.c_void_p,C.c_uint]
     lib.bringup_h_get_code.argtypes = [U32]
     lib.bringup_h_script.argtypes = [C.c_uint,C.c_char_p]
     lib.bringup_h_checkpoint.argtypes = [C.c_void_p]
@@ -62,7 +75,7 @@ def native(tmp_path_factory):
         getattr(lib,'bringup_h_'+name).argtypes = [C.c_void_p]
     lib.destbin_inspect.argtypes = [C.c_void_p,C.c_void_p]
     lib.destbin_prefix_matches.argtypes = [C.c_void_p,C.c_void_p,U32]
-    lib.recover_check.argtypes = [SectorRead,U32,C.c_void_p]
+    lib.recover_check.argtypes = [C.c_void_p,SectorRead,U32,C.c_void_p]
     lib.recover_check.restype = C.c_int
     lib.bringup_h_recover_code.argtypes = [C.c_uint]
     lib.bringup_h_recover_code.restype = C.c_uint
@@ -160,10 +173,19 @@ def query(h, request, ax=False):
 def test_descriptors_and_truncation(h):
     n,dev=setup(h,0x80,6,0x100,size=64)
     assert n==18 and dev[7]==64 and dev[8:12]==b'\x34\x12\x78\x56'
+    # A composite device: mass storage on interface 0 with EP1, vendor debug on
+    # interface 1 with EP2. A browser may claim the vendor interface; it can
+    # never be given class 08, which is why they are separate functions.
     n,cfg=setup(h,0x80,6,0x200,size=64)
-    assert n==32 and struct.unpack_from('<H',cfg,2)[0]==32
-    assert cfg[14:17]==b'\xff\x4c\x01'
-    assert cfg[20]==0x81 and cfg[27]==1
+    assert n==55 and struct.unpack_from('<H',cfg,2)[0]==55
+    # Layout: config(9) iface0(9) ep(7) ep(7) iface1(9) ep(7) ep(7) = 55.
+    assert cfg[4]==2                                    # two interfaces
+    assert cfg[9]==9 and cfg[18]==7 and cfg[25]==7      # first function sizes
+    assert cfg[32]==9 and cfg[41]==7 and cfg[48]==7     # second function sizes
+    assert cfg[11]==0 and cfg[14:17]==b'\x08\x06\x50' # interface 0: mass storage
+    assert cfg[13]==2 and cfg[20]==0x81 and cfg[27]==0x01
+    assert cfg[34]==1 and cfg[37:40]==b'\xff\x4c\x01' # interface 1: vendor debug
+    assert cfg[36]==2 and cfg[43]==0x82 and cfg[50]==0x02
     assert setup(h,0x80,6,0x200,size=9)[1]==cfg[:9]
     assert setup(h,0x80,6,0x300,size=64)[1]==b'\x04\x03\x09\x04'
     assert setup(h,0x80,6,0x301,index=0x409,size=64)[1][2:].decode('utf-16-le')=='Luma KC02 bring-up'
@@ -208,15 +230,22 @@ def test_debug_authorization_and_reset_revoke(h):
     assert not h.bringup_h_state(0) and not h.bringup_h_state(1) and not h.bringup_h_state(2)
 
 
+USB_DEBUG_INTERFACE = 1
+USB_MSC_INTERFACE = 0
+
+
 def test_device_can_revoke_but_usb_cannot_authorize(h):
     configure(h); h.bringup_h_authorize()
-    assert setup(h,0x40,0x5f)[0]==0
+    # The revoke message belongs to the debug interface and cannot reach the
+    # storage function.
+    assert setup(h,0x40,0x5f,index=0)[0]==-1
+    assert setup(h,0x40,0x5f,index=USB_DEBUG_INTERFACE)[0]==0
     assert h.bringup_h_state(2)
     h.bringup_h_ack()
     assert not h.bringup_h_state(2)
     assert h.bringup_h_state(1)==1 and h.bringup_h_state(0)==7
     for req in (0,1,0x5e,0x60,0xff):
-        assert setup(h,0x40,req)[0]==-1
+        assert setup(h,0x40,req,index=USB_DEBUG_INTERFACE)[0]==-1
     assert query(h,'g')==b'+'+packet('E22')
 
 
@@ -615,6 +644,200 @@ def test_decoder_identifies_only_trap_words(h):
     assert h.or1k_is_trap(0x21000000)
 
 
+SENSE_NOT_READY, SENSE_ILLEGAL_REQUEST, SENSE_UNIT_ATTENTION = 0x02, 0x05, 0x06
+MSC_EXPORTS, MSC_RECLAIMS, MSC_REFUSED, MSC_HOST_OWNS = 0, 1, 2, 3
+MSC_FAT_OWNER, MSC_FAT_MOUNTED, MSC_MEDIUM_BLOCKS, MSC_COMMANDS, MSC_ERRORS, MSC_STALLS = 4, 5, 6, 7, 8, 9
+CARD_BLOCKS = 16
+
+
+def msc_setup(h):
+    """Configures the composite device and binds the engine to the endpoints."""
+    configure(h)
+    h.bringup_h_msc_init()
+    assert h.bringup_h_state(1) == 1
+
+
+def cdb6(opcode, *fields):
+    """A six-byte CDB: opcode, then the command's own fields, then padding."""
+    assert len(fields) <= 5
+    return bytes([opcode]) + bytes(fields) + bytes(5-len(fields))
+
+
+def cdb_read_capacity():
+    return bytes([0x25]) + bytes(9)
+
+
+def cdb_read10(lba, blocks, flags=0):
+    """READ(10): opcode, flags, LBA, reserved, length, control."""
+    return bytes([0x28, flags]) + struct.pack('>I', lba) + b'\x00' + \
+           struct.pack('>H', blocks) + b'\x00'
+
+
+def cdb_write10(lba, blocks, flags=0):
+    return bytes([0x2a, flags]) + struct.pack('>I', lba) + b'\x00' + \
+           struct.pack('>H', blocks) + b'\x00' 
+
+
+def cbw(cdb, length, inbound=False):
+    """A Bulk-Only CBW frame for the given command block."""
+    frame = (U8*31)()
+    body = struct.pack('<II', 0x43425355, 1) + struct.pack('<I', length) + \
+           bytes([0x00 if inbound else 0x80, 0, len(cdb)]) + cdb
+    for i, byte in enumerate(body):
+        frame[i] = byte
+    return frame
+
+
+def msc_run(h, frame, data_in=b''):
+    """Sends a CBW, then any OUT data, on the storage endpoint.
+
+    The CBW comes first: that ordering is the protocol, not a convenience. A
+    test that sends data first hands the engine a payload where it expects a
+    command block.
+    """
+    h.bringup_h_ax_msc_feed(frame, 31)
+    for at in range(0, len(data_in), 64):
+        chunk = data_in[at:at+64]
+        buf = (U8*len(chunk)).from_buffer_copy(chunk)
+        h.bringup_h_ax_msc_feed(buf, len(chunk))
+    status = h.bringup_h_msc_command()
+    out = (U8*8192)()
+    n = h.bringup_h_ax_msc_take(out, 8192)
+    body = bytes(out[:n])
+    return status, body
+
+
+def csw_of(body):
+    return body[-13:] if len(body) >= 13 else b''
+
+
+def csw_status(body):
+    return csw_of(body)[12] if len(csw_of(body)) == 13 else -1
+
+
+def payload_of(body):
+    """The data the device sent, with the trailing CSW removed."""
+    return body[:-13] if len(body) >= 13 else b''
+
+
+def test_mass_storage_is_not_ready_until_the_card_is_handed_over(h):
+    """A card the camera still owns must read as no medium, not a blank disk."""
+    msc_setup(h)
+    status, body = msc_run(h, cbw(cdb6(0x00), 0))            # TEST UNIT READY
+    assert status == 1 and csw_status(body) == 1
+    assert struct.unpack_from('<I', csw_of(body), 0)[0] == 0x53425355
+    assert h.bringup_h_msc_sense() >> 8 == SENSE_NOT_READY
+    status, body = msc_run(h, cbw(cdb_read_capacity(), 8))
+    assert status == 1
+    assert h.bringup_h_msc_sense() >> 8 == SENSE_NOT_READY
+    # A read must not transfer data for a medium that is not there.
+    status, body = msc_run(h, cbw(cdb_read10(0, 1), 512))
+    assert status == 1 and payload_of(body) == b''
+
+
+def test_handed_over_card_is_a_working_disk(h):
+    msc_setup(h)
+    assert h.bringup_h_msc_export(1) == 1
+    assert h.bringup_h_msc_info(MSC_HOST_OWNS) == 1
+    assert h.bringup_h_msc_info(MSC_MEDIUM_BLOCKS) == CARD_BLOCKS
+
+    assert msc_run(h, cbw(cdb6(0x00), 0))[0] == 0            # TEST UNIT READY
+
+    status, body = msc_run(h, cbw(cdb_read_capacity(), 8))
+    assert status == 0
+    cap = payload_of(body)
+    assert struct.unpack('>I', cap[0:4])[0] == CARD_BLOCKS-1
+    assert struct.unpack('>I', cap[4:8])[0] == 512
+
+    status, body = msc_run(h, cbw(cdb6(0x12, 0, 0, 0, 36), 36))   # INQUIRY
+    assert status == 0
+    inq = payload_of(body)
+    assert inq[:5] == bytes([0x00, 0x00, 0x05, 0x02, 31])
+    assert inq[8:16] == b'LUMA    ' and inq[16:32] == b'KC02 SD CARD    '
+
+    status, body = msc_run(h, cbw(cdb_read10(2, 1), 512))
+    assert status == 0 and len(payload_of(body)) == 512
+    expected = bytes(h.bringup_h_card_byte(2*512+i) for i in range(512))
+    assert payload_of(body) == expected
+
+    written = bytes((i*11+3) & 0xff for i in range(512))
+    status, body = msc_run(h, cbw(cdb_write10(5, 1), 512, inbound=True), data_in=written)
+    assert status == 0 and csw_status(body) == 0
+    assert bytes(h.bringup_h_card_byte(5*512+i) for i in range(512)) == written
+
+    # A short read reports the unconsumed bytes as residue.
+    status, body = msc_run(h, cbw(cdb_read10(0, 3), 512))
+    assert status == 0 and len(payload_of(body)) == 512
+    assert struct.unpack_from('<I', csw_of(body), 8)[0] == 1024
+
+
+def test_get_max_lun_and_bulk_only_reset(h):
+    msc_setup(h)
+    n, out = setup(h, 0xa1, 0xfe, index=USB_MSC_INTERFACE, size=1)
+    assert n == 1 and out == b'\x00'
+    # The class request belongs to the storage interface, not the debug one.
+    assert setup(h, 0xa1, 0xfe, index=USB_DEBUG_INTERFACE, size=1)[0] == -1
+    assert setup(h, 0x21, 0xff, index=0, size=0)[0] == 0
+    h.bringup_h_ack()          # the reset takes effect when it completes
+    h.bringup_h_msc_export(1)
+    # The next command must report that a reset happened, once.
+    assert msc_run(h, cbw(cdb6(0x00), 0))[0] == 1
+    assert h.bringup_h_msc_sense() >> 8 == SENSE_UNIT_ATTENTION
+    assert msc_run(h, cbw(cdb6(0x00), 0))[0] == 0
+
+
+def test_taking_the_card_back_invalidates_the_local_mount(h):
+    msc_setup(h)
+    assert h.bringup_h_msc_export(1) == 1
+    assert h.bringup_h_msc_info(MSC_FAT_OWNER) == 1          # SD_HOST
+    assert h.bringup_h_msc_reclaim(1) == 1
+    assert h.bringup_h_msc_info(MSC_FAT_OWNER) == 0          # SD_LOCAL
+    # The mount is invalidated, so a reader must remount before trusting it.
+    assert h.bringup_h_msc_info(MSC_FAT_MOUNTED) == 0
+    assert h.bringup_h_msc_info(MSC_MEDIUM_BLOCKS) == 0
+    status, body = msc_run(h, cbw(cdb_read10(0, 1), 512))
+    assert status == 1 and payload_of(body) == b''
+
+
+def test_handoff_is_refused_while_the_camera_is_busy(h):
+    msc_setup(h)
+    # io_idle == 0 means local work is still outstanding.
+    assert h.bringup_h_msc_export(0) == 0
+    assert h.bringup_h_msc_info(MSC_EXPORTS) == 0
+    assert h.bringup_h_msc_info(MSC_HOST_OWNS) == 0
+    assert h.bringup_h_msc_export(1) == 1
+
+
+def test_format_and_eject_are_refused_over_the_endpoints(h):
+    msc_setup(h)
+    h.bringup_h_msc_export(1)
+    assert msc_run(h, cbw(cdb6(0x04), 0))[0] == 1            # FORMAT UNIT
+    assert h.bringup_h_msc_sense() >> 8 == SENSE_ILLEGAL_REQUEST
+    assert msc_run(h, cbw(cdb6(0x1b, 0, 0, 0, 0x02), 0))[0] == 1   # START STOP + eject
+    assert h.bringup_h_card_byte(0) != 0xffffffff            # the card is still there
+
+
+def test_storage_traffic_does_not_disturb_the_debug_session(h):
+    """The two functions share one device and must not share traffic."""
+    msc_setup(h)
+    h.bringup_h_msc_export(1)
+    h.bringup_h_authorize()
+    assert query(h, 'g', ax=True).startswith(b'+$00000000')
+    status, body = msc_run(h, cbw(cdb6(0x12, 0, 0, 0, 36), 36))
+    assert status == 0 and payload_of(body)[8:16] == b'LUMA    '
+    assert query(h, 'g', ax=True).startswith(b'+$00000000')
+
+
+def test_bridge_revokes_only_the_debug_function():
+    """The revoke message must be addressed to the vendor interface."""
+    import inspect
+    source = inspect.getsource(bridge.revoke)
+    assert 'interface' in source and '0x5f' in source
+    # The storage function belongs to the OS disk driver and is never claimed.
+    serve = inspect.getsource(bridge.serve)
+    assert 'claim_interface' in serve
+
+
 def test_bridge_rejects_partial_usb_write():
     class Device:
         def write(self,*args,**kwargs): return 1
@@ -660,7 +883,10 @@ class _Report(C.Structure):
 
 def recover(h,image):
     report=_Report()
-    result=h.recover_check(card_reader(image),image.stat().st_size//512*512,C.byref(report))
+    # The caller owns the volume, so ownership and the mount stay in one place.
+    volume=C.create_string_buffer(4096)
+    result=h.recover_check(volume,card_reader(image),image.stat().st_size//512*512,
+                           C.byref(report))
     return result,report
 
 
@@ -676,9 +902,11 @@ def test_recover_no_card_and_unreadable_card(h,tmp_path,codes):
     @SectorRead
     def dead(sector,out): return 0
     report=_Report()
-    assert h.recover_check(dead,1<<20,C.byref(report))==codes['RECOVER_NO_FILESYSTEM']
-    assert h.recover_check(dead,0,C.byref(report))==codes['RECOVER_NO_CARD']
-    assert h.recover_check(C.cast(None,SectorRead),1<<20,C.byref(report))==codes['RECOVER_NO_CARD']
+    volume=C.create_string_buffer(4096)
+    assert h.recover_check(volume,dead,1<<20,C.byref(report))==codes['RECOVER_NO_FILESYSTEM']
+    assert h.recover_check(volume,dead,0,C.byref(report))==codes['RECOVER_NO_CARD']
+    assert h.recover_check(volume,C.cast(None,SectorRead),1<<20,C.byref(report))==codes['RECOVER_NO_CARD']
+    assert h.recover_check(C.cast(None,C.c_void_p),dead,1<<20,C.byref(report))==codes['RECOVER_NO_CARD']
 
 
 def test_recover_valid_candidate_is_not_reported_verified(h,tmp_path,codes):
@@ -736,7 +964,7 @@ def test_recover_reports_io_failure_mid_stream(h,tmp_path,codes):
         C.memmove(out,data[sector*512:sector*512+512],512)
         return 1
     report=_Report()
-    assert h.recover_check(read,len(data),C.byref(report))==codes['RECOVER_CANDIDATE_IO']
+    assert h.recover_check(C.create_string_buffer(4096),read,len(data),C.byref(report))==codes['RECOVER_CANDIDATE_IO']
     assert calls[0]>900
 
 

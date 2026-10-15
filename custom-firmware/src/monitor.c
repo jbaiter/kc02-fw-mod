@@ -135,7 +135,7 @@ static int breakpoint_set(Monitor *m, u32 address, int insert)
 static void output(void *ctx, const u8 *p, unsigned n)
 {
     Monitor *m=ctx;
-    if (!m->usb || !usb_debug_send(m->usb,p,n)) { m->link_failed=1; }
+    if (!m->usb || !usb_device_send(m->usb,p,n)) { m->link_failed=1; }
 }
 static int read_register(void *ctx, unsigned reg, u32 *value)
 {
@@ -339,7 +339,7 @@ void monitor_authorize(Monitor *m)
 {
     if (!m->handling && m->usb && m->usb->configured && !m->usb->fault) { m->rsp.enabled=1; }
 }
-void monitor_init(Monitor *m, UsbDebug *usb, const MonitorMemory *memory, const MonitorRegions *regions)
+void monitor_init(Monitor *m, UsbDevice *usb, const MonitorMemory *memory, const MonitorRegions *regions)
 {
     DebugOps ops={m,output,read_register,write_register,read_memory,write_memory,resume,
                   interrupt,breakpoint,detach};

@@ -183,6 +183,54 @@ than silence, so a client can say why.
   emulator dispatches to `EVBA` regardless, so the SRAM-vector variant has to be
   confirmed on a real unit.
 
+## USB mass storage
+
+The device is a composite of two functions, because a browser may claim a
+vendor interface but can never be given class 08:
+
+| Function | Interface | Endpoints |
+|---|---|---|
+| Mass storage, class 08/06/50 | 0 | EP1 IN/OUT, 64-byte bulk |
+| Vendor debug, class ff/4c/01 | 1 | EP2 IN/OUT, 64-byte bulk |
+
+`src/msc.c` implements Bulk-Only Transport with a SCSI transparent command set:
+INQUIRY, REQUEST SENSE, TEST UNIT READY, READ CAPACITY(10), READ(10), WRITE(10),
+SYNCHRONIZE CACHE, MODE SENSE(6)/(10), REPORT LUNS, PREVENT ALLOW MEDIUM
+REMOVAL, START STOP UNIT.
+
+**The card is handed over, never shared.** `src/msc_medium.c` reports no medium
+at all until `sd_handoff` gives the card to the host, so a host that enumerates
+before the handoff sees SCSI NOT READY rather than a blank disk. While the host
+owns the card every local filesystem call is refused, and taking it back
+invalidates the mount so the camera must remount. A bus reset or disconnect
+reclaims the card; configuring the device hands it over.
+
+Three refusals matter as much as the commands:
+
+- **FORMAT UNIT is refused.** This device never formats, erases or reinitialises
+  media.
+- **EJECT is refused**, so a host cannot eject a card the camera owns.
+- **A truncated WRITE is a phase error**, not a silent partial write: the host
+  believing it wrote blocks that never landed is worse than any error code.
+
+A medium error sends a failed CSW with the residue so the host can ask REQUEST
+SENSE. Stalling the pipe the CSW travels on would hide a recoverable error
+behind what looks like a dead endpoint.
+
+### What is modelled and what is not
+
+`src/ax_usb.c` drives two bulk endpoints through their documented registers: one
+address register pair each, `USB20CON1` bits 13+epx for the transfer length, and
+per-endpoint interrupt bits for collection and completion. Endpoint selection
+uses those interrupt bits rather than trying each endpoint in turn, because a
+controller has one RXCSR visible per index and guessing would let the storage
+endpoint take the debug endpoint's packet.
+
+QEMU does not model this controller, so **none of it has enumerated**. Timing,
+NAK behaviour, and whether two independent bulk endpoints work at all remain
+unverified: the vendor SDK documents EP0 plus EP1..EP4, but only EP0 and EP1 are
+demonstrated by the stock firmware.
+
 ## Debug authorization
 
 USB cannot grant debug. The USB device implements no vendor request that
@@ -264,7 +312,8 @@ target unit and the stock updater has been proven with an unchanged image.
 |---|---|
 | `~/.cache/kc02-emulator/bu-trap-final` | Breakpoint installed, hit, stepped over, removed and restored; PC sequence matches the assembly in `bringup/selftest.S`, including the taken branch at `+0x10` and the indirect return |
 | `~/.cache/kc02-emulator/bu-usbwait-final` | USB build reaches and holds the polled wait, gate reports code 1 with no card |
-| `~/.cache/kc02-emulator/bu-card-final` | Gate finds a candidate on a FAT16 card and reports code 6 with fingerprint `0x95eceee0`, matching the host's `zlib.crc32` |
+| `~/.cache/kc02-emulator/msc-selftest` | Relocation, checkpoint cycle and the trap/step sequence, `failures: 0x0` |
+| `~/.cache/kc02-emulator/msc-card` | Gate finds a candidate on a FAT16 card and reports code 6 with fingerprint `0x95eceee0`, matching the host's `zlib.crc32` |
 
 The self-test drives the real RSP engine, the real vectors, the real step logic
 and the real monitor, and checks the exact bytes the monitor puts on the wire.
@@ -272,7 +321,14 @@ Only the transport is stood in for, because the emulator does not model the USB
 controller. Every expectation has its own failure bit, so a failure names itself,
 and the run records `failures: 0x0`.
 
-`tests/test_bringup.py` covers the same logic on the host in milliseconds:
+Mass storage is covered on the host by `tests/test_msc.py`, where a peer acts as
+the USB host: it builds real CBWs, drains the bulk-IN pipe and parses the CSW,
+so the tests are protocol conversations rather than calls into the engine's own
+helpers. `tests/test_bringup.py` then drives a full BOT session through the
+composite descriptors, the control layer and the real endpoints, including the
+ownership gate, `GET MAX LUN`, Bulk-Only reset and unit attention.
+
+`tests/test_bringup.py` covers the rest of the logic on the host in milliseconds:
 breakpoint install/hit/step/re-arm/remove, step refusal for `l.rfe`, `l.trap`,
 `l.sys` and self-branches, both successors of a conditional branch, continue
 from a breakpoint, detach lifting every patch, the `npc` write policy, decoder
@@ -300,10 +356,16 @@ during this milestone, which is why `le_hex` and `mem_hex` exist in the tests.
   than a byte count; the vendor shifts by 10 where SDHC means 19. A real byte
   count would overflow `u32` above 4 GB, so the value is kept and compared
   against sector offsets. `sd_hw.h` says so instead of calling it bytes.
-- The USB backend assumes `EP0` plus a bidirectional `EP1`, per the vendor SDK.
-  Independent endpoint operation is unverified on silicon, and the control path
-  has never met a real host controller. Timing, NAK handling, stall recovery and
-  disconnect behaviour are the likely first hardware surprises.
+- The USB backend assumes `EP0` plus two bidirectional bulk endpoints, per the
+  vendor SDK. Independent endpoint operation is unverified on silicon, and the
+  control path has never met a real host controller. Timing, NAK handling, stall
+  recovery, and disconnect behaviour are the likely first hardware surprises.
+- A misbehaving host can still fill the storage endpoint's staging buffer. That
+  faults the pipe rather than dropping received bytes, because dropping them
+  would corrupt a write, but it is a fail-closed guess, not a validated
+  recovery path.
+- The LUN's `sync` callback is absent, so SYNCHRONIZE CACHE reports success
+  without proving anything reached the card.
 - The stage owns the card for the length of the gate. Nothing else has started
   yet, so that is safe today, but a future application launch must not run
   concurrently with an unremounted card.

@@ -27,8 +27,9 @@ def build(output, prefix, vid=0, pid=0, selftest=False):
     sources = [ROOT/'bringup'/n for n in ('start.S', 'vectors.S', 'checkpoint.S', 'main.c', 'runtime.c')]
     if selftest:
         sources += [ROOT/'bringup'/n for n in ('selftest.S', 'selftest.c')]
-    sources += [ROOT/'src'/n for n in ('debug.c', 'monitor.c', 'usb_debug.c', 'ax_usb.c',
-                                      'sd_hw.c', 'storage.c', 'destbin.c', 'recover.c', 'or1k_decode.c')]
+    sources += [ROOT/'src'/n for n in ('debug.c', 'monitor.c', 'usb_device.c', 'ax_usb.c',
+                                      'sd_hw.c', 'storage.c', 'destbin.c', 'recover.c', 'or1k_decode.c',
+                                      'msc.c', 'msc_medium.c')]
     flags = ['-mno-delay', '-mhard-div', '-msoft-float', '-mredzone=0', '-Os', '-g3',
              '-std=gnu99', '-ffreestanding', '-fno-builtin', '-fno-pic', '-fno-stack-protector',
              '-ffunction-sections', '-fdata-sections', '-fno-unwind-tables',

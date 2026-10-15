@@ -168,7 +168,7 @@ register-endianness limitation still applies. See [emulator GDB notes](../tools/
 | SD themes and persistent capture/gallery | FAT16 guest and native tests | FAT32, JPEG, removal/full-card recovery, physical SD driver |
 | Dither / grayscale / no print | Shared UI policy and 384-dot raster tests | Head driver, temperature/supply/paper interlocks and measured energy limits |
 | GDB over USB | RSP engine, 35 little-endian registers, real `gdb-multiarch` test, plus trap-based breakpoints and single-step validated in QEMU | USB controller enumeration on hardware, verified cache maintenance, AX3292 HP shadow-bank capture, timer-interrupt halt |
-| USB mass storage | Exclusive ownership primitive | Composite descriptors, BOT/SCSI, controller driver and host tests |
+| USB mass storage | Composite descriptors, BOT/SCSI engine, ownership gate with NOT READY semantics, and host-side protocol and endpoint tests | Controller enumeration and timing on real hardware; a faulted staging buffer is a fail-closed guess |
 | WebUSB flashing | Shared image/update engine in NOR tests | Vendor interface/BOS/Windows binding, staging protocol, browser client, physical confirmation and real recovery |
 | `/firmware.img` SD update | Shared image/update engine in NOR tests | File discovery/staging adapter, recovery loader, NOR driver, real interrupted-update tests |
 | Stock-compatible first installation | Offline `DestBin` candidate packer and read-only candidate validation | SD recovery reader, NOR writer, external SPI recovery proof, real stock-updater test with an unchanged image |

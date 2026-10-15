@@ -11,7 +11,7 @@
 #include "monitor.h"
 #include "or1k_decode.h"
 extern volatile u32 bringup_probe[];
-extern UsbDebug *bringup_selftest_usb(void);
+extern UsbDevice *bringup_selftest_usb(void);
 extern void bringup_step_caller(void);
 extern void bringup_step_target(void);
 static const char hex[]="0123456789abcdef";
@@ -36,7 +36,7 @@ enum {
     FAIL_READ_BASE,
 };
 static Monitor *mon;
-static UsbDebug *link;
+static UsbDevice *link;
 static unsigned stage, failures, pc_count;
 static u32 pc_seen[7];
 static u32 original;
@@ -105,9 +105,9 @@ static void request(const char *body)
     link->queued=link->consumed=0;
     wire_size=0;
     monitor_receive(mon,packet,n);
-    while ((chunk=usb_debug_peek(link,wire+wire_size))!=0) {
+    while ((chunk=usb_device_peek(link,wire+wire_size))!=0) {
         wire_size+=chunk;
-        usb_debug_sent(link,chunk);
+        usb_device_sent(link,chunk);
         if (wire_size+64>sizeof(wire)) { break; }
     }
     /* A refused send revokes debug on purpose. That rule is covered elsewhere;

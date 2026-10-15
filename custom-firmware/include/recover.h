@@ -27,5 +27,6 @@ typedef struct {
 } RecoverReport;
 /* Card bring-up stays with the caller, which owns the hardware. This mounts the
  * volume read-only and validates the candidate. */
-RecoverResult recover_check(SectorRead read, u32 capacity, RecoverReport *report);
+RecoverResult recover_check(Fat *volume, SectorRead read, u32 capacity,
+                            RecoverReport *report);
 #endif

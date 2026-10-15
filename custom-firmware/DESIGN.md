@@ -61,32 +61,47 @@ interrupted operation can orphan clusters or leave inconsistent FAT copies.
 FAT repair, FAT32, fragmented allocation, hot removal and streaming file access
 are still required before general use.
 
-## USB composite device (planned, not implemented)
+## USB composite device (mass storage and debug implemented; not enumerated)
 
-The SDK documents EP0 plus EP1–EP4; the stock firmware demonstrates bidirectional
-EP1 bulk for mass storage. Independent bidirectional EP2/EP3 operation still
-needs hardware verification. Proposed allocation:
+Implemented today:
 
-| Function | Interface | Endpoint numbers |
+| Function | Interface | Endpoints |
 |---|---|---|
 | USB control / enumeration | EP0 | 0 |
 | Mass storage, SCSI transparent BOT | 0, class 08/06/50 | 1 IN/OUT |
-| WebUSB update/staging | 1, vendor class FF | 2 IN/OUT |
-| Local GDB transport | 2, vendor class FF | 3 IN/OUT |
+| Local GDB transport | 1, vendor class FF (subclass 0x4c) | 2 IN/OUT |
+
+Still to add, and with an endpoint budget that has to be spent deliberately:
+
+| Function | Interface | Endpoints |
+|---|---|---|
+| WebUSB update/staging | 2, vendor class FF | 3 IN/OUT |
 
 The WebUSB interface cannot be the mass-storage interface: browsers protect
 class 08 and the OS owns it. WebUSB must not expose the debugger's arbitrary
 memory writes or execution control. On Windows, bind WinUSB to the vendor
 interfaces with appropriate MS OS descriptors, leaving MSC with its disk
-driver. Implement and test BOS/WebUSB capabilities and control requests;
-copying descriptors alone is not a USB stack.
+driver. BOS/WebUSB capabilities and control requests still have to be written
+and tested; copying descriptors alone is not a USB stack.
 
-No descriptors, endpoint transport, USB VID/PID allocation, browser client, or
-BOT/SCSI backend ship in the RAM milestone. QEMU currently does not model the
-AX3292 USB controller. Required evidence includes descriptor/control tests,
-BOT reset recovery, disconnects/timeouts, and physical Linux/Windows/browser
+The SDK documents EP0 plus EP1–EP4, and the stock firmware demonstrates
+bidirectional EP1 bulk for mass storage. Two independent bulk endpoints is an
+assumption, not evidence, and it is the assumption that has to survive first
+contact with a host controller. QEMU does not model the AX3292 USB controller,
+so the controller layer is written to the documented register contract and has
+never enumerated. Required evidence before release: enumeration, BOT reset
+recovery, disconnect and timeout behaviour, and real Linux, Windows and browser
 sessions. Reuse controller code only where licensing permits; the SDK here is
 reference evidence, not redistributable application code.
+
+### Mass-storage ownership
+
+`src/msc_medium.c` binds the LUN to the SD card under the same ownership rule the
+filesystem uses. The LUN reports no medium until the handoff, so a host that
+enumerates early sees SCSI NOT READY rather than a blank disk; while the host
+owns the card the local filesystem refuses every call; taking ownership back
+invalidates the mount. FORMAT UNIT and EJECT are refused, and a truncated WRITE
+is a phase error rather than a silent partial write.
 
 ## USB GDB (protocol engine and first-stage monitor implemented; no silicon test)
 
@@ -97,7 +112,7 @@ transaction to 256 bytes. It rejects numeric overflow, malformed hex, out-of-ran
 register numbers and unauthorised requests. Unsupported operations return an
 empty response; absent backends return errors.
 
-The first-stage monitor (`bringup/`, `src/monitor.c`, `src/usb_debug.c`,
+The first-stage monitor (`bringup/`, `src/monitor.c`, `src/usb_device.c`,
 `src/ax_usb.c`) now supplies the target side for the original KC02, and the same
 stage runs a read-only recovery gate (`src/recover.c`) before any application. It runs
 before any application UI, preserves the factory boot chain, and validates a

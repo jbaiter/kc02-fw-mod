@@ -6,6 +6,7 @@
 #include "ax_usb.h"
 #include "recover.h"
 #include "sd_hw.h"
+#include "msc_medium.h"
 #ifndef USB_VID
 #define USB_VID 0
 #define USB_PID 0
@@ -19,12 +20,28 @@
 #define REG(n) (*(volatile __sfr u32 *)(n))
 #define PROBE_WORDS 32
 static Monitor monitor;
-static UsbDebug usb;
+static UsbDevice usb;
 static AxUsb controller;
 static unsigned key_phase, key_stable, key_previous;
 static u8 sd_dma[512] __attribute__((aligned(32)));
 static SdHw sd_card;
+static Fat volume;
+static MscSd lun;
+static Msc storage;
+/* The gate mounts read-only, so there is no callback that writes through the
+ * filesystem. Writing goes to the raw LUN below, and only after the card has
+ * been handed to the host. */
 static int card_read(u32 lba, u8 *out) { return sd_hw_read(&sd_card,lba,out); }
+static int lun_read(void *ctx, u32 lba, u8 *out)
+{
+    (void)ctx;
+    return sd_hw_read(&sd_card,lba,out);
+}
+static int lun_write(void *ctx, u32 lba, const u8 *in)
+{
+    (void)ctx;
+    return sd_hw_write(&sd_card,lba,in);
+}
 /* Native observation points, not host-injected application state. */
 volatile u32 bringup_probe[PROBE_WORDS] __attribute__((section(".probe.data")))={0};
 extern void bringup_checkpoint(void);
@@ -33,6 +50,7 @@ extern u8 __application_stack[];
 void bringup_selftest_start(Monitor *);
 void bringup_step_caller(void);
 #endif
+static u32 capacity;
 static void delay(unsigned n) { while (n--) { __asm__ volatile("l.nop"); } }
 static u32 read_reg(void *ctx, unsigned reg) { (void)ctx; return REG(reg); }
 static void write_reg(void *ctx, unsigned reg, u32 value) { (void)ctx; REG(reg)=value; }
@@ -111,12 +129,56 @@ static void authorize(void)
 static void poll_link(void *ctx)
 {
     (void)ctx;
-    if (USB_VID && USB_PID) { ax_usb_poll(&controller); authorize(); }
+    if (USB_VID && USB_PID) {
+        /* The BOT engine drives its own transfers, so it is advanced from the
+         * same place the endpoints are serviced. */
+        if (!msc_idle(&storage)) { msc_poll(&storage); }
+        else if (ax_usb_msc_cbw_ready(&controller)) {
+            u8 cbw[MSC_CBW_SIZE];
+            unsigned n=ax_usb_msc_receive(&controller,cbw,sizeof(cbw));
+            if (n==MSC_CBW_SIZE) { msc_cbw(&storage,cbw,n); }
+        }
+        ax_usb_poll(&controller);
+        authorize();
+    }
     else { delay(2000); }
 }
 #if BRINGUP_SELFTEST
-UsbDebug *bringup_selftest_usb(void) { return &usb; }
+UsbDevice *bringup_selftest_usb(void) { return &usb; }
 #endif
+static void bot_reset(void *ctx)
+{
+    (void)ctx;
+    msc_reset(&storage);
+}
+/* The LUN is exported only when the local filesystem has released the card, so
+ * a PC never shares a FAT with the camera. Until then the host sees NOT READY,
+ * not an empty disk. */
+static void lun_export(void)
+{
+    MscMedium medium;
+    if (msc_sd_export(&lun,1)) {
+        msc_sd_medium(&lun,&medium);
+        storage.medium=medium;
+        bringup_probe[9]=1;
+    }
+}
+static void lun_reclaim(void *ctx)
+{
+    MscMedium medium;
+    (void)ctx;
+    if (msc_sd_reclaim(&lun,1)) { bringup_probe[10]++; }
+    msc_sd_medium(&lun,&medium);
+    storage.medium=medium;
+}
+static void lun_configured(void *ctx)
+{
+    MscMedium medium;
+    (void)ctx;
+    lun_export();
+    msc_sd_medium(&lun,&medium);
+    storage.medium=medium;
+}
 u32 *bringup_service(u32 *frame)
 {
     unsigned i;
@@ -163,20 +225,39 @@ void bringup_main(void)
     /* Recovery gate first, and read-only. It finds and validates a
      * stock-format candidate but cannot install one: there is no writer, and
      * a candidate is not trusted until the boot prefix can be verified. */
+    capacity=sd_hw_init(&sd_card,&sd_dma[0]);
     {
         static RecoverReport recovery;
-        u32 capacity=sd_hw_init(&sd_card,&sd_dma[0]);
-        RecoverResult code=capacity ? recover_check(card_read,capacity,&recovery)
+        RecoverResult code=capacity ? recover_check(&volume,card_read,capacity,&recovery)
                                     : RECOVER_NO_CARD;
         bringup_probe[5]=code;
         bringup_probe[6]=recovery.capacity;
         bringup_probe[15]=recovery.info.crc;
     }
     bringup_probe[1]=2;
+    /* Mass storage starts with the card owned locally, so a host that
+     * enumerates before configuring sees NOT READY rather than a blank disk.
+     * The LUN is handed over when the host configures the device. */
+    {
+        static const MscLink link={0,USB_DEVICE_PACKET,ax_usb_msc_send,ax_usb_msc_receive,
+                                   ax_usb_msc_stall,ax_usb_msc_reset};
+        MscMedium medium;
+        MscLink bound=link;
+        bound.context=&controller;
+        msc_sd_init(&lun,&volume,capacity,lun_read,lun_write,0);
+        msc_sd_medium(&lun,&medium);
+        msc_init(&storage,&medium,&bound);
+    }
     monitor_init(&monitor,&usb,&memory,&regions);
     monitor.poll=poll_link;
-    usb_debug_init(&usb,USB_VID,USB_PID,&monitor,monitor_receive,revoke);
-    if (USB_VID && USB_PID) { usb_phy(); key_init(); ax_usb_init(&controller,&usb,&io); }
+    usb_device_init(&usb,USB_VID,USB_PID,&monitor,monitor_receive,revoke);
+    usb.bot_reset=bot_reset;
+    usb.revoke=revoke;
+    usb.bus_reset=lun_reclaim;
+    usb.on_configured=lun_configured;
+    if (USB_VID && USB_PID) {
+        usb_phy(); key_init(); ax_usb_init(&controller,&usb,&io);
+    }
     bringup_probe[1]=3; /* Diagnostic monitor only; no application boot path. */
     __asm__ volatile("l.movhi r1,hi(__application_stack)\n\t"
                      "l.ori r1,r1,lo(__application_stack)\n\t"

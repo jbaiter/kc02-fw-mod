@@ -10,12 +10,13 @@
 #include <string.h>
 #include "monitor.h"
 #include "ax_usb.h"
+#include "msc_medium.h"
 #define H_CODE_BASE 0x02000000u
 #define H_CODE_SIZE 0x10000u
 #define H_SCRIPT_MAX 8
 #define H_BODY_MAX 40
 static Monitor monitor;
-static UsbDebug usb;
+static UsbDevice usb;
 static AxUsb controller;
 static u8 code[H_CODE_SIZE];
 static u8 scratch[4096];
@@ -85,10 +86,24 @@ static void wr(void *ctx, unsigned r, u32 v)
         if (v&0x10) { rxcsr=0; } else { rxcsr=v; }
     } else { regs[r/4]=v; }
 }
+/* The DMA address registers must be followed, not approximated: the controller
+ * reads and writes through whatever address was last written, so a token that
+ * does not resolve back to the same bytes silently tests the wrong buffer.
+ * These offsets are stable because the buffers live inside AxUsb. */
 static u32 dma(void *ctx, u8 *p)
 {
+    const u8 *base=(const u8 *)&controller;
     (void)ctx;
-    return p==controller.ep0 ? 1 : p==controller.rx ? 2 : 3;
+    if (p>=(const u8 *)&controller && p<base+sizeof(controller)) {
+        return (u32)(p-base);
+    }
+    return 0xffffffffu;
+}
+static const u8 *dma_ptr(u32 token)
+{
+    if (token==0xffffffffu) { return 0; }
+    if (token>=sizeof(controller)) { return 0; }
+    return (const u8 *)&controller+token;
 }
 /* --- RSP script ----------------------------------------------------------- */
 static const char *hex_digits="0123456789abcdef";
@@ -107,9 +122,9 @@ static void feed_body(void)
     usb.fault=0;
     wire_size=0;
     monitor_receive(&monitor,packet,n);
-    while ((chunk=usb_debug_peek(&usb,wire+wire_size))!=0) {
+    while ((chunk=usb_device_peek(&usb,wire+wire_size))!=0) {
         wire_size+=chunk;
-        usb_debug_sent(&usb,chunk);
+        usb_device_sent(&usb,chunk);
         if (wire_size+64>sizeof(wire)) { break; }
     }
     monitor.link_failed=0;
@@ -153,7 +168,7 @@ void bringup_h_init(void)
     body_count=body_at=0; release=0; wire_size=0;
     monitor_init(&monitor,&usb,&memory,&regions);
     monitor.probe=harness_probe;
-    usb_debug_init(&usb,0x1234,0x5678,&monitor,monitor_receive,monitor_revoke);
+    usb_device_init(&usb,0x1234,0x5678,&monitor,monitor_receive,monitor_revoke);
     ax_usb_init(&controller,&usb,&io);
     make_frame(frame,0,0x02002010,0x8001);
     frame[33]=0x027b0000;
@@ -184,15 +199,15 @@ void bringup_h_trap(const u32 *gprs, u32 pc, u32 sr)
     monitor_exception(&monitor,frame);
 }
 void bringup_h_authorize(void) { monitor_authorize(&monitor); }
-void bringup_h_reset(void) { usb_debug_reset(&usb); }
-int bringup_h_setup(const u8 s[8], u8 out[64]) { return usb_debug_setup(&usb,s,out); }
-int bringup_h_ack(void) { return usb_debug_status_complete(&usb); }
-int bringup_h_feed(const u8 *p, unsigned n) { return usb_debug_receive(&usb,p,n); }
-int bringup_h_queue(const u8 *p, unsigned n) { return usb_debug_send(&usb,p,n); }
+void bringup_h_reset(void) { usb_device_reset(&usb); }
+int bringup_h_setup(const u8 s[8], u8 out[64]) { return usb_device_setup(&usb,s,out); }
+int bringup_h_ack(void) { return usb_device_status_complete(&usb); }
+int bringup_h_feed(const u8 *p, unsigned n) { return usb_device_receive(&usb,p,n); }
+int bringup_h_queue(const u8 *p, unsigned n) { return usb_device_send(&usb,p,n); }
 unsigned bringup_h_take(u8 *out)
 {
     unsigned n,total=0;
-    while ((n=usb_debug_peek(&usb,out+total))!=0) { total+=n; usb_debug_sent(&usb,n); }
+    while ((n=usb_device_peek(&usb,out+total))!=0) { total+=n; usb_device_sent(&usb,n); }
     return total;
 }
 unsigned bringup_h_wire(u8 *out, unsigned cap)
@@ -223,6 +238,157 @@ unsigned bringup_h_reg(unsigned index) { return index<RSP_REGS ? monitor.regs[in
 int bringup_h_patched(void) { return monitor_code_patched(&monitor); }
 unsigned bringup_h_reads(void) { return reads; }
 unsigned bringup_h_writes(void) { return writes; }
+/* --- mass storage over the real endpoints --------------------------------- */
+#define H_CARD_BLOCKS 16
+static u8 h_card[H_CARD_BLOCKS*512];
+static Fat h_fat;
+static MscSd h_sd;
+static Msc h_msc;
+static int card_read_block(void *ctx, u32 lba, u8 *out)
+{
+    (void)ctx;
+    if (lba>=H_CARD_BLOCKS) { return 0; }
+    memcpy(out,h_card+lba*512,512);
+    return 1;
+}
+static int card_write_block(void *ctx, u32 lba, const u8 *in)
+{
+    (void)ctx;
+    if (lba>=H_CARD_BLOCKS) { return 0; }
+    memcpy(h_card+lba*512,in,512);
+    return 1;
+}
+static void bot_reset(void *ctx)
+{
+    (void)ctx;
+    msc_reset(&h_msc);          /* as a Bulk-Only Mass Storage Reset must */
+}
+/* Binds the engine to the storage endpoint and to an in-memory card, under the
+ * real ownership gate. The LUN starts unexported, as it does on target. */
+void bringup_h_msc_init(void)
+{
+    MscMedium medium;
+    MscLink link;
+    unsigned i;
+    for (i=0; i<sizeof(h_card); i++) { h_card[i]=(u8)(i*5+1); }
+    h_fat=(Fat){0};
+    h_fat.mounted=1;
+    h_fat.owner=SD_LOCAL;
+    h_fat.writable=1;
+    msc_sd_init(&h_sd,&h_fat,H_CARD_BLOCKS,card_read_block,card_write_block,0);
+    msc_sd_medium(&h_sd,&medium);
+    link=(MscLink){&controller,USB_DEVICE_PACKET,ax_usb_msc_send,ax_usb_msc_receive,
+                   ax_usb_msc_stall,ax_usb_msc_reset};
+    msc_init(&h_msc,&medium,&link);
+    usb.bot_reset=bot_reset;
+    ax_usb_msc_reset(&controller);
+}
+int bringup_h_msc_export(int io_idle)
+{
+    int ok=msc_sd_export(&h_sd,io_idle);
+    MscMedium medium;
+    msc_sd_medium(&h_sd,&medium);
+    h_msc.medium=medium;
+    return ok;
+}
+int bringup_h_msc_reclaim(int io_idle)
+{
+    int ok=msc_sd_reclaim(&h_sd,io_idle);
+    MscMedium medium;
+    msc_sd_medium(&h_sd,&medium);
+    h_msc.medium=medium;
+    return ok;
+}
+unsigned bringup_h_msc_info(unsigned n)
+{
+    switch (n) {
+    case 0: return h_sd.exports;
+    case 1: return h_sd.reclaims;
+    case 2: return h_sd.refused;
+    case 3: return msc_sd_host_owns(&h_sd);
+    case 4: return h_fat.owner;
+    case 5: return h_fat.mounted;
+    case 6: return h_msc.medium.blocks;
+    case 7: return h_msc.commands;
+    case 8: return h_msc.errors;
+    case 9: return h_msc.stalls;
+    case 10: return controller.msc.tx_used;
+    case 11: return controller.msc.tx_sent;
+    case 12: return controller.msc.transmitting;
+    case 13: return controller.msc.rx_used;
+    case 14: return controller.msc.halt_in;
+    case 15: return controller.msc.fault;
+    case 16: return h_msc.phase;
+    case 17: return h_msc.expect;
+    case 18: return h_msc.data_total;
+    case 19: return h_msc.transferred;
+    default: return 0;
+    }
+}
+/* The host hands over one CBW, the engine runs the whole command, and the test
+ * reads the reply from the storage endpoint. */
+int bringup_h_msc_command(void)
+{
+    u8 cbw[MSC_CBW_SIZE];
+    unsigned guard, n;
+    n=ax_usb_msc_receive(&controller,cbw,sizeof(cbw));
+    if (n!=MSC_CBW_SIZE) { return -2; }
+    if (msc_cbw(&h_msc,cbw,MSC_CBW_SIZE)<0) { return -1; }
+    for (guard=0; guard<8192 && !msc_idle(&h_msc); guard++) {
+        if (msc_poll(&h_msc)<0) { break; }
+    }
+    return h_msc.csw[12];
+}
+unsigned bringup_h_msc_sense(void)
+{
+    return ((unsigned)h_msc.sense_key<<8)|h_msc.sense_asc;
+}
+unsigned bringup_h_card_byte(unsigned offset)
+{
+    return offset<sizeof(h_card) ? h_card[offset] : 0xffffffffu;
+}
+void bringup_h_ax_msc_endpoint_reset(void)
+{
+    ax_usb_msc_reset(&controller);
+}
+/* Mass-storage endpoint, kept separate from the debug endpoint so a test can
+ * drive a BOT session without disturbing the monitor's traffic. */
+void bringup_h_ax_msc_feed(const u8 *p, unsigned n)
+{
+    if (n<=64) { memcpy(controller.msc.packet_rx,p,n); }
+    count1=n; rxcsr|=1;
+    regs[AX_USB_INTR_RX/4]|=1u<<1;      /* mass-storage OUT packet */
+    ax_usb_poll(&controller);
+}
+/* The host reading bulk IN: a poll moves staged bytes into the endpoint packet
+ * buffer, and the test completes the transfer the way the controller would. */
+unsigned bringup_h_ax_msc_take(u8 *out, unsigned cap)
+{
+    unsigned n=0;
+    for (;;) {
+        const u8 *src;
+        unsigned got;
+        ax_usb_poll(&controller);
+        got=controller.msc.transmitting;
+        if (!got || n+got>cap) { break; }
+        src=dma_ptr(regs[AX_USB_EP_TX_REG(1)/4]);
+        if (!src) { break; }        /* no address was armed: nothing to read */
+        memcpy(out+n,src,got);
+        n+=got;
+        txcsr&=~1u;
+        regs[AX_USB_INTR_TX/4]|=1u<<1;
+        ax_usb_poll(&controller);
+    }
+    return n;
+}
+unsigned bringup_h_ax_msc_stalled(unsigned in)
+{
+    return in ? controller.msc.stalled_in : controller.msc.stalled_out;
+}
+void bringup_h_ax_msc_clear(void)
+{
+    ax_usb_msc_reset(&controller);
+}
 unsigned bringup_h_state(unsigned n)
 {
     switch(n) {
@@ -233,8 +399,8 @@ unsigned bringup_h_state(unsigned n)
     case 4:return usb.fault;
     case 5:return reads;
     case 6:return writes;
-    case 7:return usb.halt_in;
-    case 8:return usb.halt_out;
+    case 7:return usb_device_halted(&usb,USB_DEVICE_DEBUG_IN);
+    case 8:return usb_device_halted(&usb,USB_DEVICE_DEBUG_OUT);
     case 9:return regs[AX_USB_ADDRESS/4];
     case 10:return controller.state;
     default:return 0;
@@ -263,15 +429,23 @@ void bringup_h_ax_event(unsigned event)
 }
 void bringup_h_ax_feed(const u8 *p, unsigned n)
 {
-    if (n<=64) { memcpy(controller.rx,p,n); }
-    count1=n; rxcsr|=1; ax_usb_poll(&controller);
+    if (n<=64) { memcpy(controller.debug.packet_rx,p,n); }
+    count1=n; rxcsr|=1;
+    regs[AX_USB_INTR_RX/4]|=1u<<2;      /* debug OUT packet */
+    ax_usb_poll(&controller);
 }
 unsigned bringup_h_ax_take(u8 *out)
 {
-    unsigned n=controller.transmitting;
+    unsigned n;
+    /* The reply is queued by the receive path; a poll is what moves it into the
+     * endpoint buffer, exactly as the target's loop does. */
+    ax_usb_poll(&controller);
+    n=controller.debug.transmitting;
     if (n) {
-        memcpy(out,controller.tx,n); txcsr&=~1u;
-        regs[AX_USB_INTR_TX/4]|=2; ax_usb_poll(&controller);
+        memcpy(out,controller.debug.packet_tx,n);
+        txcsr&=~1u;                     /* TXPKTRDY clear: transfer complete */
+        regs[AX_USB_INTR_TX/4]|=1u<<2;  /* debug IN transfer complete */
+        ax_usb_poll(&controller);
     }
     return n;
 }

@@ -12,7 +12,7 @@
 #ifndef LUMA_MONITOR_H
 #define LUMA_MONITOR_H
 #include "debug.h"
-#include "usb_debug.h"
+#include "usb_device.h"
 #define MON_BREAKPOINTS 8
 #define MON_TEMPORARY 2
 #define MON_RAM_LOW 0x02000000u
@@ -50,7 +50,7 @@ typedef int (*MonitorProbe)(void *context, struct Monitor *monitor);
 
 typedef struct Monitor {
     Rsp rsp;
-    UsbDebug *usb;
+    UsbDevice *usb;
     MonitorMemory memory;
     MonitorRegions regions;
     u32 regs[RSP_REGS];
@@ -72,7 +72,7 @@ typedef struct Monitor {
     void *probe_context;
 } Monitor;
 
-void monitor_init(Monitor *, UsbDebug *, const MonitorMemory *, const MonitorRegions *);
+void monitor_init(Monitor *, UsbDevice *, const MonitorMemory *, const MonitorRegions *);
 void monitor_authorize(Monitor *);
 void monitor_revoke(void *);
 void monitor_receive(void *, const u8 *, unsigned);
