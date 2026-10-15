@@ -1,5 +1,11 @@
 # Handover — AX3292 firmware emulator (Stage 3: display + SPI flash)
 
+> **Status note.** This document covers the *stock emulation* workstream and its
+> "CURRENT STATE" sections name an old commit. For the current state of the
+> project and the hardware plan, read
+> [`HANDOVER_HARDWARE.md`](HANDOVER_HARDWARE.md), which is authoritative. The
+> emulator facts and traps below are still accurate and still useful.
+
 Written to survive a context compaction. Everything below is either verified
 against the dump, the vendor SDK, or the vendor's own linked build; where
 something is inferred or unconfirmed it says so.

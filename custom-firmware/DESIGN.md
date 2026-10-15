@@ -35,7 +35,10 @@ The physical boot path must identify or retain the board configuration before
 initializing GPIO, sensors, or the printer. A flash ID alone is insufficient:
 the original and X8D share it.
 
-The linker limits the image, globals, and stack to the Z-12's 2 MiB RAM. Keep
+The original KC02 is the hardware target. The linker still limits the image,
+globals and stack to the Z-12's 2 MiB RAM, which costs nothing and keeps all
+three boards building, but the original's application region is 7 MiB and its
+free flash window is 992 KiB, so those budgets are not binding. Keep
 startup, initialized data, BSS clearing and debugger context explicit. The
 compiler must emit little-endian OpenRISC instructions without delay slots.
 

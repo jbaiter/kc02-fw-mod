@@ -15,6 +15,9 @@ Also sold on [Amazon](https://www.amazon.com/HiMont-Camera-Instant-Selfie-Digita
   </tr>
 </table>
 
+Current status and the bring-up plan live in
+[HANDOVER_HARDWARE.md](HANDOVER_HARDWARE.md).
+
 ## New firmware development: Luma
 
 A separate [Luma firmware project](custom-firmware/README.md) now runs its own

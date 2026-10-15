@@ -1,7 +1,13 @@
 # Luma firmware (RAM development milestone)
 
 Luma is a new freestanding AX3292 application with three screens: camera,
-gallery, and list settings. It does not call the stock application or include a
+gallery, and list settings.
+
+**Hardware work targets the original KC02 only** ([handover](../HANDOVER_HARDWARE.md)).
+The X8D and Z-12 build from the same core and are covered by emulator tests; they
+are regression coverage, not release targets. The linker keeps the 2 MiB bound
+that Z-12 imposed because it costs nothing and keeps all three building, but the
+original has 7 MiB and 992 KiB of free flash, so memory is not scarce. It does not call the stock application or include a
 stock firmware dump. The shared core builds for the original KC02, MYSTILUCK
 X8D, and HMOLLIMT Z-12 board profiles. The SD command/DMA contract now lives
 once, in `src/sd_hw.c`, and is shared with the bring-up stage.
