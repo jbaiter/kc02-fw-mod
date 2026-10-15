@@ -2,9 +2,10 @@
 import random
 import struct
 
-# Measured RAM layout (see docs/RAM_MAP_MEASURED.md). Code and the execution packet
-# are separate regions so that a large code image does not force a large USB
-# transfer: every transfer stays at SIZE (2048) bytes, the proven size.
+# Measured USB-IDLE-ONLY layout (see docs/RAM_MAP_MEASURED.md). Preview writes
+# 0x020D9C00 inside this packet; active UI stubs also overlap the code window.
+# TestTransport refuses either context before RAM writes. Use the smaller bench
+# layout in docs/hw/execute_payload.py for preview. Transfers remain 2048 bytes.
 SHIM = 0x020D8000        # 128-byte dispatcher / SPI-adapter slot
 CANARY = 0x020D8080      # 4-byte return-only canary
 CODE_ADDR = 0x020D8100   # code image base, links here

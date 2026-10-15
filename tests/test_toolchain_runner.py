@@ -57,6 +57,8 @@ class TestCamera(FakeCamera):
         super().__init__()
         self.data=reference()
         self.memory[ICACHE_INIT_FN]=ICACHE_SIGNATURE
+        self.memory[0x020CCD54]=struct.pack('<I',10)
+        self.memory[0x02000404]=bytes.fromhex('fc4fe1d7')
         self.entries={e['blob']:e for e in entries}
         self.executions=0
         self.cached_shim=None
@@ -211,6 +213,16 @@ class ElfTests(unittest.TestCase):
 
 
 class TransportTests(unittest.TestCase):
+    def test_preview_and_active_hoist_refused_before_ram_writes(self):
+        for mode, hook in ((3, bytes.fromhex('fc4fe1d7')),
+                           (10, bytes.fromhex('7f630300'))):
+            camera=TestCamera()
+            camera.memory[0x020CCD54]=struct.pack('<I',mode)
+            camera.memory[0x02000404]=hook
+            with TestTransport(fake_usb(camera),camera,100) as dev:
+                with self.assertRaises(dump.DumpError): dev.check_firmware()
+            self.assertFalse(any(c[2]==0 for c in camera.commands))
+
     def test_unknown_firmware_no_ram_writes(self):
         camera=TestCamera(); camera.memory[dump.ROUTINE_SIGNATURES[0][0]]=bytes(16)
         with TestTransport(fake_usb(camera),camera,100) as dev:

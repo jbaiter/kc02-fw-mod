@@ -3,14 +3,214 @@
 This is the authoritative handover for the **Luma / bring-up / USB / update**
 workstream, and for the **hardware session** that is about to start.
 
+## Latest bench handoff — 2026-10-15, 21:27
+
+**This update supersedes older status/next-step text below. Hardware experiments
+stopped at the user's request/frustration with elapsed time. Do not resume or
+launch Luma without a fresh user instruction. No flash program/erase ran.**
+
+- Stock camera preview worked, visually confirmed by the user. RAM USB hoist
+  worked. CSI measured **320×180 / pitch 320**; DE video **180×320 / pitch 192**,
+  centered at portrait x=30 on the 240×320 panel.
+- Old packet `020d9700..020d9eff` is **unsafe in preview**: `020d9c00` changed to
+  `3`; verification refused execution. Bench runner now uses **packet 020d8800,
+  2048 bytes; code 020d8100, maximum 1792 bytes**. Candidate survived passive
+  surveys and CPU/host full-packet FNV comparison. General toolchain harness now
+  refuses non-USB mode or an active hoist before uploads; its old layout is
+  USB-idle-only. Do not bypass these guards.
+- Shutdown observations differ: the user reported one orderly shutdown, but on
+  the later USB disappearance the **camera remained alive in viewfinder**.
+  Cable replug recovered USB without reboot. Do not equate USB loss with power-off.
+- Configured auto-off is **300 seconds**. Optional `usb-hoist --keep-awake` uses
+  a 48-byte RAM stub clearing only `020ccdcc`; no saved-setting/battery-protection
+  change. Its idle counter stayed zero throughout the measured 30-second preview
+  observation. Sustained USB reliability beyond that remains unqualified.
+- `docs/hw/preview_session.py` holds one interface claim across payloads and DMA
+  reads, using the shared canary/readback/cache guards. It captured two changing
+  CSI and DE frames and 31 successful heartbeats. Images were nearly black;
+  bright-scene colour/orientation validation remains pending.
+- Returning to mode 10 **re-enumerates USB** (024→025 observed). The first session
+  reported failure on the departing handle; a separate fresh-handle probe
+  confirmed mode 10 and advancing uptime, with no reboot. The script now contains
+  fresh-identity reconciliation, but that revised end-to-end path is **not yet
+  hardware-tested**. No automatic replay of the mode request.
+- Latest evidence directory is in `~/kc02-hw/current-preview`; raw session data:
+  `~/kc02-hw/2026-10-15/session-202910/preview/attempt-205630/reboot-210346/`.
+  `single-session/` contains registers, raw Y/UV, PNG/PPM and the original failed
+  session report; `usb-reenumerated-state/` records successful reconciliation.
+- Emulator changes: earlier JEDEC/ADC/TT fixes plus DE address masking and SDRAM
+  translation. Hardware DE addresses are 24-bit offsets; CSI uses full CPU
+  pointers. Canonical `ax32xx_videoSetAddr` writes full pointers, confirming the
+  distinction. New production-backend fixture test passed: **10 targeted
+  DE/CSI/profile/hardware tests**. QEMU rebuilt. **Full suite and stock/Luma smoke
+  tests have NOT been rerun after the latest DE changes.** Earlier full result
+  was 367 passed, 5 skipped. Latest runner-only suite: 10 passed.
+- LCD ready bit 31 had both states on hardware; emulator still forces it high,
+  now marked as an approximation. Do not invent timing from snapshots.
+- **Luma has NOT run on silicon.** Its board HAL still needs DMA/cache and panel
+  latch validation. Measured contract for its display path: `DE_FRAME_CTRL`
+  (`0xc800`) bit 1 is the double-buffer commit, it completes at a **frame
+  boundary**, and it self-clears; `c800 == 1` is the correct steady state. So Luma
+  must issue exactly one `deUpdate`-style commit (`c800 = 1|2`) after programming
+  `c828`/`c830` at init, or the first framebuffer address never takes effect.
+  Luma's `present()` writing 1 is not itself wrong. Luma's screen/video size
+  `240x320` matches stock USB mode, but its `240/4 = 60`-word stride matches no
+  observed stock stride (stock used `0x40` words = 256 bytes for a 240-wide plane).
+  No RAM takeover/stager was launched.
+- Preview capture is a **hardware rotation**: the SFR1 rotate engine
+  (`0x898c..0x89a8`) turns the CSI `320x180` plane into the DE `180x320` plane,
+  proven by its destination registers equalling the live DE planes. Direction is
+  fixed in hardware (`ROTATECON` has no angle field). Luma does not need to use
+  the engine, but must not assume the two planes are the same buffer.
+- Working tree has substantial uncommitted changes. Review before committing.
+  No subagents used. No additional hardware action is running in background.
+- **Sensor bring-up now has its power and clock sequence (offline only).**
+  `custom-firmware/include/ax_sensor.h` holds the shared IIC0/SCCB layer and
+  `custom-firmware/include/ax_cam_power.h` the LDO/MCLK/PE10 mux, both transcribed
+  from the stock routines (`ax32xx_sysLDOSet 0x0202b284`, `ax32xx_csiMclkSet
+  0x0203444c`, `hal_iic0Init 0x02038730`). The board calls a bounded `sensor_detect()`.
+- **Root cause of the bench `0xff` is settled, and it was our bug.** `sensorprobe`
+  called `ax32xx_sysLDOSet` with index 6 and `en=0`. The stock LDO indices only
+  reach 5, so index 6 hits the default branch and returns immediately: the imager
+  was **never powered**. It was not a protocol mismatch and not a firmware
+  mismatch. Correct sequence is `SYS_LDO_LSEN(1)` with `DVDD=6`, then
+  `SYS_LDO_HSEN(0)` with `AVDD=16`.
+- **H63P parameters recovered from RAM** (`_Sensor_Adpt_` at `0x020e32a0` in the
+  baseline `ram1.bin`): **mclk 24 MHz**, DVDD 6, AVDD 16, VDDIO 16, **1280x720**,
+  YUV, csi_tun 11. The ID check runs at 16 MHz (divisor 17); the sensor then runs
+  at 24 MHz (divisor 11), where `div = 288000000/freq - 1` lands in `0x884c` bits 12:8.
+  IIC0 runs at the stock 200 kHz (divisor 143).
+- `tests/test_luma_sensor.py` covers all of it: the SCCB layer against the
+  production emulator I2C model (including unpowered → definite **NACK**, not a
+  bogus `0xff`), and the LDO/MCLK bit fields including a regression for the exact
+  index-6 no-op that caused the bench failure. Luma builds (55,072 B) and all
+  three smokes pass.
+- **Luma flash risk re-audited on the newly built image.** No update/nor/erase
+  symbols are linked, the stock JEDEC helper is absent from the flat image, and
+  `print_photo`/`update_check`/`usb_storage` are NULL/unavailable. Luma still has
+  not run on silicon.
+
+## Luma runs from RAM on the original KC02 (2026-10-15, late)
+
+**Luma has executed on the camera from RAM**, twice over, with no flash write at
+any point. This is the milestone the whole hardware effort was building toward.
+
+- **Bounded run.** `docs/hw/show_luma.py` asks the stock allocator for a block,
+  links the bench image for the address it returns, uploads it with readback,
+  runs Luma's real `hardware_init` + `app_render` + `present` for one frame, then
+  returns. Evidence: `~/kc02-hw/2026-10-15/session-202910/final-bounded-230347`
+  (beacon `LUMB`, `de_video_y` == Luma's own `lcd_y`, panel 240x320, frame
+  captured and converted to PNG showing Luma's boot screen).
+- **Full takeover.** `show_luma.py --takeover` jumps to Luma's real `_start`,
+  which sets `PICMR = 0` and takes the machine over. The camera panel then shows
+  **Luma's UI, confirmed visually by the user**. Recovery is a pinhole reset.
+
+### Why memory comes from the allocator
+
+Putting the image in the firmware's *free* pool and snapshotting it for restore
+cannot work: the running firmware starts handing that memory out, so the snapshot
+stops describing live state. The observed result was a corrupted heap and a hung
+firmware. `ramalloc.c` now asks the stock allocator for a block and keeps it, so
+the block is exclusively ours and nothing needs restoring. `run_bounded()` also
+restores on the failure path, not only on success.
+
+### Display bugs found only by hardware validation
+
+Luma assumed it owned the display from reset. It does not: it runs *after* the
+boot chain. Five defects, all fixed, all recorded in `docs/hw/2026-10-15.md`:
+
+1. **No LCD frame kick.** `ax32xx_lcdKick()` is exactly `LCD_CON(0xa800) |= 2`,
+   raised by the stock LCD interrupt every frame. A polling app must kick it
+   itself. Without it a DE commit is frame-gated on a boundary that never comes.
+2. **Assignments instead of read-modify-write.** Stock `LCD_CON = 0x31` and
+   `DE_DISPLAY_CTRL = 0x2ce52083`; Luma wrote `1` to both, clearing fields it
+   does not model and turning the panel path off.
+3. **Wrong plane pitch.** The DE video plane is 240x320 with a **256-byte** pitch
+   (`0xc82c = 0x40` words), not 240.
+4. **Storage before the first frame.** `sd_hw_init` ran before rendering; a first
+   frame that waits on storage never appears when storage misbehaves.
+5. **Zeroed chroma is not neutral.** Both `sensor_copy()` and the DE subtract 128,
+   so all-zero U/V renders as saturated **green**. This was the green rectangle in
+   the viewport and the green garbage at the plane edge, where the 16 padding
+   columns of a 256-pitch plane are never written by `present()`. Every plane is
+   now filled neutral at init. Verified numerically: padding columns read exactly
+   128 and the whole plane has zero green pixels.
+
+Also fixed: the rotate engine and the CSI-to-LCD DMA, which the stock firmware
+leaves writing the DE plane, are now disabled so Luma owns the plane outright.
+
+### Button input is fixed and verified
+
+The UI looked dead to input while it was demonstrably rendering. Cause, taken
+from the stock firmware rather than guessed: `hal_adcGetChannel` (0x0203814c)
+calls `ax32xx_adcEnable`, `ax32xx_adcSetBaudrate(1000000)`, `ax32xx_adcConverStart`
+and `ax32xx_adcRead`, and Luma did only the middle-last of those. Specifically it
+never enabled the **ADC module clock** -- `ax32xx_sysClkSet(29,1)` clears bit 29
+of `0x8840`, and a *clear* gate bit is the enabled state -- and never programmed
+the **baud divider** (`0x9174 = 144000000/(baud*2)-1 = 71`). With the module
+clock gated off the conversion never completed, so every keypad read timed out and
+returned "no key". `key_sample()` now follows the stock sequence byte for byte.
+
+**Verified on hardware**, not just derived: with the user holding OK (upper
+right), a bench run sampled the keypad ladder 32 times and read **388..392**
+against a measured OK centre of **386** and window 351..421
+(`~/kc02-hw/2026-10-15/session-202910/keypad-held-231023`). Luma maps 386 to
+`KEY_OK` within a tolerance of 25, so the press registers. Idle reads ~1023.
+
+### Also fixed for the panel
+
+Frame events are now acknowledged as well as kicked. The stock firmware clears
+every `LCDSTA(0xa804)` event bit by writing it eight positions higher, from its
+LCD interrupt. A polling application that only kicks (`LCD_CON |= 2`) without
+acknowledging stops getting frame boundaries, and because a DE commit is
+frame-gated the panel then freezes on the last frame it latched -- observed as
+Luma sitting on its boot screen with the progress bar never advancing while the
+code was running. `lcd_service()` now does both.
+
+### Still open
+
+- The sensor does not answer on either IIC bus in USB mode, so Luma's camera view
+  shows a neutral field rather than an image. See the sensor sections below.
+- Panel orientation: the captured plane reads rotated relative to how it is drawn.
+  Whether the panel's own scan makes that correct has not been confirmed, and the
+  user has not reported it as wrong.
+- A faint dark (not green) edge artifact remains at the plane padding columns.
+
+## Flash preparation
+
+`custom-firmware/tools/image.py` packs a LUMAIMG container matching
+`image_validate()` in `update.c` field for field. `tests/test_image_pack.py`
+compiles that production validator and runs it over the packer's output, so the
+two cannot drift: the container validates, and each of 14 tampered fields
+(payload byte, flags, entry, board mask, version, load address, reserved byte,
+both CRCs) is rejected.
+
+`flash_qualified`, `recovery_writer` and `hardware_tested` stay false, install
+filenames are refused, and the safe first install remains the **bringup** image,
+not Luma: no external SPI read has been verified and the recovery gate has never
+run on this hardware.
+
+## Safety record
+
+Zero flash writes across the entire effort. The RAM-run write allowlist was
+tested and refuses every address outside the allocated block, including the stock
+application image and flash. Every hang — including one real heap-corruption hang
+and one wedged USB BOT state — recovered with a USB replug or the pinhole reset.
+
 Read this before [`HANDOVER_EMULATOR.md`](HANDOVER_EMULATOR.md). That document
 covers the earlier workstream (running the *unchanged stock* firmware in QEMU) and
 its "CURRENT STATE" sections name a commit from months ago. Its emulator facts are
 still good; its status is not. For the current state, this file wins.
 
-- Repo: `/home/jbaiter/.src/kc02-fw-mod`, branch `reversing`, HEAD `1c3ec9d`.
-- Working tree clean. **362 tests pass, 5 skipped.**
-- Nothing has been written to a camera. No cable has been plugged in for a test.
+- Repo: `/home/jbaiter/.src/kc02-fw-mod`, branch `reversing`, session-start HEAD `822c6c2`.
+- **Hardware testing started 2026-10-15.** Stock USB, baseline RAM, bounded SPR,
+  sensor, ADC, TT timer and JEDEC read-ID probes passed. RAM/peripheral changes
+  only; no flash writes or erases.
+- Working-tree changes include hardware-derived emulator fixes. Full pytest:
+  **367 passed, 5 skipped** after the ADC/TT/JEDEC changes; two subsequent
+  bench-guard tests also pass in the targeted runner suite.
+- Evidence: `~/kc02-hw/2026-10-15/session-202910/` and
+  [`docs/hw/2026-10-15.md`](docs/hw/2026-10-15.md).
 
 ---
 
@@ -106,7 +306,9 @@ Evidence lives under `~/.cache/kc02-emulator/`, notably `luma-aa-final`,
 3. **Nothing has enumerated.** QEMU does not model the USB controller. Two and
    three independent bulk endpoint pairs is an SDK assumption; the stock firmware
    demonstrates only EP0 and EP1.
-4. **No hardware at all.** No camera touched.
+4. **Luma itself has not run on hardware.** The stock-firmware RAM probe path
+   works; custom USB enumeration, panel/sensor initialization and printing still
+   need hardware qualification.
 5. Cache maintenance for trap words is written to the vendor contract but
    unverified. HP shadow-bank capture is absent. Ctrl-C cannot halt a running
    target. The boot-prefix comparison has no trusted snapshot, so the recovery
@@ -117,6 +319,33 @@ Evidence lives under `~/.cache/kc02-emulator/`, notably `luma-aa-final`,
 ## 5. Measured facts from the last session (do not re-derive)
 
 These cost real effort. They are measurements, not documentation.
+
+### 2026-10-15 bench results and emulator corrections
+
+Full values, commands and caveats: [`docs/hw/2026-10-15.md`](docs/hw/2026-10-15.md).
+Portable fixture: `tests/fixtures/hardware/original-2026-10-15.json`.
+
+- JEDEC ID **`5e4016`**, read twice through the pinned stock `0x9f` helper.
+  The old `ef4016` was an emulator assumption. Corrected the original profile
+  and machine default; alternate identities remain unchanged. UID unmeasured.
+- Keypad ADC channel 3 returned `1023`; `ADCCON` read `0x13` before/after a
+  stock HAL conversion. GO self-clears along with BUSY. Corrected the emulator.
+- TT (`9900/04/08`) is disabled at the stock USB handoff. Start `0x42` reads
+  back as `2`; stop `0`/`0x40` returns control/count zero. A 50-XOS-ms sample
+  measured about 128 MHz, **not microseconds**. Added a gated/resettable TT model.
+  Luma now starts it and extends raw 32-bit ticks before converting to ms.
+- DE geometry `013f00ef` confirms 240×320 portrait. Y/UV stride registers `40`
+  confirm 256-byte pitch. Existing emulator decoding agrees. CSI LCD DMA is
+  idle in USB mode; camera-preview configuration is still pending.
+- Stock sensor autodetection selected real H63P ops `020e32a0`; independent
+  helper read still returned `ff` and remains inconclusive. Added an original
+  H63P identity regression. ADC/SD divider readback semantics remain unresolved.
+- Fixed three stale offline unlock self-test expectations before USB access.
+  `camprobe2` probes a mailbox, not SPRs, and its default input implied a
+  multi-day wait. The runner now refuses those defaults.
+
+Update the emulator fixture/tests in the same session as each finding. Change
+confirmed mismatches; keep state-specific observations out of reset defaults.
 
 ### Flash layout per board
 
@@ -175,19 +404,26 @@ The stock firmware boots and *is* the bring-up. A payload runs inside it from a
 measured-free RAM window, using the firmware's own USB and I-cache helper.
 
 ```sh
-python3 tools/kc02_usb.py selftest                 # offline guard check
+.env/bin/python tools/kc02_usb.py selftest        # offline guard check
 lsusb | grep -Ei '0219|1908'                       # identify the USB mode
-python3 docs/hw/execute_payload.py --payload camprobe2
+# SESSION must name a new persistent evidence directory; see the dated reference.
+.env/bin/python docs/hw/build_probes.py --output "$SESSION/probes"
+.env/bin/python docs/hw/execute_payload.py --payload sprprobe --input-words 0 \
+  --payload-dir "$SESSION/probes" --output-dir "$SESSION/spr-de"
 ```
 
 Purpose: replace my QEMU-derived register guesses with measurements. Read back
 the DE geometry and strides, the panel registers, the ADC channel and thresholds,
-the CSI setup, the SD divider, and the flash ID. Payloads available:
-`echo`, `mode`, `camprobe`, `camprobe2`, `sensorprobe`.
+the CSI setup, the SD divider, and the flash ID. Current bounded probes:
+`echo`, `sprprobe` (five fixed register banks), `sensorprobe`, `adcprobe`,
+`timerprobe`, `flashidprobe`. Historical `mode`/`camprobe`/`camprobe2` payloads
+change or observe UI state; they are not register-readback substitutes.
 
 Known risk: `tools/kc02_usb.py probe` (the `BLDR` at `0x01FFDA04` flash-window
-test) has a documented bus-error risk and may need a power-cycle. Everything else
-in this step is read-only.
+test) has a documented bus-error risk and may need a power-cycle. The SPR payload
+only reads peripheral registers; its transport writes scratch RAM and runs cache
+helpers. Sensor/ADC/TT probes make bounded, reversible peripheral changes. None
+writes flash. See the dated bench reference.
 
 ### Step 2 — flash driver test in the tail (writes, but reversible by the device)
 
@@ -242,7 +478,8 @@ sensor are in `tools/emu/profiles.py` (`Profile.options()`, `machine_args()`).
 Original KC02: entry `0x0200046C`, stack `0x027ffffc`, VBG `0x222c`,
 panel 90°, ADC channel 3, H63P sensor at slave `0x40`, ID `0x0b == 0x48`.
 Keys `(657, 510, 252, 776, 386, 12)` = Up, Down, Left, Right, OK, Escape.
-Extras `(386, 1024, 1024, 1024, 1024)`. Flash `ef4016`, UID all zeros.
+Extras `(386, 1024, 1024, 1024, 1024)`. Flash **`5e4016` measured**;
+UID unmeasured (the emulator still assumes zeros).
 Printer platen phases `(10, 8, 9, 1, 5, 4, 6, 2)`.
 
 Register contracts:
@@ -256,7 +493,9 @@ Register contracts:
 - JPEG in `0xb820/24` for ctrl `0x400`, else `0xb050/54`; JPGA IRQ16, JPGB IRQ22.
 - Printer: supply/job `0x8004` bit6, latch bit5; clock `0x800c` bit13, data bit15;
   strobe `0x8000` bit9; PA7 paper active-low.
-- Timer `0x9800/04/08`, pending `0x98a8`; free-running µs counter `0x9908`.
+- Timer0 `0x9800/04/08`, pending `0x98a8`; TT `0x9900/04/08` is a
+  start/stop/resettable raw counter, approximately 128 MHz against stock XOS
+  time, disabled in USB idle. **`0x9908` is not a free-running µs clock.**
 - `sd_hw_init` returns the vendor CSD value, which is numerically the card's
   512-byte sector count, not a byte count.
 
@@ -320,11 +559,13 @@ python3 custom-firmware/tools/bringup_smoke.py --build custom-firmware/build/bri
 # Stock emulator regression
 python3 tools/emu/smoke.py firmware/original.bin --output ~/.cache/kc02-emulator/stock-NEW
 
-# Hardware (read-only first)
-python3 tools/kc02_usb.py selftest
-python3 tools/kc02_usb.py probe            # BLDR at 0x01FFDA04; bus-error risk
-python3 tools/kc02_usb.py dump-ram --out ~/kc02-hw/ram1.bin
-python3 docs/hw/execute_payload.py --payload camprobe2
+# Hardware (no flash writes; prepare SESSION as in docs/hw/2026-10-15.md)
+.env/bin/python tools/kc02_usb.py selftest
+.env/bin/python tools/kc02_usb.py dump-ram --out "$SESSION/ram1.bin"
+.env/bin/python docs/hw/build_probes.py --output "$SESSION/probes"
+.env/bin/python docs/hw/execute_payload.py --payload sprprobe --input-words 0 \
+  --payload-dir "$SESSION/probes" --output-dir "$SESSION/spr-de"
+# Do not run the old flash-window probe as a routine bench step.
 ```
 
 Toolchain: working patched little-endian/no-delay compiler at
@@ -337,16 +578,21 @@ GDB: `~/.cache/kc02-gdb/root/usr/bin/gdb-multiarch`.
 
 ## 10. Immediately next
 
-The camera is running and attached. Step 1 above is read-only and ready to run.
+USB-idle baseline and bounded probes are complete. No mode switch or flash
+write/erase has run. Evidence: `~/kc02-hw/2026-10-15/session-202910/`.
+**20:51:54+02:00: camera absent from USB.** Preview preflight stopped before
+applying the hoist; user reconnection/power-on is required.
 
-Suggested order for the session:
+Next: confirm the visible camera screen and stable battery power, install only
+the RAM USB hoist and request camera mode, then re-read DE/CSI banks in preview.
+Keep those measurements separate from USB idle.
 
-1. `tools/kc02_usb.py selftest` and identify the USB mode with `lsusb`.
-2. `dump-ram` to a **persistent** path under `~/kc02-hw/` (not `/tmp`; earlier
-   sessions lost `/tmp` artifacts on reboot).
-3. `execute_payload.py --payload camprobe2` and `sensorprobe`, recording what the
-   stock firmware actually programmed, to replace the QEMU-derived guesses.
-4. Only then decide whether the `probe` flash-window test is worth its risk.
+The runner now caps code at `020d9000` to reserve the unlock, hoist and child-lock
+stubs below `020d9700`. The generic toolchain window is wider; do not use it to
+upload over active stubs. Update emulator evidence/tests after each finding.
+
+The flash-window `probe` remains deferred; earlier hardware notes already
+recorded a bus fault there. Step 2 flash-driver work has not started.
 
 Save everything to `~/kc02-hw/$(date +%F)/` and record the commands alongside the
 outputs. Write the findings back into this file's section 5 rather than only into

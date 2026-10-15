@@ -130,6 +130,20 @@ int main(void) {
     s.sfr[0xb018/4]=0x240000; ax3292_sensor_frame(&s);
     assert(s.sfr[0xb018/4] == 0x200000);
     assert(s.sfr[0xb00c/4] == 0xa);
+    /* Original KC02: stock sensorAutoCheck selected real H63P on hardware
+     * (docs/hw/2026-10-15.md). Measured on silicon, its 8-bit write address is
+     * 0x80 (7-bit 0x40); 0x40 never acknowledges, which is why stock's own
+     * hal_iic08bitAddrReadData(0x40,0x0b) read 0xff. */
+    s.sensor_3a = false;
+    tx(&s, 0x40, 0x90); tx(&s, 0x0b, 0x10); tx(&s, 0x41, 0x90);
+    ax3292_i2c_command(&s, 0, 0x20);
+    assert(s.sfr[0x9098/4] == 0xff && (s.sfr[0x90a4/4] & 0x80));
+    tx(&s, 0x80, 0x90); tx(&s, 0x0b, 0x10); tx(&s, 0x81, 0x90);
+    ax3292_i2c_command(&s, 0, 0x20);
+    assert(s.sfr[0x9098/4] == 0x48);
+    tx(&s, 0xdc, 0x90); tx(&s, 0xfc, 0x10); tx(&s, 0xdd, 0x90);
+    ax3292_i2c_command(&s, 0, 0x20);
+    assert(s.sfr[0x9098/4] == 0xff && (s.sfr[0x90a4/4] & 0x80));
     return 0;
 }
 ''')

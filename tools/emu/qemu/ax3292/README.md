@@ -17,6 +17,8 @@ real files instead of reconstructing them from diff text.
 | `ax3292-display.h` | DE scanout, OSD and keypad input |
 | `ax3292-sensor.h` | H63P/BF3A03 sensors and CSI DMA |
 | `ax3292-sd.h` | SD command controller and sector DMA |
+| `ax3292-adc.h` | Measured ADC completion and synthetic sample policy |
+| `ax3292-timer.h` | Measured TT counter enable/reset/readback |
 
 The `-*.h` files are included into `ax3292.c` on purpose. They are one machine
 with shared state, and the split is by device rather than by translation unit:
@@ -35,6 +37,21 @@ See [../README.md](../README.md) for the full list.
 
 Each known approximation carries a `TODO(approximation)` marker, so
 `rg 'TODO\(approximation\)' tools/emu/qemu/ax3292` is a truthful debt list.
+
+## Hardware evidence
+
+The original KC02 bench record is
+[`docs/hw/2026-10-15.md`](../../../../docs/hw/2026-10-15.md), with a portable
+fixture in `tests/fixtures/hardware/original-2026-10-15.json`.
+`tests/test_emu_hardware.py` compiles the production ADC/TT helpers and Luma's
+raw-counter conversion. Keep new measurements, backend fixes and regressions
+in the same workstream; do not seed stock runtime snapshots as reset state.
+
+Confirmed corrections: original JEDEC ID `5e4016`; ADC GO self-clears; TT requires
+explicit start and returns raw ticks, approximately 128 MHz against stock XOS
+time. TT frequency is an estimate, not an external clock calibration. Original
+H63P I2C identity now has a backend regression. DE geometry/stride decoding
+already agrees with the USB-idle measurements. Preview remains to be measured.
 
 ## Cache SPRs
 

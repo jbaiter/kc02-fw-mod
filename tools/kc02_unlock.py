@@ -367,7 +367,9 @@ UNLOCK_STAGING_HI = 0x020D9200            # exclusive end of the unlock staging
 # The USB/BOT hoist (TASK A) lives immediately after the unlock staging.
 HOIST_STUB_ADDR = 0x020D9200              # 36 bytes -> 0x020D9223
 HOIST_STUB_LEN = 36
-HOIST_STAGING_HI = HOIST_STUB_ADDR + HOIST_STUB_LEN
+HOIST_KEEP_AWAKE_LEN = 48
+IDLE_ACCUMULATOR_ADDR = 0x020CCDCC  # tick_auto_poweroff(1) clears this RAM word
+HOIST_STAGING_HI = HOIST_STUB_ADDR + HOIST_KEEP_AWAKE_LEN
 
 # The child-lock (TASK B) staging lives clear of the unlock/hoist staging.
 GATE_STUB_ADDR = 0x020D9400               # 52 bytes -> 0x020D9433
@@ -481,25 +483,39 @@ def expected_frame_stub_disassembly(base: int = FRAME_STUB_ADDR):
 # --------------------------------------------------------------------------
 # The hoist stub:  service the BOT transport, then fall back into the hook
 # --------------------------------------------------------------------------
-def _hoist_stub_instructions(base: int = HOIST_STUB_ADDR):
-    """(bytes, mnemonic, text) for the RAM hoist stub at ``base``."""
-    return [
+def _hoist_stub_instructions(base: int = HOIST_STUB_ADDR, keep_awake: bool = False):
+    """Service BOT, optionally resetting only the RAM idle accumulator.
+
+    r3 is caller-clobbered by BOT already. No config setter, flash operation,
+    clock/IRQ write or battery-protection change enters the bench variant.
+    """
+    instructions = [
         (ENC_SW_M8_R2, "b.sw", "b.sw -0x8(r1),r2"),
         (ENC_SW_M4_R9, "b.sw", "b.sw -0x4(r1),r9"),
         (ENC_ADD_SP_N8, "b.addi", "b.addi r1,r1,-0x8"),
-        (enc_jal(base + 0x0C, BOT_SERVICE_FN), "l.jal", "l.jal 0x0204d0a8"),
+    ]
+    if keep_awake:
+        instructions += [
+            (shim.enc_movhi(3, IDLE_ACCUMULATOR_ADDR >> 16), "l.movhi", "l.movhi r3,0x020c"),
+            (enc_ori(3, 3, IDLE_ACCUMULATOR_ADDR & 0xffff), "l.ori", "l.ori r3,r3,0xcdcc"),
+            (shim.enc_sw(3, 0, 0), "l.sw", "l.sw 0(r3),r0"),
+        ]
+    instructions += [
+        (enc_jal(base + len(instructions) * 4, BOT_SERVICE_FN), "l.jal", "l.jal 0x0204d0a8"),
         (ENC_ADD_SP_P8, "b.addi", "b.addi r1,r1,0x8"),
         (ENC_LWZ_M8_R2, "b.lwz", "b.lwz r2,-0x8(r1)"),
         (ENC_LWZ_M4_R9, "b.lwz", "b.lwz r9,-0x4(r1)"),
         (ENC_SW_M4_R9, "b.sw", "b.sw -0x4(r1),r9"),
-        (enc_lj(base + 0x20, PER_FRAME_HOOK_RESUME), "l.j", "l.j 0x02000408"),
     ]
+    instructions.append((enc_lj(base + len(instructions) * 4, PER_FRAME_HOOK_RESUME),
+                         "l.j", "l.j 0x02000408"))
+    return instructions
 
 
-def build_hoist_stub(base: int = HOIST_STUB_ADDR) -> bytes:
+def build_hoist_stub(base: int = HOIST_STUB_ADDR, keep_awake: bool = False) -> bytes:
     if base % 4:
         raise ValueError("hoist stub base must be word aligned")
-    return b"".join(raw for raw, _m, _t in _hoist_stub_instructions(base))
+    return b"".join(raw for raw, _m, _t in _hoist_stub_instructions(base, keep_awake))
 
 
 HOIST_STUB_BYTES = build_hoist_stub(HOIST_STUB_ADDR)
@@ -532,14 +548,14 @@ def expected_hoist_disassembly():
     return out
 
 
-def hoist_plan() -> List[Tuple[str, int, bytes]]:
+def hoist_plan(keep_awake: bool = False) -> List[Tuple[str, int, bytes]]:
     """The complete hoist patch: list of (label, cpu_address, bytes).
 
     Order matters: the RAM stub is written first so the code write can never
     point at an uninitialised stub.
     """
     writes: List[Tuple[str, int, bytes]] = [
-        ("hoist stub", HOIST_STUB_ADDR, HOIST_STUB_BYTES),
+        ("hoist stub", HOIST_STUB_ADDR, build_hoist_stub(keep_awake=keep_awake)),
         ("code patch", PER_FRAME_HOOK_ADDR, CODE_PATCH_BYTES),
     ]
     for label, addr, blob in writes:
@@ -1003,8 +1019,8 @@ def selftest() -> int:
     check(stub[4:8] == ENC_SW_M8_R3, "stub saves the frame arg before the BOT call")
     check(stub[16:20] == ENC_LWZ_0_R3, "stub reloads the frame arg before the menu call")
     check(stub[-8:-4] == ENC_LWZ_M4_R9 and stub[-4:] == ENC_JR_R9, "stub epilogue")
-    check(_decode_jal(FRAME_STUB_ADDR + 0x0C, stub[12:16]) == BOT_POLL_FN,
-          "stub l.jal -> BOT poll 0x0204abc8")
+    check(_decode_jal(FRAME_STUB_ADDR + 0x0C, stub[12:16]) == BOT_SERVICE_FN,
+          "stub l.jal -> pure BOT service 0x0204d0a8")
     check(_decode_jal(FRAME_STUB_ADDR + 0x14, stub[20:24]) == MAINMENU_FRAME_FN,
           "stub l.jal -> stock Main-menu frame 0x020130bc")
     # opcode sanity: only sw (0x35) / addi (0x27) / lwz (0x21) / jal (0x01)
@@ -1033,7 +1049,7 @@ def selftest() -> int:
 
     # --- whole-plan invariants -------------------------------------------
     writes = plan(fake)
-    check(len(writes) == 5, "plan has five writes")
+    check(len(writes) == 6, "plan has six writes")
     check(all(_in_ram(a, len(b)) for _l, a, b in writes), "every write inside RAM guard")
     check(all(not (a + len(b) > SHIM_SCRATCH_LO and a < SHIM_SCRATCH_HI)
               for _l, a, b in writes), "no write overlaps the shim scratch window")
@@ -1045,7 +1061,10 @@ def selftest() -> int:
     # the three bookkeeping writes are u32 mode/record pointers
     labels = [l for l, _a, _b in writes]
     check(labels == ["frame stub", "mode-10 record", "mode table[10]",
-                     "active mode record", "pending mode"], "plan order")
+                     "active mode record", "pending mode", "usb-screen flag"], "plan order")
+    check(writes[1][2] == rec[:0x18], "plan copies only the mode record header")
+    check(writes[-1][1:] == (USBSCREEN_FLAG_ADDR, bytes(4)),
+          "plan clears exactly the USB-screen flag word")
 
     # --- no patch byte may embed a flash-modifying routine address ---------
     forbidden_words = {struct.pack("<I", f) for f in FORBIDDEN_FUNCTIONS}

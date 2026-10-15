@@ -42,6 +42,9 @@
 #include "ui/console.h"
 #include "ui/input.h"
 #include "ax3292-printer.h"
+#include "ax3292-adc.h"
+#include "ax3292-timer.h"
+#include "ax3292-de.h"
 
 #define TYPE_AX3292_MACHINE MACHINE_TYPE_NAME("ax3292")
 OBJECT_DECLARE_SIMPLE_TYPE(Ax3292State, AX3292_MACHINE)
@@ -186,6 +189,7 @@ struct Ax3292State {
     uint32_t wdt_last_r9;
     uint32_t adc_con;
     uint32_t adc_dat;
+    Ax3292TickTimer tt;
     char *key_file;
     uint32_t key_value;
 
@@ -1027,7 +1031,17 @@ static bool ax3292_reg_read(Ax3292State *s, CPUOpenRISCState *env,
         *value = 0;
         return true;
 
+    case 0xc828:                    /* DE video/OSD address readbacks */
+    case 0xc830:
+    case 0xc844:
+    case 0xc854:
+    case 0xc87c:
+        *value = ax3292_de_address_register(s->sfr[spr >> 2]);
+        return true;
+
     case AX3292_LCD_STA:
+        /* TODO(approximation): ready is forced high. Hardware preview samples
+         * include both 00980000 and 80980000; command/frame timing is unmodelled. */
         *value = s->sfr[spr >> 2] | 0x80000000 | s->lcd_events;
         return true;
 
@@ -1043,13 +1057,10 @@ static bool ax3292_reg_read(Ax3292State *s, CPUOpenRISCState *env,
     case AX3292_ENG_STA:
         *value = s->sfr[spr >> 2] | s->eng_sta;
         return true;
-    case 0x9908:
-        /* Free-running counter used for the timeout; tick it in microseconds
-         * so a bounded wait cannot be confused with a stuck engine. */
-        *value = (uint32_t)(s->tick_count * 10000);
-        return true;
     case 0x9900:
-        *value = s->sfr[spr >> 2];
+    case 0x9904:
+    case 0x9908:
+        *value = ax3292_tt_read(&s->tt, spr, qemu_clock_get_ns(s->tick_clock));
         return true;
     case AX3292_DAC_ADR:
         /* bit 31 is the busy bit the driver spins on until it clears. */
@@ -1294,6 +1305,12 @@ static bool ax3292_reg_write(Ax3292State *s, CPUOpenRISCState *env,
         s->sfr[spr >> 2] = v;
         return true;
 
+    case 0x9900:
+    case 0x9904:
+    case 0x9908:
+        ax3292_tt_write(&s->tt, spr, v, qemu_clock_get_ns(s->tick_clock));
+        return true;
+
     case AX3292_ADCBAUD:
         s->sfr[spr >> 2] = v;
         return true;
@@ -1325,7 +1342,7 @@ static bool ax3292_reg_write(Ax3292State *s, CPUOpenRISCState *env,
                     fprintf(stderr, "adc-key: channel=%u value=%u\n", ch, val);
                 }
             } else {
-                val = (ch == 9 || ch == 1) ? 700 : (ch == 11 ? 280 : 512);
+                val = ax3292_adc_sample(ch, s->key_channel, s->key_value);
                 /* Battery divider 700 and bandgap 280 at nominal 800 mV
                  * correspond to 2 * 800 * 700 / 280 = 4000 mV. */
             }
@@ -1335,9 +1352,10 @@ static bool ax3292_reg_write(Ax3292State *s, CPUOpenRISCState *env,
              * SDK's ax32xx_adcRead (0x0202f85c) spins while it is set and only
              * then reads ADCDAT.  Setting it here made every keypad read stale,
              * which is why button presses never reached the UI.  A conversion
-             * completes immediately in the model, so the bit is left clear.
+             * completes immediately in the model. Hardware also clears GO;
+             * see the stock-HAL conversion measurement in docs/hw/2026-10-15.md.
              */
-            s->adc_con = v & ~AX3292_ADC_EOC;
+            s->adc_con = ax3292_adc_completed_control(v);
         }
         return true;
     }
@@ -1535,6 +1553,13 @@ static bool ax3292_reg_write(Ax3292State *s, CPUOpenRISCState *env,
         ax3292_jpeg_b_irq(s);
         return true;
 
+    case 0xc828:                    /* hardware keeps 24-bit SDRAM offsets */
+    case 0xc830:
+    case 0xc844:
+    case 0xc854:
+        s->sfr[spr >> 2] = ax3292_de_address_register(v);
+        return true;
+
     case 0xc800:                    /* DE_FRAME_CTRL update handshake */
         s->sfr[spr >> 2] = v & ~2u;
         s->sfr[0xc87c >> 2] = s->sfr[0xc828 >> 2];
@@ -1692,7 +1717,8 @@ static void ax3292_machine_init(MachineState *machine)
         ax3292_parse_adc_list(s->extra_keys, s->key_adc + 6, 5, 1024, "extra-keys");
     }
     s->key_value &= 0x3ff;
-    s->flash_id[0] = 0xef; s->flash_id[1] = 0x40; s->flash_id[2] = 0x16;
+    /* Original KC02 JEDEC read twice on hardware, 2026-10-15. */
+    s->flash_id[0] = 0x5e; s->flash_id[1] = 0x40; s->flash_id[2] = 0x16;
     if (s->flash_id_str != NULL) {
         ax3292_hex_identity(s->flash_id_str, s->flash_id, 3, "flash-id");
     }

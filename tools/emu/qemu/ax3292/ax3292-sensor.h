@@ -24,8 +24,13 @@ static void ax3292_i2c_command(Ax3292State *s, unsigned bus, uint32_t v)
     if (v & 0x10) {
         switch (s->i2c_phase[bus]) {
         case 0:
+            /* Hardware measured 2026-10-15: the original H63P answers at 8-bit
+             * write address 0x80 (7-bit 0x40), not 0x40. A software-IIC read of
+             * register 0x0b returns 0x48 at 0x80 and never acknowledges at 0x40,
+             * which is also why stock's hal_iic08bitAddrReadData(0x40,0x0b) read
+             * 0xff. See docs/hw/2026-10-15.md. */
             s->i2c_selected[bus] = s->sensor &&
-                ((tx & ~1u) == (s->sensor_3a ? 0xdc : 0x40));
+                ((tx & ~1u) == (s->sensor_3a ? 0xdc : 0x80));
             s->i2c_phase[bus] = (tx & 1) ? 2 : 1;
             break;
         case 1:

@@ -1197,12 +1197,15 @@ def _cmd_usb_hoist(args: argparse.Namespace) -> int:
           f"{len(unlock.CODE_PATCH_BYTES)} -> l.j 0x{unlock.HOIST_STUB_ADDR:08X} "
           f"(exact allowlist match)")
     print(f"  RAM stub         : 0x{unlock.HOIST_STUB_ADDR:08X} "
-          f"({unlock.HOIST_STUB_LEN} bytes)")
+          f"({len(unlock.build_hoist_stub(keep_awake=args.keep_awake))} bytes)")
     print(f"  BOT service      : 0x{unlock.BOT_SERVICE_FN:08X} "
           f"(pure poll/parse/dispatch; panel feed 0x{unlock.BOT_WRAPPER_FN:08X} "
           f"is NOT called)")
 
-    writes = unlock.hoist_plan()
+    writes = unlock.hoist_plan(keep_awake=args.keep_awake)
+    if args.keep_awake:
+        print(f"  bench keep-awake : clears RAM idle counter 0x{unlock.IDLE_ACCUMULATOR_ADDR:08X} "
+              "each frame; saved settings/battery protection unchanged")
     print("\nexact writes:")
     for label, addr, blob in writes:
         kind = "RAM " if unlock.RAM_POKE_LO <= addr < unlock.RAM_POKE_HI else "CODE"
@@ -1925,6 +1928,9 @@ def build_parser() -> argparse.ArgumentParser:
     p_hoist.add_argument("--dry-run", action="store_true",
                          help="validate the guards and print the exact writes, "
                               "then send nothing")
+    p_hoist.add_argument("--keep-awake", action="store_true",
+                         help="bench-only RAM idle-counter reset each frame; "
+                              "no saved-setting or battery-protection change")
     p_hoist.set_defaults(func=_cmd_usb_hoist)
 
     p_cl = sub.add_parser(

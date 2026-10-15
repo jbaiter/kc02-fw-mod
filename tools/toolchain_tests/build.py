@@ -43,7 +43,8 @@ def source_hashes():
     return hashes
 
 
-def elf_info(data, base, limit, spr_reads=(), spr_writes=(), spi=False):
+def elf_info(data, base, limit, spr_reads=(), spr_writes=(), spi=False,
+             allow_dynamic_spr=False):
     """Validate fully linked ELF32 LE/no-delay and reconstruct allocated bytes."""
     if len(data)<52: raise ValueError('short ELF header')
     h=struct.unpack_from('<16sHHIIIIIHHHHHH',data)
@@ -90,7 +91,10 @@ def elf_info(data, base, limit, spr_reads=(), spr_writes=(), spi=False):
                         # l.mtspr rA, rB, K writes rB to SPR (rA | K). Unlike mfspr,
                         # bits 15:11 hold the value register, so the immediate is
                         # split across bits 25:21 (K high) and 10:0 (K low).
-                        if (word>>16)&31: raise ValueError('SPR write must use a static r0 base')
+                        if (word>>16)&31:
+                            if not allow_dynamic_spr:
+                                raise ValueError('SPR write must use a static r0 base')
+                            continue
                         address=((word>>21)&31)<<11 | (word&0x7ff)
                         if address not in spr_writes:
                             raise ValueError('SPR write to 0x%x is forbidden' % address)

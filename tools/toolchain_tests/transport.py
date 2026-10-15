@@ -5,6 +5,12 @@ import dump_firmware as dump
 from .cases import BASE, SIZE, CODE_ADDR, DISPATCH, INPUT, make_packet
 from .cache import ICACHE_INIT_FN, ICACHE_SITE
 
+# The large USB-idle layout overlaps a live preview scalar and the RAM hoist.
+# Only the bench runner has a preview-safe layout. Refuse that context here.
+USB_MODE_ADDR = 0x020CCD54
+FRAME_HOOK_ADDR = 0x02000404
+FRAME_HOOK_STOCK = bytes.fromhex('fc4fe1d7')
+
 
 class TestTransport(dump.CameraTransport):
     def __init__(self, *args, **kwargs):
@@ -27,6 +33,12 @@ class TestTransport(dump.CameraTransport):
         address,expected,name=ICACHE_SITE
         if self.read_memory(address,len(expected))!=expected:
             raise dump.DumpError('Unsupported firmware: full '+name+' body differs; refusing RAM execution.')
+        if self.read_memory(USB_MODE_ADDR,4) != struct.pack('<I',10):
+            raise dump.DumpError('Large toolchain layout is USB-idle-only; preview uses 0x020D9C00. '
+                                 'Return to stock USB mode before testing.')
+        if self.read_memory(FRAME_HOOK_ADDR,4) != FRAME_HOOK_STOCK:
+            raise dump.DumpError('Large toolchain code overlaps active RAM UI stubs; '
+                                 'power-cycle to stock USB mode before testing.')
         self.firmware_ok=True
 
     def baseline(self):
@@ -127,6 +139,7 @@ class TestTransport(dump.CameraTransport):
             self.icache_ready=False
         elif callback==dump.CALLBACK_SKIP:
             sites={(a,len(b)) for a,b,_ in (*dump.ROUTINE_SIGNATURES,ICACHE_SITE)}
+            sites.update(((USB_MODE_ADDR,4),(FRAME_HOOK_ADDR,4)))
             if offset or ((buffer,length) not in sites and
                           self._approved_read(blobs,buffer,length) is None):
                 raise dump.DumpError('Memory read outside approved sites.')

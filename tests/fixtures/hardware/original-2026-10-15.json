@@ -1,0 +1,405 @@
+{
+  "board": "original",
+  "state": "stock USB/SD screen, VID:PID 0219:3280, SD unmounted",
+  "evidence": "~/kc02-hw/2026-10-15/session-202910",
+  "firmware_reference_sha256": "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5",
+  "firmware_identity_check": "pinned routine signatures, not a full live-flash comparison",
+  "passive_spr": {
+    "0xc800": "0x00000003",
+    "0xc810": "0x013f00ef",
+    "0xc818": "0x00052081",
+    "0xc820": "0x013f00ef",
+    "0xc824": "0x00000000",
+    "0xc828": "0x0015a480",
+    "0xc82c": "0x00000040",
+    "0xc830": "0x0016e480",
+    "0xc834": "0x00000040",
+    "0xc844": "0x0018b4c0",
+    "0xc848": "0x00012bff",
+    "0xc87c": "0x0015a480",
+    "0xa800": "0x00000031",
+    "0xa804": "0x80980000",
+    "0xa808": "0x00000006",
+    "0xa80c": "0x00000044",
+    "0xa810": "0x090000ff",
+    "0xa834": "0x00000000",
+    "0xa838": "0x00000000",
+    "0xa840": "0x000000f0",
+    "0xa844": "0x00000140",
+    "0xa85c": "0x82100008",
+    "0xa868": "0x00000000",
+    "0xa86c": "0x00000000",
+    "0x9170": "0x00000013",
+    "0x9174": "0x00000000",
+    "0x9178": "0x000003ff",
+    "0x9880": "0x80500049",
+    "0x9884": "0x00000000",
+    "0x9888": "0x00000000",
+    "0x988c": "0x00000000",
+    "0x9890": "0x000040a0",
+    "0x9894": "0x00000000",
+    "0x9898": "0x0000000d",
+    "0x989c": "0x00000900",
+    "0x9908": "0x00000000",
+    "0xb000": "0x0440062c",
+    "0xb008": "0x00000000",
+    "0xb014": "0x0000f818",
+    "0xb018": "0x00000000",
+    "0xb01c": "0x02cf04ff",
+    "0xb030": "0x00000000",
+    "0xb034": "0x00000000",
+    "0xb060": "0x00000000",
+    "0xb064": "0x00000000",
+    "0xb068": "0x00000000",
+    "0xb078": "0x00000000",
+    "0xb180": "0x00000000",
+    "0x9900": "0x00000000",
+    "0x9904": "0xffffffff",
+    "0x9800": "0x00003809",
+    "0x9804": "0x00001351",
+    "0x9808": "0x00002bf1",
+    "0x98a8": "0x00000000",
+    "0x9000": "0x01115005",
+    "0x9004": "0x00000000",
+    "0x9008": "0x00000000",
+    "0x900c": "0x00000000",
+    "0x924c": "0x00000005"
+  },
+  "adc_conversion": {
+    "stock_function": "0x0203814c",
+    "channel": 3,
+    "before_control": "0x13",
+    "sample": 1023,
+    "after_control": "0x13",
+    "after_divider": 0,
+    "after_data": 1023,
+    "stock_sequence": {
+      "source": "hal_adcGetChannel 0x0203814c -> ax32xx_adcEnable 0x0202f7a0, ax32xx_adcSetBaudrate 0x0202f808, ax32xx_adcConverStart 0x0202f838, ax32xx_adcRead 0x0202f85c",
+      "enable": "REG(0x9170) = channel|0x10, and ax32xx_sysClkSet(29,1) which CLEARS bit 29 of 0x8840 (SYS_CLK_ADC); a clear gate bit is the enabled state",
+      "baudrate": "REG(0x9174) = 144000000/(baud*2)-1, so 71 for the stock 1 MHz",
+      "start": "REG(0x9170) |= 0x80 (GO)",
+      "read": "spin while REG(0x9170)&0x40 (bounded 0x8ffff), then REG(0x9178)&0x3ff",
+      "luma_bug": "Luma issued only a single 0x9170 write and never enabled the ADC module clock nor set the baud divider, so the conversion never completed and every keypad read returned 'no key' on hardware while the UI was demonstrably rendering",
+      "fix": "key_sample() in custom-firmware/boards/ax3292.c now follows the stock sequence byte for byte"
+    },
+    "luma_hardware_verification": {
+      "evidence": "~/kc02-hw/2026-10-15/session-202910/keypad-held-231023",
+      "procedure": "user held the OK (upper right) button; the bench entry sampled the keypad ladder 32 times",
+      "observed": {
+        "low": 388,
+        "high": 392
+      },
+      "expected_ok_centre": 386,
+      "window": [
+        351,
+        421
+      ],
+      "conclusion": "the ADC reads the correct ladder level for a held button, and Luma's table maps 386 to KEY_OK within its tolerance of 25. Button input is verified working on hardware; before the clock-gate and baud-divider fix every read reported 'no key'."
+    }
+  },
+  "timer_detail": {
+    "original": [
+      "0x0",
+      "0xffffffff",
+      "0x0"
+    ],
+    "start_write": "0x42",
+    "start_control": "0x2",
+    "start_count": 30,
+    "after_delay_count": 6416120,
+    "xos_elapsed_ms": 50,
+    "stop_write": "0x0",
+    "stop_control": "0x0",
+    "stopped_counts": [
+      0,
+      0
+    ],
+    "resume_write": "0x2",
+    "resume_control": "0x2",
+    "resume_counts": [
+      22,
+      152263
+    ],
+    "reset_write": "0x40",
+    "reset_control": "0x0",
+    "reset_counts": [
+      0,
+      0
+    ],
+    "restored": [
+      "0x0",
+      "0xffffffff",
+      "0x0"
+    ]
+  },
+  "sensor": {
+    "ops": "0x020e32a0",
+    "item_holder": "0x020e4ba0",
+    "name": "H63P",
+    "expected_id": "0x48",
+    "id_register": "0x0b",
+    "independent_read": "0xff",
+    "interpretation": "the 0xff is explained: the probe's power call was a no-op, not a protocol or firmware mismatch",
+    "ops_params_from_ram": {
+      "source": "_Sensor_Adpt_ record at 0x020e32a0 in baseline ram1.bin",
+      "typ": 1,
+      "mclk": 24000000,
+      "pixelw": 1280,
+      "pixelh": 720,
+      "AVDD": 16,
+      "DVDD": 6,
+      "VDDIO": 16,
+      "csi_tun": 11,
+      "pclk_fir_en": 1,
+      "pclk_fir_class": 1,
+      "pclk_inv_en": 1,
+      "colrarray": 2,
+      "hsyn": 1,
+      "vsyn": 0
+    },
+    "power_sequencing": {
+      "ldo_register": "0x8868 (SFR1)",
+      "ldo_indices": {
+        "HSEN": 0,
+        "LSEN": 1,
+        "BGOE": 2,
+        "V1_2": 3,
+        "SDC": 4,
+        "DDR": 5
+      },
+      "h63p_rails": "SYS_LDO_LSEN with DVDD=6 (bits 11:7, enable bit 12); SYS_LDO_HSEN with AVDD=16 (bits 4:0, enable bit 5)",
+      "mclk_register": "0x884c bits 12:8 = 288000000/freq - 1; 0x8850 bit 26; 0x8848 bit 5; PE10 mux via 0x8348 bits 11:10 and 0x810c/0x804c bit 10",
+      "mclk_divisors": {
+        "24000000": 11,
+        "16000000": 17
+      },
+      "iic0_baud": "stock hal_iic0Init uses 200000 Hz"
+    },
+    "probe_bug_found": {
+      "call": "sensorprobe invoked ax32xx_sysLDOSet with index 6 and en=0",
+      "why_it_failed": "ax32xx_sysLDOSet only implements indices 0..5, so index 6 falls to the default branch and returns immediately; it never powered the imager",
+      "correct_call": "ax32xx_sysLDOSet(SYS_LDO_LSEN=1, DVDD=6, 1) then ax32xx_sysLDOSet(SYS_LDO_HSEN=0, AVDD=16, 1)"
+    },
+    "bus_probe_state_in_usb_mode": {
+      "note": "read-only readback, no writes",
+      "rails_already_configured": "0x8868 = 0x078fd330: DVDD selector 6 with enable bit 12 set, AVDD selector 16 with enable bit 5 set",
+      "mclk_already_running": "0x884c bits 12:8 = 11, i.e. 24 MHz; 0x8848 bit 5 already clear; 0x8348 bits 11:10 = 2",
+      "pe10_already_muxed": "0x810c bit 10 = 1 and 0x804c bit 10 = 0, so PE10 is already a CSI MCLK output",
+      "iic0_disabled_at_rest": "0x9094 = 0 and 0x9090 = 0xffff, so the controller was never enabled",
+      "unpowered_read_returns": "definite NACK, not 0xff, once the driver distinguishes timeout from NACK"
+    },
+    "bus_enable_result": {
+      "iic0_con_sticks": "0x9094 read back 0x80 after the enable write, so bit 7 is a real enable and does not self-clear",
+      "baud_sticks": "0x9090 read back 0x8f = 143, the 200 kHz divisor at APB_CLK 144 MHz",
+      "pin_group_sticks": "0x8348 went 0x0b40 -> 0x0b43, selecting IIC0 pin group 2",
+      "transfer_never_completes": "STATUS bit 0 never sets: 0x80 after START and 0xC0 after the address byte, at every stage. So the wait for done times out; this is not an addressed NACK",
+      "status_bit7_from_idle": "bit 7 is already set before any byte is sent, so it cannot be read as a plain NACK flag",
+      "restore_verified": true,
+      "conclusion": "configuration registers all latch correctly, but the peripheral does not complete a transfer, so the remaining cause is below the register layer"
+    },
+    "iic_clock_gate": {
+      "gate_exists": "SYS_CLK_IIC0 is clock index 14; ax32xx_sysClkSet writes 0x8840 for indices < 0x20 (0x8844 above), bit = index",
+      "polarity_unresolved": "ax32xx_sysClkSet sets the bit when en == 0 and clears it when en != 0, so the bit reads as a gate/reset rather than a plain enable and its polarity has not been established on hardware",
+      "stock_init_does_not_touch_it": "ax32xx_iic0Init configures GPIO, baud and Ctrl bit 7 only; it never calls sysClkSet, so the gate is expected to be open already, but this has not been confirmed"
+    },
+    "clock_gate_result": {
+      "register_at_rest": "0x8840 = 0x8000, so the SYS_CLK_IIC0 bit (14) was already clear and 0x8844 = 3",
+      "gate_bit_is_real": "setting bit 14 changed STATUS from 0xC0 to 0x80 on the same transfer, so bit 14 does gate IIC0",
+      "gate_was_not_the_cause": "with bit 14 clear (both as found and explicitly cleared) the transfer still never completed, so the clock gate is not the blocker",
+      "clear_means_enabled": "the SDK sets the bit when en == 0, so a clear bit is the enabled state; bit 14 was already clear"
+    },
+    "dual_bus_result": {
+      "evidence": "sensor-probe/bus-220345 (first) and sensor-probe/bus2-220620 (repeat)",
+      "first_run_iic1": {
+        "sta_after_address": "0x40",
+        "ack": 1,
+        "read_status": "completed",
+        "value": "0xff"
+      },
+      "repeat_run_iic1": {
+        "sta_after_address": "0xC0",
+        "ack": 0,
+        "read_status": 0,
+        "value": "0x00"
+      },
+      "correction": "RETRACTED: the single IIC1 ACK did NOT reproduce. A standalone IIC1 probe failed all four read attempts with status 0, and a full dual-bus re-run gave IIC1 STA 0xC0 / ack 0 / status 0, identical to IIC0. Treat that one-off as an artifact (floating-bus read or marginal timing), not as evidence of the bus.",
+      "current_state": "neither bus completes a transfer in USB mode: STATUS bit 0 never sets and bit 7 reads set, so the wait for done times out rather than getting an addressed NACK."
+    },
+    "stock_helper_also_reads_ff": {
+      "evidence": "sensor/reply.bin, the original sensorprobe run",
+      "ops_pointer": "0x020e32a0, i.e. the real H63P ops, not the 0x02083cb0 test-pattern fallback",
+      "independent_id_byte": "0xff",
+      "meaning": "stock sensorAutoCheck selected the real imager entry while a direct hal_iic08bitAddrReadData(0x40,0x0b) also returned 0xff, so the 0xff is not a defect in our driver. The stock ID path evidently does not depend on that read succeeding in this state."
+    },
+    "per_register_restore": {
+      "evidence": "sensor-probe/iic1-220559",
+      "result": "exactly one register differs: GDATA_PE (0x800c) read 0xa083 after being written 0xa002",
+      "explanation": "GDATA is not a written latch; it reflects pad levels, so bits 0 and 7 read high from pull-ups. PE0 is an input (GDIR bit 0 set), so the data bit is inert and no output was left driven differently.",
+      "safety": "all eight registers this probe may touch were attributed individually, so the earlier combined flag that read 0 is explained by a pad-level register, not a failed restore"
+    },
+    "open_hypotheses": [
+      "the imager is probably only out of reset/powered in camera mode: the stock ID read happens on camera entry (sensorInit), and both IIC buses are dead in USB mode, so an ID probe in mode 3 is the next experiment",
+      "a reset-selector GPIO or an LDO/PLL gate beyond the selector bits already set may still hold the imager down",
+      "the 0xff seen by stock's own helper is consistent with the imager never answering in USB mode, which is why neither our driver nor stock reads a real H63P id there"
+    ]
+  },
+  "preview": {
+    "evidence": "preview/attempt-205630/reboot-210346/single-session",
+    "user_confirmed_live_viewfinder": true,
+    "capture_atomic": false,
+    "colour_validation": "initial captured scene nearly black; bright-scene validation pending",
+    "csi": {
+      "0xb000": "0x0440062d",
+      "0xb008": "0x00000000",
+      "0xb014": "0x800ef87b",
+      "0xb018": "0x00240000",
+      "0xb01c": "0x02cf04ff",
+      "0xb030": "0x05000000",
+      "0xb034": "0x02d00000",
+      "0xb060": "0x02104080",
+      "0xb064": "0x02112180",
+      "0xb068": "0x00000140",
+      "0xb078": "0x02d00500",
+      "0xb180": "0x00b40140"
+    },
+    "de": {
+      "0xc800": "0x00000003",
+      "0xc810": "0x013f00ef",
+      "0xc818": "0x2ce52083",
+      "0xc820": "0x013f00b3",
+      "0xc824": "0x0000001e",
+      "0xc828": "0x0015a480",
+      "0xc82c": "0x00000030",
+      "0xc830": "0x00169480",
+      "0xc834": "0x00000030",
+      "0xc844": "0x001788c0",
+      "0xc848": "0x00012bff",
+      "0xc87c": "0x0013c480"
+    },
+    "address_semantics": "DE: 24-bit SDRAM offsets; CSI: complete CPU addresses; buffers vary between frames/boots",
+    "lcd_status_samples": [
+      "0x00980000",
+      "0x80980000"
+    ],
+    "bench_layout": {
+      "code": "0x020d8100",
+      "code_limit": 1792,
+      "packet": "0x020d8800",
+      "packet_size": 2048
+    },
+    "old_packet_collision": {
+      "address": "0x020d9c00",
+      "observed_value": 3,
+      "payload_execution_refused": true
+    },
+    "idle_timeout_seconds": 300,
+    "keep_awake_observation_seconds": 30,
+    "idle_accumulator_during_observation": 0,
+    "usb_return": "re-enumerates; fresh handle confirmed mode 10 and advancing uptime",
+    "initial_session_result": "preview/DMA/30s observation passed; session failed at old-handle USB return; reconciled separately"
+  },
+  "display_contract": {
+    "evidence": "display-probe/inspect-214133 + display-probe/latch2-214209",
+    "de_frame_ctrl_bit1_is_commit": true,
+    "commit_completes_at_frame_boundary": true,
+    "commit_self_clears_bit1": true,
+    "staged_addr_without_bit1_does_not_take_effect": true,
+    "usb_mode_at_rest": {
+      "0xc800": "0x00000001",
+      "0xc810": "0x013f00ef",
+      "0xc820": "0x013f00ef",
+      "0xc824": "0x00000000",
+      "0xc828": "0x0015a480",
+      "0xc82c": "0x00000040",
+      "0xc830": "0x0016e480",
+      "0xc834": "0x00000040",
+      "0xc87c": "0x0015a480",
+      "0xa804": "0x80980000",
+      "0xa840": "0x000000f0",
+      "0xa844": "0x00000140",
+      "0xb014": "0x0000f818",
+      "0xb01c": "0x02cf04ff",
+      "0x898c": "0x00000005",
+      "0x8998": "0x0015a480"
+    },
+    "usb_mode_geometry": "DE screen and video are 240x320 with a 256-byte stride (0x40 words); stride exceeds the 240 active columns",
+    "preview_mode_geometry": "stock preview instead uses a 180x320 video plane, 192-byte stride, centred at x=30 on the same 240x320 panel",
+    "csi_interrupt_reg_b014_differs_by_mode": {
+      "usb": "0x0000f818",
+      "preview": "0x800ef87b"
+    },
+    "lcd_status_bit31_not_constant": {
+      "usb_sample": "0x80980000",
+      "preview_sample": "0x00980000"
+    },
+    "rotator_target_is_de_video_plane_in_both_modes": true,
+    "luma_implications": {
+      "missing_init_commit": "present() writes only c800 bit0; after programming c828 at init it must also raise bit1 (SDK ax32xx_deUpdate) or the first framebuffer address never commits",
+      "steady_state_matches_stock": "c800 == 1 at rest is the stock steady state, so the steady-state value is correct",
+      "stride": "stock uses 256-byte stride for a 240-wide plane; Luma uses 240/4 = 60 words, which is not observed in stock configurations",
+      "screen_video_size": "Luma's 240x320 matches stock USB mode exactly",
+      "lcd_kick": "required for any display at all; was missing"
+    },
+    "lcd_frame_kick": {
+      "evidence": "ax32xx_lcdKick at 0x02035814, decompiled",
+      "implementation": "if (DAT_ram_020ce1f8 == 0) LCD_CON(0xa800) |= 2;",
+      "why_it_matters": "the stock firmware raises LCD_CON bit 1 from its LCD frame interrupt on every frame event. A polling application with no ISR must kick it itself, or the LCD never advances and the panel keeps showing the last buffer the previous firmware scanned out.",
+      "observed_failure": "a Luma RAM takeover ran, disabled interrupts via PICMR=0 and entered its own main loop, and the panel continued to show the frozen stock USB screen: the DE commit is frame-gated and no frame boundary was being produced.",
+      "fix": "Luma now sets LCD_CON bit 1 in present() and every main-loop iteration."
+    }
+  },
+  "flash": {
+    "jedec_id": "5e4016",
+    "repeat_reads": 2,
+    "stock_read_id_function": "0x0203d1fc",
+    "id_helper_full_body_pinned": true,
+    "uid": null,
+    "uid_note": "not measured; retain existing emulator UID assumption"
+  },
+  "key_adc": {
+    "centres": [
+      386,
+      776,
+      252,
+      657,
+      510,
+      12
+    ],
+    "half_width": 35,
+    "windows": [
+      [
+        351,
+        421
+      ],
+      [
+        741,
+        811
+      ],
+      [
+        217,
+        287
+      ],
+      [
+        622,
+        692
+      ],
+      [
+        475,
+        545
+      ],
+      [
+        0,
+        47
+      ]
+    ],
+    "lower_bound_clamped_at_zero": true,
+    "order": [
+      "ok",
+      "right",
+      "left",
+      "up",
+      "down",
+      "escape"
+    ]
+  }
+}

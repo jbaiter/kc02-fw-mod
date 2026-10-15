@@ -76,7 +76,8 @@ static void ax3292_scanout(Ax3292State *s, bool capture)
     uint32_t size = s->sfr[0xc810 >> 2];
     unsigned w = (size & 0xffff) + 1, h = (size >> 16) + 1;
     uint32_t enabled = s->sfr[0xc818 >> 2];
-    uint32_t yaddr = s->sfr[0xc828 >> 2], uvaddr = s->sfr[0xc830 >> 2];
+    uint32_t yaddr = ax3292_de_dma_address(s->sfr[0xc828 >> 2]);
+    uint32_t uvaddr = ax3292_de_dma_address(s->sfr[0xc830 >> 2]);
     unsigned ys = s->sfr[0xc82c >> 2] * 4, uvs = s->sfr[0xc834 >> 2] * 4;
     uint32_t vsize = s->sfr[0xc820 >> 2], vpos = s->sfr[0xc824 >> 2];
     unsigned vw = (vsize & 0xffff) + 1, vh = (vsize >> 16) + 1;
@@ -115,7 +116,7 @@ static void ax3292_scanout(Ax3292State *s, bool capture)
                 unsigned base = 0xc83c + layer * 0x10;
                 uint32_t osize = s->sfr[base >> 2];
                 uint32_t pos = s->sfr[(base + 4) >> 2];
-                uint32_t addr = s->sfr[(base + 8) >> 2];
+                uint32_t addr = ax3292_de_dma_address(s->sfr[(base + 8) >> 2]);
                 unsigned ow = (osize & 0xffff) + 1, oh = (osize >> 16) + 1;
                 int ox = (int)x - (int16_t)pos;
                 int oy = (int)y - (int16_t)(pos >> 16);

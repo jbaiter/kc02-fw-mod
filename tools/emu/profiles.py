@@ -46,7 +46,8 @@ class Profile:
 
 PROFILES = {
     "original": Profile("original", "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5",
-                        0x2600, 0xd3200, 0x0200046c, 0x027ffffc, 0x222c),
+                        0x2600, 0xd3200, 0x0200046c, 0x027ffffc, 0x222c,
+                        flash_id="5e4016"),  # JEDEC 0x9f, physical KC02, 2026-10-15
     "x8d": Profile("x8d", "3ed8c0f145708814397cf675101ee3ff6b8e280c4b09742af2e043c4cc1bc42e",
                    0x2200, 0x7f000, 0x02000470, 0x023ffffc, 0x1fec, 270, 3, True,
                    (411, 511, 411, 511, 788, 14), (252, 788, 132, 1024, 1024)),
