@@ -62,21 +62,27 @@ static void phase(unsigned vector) {
     emit(0x8010, (regs[0x8010 >> 2] & ~0xc00) |
          ((vector & 2) ? 0x400 : 0) | ((vector & 8) ? 0x800 : 0));
 }
-static void feed(unsigned steps) {
-    static const unsigned vectors[] = {10,8,9,1,5,4,6,2};
+static const unsigned default_vectors[8] = {10,8,9,1,5,4,6,2};
+static const unsigned z12_vectors[8] = {6,14,10,11,9,13,5,7};
+static void feed(const unsigned *vectors, unsigned steps) {
     phase(vectors[0]);
     for (unsigned i = 1; i <= steps; i++) { phase(vectors[i % 8]); }
 }
 int main(int argc, char **argv) {
     p.directory = argv[1]; p.paper = true;
-    power(true); load(384, 999); strobe(); strobe(); feed(4); power(false);
+    memcpy(p.phases, default_vectors, sizeof(default_vectors));
+    power(true); load(384, 999); strobe(); strobe(); feed(default_vectors, 4); power(false);
     power(true);
     for (unsigned n = 100; n <= 400; n += 100) { load(384, n); strobe(); }
     power(false);
     power(true); load(383, 400); strobe(); load(383, 0); strobe(); power(false);
     p.paper = false; power(true); load(384, 400); strobe(); power(false);
     p.paper = true; power(true); load(384, 400); strobe();
-    feed(4 * (AX_PRINT_ROWS + 1)); power(false);
+    feed(default_vectors, 4 * (AX_PRINT_ROWS + 1)); power(false);
+    /* A different board may wire the same four platen lines to other SFR bits,
+       which reorders the phase vector. */
+    memcpy(p.phases, z12_vectors, sizeof(z12_vectors));
+    power(true); load(384, 999); strobe(); strobe(); feed(z12_vectors, 4); power(false);
     g_free(p.hits);
     return 0;
 }
@@ -117,12 +123,23 @@ def test_383_clock_driver_retains_real_shift_register_bit(printer_pages):
         assert image.getextrema() == (127, 127)
 
 
+def test_board_specific_platen_phase_order(printer_pages):
+    """The Z-12 wires the platen lines to different bits, reordering phases."""
+    from PIL import Image
+    directory, log = printer_pages
+    with Image.open(directory / "print-00006.png") as image:
+        assert image.mode == "L" and image.size == (384, 2)
+    # Four forward steps were taken under the second phase order.
+    assert log.count("steps=4 bad_steps=0") == 2
+
+
 def test_exclusive_atomic_publication_and_bounds(printer_pages):
     directory, log = printer_pages
     assert (directory / "print-00001.png").read_bytes() == b"existing image"
     assert (directory / "print-00002.png.part").read_bytes() == b"other job reservation"
     assert sorted(p.name for p in directory.glob("print-*.png")) == [
-        "print-00001.png", "print-00003.png", "print-00004.png", "print-00005.png"]
+        "print-00001.png", "print-00003.png", "print-00004.png", "print-00005.png",
+        "print-00006.png"]
     assert len(list(directory.glob("*.part"))) == 1
     assert "discarded page exceeding bounded raster" in log
 

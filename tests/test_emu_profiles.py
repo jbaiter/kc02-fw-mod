@@ -46,6 +46,13 @@ def test_z12_native_wiring():
     assert profile.extra_keys[3] == profile.key_adc[3]  # Tab aliases native Right
     assert profile.flash_id == "c84016"
     assert profile.flash_uid == "4d37393830109b3f"
+    # The Z-12 wires the platen-motor lines to different SFR bits.
+    assert profile.printer_phases == (6, 14, 10, 11, 9, 13, 5, 7)
+    assert PROFILES["original"].printer_phases == (10, 8, 9, 1, 5, 4, 6, 2)
+    assert PROFILES["x8d"].printer_phases == PROFILES["original"].printer_phases
+    for name, profile in PROFILES.items():
+        phases = profile.environment()["AX3292_PRINTER_PHASES"].split(",")
+        assert len(phases) == 8 and all(0 <= int(v) <= 15 for v in phases), name
 
 
 def test_sensor_backend(tmp_path):
@@ -68,7 +75,7 @@ typedef struct {
     uint32_t sfr[0x10000/4];
     unsigned i2c_phase[2]; bool i2c_selected[2]; uint8_t i2c_offset[2];
     uint8_t sensor_regs[2][256]; uint8_t *ram_ptr;
-    unsigned tick_count; struct CPU *cpu;
+    unsigned tick_count; struct CPU *cpu; uint32_t csi_lcd_size;
 } Ax3292State;
 #include "sensor.h"
 static void tx(Ax3292State *s, unsigned value, unsigned command) {
@@ -119,6 +126,7 @@ int main(void) {
     assert(s.sfr[0xb00c/4] == 8 && cpu.env.picsr == (1u<<14));
     s.sfr[0xb060/4]=128; s.sfr[0xb064/4]=4096;
     s.sfr[0xb068/4]=64; s.sfr[0xb180/4]=(48u<<16)|64;
+    s.sfr[0xb008/4]=1u<<19;  /* the LCD path uses the size latched by LS_KS */
     s.sfr[0xb018/4]=0x240000; ax3292_sensor_frame(&s);
     assert(s.sfr[0xb018/4] == 0x200000);
     assert(s.sfr[0xb00c/4] == 0xa);

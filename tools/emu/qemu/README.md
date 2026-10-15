@@ -281,6 +281,8 @@ display console; calling SDL updates from the vCPU caused the black-window bug.
 | `AX3292_JPEG_TRACE=1` | Log codec geometry, completion and failures |
 | `AX3292_PRINTER_DIR=/path/prints` | Enable printer GPIO capture and report paper/cover present |
 | `AX3292_PRINTER_NO_PAPER=1` | With a printer directory, report missing paper/open cover |
+| `AX3292_PRINTER_PHASES=a,b,c,d,e,f,g,h` | Platen-motor phase order for the vector built from `800c` bit0, `8010` bit10, `8000` bit3 and `8010` bit11; default `10,8,9,1,5,4,6,2` |
+| `AX3292_PRINTER_TRACE=1` | Log phase-vector transitions with the current step count |
 | `AX3292_FB=/tmp/screen.ppm` | Atomically replace an RGB P6 scanout capture |
 | `AX3292_FB_EVERY=5` | Capture interval in 10 ms ticks; minimum 5 |
 | `AX3292_KEYFILE=/tmp/key` | Optional numeric ADC input; overrides native keyboard input |
@@ -298,9 +300,10 @@ tests; do not use broad `pkill` commands while someone is using the emulator.
 ## Limits
 
 This is a functional model, not cycle-accurate silicon. The original KC02 build
-has the complete capture/viewer/printer regression. [Alternate-build status and
-controls](../README.md#alternate-builds) distinguish UI/selfie checks from the
-remaining Z-12 post-capture and alternate-printer work. We have verified FAT16
+has the complete capture/viewer/printer regression. Both alternate builds also
+capture, print a thermal page and return to the menu; see [alternate-build status
+and controls](../README.md#alternate-builds), which also records the Z-12
+Bluetooth printer that is out of scope. We have verified FAT16
 mounting, metadata writes, photo capture and viewing across cold boots. Video
 recording, short CSI streaming line rings, USB device behaviour, full ISP
 processing and audible sound remain unsupported or unverified. JPGA supports

@@ -18,22 +18,45 @@ wiring; it does not modify guest instructions or application state.
 ```sh
 python3 tools/emu/run.py firmware/hmollimt-z12-10da5dbf.bin --interactive
 python3 tools/emu/profile_smoke.py firmware/hmollimt-z12-10da5dbf.bin \
-  --selfie --output "$HOME/.cache/kc02-emulator/z12-ui-new"
+  --selfie --capture --printer --output "$HOME/.cache/kc02-emulator/z12-run-new"
 python3 tools/emu/profile_smoke.py firmware/mystiluck-x8d-8e0636e1.bin \
-  --capture --output "$HOME/.cache/kc02-emulator/x8d-photo-new"
+  --capture --printer --output "$HOME/.cache/kc02-emulator/x8d-run-new"
 ```
 
 Both alternate builds pass cold boot, native menu navigation, moving preview,
-return to menu and preservation of fixture JPEGs on a private SD card. X8D also
-passes capture, strict JPEG decoding and return to menu. **Z-12 has the second
-sensor:** Tab aliases its native Right key and switches cameras in the camera
-view. The firmware drives PE11; the model selects independent BF3A03 register
-banks and vertical versus horizontal colour bars with a separate white patch.
-Switching back restores the first pattern. Sensor orientation follows register
-`0x1e`.
+capture with strict JPEG decoding, return to menu, preservation of fixture JPEGs
+on a private SD card, and a thermal-head page. **Z-12 has the second sensor:**
+Tab aliases its native Right key and switches cameras in the camera view. The
+firmware drives PE11; the model selects independent BF3A03 register banks and
+vertical versus horizontal colour bars with a separate white patch. Switching
+back restores the first pattern. Sensor orientation follows register `0x1e`.
+
+| Build | Saved photo | Thermal page |
+|---|---|---|
+| X8D | 4768×2688 and 672×384 packets | 384×753, 3008 platen steps, 33 tones |
+| Z-12 | 4096×3072 and 640×480 packets | 384×675, 2696 platen steps, 33 tones |
+
+Both builds drive the same GPIO thermal head the original uses
+(`0x800c` data/clock, `0x8004` latch/supply, `0x8000` strobe). The platen motor
+is wired differently, so `profiles.py` carries an eight-entry phase order and the
+launcher exports `AX3292_PRINTER_PHASES`. Z-12's order is inverted relative to
+the original's, which is why an earlier build produced a single-row page.
+
+After the shutter the firmware processes the frame (12 MP on Z-12) in guest
+code and ignores key events until it finishes. A single Escape is therefore not
+enough; the regression retries until the menu is active. This is firmware
+timing under TCG, not a modelled hardware wait.
+
+The Z-12 flash identity matches its dumped JEDEC ID/UID; its optional OpenImage
+credit check still fails. We do not override that check. Z-12 also links a
+Bluetooth JPEG printer (`open_printer_bluetooth_print_masf`); that transport is
+not modelled and its output is not claimed.
 
 [Front preview](../../docs/images/emulator/z12-front.png) ·
 [selfie preview](../../docs/images/emulator/z12-selfie.png)
+
+[X8D thermal page](../../docs/images/emulator/x8d-print.png) ·
+[Z-12 thermal page](../../docs/images/emulator/z12-print.png)
 
 | Keys | X8D | Z-12 |
 |---|---|---|
@@ -46,12 +69,10 @@ Switching back restores the first pattern. Sensor orientation follows register
 | Tab | Unwired | Native Right ADC 238; camera switch |
 | M | Unwired | Native function key ADC 704 |
 
-Z-12 saves strictly decodable 4096×3072 and 640×480 JPEG packets, but the
-post-capture input/return workflow still fails. `--capture` deliberately fails
-that regression rather than reporting capture support. Switching is verified
-before capture; saved selfie images and both alternate printer paths remain
-unverified. The Z-12 flash identity matches its dumped JEDEC ID/UID; its optional
-OpenImage credit check still fails. We do not override that check.
+Z-12 saves strictly decodable 4096×3072 and 640×480 JPEG packets and returns to
+the menu. Switching is verified before capture, and a capture after switching
+back still succeeds. The Z-12 flash identity matches its dumped JEDEC ID/UID; its
+optional OpenImage credit check still fails. We do not override that check.
 
 ## SPR addressing (the thing to get right)
 

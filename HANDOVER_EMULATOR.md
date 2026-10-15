@@ -994,39 +994,54 @@ non-hidden path, such as `~/pi-ghidra-cache-alt-z12-disastmp`.
 
 Evidence and remaining work:
 
-- `~/.cache/kc02-emulator/x8d-capture-final`: UI/navigation/motion/back,
-  preserved fixture bytes and PHO00005.JPG. Strict decoding: 4768×2688 and
-  672×384 packets.
-- `~/.cache/kc02-emulator/z12-switch-back-final-{1,2}`: two cold UI runs,
-  native PE11 change, distinct frame, switch back with restored bar pixels,
-  return to menu and preserved fixture bytes. Screenshots are checked in as
+- `~/.cache/kc02-emulator/x8d-print-02`: cold UI, camera switch-free capture,
+  preserved fixture bytes, PHO00005.JPG (4768×2688 and 672×384) and a 384×753
+  thermal page (3008 steps, 0 bad steps, 33 tones).
+- `~/.cache/kc02-emulator/z12-print-04`: cold UI, selfie switch and switch-back,
+  capture, 4096×3072 and 640×480 packets, and a 384×675 thermal page (2696 steps,
+  0 bad steps, 33 tones) with the firmware's date-stamp OSD.
+- `~/.cache/kc02-emulator/z12-switch-back-final-{1,2}`: two cold UI runs with
+  native PE11 change, a distinct frame, switch-back pixel comparisons and
+  preserved fixture bytes. Screenshots are checked in as
   `docs/images/emulator/z12-{front,selfie}.png`.
-- Z-12 captures produce valid 4096×3072 and 640×480 packets, but the full
-  post-capture input/back workflow **still fails**. Do not call this capture
-  support. `profile_smoke.py --capture` deliberately fails. Switching after a
-  capture, saved selfie photos and alternate-build printing remain unverified.
-  `z12-capture-04` records the earlier B018/LCD-DMA wait (640×480 with stride320);
-  `z12-capture-07` records the later input/back failure after allowing overlapping
-  DMA rows. Failure directories include CPU registers, RAM, SFRs and the stopped
-  private card. Inspect FAT only after stopping the guest.
-- `profile_smoke.py` automates native ADC keys and read-only observations. It
-  creates its own card and refuses existing output directories. No guest-memory
-  writes or application patches are involved.
-- Original regressions passed after the profile/CPU/CSI/JPEG changes:
+- **Z-12 post-capture navigation was firmware-side, not a hardware wait.** After
+  the shutter the firmware decodes/scales the 12 MP frame in guest code and
+  drops key events until it finishes; a single Escape arrived too early. The
+  regression now polls the photo-state bytes and retries Escape. Do not
+  "fix" this in the model.
+- **Both alternate builds print on the same GPIO head.** `800c` data/clock,
+  `8004` latch/supply, `8000` strobe, identical to the original. The platen-motor
+  phase order differs per board, so `Profile.printer_phases` and
+  `AX3292_PRINTER_PHASES` were added. Z-12's observed forward order is
+  `6,14,10,11,9,13,5,7`; the default is `10,8,9,1,5,4,6,2`. Before this, Z-12
+  accumulated 16384 strobes on row 0 (`steps=0 bad_steps=1348`) and produced a
+  384×1 page. `AX3292_PRINTER_TRACE=1` logs vector transitions.
+- Z-12 also links a Bluetooth JPEG printer (`open_printer_bluetooth_print_masf`,
+  `printer_jpeg`, `printer_jpg_to_printer_wh`). That transport is not modelled;
+  only the GPIO head is claimed.
+
+Original regressions after the profile/CPU/CSI/JPEG/printer changes:
   `original-profile-final-ui` (two no-card boots),
   `original-profile-final-viewer` (two four-fixture viewer boots),
   `original-profile-final-capture` (two saves and a third cold viewer boot),
   `original-profile-final-printer` (dither/grayscale/no-paper, viewer and back).
   These runs include the final overlapping-row bounds change. Re-run after
-  further shared backend edits. Full pytest: 138 passed, 5 skipped, 51 subtests,
-  with five pre-existing collection warnings. Compiled sensor tests use the
-  distributed header and cover banks, IDs/NACK, H/V orientation, DMA bounds and
-  independent sensor-state events. SDL dummy-video smoke also produced a
-  320×240 scanout; this does not prove an OS window was visible.
+  further shared backend edits. Full pytest: 139 passed, 5 skipped, 51 subtests,
+  with five pre-existing collection warnings. Compiled backend tests use the
+  distributed headers and cover sensor banks/IDs/orientation/DMA bounds, plus
+  the printer's two phase orders (out-of-order vectors must not advance steps).
+  SDL dummy-video smoke also produced a 320×240 scanout; this does not prove an
+  OS window was visible.
+
+`profile_smoke.py` automates native ADC keys and read-only observations. It
+creates its own card and refuses existing output directories. No guest-memory
+writes or application patches are involved.
 
 The distributed patch applies to pristine QEMU 11.1.2 and byte-compares against
 all 13 built sources (`~/.cache/kc02-emulator/patch-check-alt-final`). Patch SHA256:
 `3f7c74630f9827c2d579882a4ba40c7523b7d4187d584445da5523d82caca137`.
 A persistent upstream archive is `~/.cache/kc02-emulator/qemu-11.1.2.tar.xz`;
-`build-qemu.sh` now defaults to this cache rather than `/tmp`. No physical camera testing
+`build-qemu.sh` now defaults to this cache rather than `/tmp`.
+**After the printer changes the current patch SHA256 is
+`472cd81bdd7610138e5d35b32c87dac14dd6081a596bc6a899d507013c936c79`** (`patch-check-alt-printer`). No physical camera testing
 has occurred. Use `tools/emu/README.md` for current alternate controls and limits.

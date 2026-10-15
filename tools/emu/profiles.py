@@ -21,6 +21,7 @@ class Profile:
     dual_sensor: bool = False
     flash_id: str = "ef4016"
     flash_uid: str = "0000000000000000"
+    printer_phases: tuple[int, ...] = (10, 8, 9, 1, 5, 4, 6, 2)
 
     def environment(self) -> dict[str, str]:
         """Hardware wiring and ROM handoff, shared by launcher and regressions."""
@@ -36,6 +37,7 @@ class Profile:
             "AX3292_DUAL_SENSOR": "1" if self.dual_sensor else "0",
             "AX3292_FLASH_ID": self.flash_id,
             "AX3292_FLASH_UID": self.flash_uid,
+            "AX3292_PRINTER_PHASES": ",".join(map(str, self.printer_phases)),
         }
 
 
@@ -48,7 +50,7 @@ PROFILES = {
     "z12": Profile("z12", "10da5dbf24e3e67a7133d22cca2252a4e9f3452fdc7dd35ac9c7869bbd6a00ee",
                    0x2600, 0x9a600, 0x020005ac, 0x021ffffc, 0x2230, 90, 3, True,
                    (620, 775, 328, 238, 512, 415), (512, 133, 1024, 238, 704), True,
-                   "c84016", "4d37393830109b3f"),
+                   "c84016", "4d37393830109b3f", (6, 14, 10, 11, 9, 13, 5, 7)),
 }
 
 

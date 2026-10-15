@@ -29,7 +29,8 @@ OBSERVATIONS = {
 
 
 def exercise(image: Path, directory: Path, qemu: str = DEFAULT_QEMU,
-             selfie: bool = False, capture: bool = False) -> dict:
+             selfie: bool = False, capture: bool = False,
+             printer: bool = False) -> dict:
     profile = detect(image)
     if profile.name not in OBSERVATIONS:
         raise ValueError("use smoke.py for the original firmware")
@@ -52,6 +53,8 @@ def exercise(image: Path, directory: Path, qemu: str = DEFAULT_QEMU,
                AX3292_SD_IMAGE=str(card), AX3292_FB=str(frame), AX3292_FB_EVERY="5",
                AX3292_SFRDUMP=str(directory / "sfr.bin"), AX3292_JPEG_TRACE="1",
                AX3292_KEY_TRACE="1", AX3292_SPR_TRACE="0")
+    if printer:
+        env["AX3292_PRINTER_DIR"] = str(directory / "prints")
     command = [qemu, "-M", "ax3292", "-m", "64M", "-nodefaults",
                "-accel", "tcg,thread=multi", "-display", "none", "-monitor", "none",
                "-serial", "none", "-kernel", str(app), "-qmp",
@@ -93,6 +96,21 @@ def exercise(image: Path, directory: Path, qemu: str = DEFAULT_QEMU,
             def press(key, hold=0.2):
                 qmp.key(key, hold)
                 time.sleep(0.35)  # the release must also pass the ADC debounce
+
+            def leave_camera(attempts=12):
+                """Escape until the menu is active again.
+
+                While the firmware is busy encoding or processing a photo it
+                drops key events, so a single Escape is not enough.
+                """
+                for _ in range(attempts):
+                    press("esc")
+                    deadline = time.time() + 8
+                    while time.time() < deadline:
+                        if mode() == 6:
+                            return
+                        time.sleep(0.25)
+                raise TimeoutError("native back returns to menu")
 
             wait_for(proc, lambda: mode() == 6 and picture_ready(), "automatic stock menu")
             time.sleep(1)
@@ -141,14 +159,18 @@ def exercise(image: Path, directory: Path, qemu: str = DEFAULT_QEMU,
                          for line in (directory / "qemu.log").read_bytes()[log_start:].splitlines()),
                          "native JPEG encode", timeout=30)
                 if profile.name == "z12":
-                    wait_for(proc, lambda: value(0x020a78c0, 1) == 0,
-                             "native photo pipeline completes", timeout=25)
-                    time.sleep(1)
+                    # After the hardware encode the firmware decodes and scales
+                    # the 12 MP frame in guest code. Under TCG that takes
+                    # seconds, during which the camera drops key events.
+                    wait_for(proc, lambda: value(0x020a78c0, 1) == 0 and
+                             value(0x020a78c6, 1) == 1,
+                             "native photo pipeline completes", timeout=180)
+                    wait_for(proc, lambda: value(0x020a78ac, 1) != 2,
+                             "camera window idle", timeout=180)
                 else:
                     time.sleep(15)
                 save("05-after-shutter")
-            press("esc")
-            wait_for(proc, lambda: mode() == 6, "native back returns to menu")
+            leave_camera()
             time.sleep(0.5)
             save("06-back")
         except Exception as error:
@@ -198,6 +220,9 @@ def exercise(image: Path, directory: Path, qemu: str = DEFAULT_QEMU,
                                   "dimensions": dimensions}
             report["capture"] = verified
     report["sd_mount"] = {"root_entries": sorted(root), "preserved_photos": after}
+    if printer:
+        pages = sorted(p.name for p in (directory / "prints").glob("*.png"))
+        report["printer"] = {"directory": str(directory / "prints"), "pages": pages}
     (directory / "report.json").write_text(json.dumps(report, indent=2) + "\n")
     return report
 
@@ -209,9 +234,14 @@ def main() -> int:
     parser.add_argument("--qemu", default=DEFAULT_QEMU)
     parser.add_argument("--selfie", action="store_true")
     parser.add_argument("--capture", action="store_true")
+    parser.add_argument("--printer", action="store_true",
+                        help="enable thermal-head capture and report emitted pages")
     args = parser.parse_args()
-    result = exercise(args.image, args.output, args.qemu, args.selfie, args.capture)
+    result = exercise(args.image, args.output, args.qemu, args.selfie, args.capture,
+                      args.printer)
     print(f"PASS {result['profile']}: native menu/navigation/camera/motion/back; SD preserved")
+    if "printer" in result:
+        print(f"  printer pages: {result['printer']['pages']}")
     return 0
 
 

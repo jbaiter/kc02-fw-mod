@@ -1,6 +1,6 @@
 --- /dev/null
 +++ b/hw/or1k/ax3292.c
-@@ -0,0 +1,1888 @@
+@@ -0,0 +1,1917 @@
 +/*
 + * AX3292 (KC02-family camera) machine.
 + *
@@ -112,6 +112,7 @@
 +    bool i2c_selected[2];
 +    uint8_t i2c_offset[2];
 +    uint8_t sensor_regs[2][256];
++    uint32_t csi_lcd_size;    /* ISP_LS_SIZE committed by ISP_CTRL_LS_KS */
 +    QemuConsole *console;
 +    QemuInputHandlerState *input;
 +    QEMUBH *display_bh;
@@ -764,9 +765,11 @@
 +
 +    s->tick_count++;
 +    if (s->trace && (s->tick_count <= 3 || s->tick_count % 200 == 0)) {
-+        fprintf(stderr, "tick %lu pc=%08x sr=%08x picmr=%08x picsr=%08x\n",
++        fprintf(stderr, "tick %lu pc=%08x sr=%08x picmr=%08x picsr=%08x "
++                "epcr=%08x esr=%08x hp=%u\n",
 +                s->tick_count, (uint32_t)env->pc, cpu_get_sr(env),
-+                env->picmr, env->picsr);
++                env->picmr, env->picsr, env->epcr, env->esr,
++                env->ax3292_hp_active);
 +    }
 +
 +    ax3292_irq_update(s);
@@ -1612,7 +1615,33 @@
 +    s->sensor = getenv("AX3292_SENSOR") != NULL;
 +    s->jpeg_trace = getenv("AX3292_JPEG_TRACE") &&
 +                    atoi(getenv("AX3292_JPEG_TRACE")) != 0;
++    static const unsigned phases[] = {10,8,9,1,5,4,6,2};
 +    s->printer.directory = getenv("AX3292_PRINTER_DIR");
++    s->printer.trace = getenv("AX3292_PRINTER_TRACE") != NULL;
++    memcpy(s->printer.phases, phases, sizeof(phases));
++    env = getenv("AX3292_PRINTER_PHASES");
++    if (env != NULL) {
++        /* Board wiring, not application state: each board connects the four
++         * platen-motor phase lines to different SFR bits, so the order in
++         * which the firmware's waveforms map onto the phase vector differs. */
++        const char *q = env;
++        unsigned n = 0;
++        while (n < 8) {
++            char *end;
++            unsigned long v = strtoul(q, &end, 10);
++            if (end == q || v > 15) {
++                error_report("AX3292_PRINTER_PHASES needs eight values 0..15");
++                exit(1);
++            }
++            s->printer.phases[n++] = v;
++            if (*end != ',') { break; }
++            q = end + 1;
++        }
++        if (n != 8) {
++            error_report("AX3292_PRINTER_PHASES needs eight values 0..15");
++            exit(1);
++        }
++    }
 +    s->printer.paper = !getenv("AX3292_PRINTER_NO_PAPER");
 +    if (s->printer.directory && g_mkdir_with_parents(s->printer.directory, 0755)) {
 +        error_report("Cannot create printer output directory: %s", strerror(errno));
@@ -2398,7 +2427,7 @@
 +}
 --- /dev/null
 +++ b/hw/or1k/ax3292-sensor.h
-@@ -0,0 +1,148 @@
+@@ -0,0 +1,154 @@
 +/* Synthetic H63P/BF3A03 + CSI LCD/JPEG DMA, no application-state writes.
 + * SPDX-License-Identifier: GPL-2.0-or-later
 + */
@@ -2502,7 +2531,10 @@
 +{
 +    /* ISP_CTRL_LS_KS latches line-scaler configuration, then self-clears.
 +     * It must complete even while CSI is stopped for a RAM JPEG operation. */
-+    s->sfr[0xb008 >> 2] &= ~(1u << 19);
++    if (s->sfr[0xb008 >> 2] & (1u << 19)) {
++        s->csi_lcd_size = s->sfr[0xb180 >> 2];
++        s->sfr[0xb008 >> 2] &= ~(1u << 19);
++    }
 +    uint32_t dma = s->sfr[0xb018 >> 2];
 +    uint32_t events = 0;
 +    if (!s->sensor) { return; }
@@ -2515,7 +2547,10 @@
 +        s->sfr[0xb078 >> 2] = s->sfr[0xb01c >> 2];
 +    }
 +    if ((s->sfr[0xb000 >> 2] & 1) && (dma & 0x40000)) {
-+        uint32_t size = s->sfr[0xb180 >> 2]; /* ISP_LS_SIZE */
++        /* Register writes stage the next scaler setup. In particular,
++         * csiScaler writes JPEG dimensions without kicking LS when no scale
++         * is needed. Such writes must not resize an active LCD transfer. */
++        uint32_t size = s->csi_lcd_size;
 +        if (ax3292_sensor_fill(s, s->sfr[0xb060 >> 2], s->sfr[0xb064 >> 2],
 +                              size & 0xffff, size >> 16, s->sfr[0xb068 >> 2])) {
 +            events |= 0x0a; /* sensor size valid, LCD frame end */
@@ -2709,7 +2744,7 @@
 +}
 --- /dev/null
 +++ b/hw/or1k/ax3292-printer.h
-@@ -0,0 +1,169 @@
+@@ -0,0 +1,181 @@
 +/* GPIO thermal head + platen; records firmware output, not source images.
 + * SPDX-License-Identifier: GPL-2.0-or-later
 + * KC02: PORTE DATA15/CLK13, PORTB LATCH5/POWER6, PORTA STROBE9.
@@ -2723,10 +2758,12 @@
 +
 +typedef struct AxPrinter {
 +    const char *directory;
-+    bool paper, active, overflow;
++    bool paper, active, overflow, trace;
 +    uint8_t shift[AX_PRINT_DOTS], latch[AX_PRINT_DOTS];
 +    unsigned shift_pos, step, rows, jobs;
 +    int phase;
++    unsigned last_vector;
++    unsigned phases[8];
 +    uint16_t *hits;
 +    uint16_t strobes[AX_PRINT_ROWS];
 +    uint64_t clocks, latches, pulses, bad_steps;
@@ -2819,6 +2856,7 @@
 +    memset(p->latch, 0, sizeof(p->latch));
 +    p->shift_pos = p->step = p->rows = 0;
 +    p->phase = -1;
++    p->last_vector = 0xff;
 +    p->clocks = p->latches = p->pulses = p->bad_steps = 0;
 +    p->overflow = false;
 +    p->active = true;
@@ -2833,6 +2871,17 @@
 +        else { ax_printer_finish(p); }
 +    }
 +    if (!p->active) { return; }
++    if (p->trace) {
++        unsigned v = (regs[0x800c >> 2] & 1) |
++                     ((regs[0x8010 >> 2] & 0x400) >> 9) |
++                     ((regs[0x8000 >> 2] & 8) >> 1) |
++                     ((regs[0x8010 >> 2] & 0x800) >> 8);
++        if (v != p->last_vector) {
++            fprintf(stderr, "printer-vector: %u spr=%04x value=%08x step=%u\n",
++                    v, spr, value, p->step);
++            p->last_vector = v;
++        }
++    }
 +    if (spr == 0x800c && !(old & 0x2000) && (value & 0x2000)) {
 +        p->shift[p->shift_pos] = !!(value & 0x8000);
 +        p->shift_pos = (p->shift_pos + 1) % AX_PRINT_DOTS;
@@ -2847,14 +2896,12 @@
 +    if ((spr == 0x8000 && ((old ^ value) & 8)) ||
 +        (spr == 0x800c && ((old ^ value) & 1)) ||
 +        (spr == 0x8010 && ((old ^ value) & 0xc00))) {
-+        static const unsigned phases[] = {10,8,9,1,5,4,6,2};
 +        unsigned vector = (regs[0x800c >> 2] & 1) |
 +                          ((regs[0x8010 >> 2] & 0x400) >> 9) |
 +                          ((regs[0x8000 >> 2] & 8) >> 1) |
 +                          ((regs[0x8010 >> 2] & 0x800) >> 8);
 +        for (unsigned i = 0; i < 8; i++) {
-+            if (vector != phases[i]) { continue; }
-+            if (p->phase >= 0 && i != (unsigned)p->phase) {
++            if (vector != p->phases[i]) { continue; }            if (p->phase >= 0 && i != (unsigned)p->phase) {
 +                if (i == ((unsigned)p->phase + 1) % 8) { p->step++; }
 +                else if (i == ((unsigned)p->phase + 7) % 8) {
 +                    if (p->step) { p->step--; }
