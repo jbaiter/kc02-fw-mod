@@ -15,6 +15,16 @@ typedef struct {
     SdOwner owner;
 } Fat;
 int fat_mount(Fat *fs, SectorRead read, SectorWrite write, u32 capacity);
+/* Forward-only streaming reader for files too large to buffer. One 512-byte
+ * staging sector plus one cached FAT sector; no allocation. */
+typedef struct {
+    Fat *fs;
+    u32 size, done, current, in_cluster, lba;
+    u8 sector[512];
+    int cached;
+} FileStream;
+int fat_stream_open(Fat *fs, const char *name, FileStream *stream);
+int fat_stream_read(FileStream *stream, u8 *out, unsigned size);
 int fat_read(Fat *fs, const char *name, u8 *out, unsigned cap, unsigned *size);
 int fat_create(Fat *fs, const char *name, const u8 *bytes, unsigned size);
 unsigned fat_photos(Fat *fs, unsigned *ids, unsigned cap);

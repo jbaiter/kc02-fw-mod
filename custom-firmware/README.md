@@ -3,7 +3,8 @@
 Luma is a new freestanding AX3292 application with three screens: camera,
 gallery, and list settings. It does not call the stock application or include a
 stock firmware dump. The shared core builds for the original KC02, MYSTILUCK
-X8D, and HMOLLIMT Z-12 board profiles.
+X8D, and HMOLLIMT Z-12 board profiles. The SD command/DMA contract now lives
+once, in `src/sd_hw.c`, and is shared with the bring-up stage.
 
 **Do not flash these builds.** They run from RAM in QEMU. They lack cold-boot
 bring-up, a USB controller driver, physical printer safety controls, and a
@@ -12,8 +13,9 @@ recovery loader. Do not rename `luma.ram.bin` to `DestBin.bin` or `firmware.img`
 A separate [first-stage bring-up](BRINGUP.md) (`bringup/`) now exists for the
 original KC02: a recovery gate and GDB-over-USB monitor that runs before any UI.
 It is also experimental and not flash-qualified. It preserves the factory boot
-chain, serves a checkpoint-only debug monitor, and validates a stock-format
-update candidate without writing flash.
+chain, serves a checkpoint-only debug monitor, and finds and validates a
+stock-format update candidate on the card read-only. It cannot install one: the
+gate has no writer and no trusted boot-prefix snapshot to compare against.
 
 ![Actual QEMU screenshots: boot, viewport, gallery, settings](../docs/images/luma/first-milestone.png)
 

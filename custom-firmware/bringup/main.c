@@ -4,7 +4,8 @@
  */
 #include "monitor.h"
 #include "ax_usb.h"
-#include "destbin.h"
+#include "recover.h"
+#include "sd_hw.h"
 #ifndef USB_VID
 #define USB_VID 0
 #define USB_PID 0
@@ -20,6 +21,9 @@ static Monitor monitor;
 static UsbDebug usb;
 static AxUsb controller;
 static unsigned key_phase, key_stable, key_previous;
+static u8 sd_dma[512] __attribute__((aligned(32)));
+static SdHw sd_card;
+static int card_read(u32 lba, u8 *out) { return sd_hw_read(&sd_card,lba,out); }
 /* Native observation points, not host-injected application state. */
 volatile u32 bringup_probe[8] __attribute__((section(".probe.data")))={0};
 extern void bringup_checkpoint(void);
@@ -120,9 +124,18 @@ void bringup_main(void)
     REG(0x880c)=0x5500; /* SDK watchdog-disable key; bring-up only. */
     bringup_probe[0]=0x4c554d41;
     bringup_probe[1]=1; /* Recovery entry precedes any workload. */
-    /* Missing physical SD reader is an explicit blocked state. We do not
-     * pretend an absent driver means 'no update file', or jump to Luma. */
-    bringup_probe[5]=0xffffffffu; /* RECOVERY_NO_SD_BACKEND */
+    /* Recovery gate first, and read-only. It finds and validates a
+     * stock-format candidate but cannot install one: there is no writer, and
+     * a candidate is not trusted until the boot prefix can be verified. */
+    {
+        static RecoverReport recovery;
+        u32 capacity=sd_hw_init(&sd_card,&sd_dma[0]);
+        RecoverResult code=capacity ? recover_check(card_read,capacity,&recovery)
+                                    : RECOVER_NO_CARD;
+        bringup_probe[5]=code;
+        bringup_probe[6]=recovery.capacity;
+        bringup_probe[7]=recovery.info.crc;
+    }
     bringup_probe[1]=2;
     monitor_init(&monitor,&usb,&memory);
     usb_debug_init(&usb,USB_VID,USB_PID,&monitor,monitor_receive,revoke);

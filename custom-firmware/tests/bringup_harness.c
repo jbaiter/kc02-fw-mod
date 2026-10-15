@@ -128,3 +128,14 @@ unsigned bringup_h_ax_take(u8 *out)
     }
     return n;
 }
+
+/* Compile-time recovery-result values, so the Python tests assert the real
+ * enum order instead of restating it. */
+#include "recover.h"
+unsigned bringup_h_recover_code(unsigned n)
+{
+    static const unsigned codes[]={RECOVER_OK,RECOVER_NO_CARD,RECOVER_NO_FILESYSTEM,
+        RECOVER_NO_CANDIDATE,RECOVER_CANDIDATE_IO,RECOVER_CANDIDATE_INVALID,
+        RECOVER_PREFIX_UNAVAILABLE};
+    return n<sizeof(codes)/sizeof(codes[0]) ? codes[n] : ~0u;
+}

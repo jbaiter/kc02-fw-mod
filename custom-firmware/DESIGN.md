@@ -98,7 +98,8 @@ register numbers and unauthorised requests. Unsupported operations return an
 empty response; absent backends return errors.
 
 The first-stage monitor (`bringup/`, `src/monitor.c`, `src/usb_debug.c`,
-`src/ax_usb.c`) now supplies the target side for the original KC02. It runs
+`src/ax_usb.c`) now supplies the target side for the original KC02, and the same
+stage runs a read-only recovery gate (`src/recover.c`) before any application. It runs
 before any application UI, preserves the factory boot chain, and validates a
 stock-format candidate read-only. What it does **and does not** do is documented
 in [BRINGUP.md](BRINGUP.md). In summary:
@@ -246,6 +247,13 @@ CRC is a fingerprint, **not authentication**, and matching the stock layout is
 not proof that a candidate boots. `tools/factory.py` packages a candidate from
 the pinned original dump and enforces that only the factory application copy
 span changes.
+
+`src/recover.c` is the gate that runs first with the card. It mounts the volume
+read-only through the shared SD driver, streams a root `DESTBIN.BIN` through one
+staging sector, validates it and reports a distinct code for each failure. It
+stops at `RECOVER_PREFIX_UNAVAILABLE` rather than claiming success, because
+`destbin_prefix_matches` has no trusted snapshot of the running boot bytes yet.
+See [BRINGUP.md](BRINGUP.md) for the codes and the evidence.
 
 ## Next hardware milestones
 

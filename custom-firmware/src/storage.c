@@ -197,3 +197,50 @@ int sd_handoff(Fat *f, SdOwner to, int io_idle)
     f->owner=to;
     return 1;
 }
+/* Sequential reader: no whole-file buffer, so a 4 MiB candidate streams from a
+ * 512-byte staging sector and one cached FAT sector. Reads are forward-only;
+ * the API deliberately does not claim random access. */
+static int cluster_next(FileStream *s, u32 *next)
+{
+    u8 block[512];
+    if (!s->fs->read(s->fs->fat+s->current/256,block)) { return 0; }
+    *next=get16(block+(s->current%256)*2);
+    return 1;
+}
+int fat_stream_open(Fat *f, const char *name, FileStream *s)
+{
+    u8 n[11], e[32];
+    *s=(FileStream){.fs=f};
+    if (!f->mounted || f->owner != SD_LOCAL || !name83(name,n) || entry(f,n,e,0)!=1) { return 0; }
+    s->size=get32(e+28);
+    s->current=get16(e+26);
+    if (!s->size || s->current<2 || s->current>=f->clusters+2) { return 0; }
+    return 1;
+}
+/* Returns bytes read, 0 at end of file, or -1 on a short/cyclic chain or I/O
+ * error. A short chain is an error, never a truncated image. */
+int fat_stream_read(FileStream *s, u8 *out, unsigned size)
+{
+    unsigned done=0, per=s->fs->spc*512u, stepped=0;
+    if (s->size-s->done<size) { size=s->size-s->done; }
+    while (done<size) {
+        unsigned offset=s->in_cluster%512u, room=512u-offset, tail=per-s->in_cluster, take, i;
+        u32 lba=s->fs->data+(s->current-2)*s->fs->spc+s->in_cluster/512u;
+        if (room>tail) { room=tail; }
+        if (room>size-done) { room=size-done; }
+        if (!s->cached || s->lba!=lba) {
+            if (!s->fs->read(lba,s->sector)) { return -1; }
+            s->lba=lba; s->cached=1;
+        }
+        take=room;
+        for (i=0; i<take; i++) { out[done+i]=s->sector[offset+i]; }
+        done+=take; s->done+=take; s->in_cluster+=take;
+        if (s->in_cluster==per && done<size) {
+            u32 next;
+            if (stepped++>=s->fs->clusters || !cluster_next(s,&next)) { return -1; }
+            if (next<2 || next>=s->fs->clusters+2) { return -1; }
+            s->current=next; s->in_cluster=0; s->cached=0;
+        }
+    }
+    return (int)done;
+}

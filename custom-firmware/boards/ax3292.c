@@ -7,6 +7,7 @@
 #include "luma.h"
 #include "storage.h"
 #include "input.h"
+#include "sd_hw.h"
 #ifndef BOARD_ID
 #error BOARD_ID must be 0 (original), 1 (x8d) or 2 (z12)
 #endif
@@ -19,6 +20,7 @@ static u8 lcd_uv[PIXELS/2] __attribute__((aligned(32)));
 static u8 sensor_y[PIXELS] __attribute__((aligned(32)));
 static u8 sensor_uv[PIXELS/2] __attribute__((aligned(32)));
 static u8 dma[512] __attribute__((aligned(32)));
+static SdHw sd;
 static Fat fs;
 static unsigned photo_ids[GALLERY_MAX], count;
 /* GDB observation points; application state is never supplied by the host. */
@@ -37,54 +39,8 @@ void *memset(void *dest, int v, size_t n)
     while (n--) { *d++=(u8)v; }
     return dest;
 }
-static int wait_bit(unsigned reg, u32 mask)
-{
-    unsigned timeout=200000;
-    while (!(REG(reg)&mask) && --timeout) { }
-    return timeout != 0;
-}
-static int command(unsigned cmd, u32 arg, u32 *response)
-{
-    REG(0x9884)=0x28000;
-    REG(0x9898)=cmd; REG(0x989c)=arg; REG(0x9884)=1;
-    if (!wait_bit(0x9880,0x20000)) { return 0; }
-    if (response) { *response=REG(0x989c); }
-    return 1;
-}
-static u32 sd_init(void)
-{
-    u32 r, rca;
-    unsigned retry, i;
-    u8 wire[16];
-    REG(0x9888)=120; /* Development divider, not board timing calibration. */
-    if (!command(0,0,0) || !command(8,0x1aa,&r) || r!=0x1aa) { return 0; }
-    for (retry=0; retry<100; retry++) {
-        if (!command(55,0,0) || !command(41,0x40ff8000,&r)) { return 0; }
-        if (r&0x80000000u) { break; }
-    }
-    if (retry==100 || !(r&0x40000000u)) { return 0; } /* SDHC only */
-    REG(0x988c)=(u32)dma;
-    if (!command(2,0,0) || !command(3,0,&rca)) { return 0; }
-    if (!command(9,rca,0)) { return 0; }
-    for (i=0; i<16; i++) { wire[i]=dma[(i&~3u)+3-(i&3)]; }
-    if ((wire[0]>>6)!=1) { return 0; }
-    if (!command(7,rca,0)) { return 0; }
-    return (((((u32)wire[7]&63)<<16)|((u32)wire[8]<<8)|wire[9])+1u) << 10;
-}
-static int sector_io(u32 lba, u8 *out, const u8 *in)
-{
-    unsigned i;
-    if (in) { for (i=0; i<512; i++) { dma[i]=in[i]; } }
-    REG(0x9890)=(u32)dma; REG(0x9894)=512;
-    REG(0x9884)=0x8000;
-    if (!command(in ? 24 : 17,lba,0)) { return 0; }
-    REG(0x9884)=0x10;
-    if (!wait_bit(0x9880,0x8000) || (REG(0x9880)&0x10000)) { return 0; }
-    if (out) { for (i=0; i<512; i++) { out[i]=dma[i]; } }
-    return 1;
-}
-static int read_sector(u32 lba, u8 *out) { return sector_io(lba,out,0); }
-static int write_sector(u32 lba, const u8 *in) { return sector_io(lba,0,in); }
+static int read_sector(u32 lba, u8 *out) { return sd_hw_read(&sd, lba, out); }
+static int write_sector(u32 lba, const u8 *in) { return sd_hw_write(&sd, lba, in); }
 static int read_file(const char *name, u8 *out, unsigned cap, unsigned *n)
 {
     return fat_read(&fs,name,out,cap,n);
@@ -200,7 +156,7 @@ void firmware_main(void)
     u32 last=~0u, capacity;
     unsigned n;
     hardware_init();
-    capacity=sd_init();
+    capacity=sd_hw_init(&sd,dma);
     if (capacity) { fat_mount(&fs,read_sector,write_sector,capacity); }
     app_init(a,&platform,REG(0x9908)/1000);
     if (a->theme.background[0] && read_file(a->theme.background,bitmap,sizeof(bitmap),&n)) { have_bg=bmp_read(bitmap,n,theme_bg); }

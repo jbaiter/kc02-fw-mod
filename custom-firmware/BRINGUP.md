@@ -62,6 +62,45 @@ data cache is enabled at handoff, it stops in a self-loop rather than writing
 back dirty application data into a region it is about to reuse. It does not
 discard live cache contents.
 
+## The recovery gate
+
+The gate runs first, before the workload and before any USB setup, and it is
+read-only. Card bring-up uses the shared SD driver in `src/sd_hw.c`, the same
+one the Luma application uses, so there is a single implementation of the
+vendor command/DMA contract. The volume is mounted with a null write callback,
+which makes `fat_create` refuse. The gate cannot publish a file.
+
+The candidate is streamed, not buffered. `fat_stream_read` walks the cluster
+chain through one 512-byte staging sector and one cached FAT sector, so a 4 MiB
+image costs no 4 MiB allocation. The validator reads strictly in ascending
+order, which is the only access pattern a forward-only stream can honour.
+
+Every outcome is distinct and terminal:
+
+| Code | Meaning |
+|---|---|
+| 0 | `RECOVER_OK`: reserved; the gate never reports a verified candidate today |
+| 1 | No card, or it did not answer as SDHC |
+| 2 | Card present, no usable FAT16 volume |
+| 3 | No `DESTBIN.BIN` in the root directory |
+| 4 | The file could not be read completely |
+| 5 | Structure, size or layout rejected |
+| 6 | Structure valid; the boot-prefix check could not run |
+
+Code 6 is the one that matters. `destbin_inspect` checks the BLDR magic, the
+512-byte additive checksum, the `55AA` signature, the declared load address,
+the region fields, the `SFAT` marker and the full-image CRC, and reports that
+CRC as a **fingerprint**. `DestBin` stores no image CRC of its own, so a bit
+flip in the resource area is structurally valid and no amount of structure
+checking will catch it. Comparing the fingerprint against a known-good build is
+the only defence for those bytes. It is not authentication.
+
+The remaining check is `destbin_prefix_matches`, which compares the first
+`protected_bytes` of the candidate against a trusted snapshot of the running
+boot/recovery bytes. No such snapshot exists yet, so the gate reports code 6
+instead of claiming verification. Reporting OK without that comparison would be
+the most dangerous thing this stage could do.
+
 ## Stop model: checkpoints only
 
 `bringup_checkpoint` is a cooperative call boundary, not a trap handler. It
@@ -118,10 +157,19 @@ python3 custom-firmware/tools/bringup_smoke.py \
   --build custom-firmware/build/bringup-selftest \
   --output ~/.cache/kc02-emulator/luma-bringup-NEW
 
-# USB build. Supply your own development identifiers; stock camera VID/PIDs,
-# and this project's reserved pairs, are refused.
+# Recovery gate against a private card holding a candidate DESTBIN.BIN.
+python3 custom-firmware/tools/bringup_smoke.py \
+  --build custom-firmware/build/bringup-original \
+  --card /path/to/private-card.img \
+  --output ~/.cache/kc02-emulator/luma-bringup-recovery-NEW
+
+# USB build. Supply your own development identifiers; stock camera VID/PIDs
+# are refused.
 python3 custom-firmware/tools/build_bringup.py \
   --usb-vid 0x1209 --usb-pid 0x0001 --output custom-firmware/build/bringup-usb
+python3 custom-firmware/tools/bringup_smoke.py --usb-wait \
+  --build custom-firmware/build/bringup-usb \
+  --output ~/.cache/kc02-emulator/luma-bringup-usbwait-NEW
 ```
 
 There is no production device identity yet. Compiled defaults leave USB
@@ -152,16 +200,46 @@ The report sets `flash_qualified`, `recovery_writer` and `hardware_tested` to
 false. They stay false until an external SPI read has been verified on the
 target unit and the stock updater has been proven with an unchanged image.
 
+## Evidence
+
+| Artifact | What it shows |
+|---|---|
+| `~/.cache/kc02-emulator/luma-bringup-selftest-final` | Monitor relocated, 91k+ checkpoint stop/resume cycles, gate reports code 1 with no card |
+| `~/.cache/kc02-emulator/luma-bringup-recovery-final` | Gate finds a candidate on a FAT16 card and reports code 6 with fingerprint `0x95eceee0`, matching the host's `zlib.crc32` |
+| `~/.cache/kc02-emulator/luma-bringup-usbwait-final` | USB build reaches and holds the polled wait |
+
+All three record `usb_tested: false`, `physical_hardware_tested: false`,
+`flash_written: false`. Host tests live in `tests/test_bringup.py`: they compile
+the real sources and drive an actual `gdb-multiarch` through the localhost
+bridge, the AX3292 register model and the actual monitor.
+
 ## Known gaps
 
-- `destbin_inspect` checks the BLDR magic, additive checksum, signature,
-  region fields, load address, SFAT marker and full-image CRC, then compares a
-  separately snapshotted running prefix against the candidate. **CRC is a
-  fingerprint, not authentication.**
-- No SD reader and no NOR writer are wired in. The recovery gate reports
-  `RECOVERY_NO_SD_BACKEND` in native observation word 5 instead of proceeding.
+- No NOR writer is wired in, and the boot-prefix comparison has no trusted
+  snapshot, so the gate stops at code 6. **CRC is a fingerprint, not
+  authentication.**
+- **Card capacity units are a vendor quirk.** `sd_hw_init` reproduces
+  `hal_sd.c`'s `((csize+1)<<10)`, which is numerically a sector count rather
+  than a byte count; the vendor shifts by 10 where SDHC means 19. A real byte
+  count would overflow `u32` above 4 GB, so the value is kept and compared
+  against sector offsets. `sd_hw.h` says so instead of calling it bytes.
 - The USB backend assumes `EP0` plus a bidirectional `EP1`, per the vendor SDK.
-  Independent endpoint operation is unverified on silicon.
-- The control path has not been exercised against a real host controller.
-  Timing, NAK handling, stall recovery and disconnect behaviour are the likely
-  first hardware surprises.
+  Independent endpoint operation is unverified on silicon, and the control path
+  has never met a real host controller. Timing, NAK handling, stall recovery and
+  disconnect behaviour are the likely first hardware surprises.
+- The stage owns the card for the length of the gate. Nothing else has started
+  yet, so that is safe today, but a future application launch must not run
+  concurrently with an unremounted card.
+
+## Where the boot-prefix snapshot has to come from
+
+Until a NOR read path exists, the gate cannot finish its last check. The
+options, best first:
+
+1. A verified read of the mapped boot region, with its own bounds and no
+   dependence on the application being intact.
+2. A build-time constant recorded from the pinned original dump, which proves
+   nothing about the unit actually running.
+3. Installing without the comparison, which this project rejects.
+
+Option 1 is the next real milestone for the recovery path.

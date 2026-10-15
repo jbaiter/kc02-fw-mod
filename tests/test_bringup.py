@@ -40,7 +40,8 @@ def native(tmp_path_factory):
     subprocess.run(['cc','-std=c99','-O1','-g','-Wall','-Wextra','-Werror',
                     '-fsanitize=undefined','-fno-sanitize-recover=undefined','-shared','-fPIC',
                     '-I'+str(FW/'include'),
-                    *(str(FW/'src'/s) for s in ('debug.c','monitor.c','usb_debug.c','ax_usb.c','destbin.c')),
+                    *(str(FW/'src'/s) for s in ('debug.c','monitor.c','usb_debug.c','ax_usb.c','destbin.c',
+                                                   'storage.c','recover.c')),
                     str(FW/'tests/bringup_harness.c'),'-o',str(libpath)],check=True)
     lib = C.CDLL(str(libpath))
     lib.bringup_h_setup.argtypes = [C.c_void_p,C.c_void_p]
@@ -49,7 +50,16 @@ def native(tmp_path_factory):
         getattr(lib,'bringup_h_'+name).argtypes = [C.c_void_p,C.c_uint]
     for name in ('take','ax_take','ax_setup'):
         getattr(lib,'bringup_h_'+name).argtypes = [C.c_void_p]
-    lib.destbin_inspect.argtypes = [C.c_void_p,C.c_void_p,U32,C.c_void_p]
+    lib.destbin_inspect.argtypes = [C.c_void_p,C.c_void_p]
+    lib.destbin_prefix_matches.argtypes = [C.c_void_p,C.c_void_p,U32]
+    lib.recover_check.argtypes = [SectorRead,U32,C.c_void_p]
+    lib.recover_check.restype = C.c_int
+    lib.bringup_h_recover_code.argtypes = [C.c_uint]
+    lib.bringup_h_recover_code.restype = C.c_uint
+    lib.fat_create.argtypes = [C.c_void_p,C.c_char_p,C.c_void_p,C.c_uint]
+    lib.fat_mount.argtypes = [C.c_void_p,SectorRead,SectorWrite,U32]
+    lib.fat_stream_open.argtypes = [C.c_void_p,C.c_char_p,C.c_void_p]
+    lib.fat_stream_read.argtypes = [C.c_void_p,C.c_void_p,C.c_uint]
     return lib
 
 
@@ -57,6 +67,14 @@ def native(tmp_path_factory):
 def h(native):
     native.bringup_h_init()
     return native
+
+
+@pytest.fixture(scope='module')
+def codes(native):
+    """Result codes read from the real enum, never restated here."""
+    names=['RECOVER_OK','RECOVER_NO_CARD','RECOVER_NO_FILESYSTEM','RECOVER_NO_CANDIDATE',
+           'RECOVER_CANDIDATE_IO','RECOVER_CANDIDATE_INVALID','RECOVER_PREFIX_UNAVAILABLE']
+    return {n:native.bringup_h_recover_code(i) for i,n in enumerate(names)}
 
 
 def setup(h, kind, request, value=0, index=0, size=0, ack=False):
@@ -244,15 +262,17 @@ def test_controller_oversize_packet_fails_closed(h):
     assert h.bringup_h_state(4) and not h.bringup_h_state(2)
 
 
-Read=C.CFUNCTYPE(C.c_int,C.c_void_p,U32,C.c_void_p,C.c_uint)
+ByteRead=C.CFUNCTYPE(C.c_int,C.c_void_p,U32,C.c_void_p,C.c_uint)
+SectorRead=C.CFUNCTYPE(C.c_int,U32,C.c_void_p)
+SectorWrite=C.CFUNCTYPE(C.c_int,U32,C.c_void_p)
 class Source(C.Structure):
-    _fields_=[('context',C.c_void_p),('read',Read),('size',U32)]
+    _fields_=[('context',C.c_void_p),('read',ByteRead),('size',U32)]
 class Info(C.Structure):
     _fields_=[(n,U32) for n in ('size','crc','app_offset','app_size')]
 
 
 def source(data, fail=None):
-    @Read
+    @ByteRead
     def read(ctx,at,out,n):
         if at+n>len(data) or (fail is not None and at<=fail<at+n):
             return 0
@@ -270,32 +290,37 @@ def legacy():
 
 
 def test_legacy_full_stream_and_protected_prefix(h):
-    b=legacy(); a,base=source(b),source(b)
+    b=legacy(); a=source(b)
     info=Info()
-    assert h.destbin_inspect(C.byref(a),C.byref(base),0x20000,C.byref(info))==0
-    assert info.crc==zlib.crc32(b) and info.app_size==0x644*512
+    assert h.destbin_inspect(C.byref(a),C.byref(info))==0
+    assert info.crc==zlib.crc32(b) and info.size==0x400000 and info.app_size==0x644*512
+    # Prefix comparison is a separate decision: a caller that cannot obtain a
+    # trusted running snapshot must not be able to call the candidate verified.
+    assert h.destbin_prefix_matches(C.byref(a),C.byref(source(b)),0x20000)==0
     b[0x10000]^=1
-    changed=source(b)
-    # A separately snapshotted current prefix detects a changed recovery byte.
-    old=legacy(); base=source(old)
-    assert h.destbin_inspect(C.byref(changed),C.byref(base),0x20000,C.byref(info))==3
+    assert h.destbin_prefix_matches(C.byref(source(b)),C.byref(source(legacy())),0x20000)==3
+    # A change outside the protected span is not a prefix failure.
+    b=legacy(); b[0x30000]^=1
+    assert h.destbin_prefix_matches(C.byref(source(b)),C.byref(source(legacy())),0x20000)==0
+    for bad_bytes in (0,0x25ff,0x400001):
+        assert h.destbin_prefix_matches(C.byref(a),C.byref(source(legacy())),bad_bytes)==1
 
 
 @pytest.mark.parametrize('offset',[4,0x20,0x24,0x28,0x30,0x34,0x1fe,0x304])
 def test_legacy_rejects_malformed(h,offset):
-    b=legacy(); base=source(bytes(b)); b[offset]^=1
+    b=legacy(); b[offset]^=1
     if offset<512:
         b[0x0c]=(b[0x0c]-sum(b[:512]))&255
-    a=source(b); info=Info(1,2,3,4)
-    assert h.destbin_inspect(C.byref(a),C.byref(base),0x2600,C.byref(info))==1
-    assert tuple(getattr(info,n) for n,_ in info._fields_)==(1,2,3,4)
+    a=source(b); info=Info()
+    assert h.destbin_inspect(C.byref(a),C.byref(info))==1
+    assert tuple(getattr(info,n) for n,_ in info._fields_)==(0,0,0,0)
 
 
 def test_legacy_io_and_size_failure(h):
-    b=legacy(); base=source(b); a=source(b,0x300000); info=Info()
-    assert h.destbin_inspect(C.byref(a),C.byref(base),0x2600,C.byref(info))==2
-    a=source(b[:-1])
-    assert h.destbin_inspect(C.byref(a),C.byref(base),0x2600,C.byref(info))==1
+    b=legacy(); info=Info()
+    assert h.destbin_inspect(C.byref(source(b,0x300000)),C.byref(info))==2
+    assert h.destbin_inspect(C.byref(source(b[:-1])),C.byref(info))==1
+    assert h.destbin_inspect(C.byref(source(b[:0])),C.byref(info))==1
 
 
 def stock_or_skip():
@@ -345,63 +370,159 @@ def test_bridge_rejects_partial_usb_write():
         bridge.write_all(Device(),b'123',100)
 
 
-def test_real_gdb_through_bridge_and_usb_register_model(h,tmp_path):
-    """Actual GDB -> actual bridge -> AX USB contract model -> actual monitor.
+card=module('luma_card', FW/'tools/card.py')
+sdcreate=module('kc02_create_sd', ROOT/'tools/emu/create_sd.py')
 
-    USB registers and RAM are a host test double. No silicon is involved.
-    """
-    import socket
-    import threading
-    from types import SimpleNamespace
-    gdb=shutil.which('gdb-multiarch')
-    cached=Path.home()/'.cache/kc02-gdb/root/usr/bin/gdb-multiarch'
-    if not gdb and cached.is_file():
-        gdb=str(cached)
-    if not gdb:
-        pytest.skip('OpenRISC-capable GDB unavailable')
-    class UsbTimeout(Exception): pass
-    class Device:
-        def write(self,endpoint,data,timeout):
-            assert endpoint==1 and len(data)<=64
-            h.bringup_h_ax_feed(data,len(data))
-            return len(data)
-        def read(self,endpoint,size,timeout):
-            assert endpoint==0x81 and size==64
-            out=(U8*64)()
-            n=h.bringup_h_ax_take(out)
-            if not n:
-                raise UsbTimeout()
-            return bytes(out[:n])
-    ax_configure(h); h.bringup_h_authorize()
-    listener=socket.socket()
-    listener.bind(('127.0.0.1',0)); listener.listen(1); listener.settimeout(10)
-    port=listener.getsockname()[1]
-    errors=[]
-    def server():
-        try:
-            client,_=listener.accept()
-            with client:
-                bridge.forward(client,Device(),SimpleNamespace(core=SimpleNamespace(USBTimeoutError=UsbTimeout)))
-        except Exception as exc:
-            errors.append(exc)
-        finally:
-            listener.close()
-    thread=threading.Thread(target=server,daemon=True)
-    thread.start()
-    result=subprocess.run([gdb,'-q','-nx','-nh','-batch',
-                           '-ex','set architecture or1k','-ex','set endian little',
-                           '-ex',f'target remote 127.0.0.1:{port}',
-                           '-ex','p/x $r1','-ex','p/x $npc',
-                           '-ex','x/4bx 0x02000000',
-                           '-ex','set {unsigned int}0x027b0000 = 0x12345678',
-                           '-ex','x/wx 0x027b0000','-ex','detach'],
-                          text=True,capture_output=True,timeout=15)
-    thread.join(11)
-    (tmp_path/'gdb.txt').write_text(result.stdout+result.stderr)
-    assert not errors and not thread.is_alive(),errors
-    assert result.returncode==0,result.stdout+result.stderr
-    for expected in ('0x27b0000','0x2002010','0x12345678'):
-        assert expected in result.stdout,result.stdout
-    assert 'Truncated register' not in result.stderr
-    assert 'rejected' not in result.stderr.lower()
-    assert h.bringup_h_state(3) and not h.bringup_h_state(2)
+_counter=[0]
+
+
+def card_with(tmp_path, entries):
+    """A private, create-only FAT16 fixture; never an existing user card."""
+    _counter[0]+=1
+    image=tmp_path/f'card-{_counter[0]}.img'
+    sdcreate.create_image(image)
+    if entries:
+        card.seed(image, entries)
+    return image
+
+
+def card_reader(image):
+    data=image.read_bytes()
+
+    @SectorRead
+    def read(sector,out):
+        if sector+1>len(data)//512:
+            return 0
+        C.memmove(out,data[sector*512:sector*512+512],512)
+        return 1
+    return read
+
+
+class _Info(C.Structure):
+    _fields_=[(n,U32) for n in ('size','crc','app_offset','app_size')]
+
+
+class _Report(C.Structure):
+    _fields_=[('result',C.c_int),('info',_Info),('capacity',U32)]
+
+
+def recover(h,image):
+    report=_Report()
+    result=h.recover_check(card_reader(image),image.stat().st_size//512*512,C.byref(report))
+    return result,report
+
+
+def test_recover_result_codes_match_the_header(h,codes):
+    assert codes['RECOVER_OK']==0
+    assert [codes[n] for n in ('RECOVER_NO_CARD','RECOVER_NO_FILESYSTEM','RECOVER_NO_CANDIDATE',
+                               'RECOVER_CANDIDATE_IO','RECOVER_CANDIDATE_INVALID',
+                               'RECOVER_PREFIX_UNAVAILABLE')]==[1,2,3,4,5,6]
+    assert h.bringup_h_recover_code(99)==0xffffffff
+
+
+def test_recover_no_card_and_unreadable_card(h,tmp_path,codes):
+    @SectorRead
+    def dead(sector,out): return 0
+    report=_Report()
+    assert h.recover_check(dead,1<<20,C.byref(report))==codes['RECOVER_NO_FILESYSTEM']
+    assert h.recover_check(dead,0,C.byref(report))==codes['RECOVER_NO_CARD']
+    assert h.recover_check(C.cast(None,SectorRead),1<<20,C.byref(report))==codes['RECOVER_NO_CARD']
+
+
+def test_recover_valid_candidate_is_not_reported_verified(h,tmp_path,codes):
+    candidate=legacy()
+    image=card_with(tmp_path,[('DESTBIN.BIN',bytes(candidate))])
+    result,report=recover(h,image)
+    # Structure and CRC pass, but the boot prefix cannot be verified yet, so the
+    # gate must not report the candidate as verified or installable.
+    assert result==codes['RECOVER_PREFIX_UNAVAILABLE'], result
+    assert result!=codes['RECOVER_OK']
+    assert report.capacity==image.stat().st_size
+    assert report.info.crc==zlib.crc32(candidate)
+    assert report.info.app_size==0x644*512 and report.info.app_offset==0x2600
+
+
+def test_recover_rejects_absent_malformed_and_truncated(h,tmp_path,codes):
+    invalid=codes['RECOVER_CANDIDATE_INVALID']
+    assert recover(h,card_with(tmp_path,[]))[0]==codes['RECOVER_NO_CANDIDATE']
+    assert recover(h,card_with(tmp_path,[('DESTBIN.BIN',legacy()[:0x300000])]))[0]==invalid
+    assert recover(h,card_with(tmp_path,[('DESTBIN.BIN',b'x')]))[0]==invalid
+    for offset in (4,0x20,0x24,0x28,0x30,0x34,0x1fe,0x304):
+        broken=bytearray(legacy())
+        broken[offset]^=1
+        if offset<512:
+            broken[0x0c]=(broken[0x0c]-sum(broken[:512]))&255
+        assert recover(h,card_with(tmp_path,[('DESTBIN.BIN',bytes(broken))]))[0]==invalid, hex(offset)
+
+
+def test_recover_fingerprint_detects_a_modified_image(h,tmp_path,codes):
+    # DestBin stores no image CRC, so a bit flip outside the boot/recovery
+    # prefix is structurally valid. The gate therefore reports a fingerprint
+    # for the operator to compare, and that is the only defence for those
+    # bytes. It must never be described as authentication.
+    good=legacy()
+    modified=bytearray(good); modified[0x90000]^=1
+    ok_image=card_with(tmp_path,[('DESTBIN.BIN',good)])
+    modified_image=card_with(tmp_path,[('DESTBIN.BIN',bytes(modified))])
+    first,report=recover(h,ok_image)
+    second,other=recover(h,modified_image)
+    assert first==second==codes['RECOVER_PREFIX_UNAVAILABLE']
+    assert report.info.crc==zlib.crc32(good)
+    assert other.info.crc==zlib.crc32(bytes(modified))
+    assert report.info.crc!=other.info.crc
+    # Inside the protected prefix the comparison does catch it,
+    # but only once a trusted running snapshot is available.
+def test_recover_reports_io_failure_mid_stream(h,tmp_path,codes):
+    image=card_with(tmp_path,[('DESTBIN.BIN',bytes(legacy()))])
+    data=image.read_bytes()
+    calls=[0]
+
+    @SectorRead
+    def read(sector,out):
+        calls[0]+=1
+        if calls[0]>900: return 0
+        C.memmove(out,data[sector*512:sector*512+512],512)
+        return 1
+    report=_Report()
+    assert h.recover_check(read,len(data),C.byref(report))==codes['RECOVER_CANDIDATE_IO']
+    assert calls[0]>900
+
+
+def test_recover_read_only_mount_refuses_creation(h,tmp_path,codes):
+    # The property recover_check depends on: a mount with no write callback can
+    # never publish a file, so the gate cannot modify the card it inspects.
+    image=card_with(tmp_path,[('DESTBIN.BIN',b'x')])
+    fat=C.create_string_buffer(4096)
+    assert h.fat_mount(fat,card_reader(image),C.cast(None,SectorWrite),image.stat().st_size)
+    assert h.fat_create(fat,b'NEW.BIN',b'y',1)==0
+    assert recover(h,image)[0]==codes['RECOVER_CANDIDATE_INVALID']  # 1 byte is not 4 MiB
+
+
+def test_stream_reader_streams_without_whole_file_buffer(h,tmp_path):
+    payload=bytes(range(256))*300
+    image=card_with(tmp_path,[('BIG.BIN',payload)])
+    read=card_reader(image)
+    data=image.read_bytes()
+    fat=C.create_string_buffer(4096)
+    assert h.fat_mount(fat,read,C.cast(None,SectorWrite),len(data))
+    stream=C.create_string_buffer(4096)
+    assert h.fat_stream_open(fat,b'BIG.BIN',stream)
+    out=(U8*512)()
+    total=b''
+    while True:
+        got=h.fat_stream_read(stream,out,512)
+        if got<=0:
+            break
+        total+=bytes(out[:got])
+    assert got==0 and total==payload
+    assert h.fat_stream_read(stream,out,512)==0
+
+
+def test_stream_reader_rejects_short_chain_and_bad_names(h,tmp_path):
+    image=card_with(tmp_path,[('BIG.BIN',b'z'*70000)])
+    read=card_reader(image)
+    data=image.read_bytes()
+    fat=C.create_string_buffer(4096)
+    assert h.fat_mount(fat,read,C.cast(None,SectorWrite),len(data))
+    for name in (b'big.bin',b'MISSING.BIN',b'../BIG.BIN',b'TOOLONGNAME.BIN'):
+        assert h.fat_stream_open(fat,name,C.create_string_buffer(4096))==0

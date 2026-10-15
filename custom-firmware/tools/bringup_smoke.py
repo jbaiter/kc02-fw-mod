@@ -16,7 +16,7 @@ from profiles import PROFILES, machine_args
 from smoke import QMP, wait_for
 
 
-def exercise(qemu, build, output, wait=False):
+def exercise(qemu, build, output, wait=False, card=None):
     manifest = json.loads((build/'manifest.json').read_text())
     raw = build/'bringup.ram.bin'
     if hashlib.sha256(raw.read_bytes()).hexdigest() != manifest['sha256']:
@@ -24,14 +24,18 @@ def exercise(qemu, build, output, wait=False):
     if wait:
         if manifest.get('selftest') or not manifest.get('usb_vid') or not manifest.get('usb_pid'):
             raise ValueError('--usb-wait requires a USB-attached non-selftest build')
-    elif (not manifest.get('selftest') or manifest.get('usb_vid') or manifest.get('usb_pid')):
+    elif not card and (not manifest.get('selftest') or manifest.get('usb_vid') or manifest.get('usb_pid')):
         raise ValueError('requires a matching USB-detached --selftest build')
+    if card and manifest.get('selftest'):
+        raise ValueError('the recovery gate needs the non-selftest image')
     output.mkdir(parents=True, exist_ok=True)
     sock = output/'qmp.sock'
     if sock.exists():
         raise FileExistsError('refusing an existing QMP socket')
-    command = [str(qemu), *machine_args(PROFILES['original'].options(),
-               {'sensor':'off', 'entry':hex(manifest['entry']), 'stack-top':'0x027ffff0'}),
+    properties={'sensor':'off', 'entry':hex(manifest['entry']), 'stack-top':'0x027ffff0'}
+    if card:
+        properties['sd-image']=str(Path(card).resolve())
+    command = [str(qemu), *machine_args(PROFILES['original'].options(), properties),
                '-m','64M','-nodefaults','-accel','tcg,thread=multi',
                '-display','none','-monitor','none','-serial','none','-kernel',str(raw.resolve()),
                '-qmp',f'unix:{sock},server=on,wait=off']
@@ -44,9 +48,10 @@ def exercise(qemu, build, output, wait=False):
             qmp = QMP(sock)
             def sample():
                 return struct.unpack('<8I', qmp.memory(0x02002800,32,output/'observations.bin'))
-            if wait:
+            if wait or card:
                 # QEMU does not model the AX3292 USB controller, so the correct
-                # outcome is a stable polled wait, not an enumeration.
+                # outcome is a stable polled wait. With a card the recovery gate
+                # result and fingerprint are recordable before that wait.
                 wait_for(proc, lambda: sample()[1]==3, 'USB stage reached', timeout=15)
                 first = sample()
                 time.sleep(.5)
@@ -54,6 +59,7 @@ def exercise(qemu, build, output, wait=False):
                 assert first==last and last[0]==0x4c554d41 and last[3]==1 and last[4]==0, last
                 report = dict(command=command, first=first, last=last, usb_enumerated=False,
                               reason='AX3292 USB controller is not part of the QEMU machine',
+                              recovery_code=last[5], card_bytes=last[6], candidate_crc=hex(last[7]),
                               usb_tested=False, physical_hardware_tested=False, flash_written=False)
                 (output/'report.json').write_text(json.dumps(report, indent=2)+'\n')
                 return report
@@ -65,8 +71,11 @@ def exercise(qemu, build, output, wait=False):
             payload = raw.read_bytes()[0x3000:]
             resident = qmp.memory(0x027c0000,len(payload),output/'resident.bin')
             assert payload == resident, 'resident relocation changed code/data'
-            assert last[5] == 0xffffffff, 'missing recovery backend must stay explicit'
+            # The selftest run has no card, so the gate must report exactly that
+            # and never a fabricated success.
+            assert last[5] == 1 and last[6] == 0 and last[7] == 0, last
             report = dict(command=command, first=first, last=last, relocated_bytes=len(payload),
+                          recovery_code=last[5],
                           usb_tested=False, physical_hardware_tested=False, flash_written=False)
             (output/'report.json').write_text(json.dumps(report, indent=2)+'\n')
             return report
@@ -91,8 +100,10 @@ def main():
     p.add_argument('--output', type=Path, required=True)
     p.add_argument('--usb-wait', action='store_true',
                    help='USB-attached build: prove a clean polled wait, no enumeration claim')
+    p.add_argument('--card', type=Path,
+                   help='SD image containing DESTBIN.BIN, to exercise the recovery gate')
     a = p.parse_args()
-    print(json.dumps(exercise(a.qemu,a.build,a.output.resolve(),a.usb_wait), indent=2))
+    print(json.dumps(exercise(a.qemu,a.build,a.output.resolve(),a.usb_wait,a.card), indent=2))
 
 
 if __name__ == '__main__':
