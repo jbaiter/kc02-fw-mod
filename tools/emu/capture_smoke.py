@@ -19,6 +19,7 @@ import time
 from PIL import Image
 
 from create_sd import create_image
+from profiles import PROFILES, machine_args
 from run import DEFAULT_QEMU
 from sd_read import FAT16, jpeg_packets
 from smoke import ORIGINAL_SHA256, QMP, read_ppm, wait_for
@@ -57,14 +58,15 @@ def exercise(qemu, firmware, card, directory, *, capture, printer=None,
     frame = directory / "screen.ppm"
     sock = directory / "qmp.sock"
     env = {k: v for k, v in os.environ.items() if not k.startswith("AX3292_")}
-    env.update(AX3292_FLASH=str(firmware.resolve()), AX3292_SENSOR="1",
-               AX3292_SD_IMAGE=str(card), AX3292_JPEG_TRACE="1",
-               AX3292_FB=str(frame), AX3292_FB_EVERY="5")
+    env.update(AX3292_DEBUG="1", AX3292_TRACE_JPEG="1",
+               AX3292_DUMP_FB=str(frame), AX3292_DUMP_FB_EVERY="5")
+    properties = {"flash": str(firmware.resolve()), "sensor": "on",
+                  "sd-image": str(card)}
     if printer is not None:
-        env["AX3292_PRINTER_DIR"] = str(printer)
-        if no_paper:
-            env["AX3292_PRINTER_NO_PAPER"] = "1"
-    command = [qemu, "-M", "ax3292", "-m", "64M", "-nodefaults",
+        properties["printer-dir"] = str(printer)
+        properties["printer-no-paper"] = "on" if no_paper else "off"
+    command = [qemu, *machine_args(PROFILES["original"].options(), properties),
+               "-m", "64M", "-nodefaults",
                "-accel", "tcg,thread=multi", "-display", "none",
                "-monitor", "none", "-serial", "none", "-kernel", str(app),
                "-qmp", f"unix:{sock},server=on,wait=off"]

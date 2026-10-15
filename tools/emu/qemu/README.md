@@ -87,7 +87,7 @@ sectors through DMA. We do not inject card state into application RAM.
 
 We verified persisted `VIDEO`, `PHOTO`, `MP3` directories and `VIDEO.LST` after a
 cold boot. Reads/writes are synchronous and flush the host stream. Optional
-`AX3292_SD_TRACE=1` logs SD commands and sector transfers. Normal-speed SDHC is
+`AX3292_DEBUG=1 AX3292_TRACE_SD=1` logs SD commands and sector transfers. Normal-speed SDHC is
 modelled; CMD6 returns a 64-byte switch-status packet without high-speed support.
 The backing image size must be a multiple of 512 KiB. If a launch exits with a
 card-lock error, close the other emulator using that image. The launcher prints
@@ -264,38 +264,78 @@ blocks. This prevents concurrent DMA/PIC mutations. The IRQ helper acquires BQL
 when needed. A main-thread bottom half uploads the resulting RGB frame to QEMU's
 display console; calling SDL updates from the vCPU caused the black-window bug.
 
+## Board configuration (machine properties)
+
+A run is described by its command line, so board wiring and boot handoff are
+machine properties rather than environment variables:
+
+```sh
+qemu-system-or1k -M ax3292,flash=original.bin,sensor=on,sd-image=card.img
+```
+
+| Property | Meaning |
+|---|---|
+| `flash=PATH` | Flash image backing the SPI controller |
+| `entry=ADDR`, `stack-top=ADDR` | Boot handoff into the application |
+| `vbg-addr=ADDR` | SRAM word that receives the ROM's 800 mV bandgap calibration |
+| `panel-rotation=90\|270` | Physical panel mounting |
+| `key-channel=N`, `key-value=N` | ADC channel and injected key level |
+| `key-values=a:b:c:d:e:f` | Six base keypad ladder values, colon separated |
+| `extra-keys=a:b:c:d:e` | Five extra buttons; `1024` means unwired |
+| `key-file=PATH` | Optional numeric ADC input; overrides native keyboard input |
+| `sensor=on\|off` | Synthetic camera input |
+| `sensor-3a=on\|off`, `dual-sensor=on\|off` | BF3A03 and PE11-selected second camera |
+| `flash-id=HEX`, `flash-uid=HEX` | JEDEC ID (6 digits) and SPI UID (16 digits) |
+| `sd-image=PATH` | Writable raw SD image; no card when unset |
+| `printer-dir=PATH` | Enable thermal-head capture into numbered PNGs |
+| `printer-no-paper=on\|off` | Report missing paper / open cover |
+| `printer-phases=a:b:...:h` | Platen phase order for the vector built from `800c` bit0, `8010` bit10, `8000` bit3 and `8010` bit11 (default `10:8:9:1:5:4:6:2`) |
+
+Lists are colon separated because a comma would end the `-M` option. The
+launcher and the regression tools build this argument from `tools/emu/profiles.py`,
+so you rarely type it by hand.
+
 ## Diagnostics
+
+Everything below is diagnostic and stays inert unless `AX3292_DEBUG=1`. Setting
+one without the gate prints a warning and ignores it, so a stray variable cannot
+change a production run.
 
 | Environment variable | Effect |
 |---|---|
-| `AX3292_FLASH` | Flash image path; the launcher sets it |
-| `AX3292_SENSOR=1` | Enable synthetic camera input |
-| `AX3292_SENSOR_3A=1` / `AX3292_DUAL_SENSOR=1` | BF3A03 and optional PE11-selected second camera |
-| `AX3292_FLASH_ID` / `AX3292_FLASH_UID` | JEDEC ID (6 hex digits) and SPI UID (16 hex digits); profiles set these |
-| `AX3292_PANEL_ROTATION` | Physical panel mount: 90 or 270 degrees |
-| `AX3292_KEY_CHANNEL` / `AX3292_KEY_VALUES` / `AX3292_EXTRA_KEYS` | ADC channel, six base and five extra key values; profiles set these |
-| `AX3292_KEY_TRACE=1` | Log pressed-key ADC samples |
-| `AX3292_SPR_TRACE_MIN` / `AX3292_SPR_TRACE_MAX` | Inclusive SPR trace range |
-| `AX3292_SD_IMAGE=/path/sd.img` | Writable raw SD image; the launcher sets this with `--sd-card` |
-| `AX3292_SD_TRACE=1` | Log card commands and sector DMA |
-| `AX3292_JPEG_TRACE=1` | Log codec geometry, completion and failures |
-| `AX3292_PRINTER_DIR=/path/prints` | Enable printer GPIO capture and report paper/cover present |
-| `AX3292_PRINTER_NO_PAPER=1` | With a printer directory, report missing paper/open cover |
-| `AX3292_PRINTER_PHASES=a,b,c,d,e,f,g,h` | Platen-motor phase order for the vector built from `800c` bit0, `8010` bit10, `8000` bit3 and `8010` bit11; default `10,8,9,1,5,4,6,2` |
-| `AX3292_PRINTER_TRACE=1` | Log phase-vector transitions with the current step count |
-| `AX3292_FB=/tmp/screen.ppm` | Atomically replace an RGB P6 scanout capture |
-| `AX3292_FB_EVERY=5` | Capture interval in 10 ms ticks; minimum 5 |
-| `AX3292_KEYFILE=/tmp/key` | Optional numeric ADC input; overrides native keyboard input |
-| `AX3292_SPR_TRACE=1` | Enable register trace; default off |
-| `AX3292_SPR_TRACE_LIMIT=300000` | Bound register logging |
-| `AX3292_PC_SAMPLE=1` | PC/GPR sampler; also enable SPR tracing |
-| `AX3292_PROBE=addr,...` | Up to eight hexadecimal RAM addresses, change-only samples |
-| `AX3292_RAMDUMP=/tmp/ram.bin` | Snapshot SDRAM `0x02000000..0x027fffff` every 100 ticks |
-| `AX3292_SFRDUMP=/tmp/sfr.bin` | Snapshot 64 KiB register backing store every 100 ticks |
+| `AX3292_DEBUG=1` | Enable every diagnostic in this table |
+| `AX3292_TRACE_SPR=1` | SPR access trace |
+| `AX3292_TRACE_SPR_MIN` / `_MAX` / `_LIMIT` | Trace address range and entry budget |
+| `AX3292_TRACE_PC=1` | PC/GPR sampler; `AX3292_TRACE_PC_MS` sets its period |
+| `AX3292_TRACE_PROBE=addr,...` | Up to eight hexadecimal RAM addresses, change-only samples |
+| `AX3292_TRACE_WATCH=HEX`, `_WORDS=N` | Dump guest words when the tick ISR runs |
+| `AX3292_TRACE_SPI` / `_SD` / `_JPEG` / `_KEY` / `_PRINTER` | Per-device traces |
+| `AX3292_DUMP_RAM=PATH` / `AX3292_DUMP_SFR=PATH` | Periodic SDRAM / register snapshots |
+| `AX3292_DUMP_FB=PATH`, `AX3292_DUMP_FB_EVERY=N` | Atomically replaced RGB P6 scanout capture |
+| `AX3292_DEBUG_PULSE_IRQ=N`, `_PULSE_PERIOD=N` | Inject one interrupt source |
+| `AX3292_DEBUG_FORCE_IRQ0=1` | Force PIC source 0 |
+| `AX3292_DEBUG_LCDC_IRQ=0` | Disable the frame interrupt |
+| `AX3292_DEBUG_TICK_IRQ=N`, `_TICK_MS=N` | Override the tick line / period |
+| `AX3292_DEBUG_CLOCK=virtual` | Use the virtual clock instead of real time |
 
 `--qmp unix:/tmp/kc02.qmp,server=on,wait=off` exposes a local QMP socket for
 read-only inspection and keypad automation. Prefer owned, bounded processes for
 tests; do not use broad `pkill` commands while someone is using the emulator.
+
+## Source layout
+
+The machine and its device models live in this repository, under
+[`ax3292/`](ax3292/README.md). `build-qemu.sh` copies them into `hw/or1k/` and
+applies `0001-ax3292-machine.patch`, which carries only the integration changes
+(`target/or1k/*`, `Kconfig`, `meson.build`). Editing a device model does not
+require a fresh QEMU tree, and the tests compile the real files rather than
+extracting them from a diff.
+
+Each unmodelled behaviour carries a `TODO(approximation)` marker:
+
+```sh
+rg 'TODO\(approximation\)' tools/emu/qemu/ax3292
+```
 
 ## Limits
 

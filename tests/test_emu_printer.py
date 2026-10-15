@@ -20,10 +20,8 @@ def printer_pages(tmp_path_factory):
     if flags.returncode:
         pytest.skip("glib/libpng development files unavailable")
     directory = tmp_path_factory.mktemp("printer-unit")
-    patch = (ROOT / "tools/emu/qemu/0001-ax3292-machine.patch").read_text()
-    chunk = patch.split("+++ b/hw/or1k/ax3292-printer.h\n", 1)[1].split("\n--- ", 1)[0]
-    (directory / "printer.h").write_text("".join(line[1:] + "\n" for line in chunk.splitlines()
-                                                if line.startswith("+")))
+    # The backend is ordinary repository source, so the test compiles it as is.
+    shutil.copy(ROOT / "tools/emu/qemu/ax3292/ax3292-printer.h", directory / "printer.h")
     source = r'''
 #include <glib.h>
 #include <stdio.h>
@@ -149,19 +147,23 @@ def test_launcher_printer_options(tmp_path):
     image = tmp_path / "firmware.bin"
     image.write_bytes(b"\0" * 0x3000)
     qemu = tmp_path / "qemu"
-    output = tmp_path / "env.json"
-    qemu.write_text("#!/usr/bin/env python3\nimport json, os\n"
-                    f"open({str(output)!r}, 'w').write(json.dumps(dict(os.environ)))\n")
+    output = tmp_path / "argv.json"
+    qemu.write_text("#!/usr/bin/env python3\nimport json, sys\n"
+                    f"open({str(output)!r}, 'w').write(json.dumps(sys.argv[1:]))\n")
     qemu.chmod(0o755)
     command = ["python3", str(ROOT / "tools/emu/run.py"), str(image),
                "--qemu", str(qemu), "--interactive", "--printer-output", str(tmp_path / "prints")]
     env = dict(os.environ, AX3292_PRINTER_NO_PAPER="1")
     subprocess.run(command, env=env, check=True, capture_output=True)
-    values = json.loads(output.read_text())
-    assert values["AX3292_PRINTER_DIR"] == str(tmp_path / "prints")
-    assert "AX3292_PRINTER_NO_PAPER" not in values
+    argv = json.loads(output.read_text())
+    # Board wiring is a machine property, not an environment variable.
+    machine = argv[argv.index("-M") + 1]
+    assert f"printer-dir={tmp_path / 'prints'}" in machine
+    assert "printer-no-paper=off" in machine
+    assert not [a for a in argv if a.startswith("AX3292_PRINTER")]
     subprocess.run(command + ["--printer-no-paper"], check=True, capture_output=True)
-    assert json.loads(output.read_text())["AX3292_PRINTER_NO_PAPER"] == "1"
+    assert "printer-no-paper=on" in json.loads(output.read_text())[
+        json.loads(output.read_text()).index("-M") + 1]
     result = subprocess.run(command[:-2] + ["--printer-no-paper"], capture_output=True, text=True)
     assert result.returncode == 2
     assert "requires --printer-output" in result.stderr

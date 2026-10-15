@@ -1011,11 +1011,11 @@ Evidence and remaining work:
   "fix" this in the model.
 - **Both alternate builds print on the same GPIO head.** `800c` data/clock,
   `8004` latch/supply, `8000` strobe, identical to the original. The platen-motor
-  phase order differs per board, so `Profile.printer_phases` and
-  `AX3292_PRINTER_PHASES` were added. Z-12's observed forward order is
+  phase order differs per board, so `Profile.printer_phases` and the
+  `printer-phases` machine property were added. Z-12's observed forward order is
   `6,14,10,11,9,13,5,7`; the default is `10,8,9,1,5,4,6,2`. Before this, Z-12
   accumulated 16384 strobes on row 0 (`steps=0 bad_steps=1348`) and produced a
-  384×1 page. `AX3292_PRINTER_TRACE=1` logs vector transitions.
+  384×1 page. `AX3292_DEBUG=1 AX3292_TRACE_PRINTER=1` logs vector transitions.
 - Z-12 also links a Bluetooth JPEG printer (`open_printer_bluetooth_print_masf`,
   `printer_jpeg`, `printer_jpg_to_printer_wh`). That transport is not modelled;
   only the GPIO head is claimed.
@@ -1038,10 +1038,54 @@ creates its own card and refuses existing output directories. No guest-memory
 writes or application patches are involved.
 
 The distributed patch applies to pristine QEMU 11.1.2 and byte-compares against
-all 13 built sources (`~/.cache/kc02-emulator/patch-check-alt-final`). Patch SHA256:
-`3f7c74630f9827c2d579882a4ba40c7523b7d4187d584445da5523d82caca137`.
+the 7 integration files it carries (`~/.cache/kc02-emulator/patch-check-integration`).
+Patch SHA256: `24f7e08641ac9bdf0ee292e8bdf5df4fe2ebce47c57a2f74c5c5b3601dcbeff0`.
 A persistent upstream archive is `~/.cache/kc02-emulator/qemu-11.1.2.tar.xz`;
-`build-qemu.sh` now defaults to this cache rather than `/tmp`.
-**After the printer changes the current patch SHA256 is
-`472cd81bdd7610138e5d35b32c87dac14dd6081a596bc6a899d507013c936c79`** (`patch-check-alt-printer`). No physical camera testing
-has occurred. Use `tools/emu/README.md` for current alternate controls and limits.
+`build-qemu.sh` now defaults to this cache rather than `/tmp`. No physical camera
+testing has occurred. Use `tools/emu/README.md` for current alternate controls
+and limits.
+
+### 2026 hygiene pass
+
+The device models are now ordinary repository source rather than text inside a
+diff. `tools/emu/qemu/ax3292/` owns `ax3292.c` and the five device headers;
+`build-qemu.sh` copies them into `hw/or1k/` and the patch carries only
+`target/or1k/*`, `Kconfig` and `meson.build` (2,910 patch lines became 291).
+Verified by extracting a pristine tarball into
+`~/.cache/kc02-emulator/qemu-pipeline-check`, running `build-qemu.sh` against it,
+and booting the resulting binary through `smoke.py` (`pipeline-ui`). Editing a
+device model no longer needs a fresh tree.
+
+Configuration moved from the environment to machine properties:
+
+```sh
+qemu-system-or1k -M ax3292,flash=original.bin,sensor=on,sd-image=card.img
+```
+
+`Profile.options()` in `profiles.py` builds them and `machine_args()` escapes
+commas. Lists use `:` because a comma ends the `-M` option. `MachineClass` is not
+a `DeviceClass`, so the properties use offset-based accessors, not `DEFINE_PROP`.
+
+Diagnostics are gated: every `AX3292_TRACE_*`, `AX3292_DUMP_*` and
+`AX3292_DEBUG_*` knob is inert unless `AX3292_DEBUG=1`, and setting one without
+the gate warns and ignores it.
+
+`AX3292_LOW` was deleted. It was unused by every tool, and its `base200` branch
+set `vec_bias` on a CPU that did not exist yet, so it never did anything.
+
+Every known approximation now carries a marker:
+
+```sh
+rg 'TODO\(approximation\)' tools/emu/qemu/ax3292   # currently 8
+```
+
+Remaining debt, in order: the device headers are still included into one
+translation unit (correct for shared state, but it blocks per-device QOM
+testing); the CPU core carries an intentional `nodelay`/little-endian/SPR-remap
+fork; and the `hits`/`strobes` raster in the printer backend is allocated on
+machine lifetime.
+
+Regressions after the pass: original no-card UI and viewer, original capture
+(three cold boots) and printer (dither/grayscale/no-paper), X8D capture+printer,
+Z-12 selfie+capture+printer, plus the pristine-pipeline boot. Full pytest: 139
+passed, 5 skipped, 51 subtests.

@@ -23,6 +23,9 @@ case ${QEMU_DISPLAY:-auto} in
     *) echo 'QEMU_DISPLAY must be auto, sdl or none' >&2; exit 2 ;;
 esac
 PATCH_SHA=$(sha256sum "$HERE/0001-ax3292-machine.patch" | awk '{print $1}')
+# The device models are copied in from the repository rather than patched, so
+# editing them never requires a fresh source tree.
+DEVICE_SHA=$(cd "$HERE/ax3292" && cat ./*.c ./*.h | sha256sum | awk '{print $1}')
 
 if [ ! -d "$QEMU_SRC" ]; then
     if [ ! -f "$TARBALL" ]; then
@@ -49,6 +52,9 @@ else
     patch -p1 --forward < "$HERE/0001-ax3292-machine.patch"
     printf '%s\n' "$PATCH_SHA" > .ax3292-patched
 fi
+
+cp "$HERE/ax3292/"*.c "$HERE/ax3292/"*.h hw/or1k/
+printf '%s\n' "$DEVICE_SHA" > .ax3292-devices
 
 mkdir -p build
 cd build

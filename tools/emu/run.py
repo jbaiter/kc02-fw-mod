@@ -27,7 +27,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from sfr_map import DEFAULT_TABLE, load_table  # noqa: E402
-from profiles import PROFILES, detect  # noqa: E402
+from profiles import PROFILES, detect, machine_args  # noqa: E402
 
 DEFAULT_QEMU = os.environ.get(
     "QEMU_OR1K", str(Path.home() / ".src/qemu-11.1.2/build/qemu-system-or1k")
@@ -148,29 +148,23 @@ def main(argv: list[str] | None = None) -> int:
         app_path = tmp.name
 
     env = dict(os.environ)
-    env.update(profile.environment())
-    env["AX3292_ENTRY"] = hex(entry)
-    env["AX3292_SPR_TRACE_LIMIT"] = str(args.trace_limit)
-    env["AX3292_FLASH"] = str(args.image.resolve())
+    # Diagnostics only: the gate makes every AX3292_TRACE_*/AX3292_DUMP_* inert.
+    env["AX3292_DEBUG"] = "1"
+    env["AX3292_TRACE_SPR_LIMIT"] = str(args.trace_limit)
+    properties = {"flash": str(args.image.resolve()), "entry": hex(entry)}
     if args.sd_card is not None:
-        env["AX3292_SD_IMAGE"] = str(args.sd_card.resolve())
+        properties["sd-image"] = str(args.sd_card.resolve())
         print(f"SD: {args.sd_card.resolve()} (writable)", flush=True)
     if args.printer_output is not None:
-        env["AX3292_PRINTER_DIR"] = str(args.printer_output.resolve())
-        if args.printer_no_paper:
-            env["AX3292_PRINTER_NO_PAPER"] = "1"
-        else:
-            env.pop("AX3292_PRINTER_NO_PAPER", None)
+        properties["printer-dir"] = str(args.printer_output.resolve())
+        properties["printer-no-paper"] = "on" if args.printer_no_paper else "off"
         print(f"Printer: {args.printer_output.resolve()} (thermal-head PNGs)", flush=True)
-    env["AX3292_SPR_TRACE"] = "1" if args.trace or not args.interactive else "0"
+    env["AX3292_TRACE_SPR"] = "1" if args.trace or not args.interactive else "0"
     sensor_enabled = args.sensor if args.sensor is not None else args.interactive
-    if sensor_enabled:
-        env["AX3292_SENSOR"] = "1"
-    else:
-        env.pop("AX3292_SENSOR", None)
+    properties["sensor"] = "on" if sensor_enabled else "off"
 
     cmd = [
-        args.qemu, "-M", "ax3292", "-m", "64M", "-nodefaults",
+        args.qemu, *machine_args(profile.options(), properties), "-m", "64M", "-nodefaults",
         "-accel", "tcg,thread=multi",
         "-name", f"AX3292 - {profile.name} firmware",
         "-display", args.display or ("sdl" if args.interactive else "none"),

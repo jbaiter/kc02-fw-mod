@@ -25,12 +25,13 @@ def test_dump_profiles(name, file):
     assert profile.name == name
     assert profile == PROFILES[name]
     assert 0 < profile.app_offset < profile.app_end <= image.stat().st_size
-    env = profile.environment()
-    assert int(env["AX3292_ENTRY"], 0) == profile.entry
-    assert len(env["AX3292_KEY_VALUES"].split(",")) == 6
-    assert len(env["AX3292_EXTRA_KEYS"].split(",")) == 5
-    assert env["AX3292_SENSOR_3A"] == str(int(name != "original"))
-    assert env["AX3292_DUAL_SENSOR"] == str(int(name == "z12"))
+    env = profile.options()
+    assert int(env["entry"], 0) == profile.entry
+    assert len(env["key-values"].split(":")) == 6
+    assert len(env["extra-keys"].split(":")) == 5
+    assert env["sensor-3a"] == ("on" if name != "original" else "off")
+    assert env["dual-sensor"] == ("on" if name == "z12" else "off")
+    assert not [v for v in env.values() if "," in v], "a comma would end the -M option"
     assert profile.key_channel == 3
 
 
@@ -51,18 +52,17 @@ def test_z12_native_wiring():
     assert PROFILES["original"].printer_phases == (10, 8, 9, 1, 5, 4, 6, 2)
     assert PROFILES["x8d"].printer_phases == PROFILES["original"].printer_phases
     for name, profile in PROFILES.items():
-        phases = profile.environment()["AX3292_PRINTER_PHASES"].split(",")
+        phases = profile.options()["printer-phases"].split(":")
         assert len(phases) == 8 and all(0 <= int(v) <= 15 for v in phases), name
 
 
 def test_sensor_backend(tmp_path):
     if not shutil.which("cc"):
         pytest.skip("C compiler unavailable")
-    patch = (ROOT / "tools/emu/qemu/0001-ax3292-machine.patch").read_text()
-    chunk = patch.split("+++ b/hw/or1k/ax3292-sensor.h\n", 1)[1].split("\n--- ", 1)[0]
-    header = "".join(line[1:] + "\n" for line in chunk.splitlines() if line.startswith("+"))
-    (tmp_path / "sensor.h").write_text(header)
-    (tmp_path / "test.c").write_text(r'''
+    directory = tmp_path
+    # The backend is ordinary repository source, so the test compiles it as is.
+    shutil.copy(ROOT / "tools/emu/qemu/ax3292/ax3292-sensor.h", directory / "sensor.h")
+    (directory / "test.c").write_text(r'''
 #include <assert.h>
 #include <stdint.h>
 #include <stdbool.h>

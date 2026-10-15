@@ -16,7 +16,7 @@ import subprocess
 import time
 
 from create_sd import create_image
-from profiles import detect
+from profiles import detect, machine_args
 from run import DEFAULT_QEMU
 from sd_read import FAT16
 from smoke import QMP, read_ppm, wait_for
@@ -48,14 +48,15 @@ def exercise(image: Path, directory: Path, qemu: str = DEFAULT_QEMU,
     frame = directory / "screen.ppm"
     sock = directory / "qmp.sock"
     env = {key: value for key, value in os.environ.items() if not key.startswith("AX3292_")}
-    env.update(profile.environment())
-    env.update(AX3292_FLASH=str(image.resolve()), AX3292_SENSOR="1",
-               AX3292_SD_IMAGE=str(card), AX3292_FB=str(frame), AX3292_FB_EVERY="5",
-               AX3292_SFRDUMP=str(directory / "sfr.bin"), AX3292_JPEG_TRACE="1",
-               AX3292_KEY_TRACE="1", AX3292_SPR_TRACE="0")
+    env.update(AX3292_DEBUG="1", AX3292_DUMP_FB=str(frame),
+               AX3292_DUMP_FB_EVERY="5", AX3292_DUMP_SFR=str(directory / "sfr.bin"),
+               AX3292_TRACE_JPEG="1", AX3292_TRACE_KEY="1")
+    properties = {"flash": str(image.resolve()), "sensor": "on",
+                  "sd-image": str(card)}
     if printer:
-        env["AX3292_PRINTER_DIR"] = str(directory / "prints")
-    command = [qemu, "-M", "ax3292", "-m", "64M", "-nodefaults",
+        properties["printer-dir"] = str(directory / "prints")
+    command = [qemu, *machine_args(profile.options(), properties), "-m", "64M",
+               "-nodefaults",
                "-accel", "tcg,thread=multi", "-display", "none", "-monitor", "none",
                "-serial", "none", "-kernel", str(app), "-qmp",
                f"unix:{sock},server=on,wait=off"]

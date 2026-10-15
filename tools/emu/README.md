@@ -39,8 +39,9 @@ back restores the first pattern. Sensor orientation follows register `0x1e`.
 Both builds drive the same GPIO thermal head the original uses
 (`0x800c` data/clock, `0x8004` latch/supply, `0x8000` strobe). The platen motor
 is wired differently, so `profiles.py` carries an eight-entry phase order and the
-launcher exports `AX3292_PRINTER_PHASES`. Z-12's order is inverted relative to
-the original's, which is why an earlier build produced a single-row page.
+launcher passes it as the `printer-phases` machine property. Z-12's order is
+inverted relative to the original's, which is why an earlier build produced a
+single-row page.
 
 After the shutter the firmware processes the frame (12 MP on Z-12) in guest
 code and ignores key events until it finishes. A single Escape is therefore not

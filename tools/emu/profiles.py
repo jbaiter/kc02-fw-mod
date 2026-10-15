@@ -23,21 +23,24 @@ class Profile:
     flash_uid: str = "0000000000000000"
     printer_phases: tuple[int, ...] = (10, 8, 9, 1, 5, 4, 6, 2)
 
-    def environment(self) -> dict[str, str]:
-        """Hardware wiring and ROM handoff, shared by launcher and regressions."""
+    def options(self) -> dict[str, str]:
+        """Board wiring and boot handoff, as QEMU machine properties.
+
+        Values are colon separated because a comma would end the -M option.
+        """
         return {
-            "AX3292_ENTRY": hex(self.entry),
-            "AX3292_STACK_TOP": hex(self.stack_top),
-            "AX3292_VBG_ADDR": hex(self.vbg_address),
-            "AX3292_PANEL_ROTATION": str(self.panel_rotation),
-            "AX3292_KEY_CHANNEL": str(self.key_channel),
-            "AX3292_KEY_VALUES": ",".join(map(str, self.key_adc)),
-            "AX3292_EXTRA_KEYS": ",".join(map(str, self.extra_keys)),
-            "AX3292_SENSOR_3A": "1" if self.sensor_3a else "0",
-            "AX3292_DUAL_SENSOR": "1" if self.dual_sensor else "0",
-            "AX3292_FLASH_ID": self.flash_id,
-            "AX3292_FLASH_UID": self.flash_uid,
-            "AX3292_PRINTER_PHASES": ",".join(map(str, self.printer_phases)),
+            "entry": hex(self.entry),
+            "stack-top": hex(self.stack_top),
+            "vbg-addr": hex(self.vbg_address),
+            "panel-rotation": str(self.panel_rotation),
+            "key-channel": str(self.key_channel),
+            "key-values": ":".join(map(str, self.key_adc)),
+            "extra-keys": ":".join(map(str, self.extra_keys)),
+            "sensor-3a": "on" if self.sensor_3a else "off",
+            "dual-sensor": "on" if self.dual_sensor else "off",
+            "flash-id": self.flash_id,
+            "flash-uid": self.flash_uid,
+            "printer-phases": ":".join(map(str, self.printer_phases)),
         }
 
 
@@ -52,6 +55,26 @@ PROFILES = {
                    (620, 775, 328, 238, 512, 415), (512, 133, 1024, 238, 704), True,
                    "c84016", "4d37393830109b3f", (6, 14, 10, 11, 9, 13, 5, 7)),
 }
+
+
+def machine_args(*groups: dict[str, str], machine: str = "ax3292") -> list[str]:
+    """argv fragment that selects the machine and sets its board properties.
+
+    Later groups win.  Commas inside a value are doubled, which is how the -M
+    parser escapes them, so a filesystem path cannot be misread as another
+    option.
+    """
+    merged: dict[str, str] = {}
+    for group in groups:
+        merged.update(group)
+    if not merged:
+        return ["-M", machine]
+    encoded = ",".join(f"{k}={str(v).replace(',', ',,')}" for k, v in merged.items())
+    return ["-M", f"{machine},{encoded}"]
+
+
+#: Diagnostics are inert unless this is set, so tests opt in explicitly.
+DIAGNOSTIC_ENV = {"AX3292_DEBUG": "1"}
 
 
 def detect(image: Path) -> Profile:

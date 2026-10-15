@@ -16,6 +16,7 @@ import subprocess
 import time
 
 from run import DEFAULT_QEMU
+from profiles import PROFILES, machine_args
 
 ORIGINAL_SHA256 = "218c6cdfe59932d197d2ee85e4ba5dcf05860c25ee31b2d3684c19ac1ec721a5"
 
@@ -93,11 +94,13 @@ def exercise(qemu: str, image: Path, directory: Path,
     sock = directory / "qmp.sock"
     sock.unlink(missing_ok=True)
     env = {k: v for k, v in os.environ.items() if not k.startswith("AX3292_")}
-    env.update(AX3292_FLASH=str(image.resolve()), AX3292_SENSOR="1",
-               AX3292_SPR_TRACE="0", AX3292_FB=str(frame), AX3292_FB_EVERY="5")
+    env.update(AX3292_DEBUG="1", AX3292_DUMP_FB=str(frame),
+               AX3292_DUMP_FB_EVERY="5")
+    properties = {"flash": str(image.resolve()), "sensor": "on"}
     if viewer_card is not None:
-        env["AX3292_SD_IMAGE"] = str(viewer_card.resolve())
-    command = [qemu, "-M", "ax3292", "-m", "64M", "-nodefaults",
+        properties["sd-image"] = str(viewer_card.resolve())
+    command = [qemu, *machine_args(PROFILES["original"].options(), properties),
+               "-m", "64M", "-nodefaults",
                "-accel", "tcg,thread=multi", "-display", "none",
                "-monitor", "none", "-serial", "none", "-kernel", str(app),
                "-qmp", f"unix:{sock},server=on,wait=off"]
