@@ -17,6 +17,7 @@
 #error Self-test must not attach USB or enable debug
 #endif
 #define REG(n) (*(volatile __sfr u32 *)(n))
+#define PROBE_WORDS 32
 static Monitor monitor;
 static UsbDebug usb;
 static AxUsb controller;
@@ -25,9 +26,13 @@ static u8 sd_dma[512] __attribute__((aligned(32)));
 static SdHw sd_card;
 static int card_read(u32 lba, u8 *out) { return sd_hw_read(&sd_card,lba,out); }
 /* Native observation points, not host-injected application state. */
-volatile u32 bringup_probe[8] __attribute__((section(".probe.data")))={0};
+volatile u32 bringup_probe[PROBE_WORDS] __attribute__((section(".probe.data")))={0};
 extern void bringup_checkpoint(void);
 extern u8 __application_stack[];
+#if BRINGUP_SELFTEST
+void bringup_selftest_start(Monitor *);
+void bringup_step_caller(void);
+#endif
 static void delay(unsigned n) { while (n--) { __asm__ volatile("l.nop"); } }
 static u32 read_reg(void *ctx, unsigned reg) { (void)ctx; return REG(reg); }
 static void write_reg(void *ctx, unsigned reg, u32 value) { (void)ctx; REG(reg)=value; }
@@ -43,6 +48,17 @@ static int memory_write(void *ctx, u32 a, const u8 *data, unsigned n)
     volatile u8 *p=(volatile u8 *)a;
     unsigned i; (void)ctx;
     for (i=0; i<n; i++) { p[i]=data[i]; } return 1;
+}
+/* A trap word has to reach instruction fetch, not just data load. This follows
+ * the vendor's invalidate sequence (ax32xx_sysIcacheInit writes one line
+ * address to SPR_ICAIR). The emulator backs ICAIR as an inert register, so this
+ * path is written to the vendor contract and is NOT verified sufficient on
+ * silicon. A wrong or missing flush shows up as a trap that never fires. */
+static void code_sync(void *ctx, u32 address, unsigned size)
+{
+    u32 line=address & ~15u, last=(address+size-1) & ~15u;
+    (void)ctx;
+    for (; line<=last; line+=16) { __asm__ volatile("l.mtspr r0,%0,0x2008" : : "r"(line)); }
 }
 static void revoke(void *ctx)
 {
@@ -92,32 +108,52 @@ static void authorize(void)
     else if (key_phase==1 && k==1) { key_phase=2; }
     else if (key_phase==2 && !k) { monitor_authorize(&monitor); key_phase=0; }
 }
+static void poll_link(void *ctx)
+{
+    (void)ctx;
+    if (USB_VID && USB_PID) { ax_usb_poll(&controller); authorize(); }
+    else { delay(2000); }
+}
+#if BRINGUP_SELFTEST
+UsbDebug *bringup_selftest_usb(void) { return &usb; }
+#endif
 u32 *bringup_service(u32 *frame)
 {
     unsigned i;
-    monitor_enter(&monitor,frame);
+    monitor_checkpoint(&monitor,frame);
     bringup_probe[3]++;
-    if (BRINGUP_SELFTEST) {
-        for (i=2; i<32; i++) { if (monitor.regs[i]!=frame[i]) { bringup_probe[7]=1; } }
-        monitor.resumed=1;
-    } else {
-        while (!monitor.resumed || ((USB_VID && USB_PID) && !ax_usb_idle(&controller))) {
-            if (USB_VID && USB_PID) { ax_usb_poll(&controller); authorize(); }
-            else { delay(10000); }
-        }
-    }
-    for (i=0; i<RSP_REGS; i++) { frame[i]=monitor.regs[i]; }
-    monitor.stopped=0;
-    bringup_probe[4]++;
+    for (i=0; i<RSP_REGS; i++) { if (monitor.regs[i]!=frame[i]) { bringup_probe[7]=1; } }
+    return frame;
+}
+u32 *bringup_exception_service(u32 *frame)
+{
+    bringup_probe[8]++;
+    monitor_exception(&monitor,frame);
     return frame;
 }
 __attribute__((section(".probe.text"),noreturn)) void bringup_workload(void)
 {
-    for (;;) { bringup_probe[2]++; bringup_checkpoint(); }
+#if BRINGUP_SELFTEST
+    /* One checkpoint to let the self-test install its breakpoint, then run the
+     * shaped instruction sequence so every step has a real target. */
+    bringup_selftest_start(&monitor);
+    bringup_probe[2]++;
+    bringup_checkpoint();
+    bringup_step_caller();
+#endif
+    for (;;) {
+        bringup_probe[2]++;
+        bringup_checkpoint();
+    }
 }
 void bringup_main(void)
 {
-    MonitorMemory memory={0,memory_read,memory_write};
+    MonitorMemory memory={0,memory_read,memory_write,code_sync};
+    MonitorRegions regions={
+        .code_low=0x02000000, .code_high=0x02000000+0xc8800-4,
+        .ram_low=MON_RAM_LOW, .ram_high=MON_SCRATCH-4,
+        .scratch_low=MON_SCRATCH, .scratch_high=MON_SCRATCH+MON_SCRATCH_SIZE-4
+    };
     AxUsbIo io={0,read_reg,write_reg,dma_address};
     /* These writes only turn off the documented original-board supply/strobe. */
     REG(0x8004)&=~0x40u; REG(0x8000)&=~0x200u;
@@ -134,10 +170,11 @@ void bringup_main(void)
                                     : RECOVER_NO_CARD;
         bringup_probe[5]=code;
         bringup_probe[6]=recovery.capacity;
-        bringup_probe[7]=recovery.info.crc;
+        bringup_probe[15]=recovery.info.crc;
     }
     bringup_probe[1]=2;
-    monitor_init(&monitor,&usb,&memory);
+    monitor_init(&monitor,&usb,&memory,&regions);
+    monitor.poll=poll_link;
     usb_debug_init(&usb,USB_VID,USB_PID,&monitor,monitor_receive,revoke);
     if (USB_VID && USB_PID) { usb_phy(); key_init(); ax_usb_init(&controller,&usb,&io); }
     bringup_probe[1]=3; /* Diagnostic monitor only; no application boot path. */

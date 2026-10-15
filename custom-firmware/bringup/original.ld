@@ -7,6 +7,10 @@ SECTIONS {
   .boot 0x02000000 : { KEEP(*(.boot)) }
   ASSERT(_start == 0x0200046c, "incorrect factory entry")
   ASSERT(SIZEOF(.boot) < 0x2000, "bootstrap overlaps workload")
+  .vectors 0x02000800 : { __vectors = .; KEEP(*(.vectors)) }
+  ASSERT(__vectors == 0x02000800, "vector base must be fixed")
+  ASSERT(SIZEOF(.vectors) == 0x100, "vector table must be 16 slots")
+  ASSERT(SIZEOF(.boot) <= 0x800, "bootstrap overlaps the vector table")
   .probe 0x02002000 : { KEEP(*(.probe.text)) }
   ASSERT(SIZEOF(.probe) < 0x800, "workload overlaps observations")
   .observations 0x02002800 : { KEEP(*(.probe.data)) }

@@ -101,29 +101,87 @@ boot/recovery bytes. No such snapshot exists yet, so the gate reports code 6
 instead of claiming verification. Reporting OK without that comparison would be
 the most dangerous thing this stage could do.
 
-## Stop model: checkpoints only
+## Stop model: traps, breakpoints and stepping
 
-`bringup_checkpoint` is a cooperative call boundary, not a trap handler. It
-saves the caller's registers, the stack pointer, the link register and `SR`,
-switches to the reserved monitor stack, and enters the service loop. GDB can
-read registers and memory and continue from the same point.
+The stage installs its own exception vector table and points `EVBA` at it. The
+table follows the vendor layout in `reset.S`: sixteen 16-byte slots, one `l.j`
+each, indexed by `exception << 4`, so slot 0x0e0 is `l.trap` and 0x0c0 is
+`l.sys`. Each slot jumps to a stub that records the exception number, and the
+shared entry saves all 32 registers plus `EPCR` and `ESR`, switches to the
+reserved monitor stack, and hands C a frame.
 
-This means:
+There are two ways in:
 
-- **No arbitrary breakpoints and no single-step.** The monitor does not
-  advertise them; the protocol engine returns an empty response for `Z`/`z`
-  and refuses `s`.
-- **No exception entry handling.** AX3292 HP shadow-bank semantics, `EPCR`,
-  `ESR` and PIC state during a real interrupt are not exercised. A trap-based
-  implementation still has to be written and validated on silicon.
-- **No cache maintenance.** Writes are restricted to a scratch window so no
-  instruction-cache invalidation is required to resume.
+| Entry | Used by | Notes |
+|---|---|---|
+| Cooperative call boundary (`checkpoint.S`) | The workload's own call sites | Cheap, but only stops where the target asks |
+| Real exception entry (`vectors.S`) | `l.trap`, faults, any trap word the monitor installs | Stops at an arbitrary instruction |
 
-Register writes are limited to `r2`–`r8`, `r10`–`r31`. The stack pointer, link
-register, program counter and `SR` are immutable in this milestone. Memory
-reads are limited to application RAM; writes are limited to a 4 KiB scratch
-window at `027b0000`. The monitor will not read or write its own buffers, DMA
-buffers, NOR, or arbitrary SPRs.
+### Breakpoints
+
+`Z0,<address>,4` writes an `l.trap` word over one instruction and remembers the
+original; `z0` puts it back. Every patch is tracked, and detach, unplug and bus
+reset lift all of them, so the target is never left with a trap where real code
+belongs.
+
+A breakpoint may only be placed inside the code region the stage declares, and
+never over an existing trap word. Eight at a time.
+
+### Single stepping
+
+`l.rfe` has no successor worth guessing, and a real debug monitor does not get to
+guess, so `or1k_decode.c` decodes control flow and places temporary traps on the
+**successors** of the current instruction:
+
+| Instruction | Temporary traps |
+|---|---|
+| `l.j`, `l.jal` | The target |
+| `l.bf` | The target and the fall-through |
+| `l.bnf` | The fall-through and the target |
+| `l.jr`, `l.jalr` | The destination register's value |
+| `l.rfe` | Refused |
+| `l.trap`, `l.sys` | Refused: the instruction stops |
+| Anything else | `pc + 4` |
+
+The decoder is small on purpose and its opcodes come from QEMU's own
+`target/or1k/insns.decode`. Three things keep it honest: host tests compare its
+successors against instructions the toolchain actually assembled, the in-guest
+self-test single-steps a sequence whose conditional branch is **taken** so a
+decoder that only traps `pc + 4` lands on the wrong path, and a branch back to
+its own address is refused rather than turned into a step that silently never
+returns.
+
+`continue` from a breakpoint lifts that breakpoint, steps over it, and swallows
+the intermediate stop, so the debugger only sees the next real event. The
+breakpoint is re-armed as part of the same step.
+
+### Access policy
+
+Reads cover the declared RAM region, writes only the 4 KiB scratch window.
+`SP`, the link register and `SR` are immutable; `npc` is writable for a trap stop
+only, and only into the code region. A refused step is an explicit error rather
+than silence, so a client can say why.
+
+### What this is not
+
+- **No cache maintenance on silicon.** Writing a trap word needs the target's
+  fetch to see it, which is `code_sync` in `bringup/main.c`: the vendor's
+  invalidate sequence from `ax32xx_sysIcacheInit`, writing one line address to
+  `SPR_ICAIR`. The emulator backs `ICAIR` as an inert register, so this path
+  follows the vendor contract and is **not verified sufficient**. A wrong or
+  missing flush shows up as a trap that never fires.
+- **No HP shadow-bank capture.** An HP interrupt entry shadows registers in
+  hardware, and `HELPER(rfe)` restores them in the model. The monitor reports
+  the exception number and the pre-exception `SR`, but it does not yet validate
+  the shadow-bank round trip on silicon.
+- **Ctrl-C cannot halt a free-running target.** The interrupt request is
+  recorded and takes effect at the next trap or checkpoint. Doing better needs a
+  timer interrupt, which this stage does not enable.
+- **`EVBA` selection is unverified on hardware.** The SDK's SR bit 14 is named
+  `intvct_sram/intvct_mask` and documented as selecting SRAM versus mask-ROM
+  vectors. This image leaves it clear and points `EVBA` at its own table. The
+  emulator dispatches to `EVBA` regardless, so the SRAM-vector variant has to be
+  confirmed on a real unit.
 
 ## Debug authorization
 
@@ -204,14 +262,33 @@ target unit and the stock updater has been proven with an unchanged image.
 
 | Artifact | What it shows |
 |---|---|
-| `~/.cache/kc02-emulator/luma-bringup-selftest-final` | Monitor relocated, 91k+ checkpoint stop/resume cycles, gate reports code 1 with no card |
-| `~/.cache/kc02-emulator/luma-bringup-recovery-final` | Gate finds a candidate on a FAT16 card and reports code 6 with fingerprint `0x95eceee0`, matching the host's `zlib.crc32` |
-| `~/.cache/kc02-emulator/luma-bringup-usbwait-final` | USB build reaches and holds the polled wait |
+| `~/.cache/kc02-emulator/bu-trap-final` | Breakpoint installed, hit, stepped over, removed and restored; PC sequence matches the assembly in `bringup/selftest.S`, including the taken branch at `+0x10` and the indirect return |
+| `~/.cache/kc02-emulator/bu-usbwait-final` | USB build reaches and holds the polled wait, gate reports code 1 with no card |
+| `~/.cache/kc02-emulator/bu-card-final` | Gate finds a candidate on a FAT16 card and reports code 6 with fingerprint `0x95eceee0`, matching the host's `zlib.crc32` |
 
-All three record `usb_tested: false`, `physical_hardware_tested: false`,
-`flash_written: false`. Host tests live in `tests/test_bringup.py`: they compile
-the real sources and drive an actual `gdb-multiarch` through the localhost
-bridge, the AX3292 register model and the actual monitor.
+The self-test drives the real RSP engine, the real vectors, the real step logic
+and the real monitor, and checks the exact bytes the monitor puts on the wire.
+Only the transport is stood in for, because the emulator does not model the USB
+controller. Every expectation has its own failure bit, so a failure names itself,
+and the run records `failures: 0x0`.
+
+`tests/test_bringup.py` covers the same logic on the host in milliseconds:
+breakpoint install/hit/step/re-arm/remove, step refusal for `l.rfe`, `l.trap`,
+`l.sys` and self-branches, both successors of a conditional branch, continue
+from a breakpoint, detach lifting every patch, the `npc` write policy, decoder
+successors pinned to real assembled encodings, and the recovery gate.
+
+All runs record `usb_tested: false`, `physical_hardware_tested: false`,
+`flash_written: false`.
+
+## Two byte orders, and why mixing them looks like a broken target
+
+`m`/`M` carry memory bytes in address order, so a little-endian word appears
+byte-reversed on the wire. `p`/`P` carry register values in the target's byte
+order, which is also little-endian here. Both are consistent and GDB-compatible;
+comparing a register read against the numeric hex of its value is a reliable way
+to conclude the target is broken when it is not. That mistake cost real time
+during this milestone, which is why `le_hex` and `mem_hex` exist in the tests.
 
 ## Known gaps
 

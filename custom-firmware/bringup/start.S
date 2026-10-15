@@ -8,6 +8,11 @@
 .global _start
 _start:
  l.mtspr r0,r0,0x4800
+ /* Point the exception vector base at our own table before any trap can
+  * happen. SR bit 14 stays clear; see vectors.S for the hardware caveat. */
+ l.movhi r3,hi(__vectors)
+ l.ori r3,r3,lo(__vectors)
+ l.mtspr r0,r3,0x50
  l.mfspr r3,r0,0x18
  l.movhi r4,0xffff
  l.ori r4,r4,0xfff9

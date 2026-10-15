@@ -49,9 +49,13 @@ static int resume(void *ctx, int step, int has_address, u32 address)
     runs++; return 1;
 }
 static void interrupt(void *ctx) { (void)ctx; interrupts++; rsp_stop(&rsp,2); }
+/* This harness has no patches to unwind, so detach is a plain success.
+ * Breakpoints stay NULL: framing and registers are what it tests. */
+static int detach(void *ctx) { (void)ctx; return 1; }
+static const DebugOps ops={0,send_bytes,read_reg,write_reg,read_memory,write_memory,resume,
+                           interrupt,0,detach};
 void harness_init(int authorised)
 {
-    const DebugOps ops={0,send_bytes,read_reg,write_reg,read_memory,write_memory,resume,interrupt};
     unsigned i;
     rsp_init(&rsp,&ops);
     rsp.enabled=authorised;

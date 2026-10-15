@@ -8,6 +8,7 @@ import hashlib
 import importlib.util
 import json
 from pathlib import Path
+import random
 import shutil
 import struct
 import subprocess
@@ -41,11 +42,20 @@ def native(tmp_path_factory):
                     '-fsanitize=undefined','-fno-sanitize-recover=undefined','-shared','-fPIC',
                     '-I'+str(FW/'include'),
                     *(str(FW/'src'/s) for s in ('debug.c','monitor.c','usb_debug.c','ax_usb.c','destbin.c',
-                                                   'storage.c','recover.c')),
+                                                'storage.c','recover.c','or1k_decode.c')),
                     str(FW/'tests/bringup_harness.c'),'-o',str(libpath)],check=True)
     lib = C.CDLL(str(libpath))
     lib.bringup_h_setup.argtypes = [C.c_void_p,C.c_void_p]
     lib.bringup_h_state.argtypes = [C.c_uint]
+    for name in ('state','reg','get_code','code_syncs','stop_reason','reads','writes','patched'):
+        getattr(lib,'bringup_h_'+name).restype = C.c_uint
+    lib.bringup_h_reg.argtypes = [C.c_uint]
+    lib.bringup_h_wire.argtypes = [C.c_void_p,C.c_uint]
+    lib.bringup_h_set_code.argtypes = [U32,U32]
+    lib.bringup_h_get_code.argtypes = [U32]
+    lib.bringup_h_script.argtypes = [C.c_uint,C.c_char_p]
+    lib.bringup_h_checkpoint.argtypes = [C.c_void_p]
+    lib.bringup_h_trap.argtypes = [C.c_void_p,U32,U32]
     for name in ('feed','queue','ax_feed'):
         getattr(lib,'bringup_h_'+name).argtypes = [C.c_void_p,C.c_uint]
     for name in ('take','ax_take','ax_setup'):
@@ -60,6 +70,7 @@ def native(tmp_path_factory):
     lib.fat_mount.argtypes = [C.c_void_p,SectorRead,SectorWrite,U32]
     lib.fat_stream_open.argtypes = [C.c_void_p,C.c_char_p,C.c_void_p]
     lib.fat_stream_read.argtypes = [C.c_void_p,C.c_void_p,C.c_uint]
+    lib.or1k_successors.argtypes = [U32,U32,C.c_void_p,U32,C.c_void_p]
     return lib
 
 
@@ -96,6 +107,22 @@ def packet(s):
     return b'$'+b+b'#'+f'{sum(b)&255:02x}'.encode()
 
 
+def mem_hex(word):
+    """The bytes a little-endian word occupies in memory, in address order."""
+    return struct.pack('<I', word).hex()
+
+
+def drain(h, ax=False):
+    """Discards anything already queued, such as an earlier stop report."""
+    out=(U8*8192)()
+    if ax:
+        for _ in range(100):
+            if not h.bringup_h_ax_take(out):
+                return
+    else:
+        h.bringup_h_take(out)
+
+
 def take(h, ax=False):
     out = (U8*8192)()
     if not ax:
@@ -110,7 +137,19 @@ def take(h, ax=False):
     raise AssertionError('USB never drained')
 
 
+def le_hex(word):
+    """Register values travel as little-endian bytes.
+
+    The RSP `p`/`P` payload is the target's byte order, which is what GDB
+    expects from a little-endian target. `m`/`M` instead carry memory bytes in
+    address order. Both are self-consistent; mixing them up looks exactly like
+    a broken target.
+    """
+    return struct.pack('<I', word).hex()
+
+
 def query(h, request, ax=False):
+    drain(h, ax)
     p=packet(request)
     feed=h.bringup_h_ax_feed if ax else h.bringup_h_feed
     for at in range(0,len(p),64):
@@ -181,6 +220,9 @@ def test_device_can_revoke_but_usb_cannot_authorize(h):
     assert query(h,'g')==b'+'+packet('E22')
 
 
+MON_STOP_CHECKPOINT, MON_STOP_BREAKPOINT, MON_STOP_STEP, MON_STOP_EXCEPTION = 0,1,2,3
+
+
 def test_monitor_memory_policy(h):
     configure(h); h.bringup_h_authorize()
     assert query(h,'m2000000,4')==b'+'+packet('00010203')
@@ -194,17 +236,168 @@ def test_monitor_memory_policy(h):
     assert (h.bringup_h_state(5),h.bringup_h_state(6))==(reads,writes)
 
 
+TRAP = 0x21000000
+ADDR = 0x02002000
+
+
+def script(h, *bodies):
+    h.bringup_h_script_clear()
+    for i, body in enumerate(bodies):
+        h.bringup_h_script(i, body.encode())
+
+
+def wire(h):
+    buf = (U8*256)()
+    n = h.bringup_h_wire(buf, 256)
+    return bytes(buf[:n])
+
+
 def test_monitor_register_resume_limits(h):
     configure(h); h.bringup_h_authorize()
-    for reg in (0,1,9,32,33,34):
+    for reg in (0,1,9,32,34):
         assert query(h,f'P{reg:x}=00000000')==b'+'+packet('E02')
     assert query(h,'P2=78563412')==b'+'+packet('OK')
     assert query(h,'p2')==b'+'+packet('78563412')
-    for request in ('s','c2000000','Z0,2002000,4'):
-        assert query(h,request)==b'+'+packet('' if request.startswith('Z') else 'E02')
-    assert not h.bringup_h_state(3)
-    assert query(h,'c2002010')==b'+'
-    assert h.bringup_h_state(3)
+    # npc is only writable for a trap stop, so a checkpoint stop refuses it.
+    assert query(h,f'P21={le_hex(0x02002000)}')==b'+'+packet('E02')
+
+
+def test_npc_writable_for_trap_but_only_into_code(h):
+    configure(h); h.bringup_h_authorize()
+    # An empty script releases the target with no RSP traffic, so the session
+    # stays authorised and the stop state can be inspected.
+    script(h)
+    h.bringup_h_trap(None, ADDR, 0x8001)
+    assert query(h,f'P21={le_hex(0x02003000)}')==b'+'+packet('OK')
+    assert h.bringup_h_reg(33)==0x02003000
+    assert query(h,f'P21={le_hex(0x00008004)}')==b'+'+packet('E02')       # outside the code region
+    assert query(h,f'P21={le_hex(0x027b0000)}')==b'+'+packet('E02')    # scratch is not code
+
+
+def test_breakpoint_install_hit_step_and_rearm(h):
+    configure(h); h.bringup_h_authorize()
+    h.bringup_h_set_code(ADDR, 0x9c800000)     # l.addi r4,r0,0
+    h.bringup_h_set_code(ADDR+4, 0x9c600004)   # l.addi r3,r0,4: one successor
+    before = h.bringup_h_code_syncs()
+    script(h, f'Z0,{ADDR:x},4', 'c')
+    h.bringup_h_checkpoint(None)
+    assert h.bringup_h_get_code(ADDR) == TRAP
+    assert h.bringup_h_code_syncs() > before, 'patching code must ask for a sync'
+    # Stopped at the trap: the monitor must classify it as the breakpoint.
+    script(h, 's')
+    h.bringup_h_trap(None, ADDR, 0x8001)
+    assert h.bringup_h_stop_reason() == MON_STOP_BREAKPOINT
+    # The step lifted the breakpoint and put a temporary trap on the successor.
+    assert h.bringup_h_get_code(ADDR) == 0x9c800000
+    assert h.bringup_h_get_code(ADDR+4) == TRAP
+    # Landing on the successor completes the step and re-arms the breakpoint.
+    script(h, 's')
+    h.bringup_h_trap(None, ADDR+4, 0x8001)
+    assert h.bringup_h_stop_reason() == MON_STOP_STEP
+    assert h.bringup_h_get_code(ADDR) == TRAP, 'the breakpoint must be re-armed'
+    assert h.bringup_h_get_code(ADDR+8) == TRAP, 'the next step is armed'
+
+
+def test_breakpoint_remove_and_detach_restore_everything(h):
+    configure(h); h.bringup_h_authorize()
+    h.bringup_h_set_code(ADDR, 0x9c800000)
+    h.bringup_h_set_code(ADDR+4, 0x9c600004)   # l.addi r3,r0,4
+    # Only requests that arrive before the target is released run inside the
+    # stop loop; the rest are issued once it is running again.
+    script(h, f'Z0,{ADDR:x},4', f'Z0,{ADDR+4:x},4')
+    h.bringup_h_checkpoint(None)
+    assert h.bringup_h_get_code(ADDR) == TRAP
+    assert h.bringup_h_get_code(ADDR+4) == TRAP
+    assert query(h, f'z0,{ADDR+4:x},4') == b'+'+packet('OK')
+    assert h.bringup_h_get_code(ADDR+4) == 0x9c600004
+    # m carries memory bytes in address order, so the word appears reversed.
+    assert query(h, f'm{ADDR+4:x},4') == b'+'+packet(mem_hex(0x9c600004))
+    assert h.bringup_h_get_code(ADDR) == TRAP
+    assert h.bringup_h_patched()
+    # Detaching from a trap stop lifts the remaining breakpoint.
+    script(h, 'D')
+    h.bringup_h_trap(None, ADDR, 0x8001)
+    assert h.bringup_h_stop_reason() == MON_STOP_BREAKPOINT
+    assert not h.bringup_h_patched()
+    assert h.bringup_h_get_code(ADDR) == 0x9c800000
+
+
+def test_breakpoint_rejects_non_code_and_full_table(h):
+    configure(h); h.bringup_h_authorize()
+    for address in (0x8004, 0x027b0000, 0x020c8800, 0x10000000):
+        assert query(h,f'Z0,{address:x},4')==b'+'+packet('')
+    for i in range(8):
+        assert query(h,f'Z0,{ADDR+i*4:x},4')==b'+'+packet('OK')
+    assert query(h,f'Z0,{ADDR+32:x},4')==b'+'+packet('')
+    # Only software breakpoints of the width this target can patch.
+    assert query(h,f'Z1,{ADDR:x},4')==b'+'+packet('')
+    assert query(h,f'Z0,{ADDR:x},2')==b'+'+packet('')
+
+
+@pytest.mark.parametrize('word,armed',[(0x24000000,True),(0x20000000,False),(0x21000000,False)])
+def test_step_refuses_unknown_and_stopping_instructions(h,word,armed):
+    configure(h); h.bringup_h_authorize()
+    h.bringup_h_set_code(ADDR, word)
+    if armed:
+        script(h, f'Z0,{ADDR:x},4', 'c')
+    else:
+        script(h, 'c')
+    h.bringup_h_checkpoint(None)
+    script(h)
+    h.bringup_h_trap(None, ADDR, 0x8001)
+    assert h.bringup_h_reg(33) == ADDR
+    assert h.bringup_h_get_code(ADDR) == (TRAP if armed else word)
+    # l.rfe has no successor this decoder will guess, and l.trap/l.sys stop.
+    # A refused step is an explicit error, not silence, so the client can say why.
+    assert query(h,'s')==b'+'+packet('E02')
+    assert h.bringup_h_get_code(ADDR) == (TRAP if armed else word)
+
+
+def test_step_refuses_a_branch_to_its_own_address(h):
+    configure(h); h.bringup_h_authorize()
+    h.bringup_h_set_code(ADDR, 0x0c000000)   # l.bnf to its own address
+    script(h, f'Z0,{ADDR:x},4', 'c')
+    h.bringup_h_checkpoint(None)
+    assert query(h,'s')==b'+'+packet('E02')
+    # The breakpoint must still be armed: a refused step changes nothing.
+    assert h.bringup_h_get_code(ADDR) == TRAP
+
+
+def test_step_arms_both_successors_of_a_conditional_branch(h):
+    configure(h); h.bringup_h_authorize()
+    # l.bf with a forward offset, so taken and fall-through differ.
+    h.bringup_h_set_code(ADDR, 0x10000002)
+    script(h, f'Z0,{ADDR:x},4', 'c')
+    h.bringup_h_checkpoint(None)
+    script(h, 's')
+    h.bringup_h_trap(None, ADDR, 0x8001)
+    assert h.bringup_h_stop_reason() == MON_STOP_BREAKPOINT
+    assert h.bringup_h_get_code(ADDR+4) == TRAP
+    assert h.bringup_h_get_code(ADDR+8) == TRAP
+
+
+def test_continue_from_a_breakpoint_steps_over_it_without_reporting(h):
+    configure(h); h.bringup_h_authorize()
+    h.bringup_h_set_code(ADDR, 0x9c800000)
+    script(h, f'Z0,{ADDR:x},4', 'c')
+    h.bringup_h_checkpoint(None)
+    # Continuing from the breakpoint lifts it and hides the intermediate stop.
+    script(h, 'c')
+    h.bringup_h_trap(None, ADDR, 0x8001)
+    assert h.bringup_h_get_code(ADDR) == 0x9c800000
+    assert h.bringup_h_get_code(ADDR+4) == TRAP
+    # The successor stop is swallowed and re-arms the breakpoint, so the target
+    # keeps running until the next real event.
+    script(h, 's')
+    h.bringup_h_trap(None, ADDR+4, 0x8001)
+    assert h.bringup_h_get_code(ADDR) == TRAP
+
+
+def test_unexpected_trap_reports_bus_error(h):
+    configure(h); h.bringup_h_authorize()
+    script(h)
+    h.bringup_h_trap(None, ADDR, 0x8001)
+    assert h.bringup_h_stop_reason() == MON_STOP_EXCEPTION
 
 
 def test_detach_ack_and_auth_revocation(h):
@@ -361,6 +554,65 @@ def test_factory_refuses_install_names(tmp_path,name):
 def test_bridge_refuses_stock_and_invalid_identities(pair):
     with pytest.raises(ValueError):
         bridge.check_identity(*pair)
+
+
+class Successors(C.Structure):
+    _fields_=[('count',C.c_uint),('address',U32*2),('stops',C.c_int),('unknown',C.c_int)]
+
+
+def successors(h,pc,word,gpr=None):
+    regs=(U32*32)()
+    if gpr:
+        for index,value in gpr.items():
+            regs[index]=value
+    out=Successors()
+    ok=h.or1k_successors(pc,word,regs,0x02000000,C.byref(out))
+    return ok,[out.address[i] for i in range(out.count)],out.stops,out.unknown
+
+
+# Encodings taken from the toolchain's own disassembly, so the decoder is pinned
+# to real instructions rather than to my reading of the ISA.
+PC = 0x02002000
+
+
+@pytest.mark.parametrize('word,targets,stops,unknown',[
+    (0x15000000,[PC+4],0,0),        # l.nop
+    (0x9c600004,[PC+4],0,0),        # l.addi r3,r0,4
+    (0x03fffffa,[PC-24],0,0),       # l.j, target 24 bytes back
+    (0x07fffff9,[PC-28],0,0),       # l.jal
+    (0x13fffff8,[PC-32,PC+4],0,0),  # l.bf: the taken target is listed first
+    (0x0ffffff7,[PC+4,PC-36],0,0),  # l.bnf: the fall-through is listed first
+    (0x21000000,[],1,0),            # l.trap
+    (0x20000000,[],1,0),            # l.sys
+    (0x24000000,[],0,1),            # l.rfe
+])
+def test_decoder_successors(h,word,targets,stops,unknown):
+    ok,target,got_stops,got_unknown=successors(h,PC,word)
+    assert bool(ok)==bool(not unknown)
+    assert got_stops==stops and got_unknown==unknown
+    if not stops:
+        assert target==targets
+
+
+def test_decoder_register_jumps(h):
+    for word,target in ((0x44004800,0xdeadbeef),(0x48004800,0xdeadbeef)):
+        ok,targets,stops,unknown=successors(h,PC,word,{9:0xdeadbeef})
+        assert ok and not stops and not unknown and targets==[0xdeadbeef]
+
+
+def test_decoder_is_bounded_on_arbitrary_words(h):
+    rng=random.Random(3292)
+    for _ in range(2000):
+        out=Successors()
+        word=rng.getrandbits(32)
+        h.or1k_successors(PC,word,(U32*32)(),0, C.byref(out))
+        assert out.count<=2, hex(word)
+
+
+def test_decoder_identifies_only_trap_words(h):
+    assert not h.or1k_is_trap(0x20000000)
+    assert not h.or1k_is_trap(0x9c600004)
+    assert h.or1k_is_trap(0x21000000)
 
 
 def test_bridge_rejects_partial_usb_write():

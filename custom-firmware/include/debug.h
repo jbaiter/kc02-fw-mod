@@ -17,6 +17,14 @@ typedef struct {
     int (*mem_write)(void *context, u32 address, const u8 *data, unsigned size);
     int (*resume)(void *context, int step, int has_address, u32 address);
     void (*interrupt)(void *context);
+    /* Insert or remove a software breakpoint. Absent means the target has no
+     * breakpoint support, and Z0/z0 answer as unsupported. */
+    int (*breakpoint)(void *context, u32 address, int insert);
+    /* Let the target run with every debugger change undone. Separate from
+     * resume, because detaching from a breakpoint must lift that breakpoint
+     * rather than step over it: there will be nobody left to service the
+     * temporary trap a step-over would install. */
+    int (*detach)(void *context);
 } DebugOps;
 typedef struct {
     DebugOps ops;

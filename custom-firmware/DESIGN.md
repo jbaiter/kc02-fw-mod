@@ -110,11 +110,15 @@ monitor; a bus reset, disconnect, suspend, reconfiguration, vendor revoke or
 protocol fault disables it and leaves the target stopped.
 2. Memory access is restricted: reads to application RAM, writes only to a
 4 KiB scratch window. Stack pointer, link register, PC and SR are immutable.
-3. **The stop point is a cooperative call boundary, not an exception or trap
-handler.** There is no breakpoint, no single-step, no cache maintenance, and no
-AX3292 HP shadow-bank/EPCR/ESR/PIC capture. The protocol engine refuses `s`,
-returns an empty response for `Z`/`z`, and the monitor never advertises a
-capability it cannot perform.
+3. **Stopping uses real exception vectors.** The stage owns a vector table at
+its own `EVBA`, so `l.trap` stops at an arbitrary instruction. `Z0`/`z0`
+install and remove software breakpoints, every patch is tracked and lifted on
+detach or revoke, and single-step places temporary traps on the decoded
+successors of the current instruction. A refused step is an explicit error.
+Absent on purpose: cache maintenance verified on silicon (the vendor `ICAIR`
+sequence is written but the emulator treats it as inert), AX3292 HP shadow-bank
+capture, and a timer interrupt, so Ctrl-C only takes effect at the next trap.
+An instruction whose successor cannot be determined is refused, not guessed.
 4. The USB controller driver is a single polled bidirectional bulk endpoint
 plus EP0 control, matching the vendor SDK's documented register map. QEMU does
 not model this controller, so only a stable polled wait is verified in

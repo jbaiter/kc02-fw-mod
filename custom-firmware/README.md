@@ -167,7 +167,7 @@ register-endianness limitation still applies. See [emulator GDB notes](../tools/
 | Three screens and animations | Guest code running on all three QEMU board profiles | Physical display/input validation |
 | SD themes and persistent capture/gallery | FAT16 guest and native tests | FAT32, JPEG, removal/full-card recovery, physical SD driver |
 | Dither / grayscale / no print | Shared UI policy and 384-dot raster tests | Head driver, temperature/supply/paper interlocks and measured energy limits |
-| GDB attached over USB | RSP engine, 35 little-endian registers, actual GDB client test | USB controller, bridge, stop/resume exception context, cache coherence, breakpoints, no-delay stepping |
+| GDB over USB | RSP engine, 35 little-endian registers, real `gdb-multiarch` test, plus trap-based breakpoints and single-step validated in QEMU | USB controller enumeration on hardware, verified cache maintenance, AX3292 HP shadow-bank capture, timer-interrupt halt |
 | USB mass storage | Exclusive ownership primitive | Composite descriptors, BOT/SCSI, controller driver and host tests |
 | WebUSB flashing | Shared image/update engine in NOR tests | Vendor interface/BOS/Windows binding, staging protocol, browser client, physical confirmation and real recovery |
 | `/firmware.img` SD update | Shared image/update engine in NOR tests | File discovery/staging adapter, recovery loader, NOR driver, real interrupted-update tests |

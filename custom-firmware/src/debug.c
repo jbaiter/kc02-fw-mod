@@ -108,6 +108,19 @@ static void dispatch(Rsp *r)
         }
         text(r,r->ops.reg_write && r->ops.reg_write(r->ops.context,n,value) ? "OK" : "E02"); return;
     }
+    if (p[0]=='Z' || p[0]=='z') {
+        /* Only software breakpoints, and only the 4-byte kind this target can
+         * actually patch. Anything else stays unsupported rather than being
+         * answered with an OK the target cannot honour. */
+        if (p[1]!='0' || p[2]!=',') { text(r,""); return; }
+        arg=p+3;
+        if (!number(&arg,&address) || *arg++!=',' || !number(&arg,&n) || *arg || n!=4) {
+            text(r,""); return;
+        }
+        if (!r->ops.breakpoint ||
+            !r->ops.breakpoint(r->ops.context,address,p[0]=='Z')) { text(r,""); return; }
+        text(r,"OK"); return;
+    }
     if (p[0]=='m' || p[0]=='M') {
         arg=p+1;
         if (!number(&arg,&address) || *arg++!=',' || !number(&arg,&n) || n>256 ||
@@ -135,8 +148,9 @@ static void dispatch(Rsp *r)
         return;
     }
     if (p[0]=='D' && !p[1]) {
-        /* Don't report a successful detach unless execution can resume. */
-        if (!r->ops.resume || !r->ops.resume(r->ops.context,0,0,0)) { text(r,"E02"); }
+        /* Don't report a successful detach unless every patch is lifted and
+         * execution can resume. */
+        if (!r->ops.detach || !r->ops.detach(r->ops.context)) { text(r,"E02"); }
         else { text(r,"OK"); r->enabled=0; }
         return;
     }
