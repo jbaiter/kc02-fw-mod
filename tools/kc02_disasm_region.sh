@@ -73,7 +73,7 @@ rm -rf "$art"
 mkdir -p "$art/input" "$art/project"
 cp "$WORK/fw_copy.bin" "$art/input/$prog"
 
-ARGS=(-import "$art/input/$prog" -processor "$LANG" -loader-baseAddr "$LOAD_BASE"
+ARGS=(-import "$art/input/$prog" -loader BinaryLoader -processor "$LANG" -loader-baseAddr "$LOAD_BASE"
       -noanalysis -scriptPath "$TOOLS")
 i=0
 while [[ $i -lt ${#SPECS[@]} ]]; do
@@ -81,9 +81,19 @@ while [[ $i -lt ${#SPECS[@]} ]]; do
   i=$((i+3))
 done
 ARGS+=(-max-cpu 1)
+touch "$WORK/run-start"
 
-"$LAUNCHER" "$art/project" pi-ghidra "${ARGS[@]}" 2>&1 \
-  | grep -E "DumpShim\.java>|ERROR|Exception" || true
+if ! "$LAUNCHER" "$art/project" pi-ghidra "${ARGS[@]}" > "$WORK/headless.log" 2>&1; then
+  grep -E "DumpShim\.java>|ERROR|Exception" "$WORK/headless.log" >&2 || true
+  exit 1
+fi
+grep -E "DumpShim\.java>|ERROR|Exception" "$WORK/headless.log" || true
+for ((i=2; i<${#SPECS[@]}; i+=3)); do
+  [[ -s "${SPECS[$i]}" && "${SPECS[$i]}" -nt "$WORK/run-start" ]] || {
+    echo "missing or stale disassembly: ${SPECS[$i]}" >&2
+    exit 1
+  }
+done
 
 cat > "$art/manifest.json" <<JSON
 {
