@@ -15,6 +15,14 @@ Also sold on [Amazon](https://www.amazon.com/HiMont-Camera-Instant-Selfie-Digita
   </tr>
 </table>
 
+## New firmware development: Luma
+
+A separate [Luma firmware project](custom-firmware/README.md) now runs its own
+camera, gallery and list settings UI on all three QEMU board profiles. It has
+SD themes and a RAM-only development build. **It is not ready to flash.** USB
+mass storage, hardware USB GDB, physical printing and recoverable SD/WebUSB
+updates remain required release work; see the project's capability table.
+
 ## Background
 
 I bought two of these cameras (one to sacrifice) and decided to reverse engineer the firmware to fully revamp UI. 
