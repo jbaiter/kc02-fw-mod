@@ -4,7 +4,7 @@ Written to survive a context compaction. Everything below is either verified
 against the dump, the vendor SDK, or the vendor's own linked build; where
 something is inferred or unconfirmed it says so.
 
-> **Read "CURRENT VERIFIED STATE: capture and printer" at the end first.**
+> **Read "CURRENT VERIFIED STATE: alternate profiles and selfie" at the end first.**
 > Earlier status sections are historical and contain superseded diagnoses.
 > Use `tools/emu/qemu/README.md` for current build/run commands.
 
@@ -958,3 +958,75 @@ short CSI line rings, USB devices, full ISP/audio and other camera builds remain
 unsupported or unverified. SPI flash backing remains read-only; settings changes
 need not persist across cold boots. Historical bootstrap/CALLFIX/queue/interrupt
 race advice above is not a basis for new fixes.
+
+## CURRENT VERIFIED STATE: alternate profiles and selfie
+
+SDL2 headers are installed; Meson cache was cleared and the SDL-enabled binary
+rebuilt. Keep evidence under `~/.cache/kc02-emulator/`; the reboot removed the
+historical `/tmp` cards and traces listed above. Ghidra projects must use a
+non-hidden path, such as `~/pi-ghidra-cache-alt-z12-disastmp`.
+
+- `tools/emu/profiles.py` detects full dump hashes and supplies ROM handoff plus
+  board wiring. Explicit `run.py --profile` handles modified dumps. All three
+  builds load unchanged application bytes at `02000000`.
+- X8D: app `2200..7f000`, entry `02000470`, SP `023ffffc`, VBG `1fec`, panel 270°.
+  Z-12: app `2600..9a600`, entry `020005ac`, SP `021ffffc`, VBG `2230`, panel 90°.
+- SR bit 14 is SRAM-vector selection, not upstream EPH. Low EVBA fixes X8D's
+  relative ISR jumps. DE scan modes now account for reversed framebuffer origins.
+- Both alternate sensors identify as BF3A03: I2C DC/DD, FC=3A. Z-12 has the selfie
+  sensor. Its `sensorInit` at `02047dd8` drives PE10/PE11; the model chooses its
+  bank from PE11, independently of the application camera byte at `0209e2a8`.
+  The second bank produces horizontal bars/side luma and a white patch; the first
+  produces vertical bars/bottom luma. BF3A03 register 1E controls orientation.
+- **Z-12 keys use ADC channel 3, not 6.** The earlier channel-6 test was misleading:
+  channel 3 defaulted to ADC512 and generated unintended native Enter events.
+  Correct arrows are Up620, Down775, Left328, Right238; Enter512, Escape415.
+  Tab aliases Right238 for native camera switching. P133 is the native print key;
+  M704 is another function key. F is unwired. X8D uses 411/511 for previous/next,
+  Enter788, Escape14, Space252 shutter, P788 and F132.
+- Z-12 flash identity: JEDEC C84016, UID 4D37393830109B3F, copied from the dump's
+  OpenPrinterImage header. SPI4B consumes four dummy bytes. UUID checks succeed;
+  `OpenImage Credit Check Failed!` remains. Do not bypass it or seed app flags.
+- CSI sensor-size events continue with output DMAs gated. SDK `hal_mjpegStart`
+  depends on this. Automatic JPGA reads the CSI I2J buffers; manual mode uses
+  B820/B824. DMA stride is a row-start increment; overlapping rows still complete,
+  with bounds checked against the last actual Y/UV write.
+
+Evidence and remaining work:
+
+- `~/.cache/kc02-emulator/x8d-capture-final`: UI/navigation/motion/back,
+  preserved fixture bytes and PHO00005.JPG. Strict decoding: 4768×2688 and
+  672×384 packets.
+- `~/.cache/kc02-emulator/z12-switch-back-final-{1,2}`: two cold UI runs,
+  native PE11 change, distinct frame, switch back with restored bar pixels,
+  return to menu and preserved fixture bytes. Screenshots are checked in as
+  `docs/images/emulator/z12-{front,selfie}.png`.
+- Z-12 captures produce valid 4096×3072 and 640×480 packets, but the full
+  post-capture input/back workflow **still fails**. Do not call this capture
+  support. `profile_smoke.py --capture` deliberately fails. Switching after a
+  capture, saved selfie photos and alternate-build printing remain unverified.
+  `z12-capture-04` records the earlier B018/LCD-DMA wait (640×480 with stride320);
+  `z12-capture-07` records the later input/back failure after allowing overlapping
+  DMA rows. Failure directories include CPU registers, RAM, SFRs and the stopped
+  private card. Inspect FAT only after stopping the guest.
+- `profile_smoke.py` automates native ADC keys and read-only observations. It
+  creates its own card and refuses existing output directories. No guest-memory
+  writes or application patches are involved.
+- Original regressions passed after the profile/CPU/CSI/JPEG changes:
+  `original-profile-final-ui` (two no-card boots),
+  `original-profile-final-viewer` (two four-fixture viewer boots),
+  `original-profile-final-capture` (two saves and a third cold viewer boot),
+  `original-profile-final-printer` (dither/grayscale/no-paper, viewer and back).
+  These runs include the final overlapping-row bounds change. Re-run after
+  further shared backend edits. Full pytest: 138 passed, 5 skipped, 51 subtests,
+  with five pre-existing collection warnings. Compiled sensor tests use the
+  distributed header and cover banks, IDs/NACK, H/V orientation, DMA bounds and
+  independent sensor-state events. SDL dummy-video smoke also produced a
+  320×240 scanout; this does not prove an OS window was visible.
+
+The distributed patch applies to pristine QEMU 11.1.2 and byte-compares against
+all 13 built sources (`~/.cache/kc02-emulator/patch-check-alt-final`). Patch SHA256:
+`3f7c74630f9827c2d579882a4ba40c7523b7d4187d584445da5523d82caca137`.
+A persistent upstream archive is `~/.cache/kc02-emulator/qemu-11.1.2.tar.xz`;
+`build-qemu.sh` now defaults to this cache rather than `/tmp`. No physical camera testing
+has occurred. Use `tools/emu/README.md` for current alternate controls and limits.

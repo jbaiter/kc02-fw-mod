@@ -54,7 +54,7 @@ class QMP:
             if "return" in result:
                 return result["return"]
 
-    def key(self, code: str):
+    def key(self, code: str, hold: float = 0.2):
         for down in (True, False):
             self.call("input-send-event", events=[{
                 "type": "key", "data": {"down": down, "key": {"type": "qcode", "data": code}}
@@ -62,7 +62,7 @@ class QMP:
             if down:
                 # ADC keypad debounce needs several samples; >500 ms is a
                 # firmware long press, not the short navigation action.
-                time.sleep(0.2)
+                time.sleep(hold)
 
     def memory(self, address: int, size: int, path: Path) -> bytes:
         self.call("pmemsave", val=address, size=size, filename=str(path))

@@ -8,6 +8,51 @@ instructions, controls and limitations.
 python3 tools/emu/run.py firmware/original.bin --interactive
 ```
 
+## Alternate builds
+
+The launcher detects the complete SHA-256 of the original, MYSTILUCK X8D and
+HMOLLIMT Z-12 dumps. Use `--profile x8d` or `--profile z12` for a modified dump.
+The profile supplies application bounds, entry/SP, ROM calibration and board
+wiring; it does not modify guest instructions or application state.
+
+```sh
+python3 tools/emu/run.py firmware/hmollimt-z12-10da5dbf.bin --interactive
+python3 tools/emu/profile_smoke.py firmware/hmollimt-z12-10da5dbf.bin \
+  --selfie --output "$HOME/.cache/kc02-emulator/z12-ui-new"
+python3 tools/emu/profile_smoke.py firmware/mystiluck-x8d-8e0636e1.bin \
+  --capture --output "$HOME/.cache/kc02-emulator/x8d-photo-new"
+```
+
+Both alternate builds pass cold boot, native menu navigation, moving preview,
+return to menu and preservation of fixture JPEGs on a private SD card. X8D also
+passes capture, strict JPEG decoding and return to menu. **Z-12 has the second
+sensor:** Tab aliases its native Right key and switches cameras in the camera
+view. The firmware drives PE11; the model selects independent BF3A03 register
+banks and vertical versus horizontal colour bars with a separate white patch.
+Switching back restores the first pattern. Sensor orientation follows register
+`0x1e`.
+
+[Front preview](../../docs/images/emulator/z12-front.png) ·
+[selfie preview](../../docs/images/emulator/z12-selfie.png)
+
+| Keys | X8D | Z-12 |
+|---|---|---|
+| Left / Right | Previous / next | Previous / next |
+| Up / Down | Aliases Left / Right | Change menu row |
+| Enter / Escape | Confirm / back | Confirm or shutter / back |
+| Space | Shutter | Shutter |
+| P | Native ADC 788 (same as Enter) | Native print key ADC 133 |
+| F | Native function key ADC 132 | Unwired |
+| Tab | Unwired | Native Right ADC 238; camera switch |
+| M | Unwired | Native function key ADC 704 |
+
+Z-12 saves strictly decodable 4096×3072 and 640×480 JPEG packets, but the
+post-capture input/return workflow still fails. `--capture` deliberately fails
+that regression rather than reporting capture support. Switching is verified
+before capture; saved selfie images and both alternate printer paths remain
+unverified. The Z-12 flash identity matches its dumped JEDEC ID/UID; its optional
+OpenImage credit check still fails. We do not override that check.
+
 ## SPR addressing (the thing to get right)
 
 Every peripheral on this chip is reached through OpenRISC special-purpose
@@ -41,6 +86,8 @@ Two traps this tooling encodes:
 | `spr_census.py` | Static census of `l.mfspr`/`l.mtspr` sites in a dump |
 | `run.py` | Slice the application out of a dump and run it headless or in an interactive SDL window |
 | `smoke.py` | Verify cold boot, keypad navigation, fake-camera motion and return to the menu |
+| `profiles.py` | Full-hash boot handoffs and board wiring for the three dumps |
+| `profile_smoke.py` | Alternate-build native UI, optional selfie/capture and SD-preservation regression |
 | `capture_smoke.py` | Capture two photos through the firmware, then verify saved JPEG packets and viewing across cold boots |
 | `printer_smoke.py` | Verify firmware dither/grayscale head output and missing-paper behavior, plus capture/viewer persistence |
 | `sd_read.py` | Read FAT16 files and separate JRX JPEG packets from a stopped emulator's card |

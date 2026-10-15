@@ -211,10 +211,13 @@ neither writes application state nor modifies firmware instructions.
 
 ## Boot handoff and CPU changes
 
-The launcher slices the application from flash offsets `0x2600..0xd3200`, loads
-it at `0x02000000`, and enters `0x0200046c` with SP `0x027ffffc`. The machine loads
+The original profile slices flash offsets `0x2600..0xd3200`, loads the application
+at `0x02000000`, and enters `0x0200046c` with SP `0x027ffffc`. Alternate profiles
+supply their own bounds, entry, SP and calibration address in `profiles.py`. The machine loads
 low SRAM from flash offset `0x200`, uses 16-byte exception-vector slots with zero
-bias, and aliases SRAM at `0xf0000000` for SR[EPH].
+bias. AX3292 SR bit 14 selects SRAM vectors (`intvct_sram/intvct_mask` in
+`reset.S`), rather than upstream OR1K's high-address EPH. Interrupt entry uses
+the low EVBA even when that bit is set. This matters for X8D's relative ISR jumps.
 
 We skip ROM/SDRAM calibration. The machine supplies the SDK's nominal 800 mV
 bandgap calibration at SRAM `0x222c`, which the boot ADC routine uses. This is
@@ -247,7 +250,7 @@ that the UI is running.
 | DE | Update handshake, programmed strides/geometry, YUV420 video and RGB565/A5 palette OSD |
 | JPGA | Baseline 4:2:0 encode from guest YUV buffers, guest quantization/Huffman tables, bounded output DMA and IRQ16; row restart markers support the firmware's stitching |
 | JPGB | libjpeg-backed baseline decode and scaling into guest YUV buffers; isolates JRX scans in host memory, defers completion by at least 1 ms, and respects IRQ masks |
-| I2C / H63P | Sensor register transactions and read-only chip ID `0x0b = 0x48` |
+| I2C / sensors | H63P ID `0x0b = 0x48`, or BF3A03 ID `0xfc = 0x3a`; optional PE11-selected dual banks, distinct patterns and BF3A03 mirroring |
 | CSI | Fake frames written into programmed LCD and full-frame JPEG input buffers; frame-end IRQ14; line-scaler configuration kick self-clears even with CSI stopped |
 | SD | Optional writable raw SDHC image; command/R2 responses, normal-speed switch status, sector DMA and CRC/completion flags. No card when no image is attached |
 | Printer | Optional GPIO head shift/latch/strobe and platen model, active-low paper/cover input, bounded 384×8192 raster and exclusive numbered PNG jobs |
@@ -266,7 +269,13 @@ display console; calling SDL updates from the vCPU caused the black-window bug.
 | Environment variable | Effect |
 |---|---|
 | `AX3292_FLASH` | Flash image path; the launcher sets it |
-| `AX3292_SENSOR=1` | Fake H63P sensor |
+| `AX3292_SENSOR=1` | Enable synthetic camera input |
+| `AX3292_SENSOR_3A=1` / `AX3292_DUAL_SENSOR=1` | BF3A03 and optional PE11-selected second camera |
+| `AX3292_FLASH_ID` / `AX3292_FLASH_UID` | JEDEC ID (6 hex digits) and SPI UID (16 hex digits); profiles set these |
+| `AX3292_PANEL_ROTATION` | Physical panel mount: 90 or 270 degrees |
+| `AX3292_KEY_CHANNEL` / `AX3292_KEY_VALUES` / `AX3292_EXTRA_KEYS` | ADC channel, six base and five extra key values; profiles set these |
+| `AX3292_KEY_TRACE=1` | Log pressed-key ADC samples |
+| `AX3292_SPR_TRACE_MIN` / `AX3292_SPR_TRACE_MAX` | Inclusive SPR trace range |
 | `AX3292_SD_IMAGE=/path/sd.img` | Writable raw SD image; the launcher sets this with `--sd-card` |
 | `AX3292_SD_TRACE=1` | Log card commands and sector DMA |
 | `AX3292_JPEG_TRACE=1` | Log codec geometry, completion and failures |
@@ -288,8 +297,10 @@ tests; do not use broad `pkill` commands while someone is using the emulator.
 
 ## Limits
 
-This is a functional model, not cycle-accurate silicon. We have verified the
-original KC02 build, not the other dumped cameras. We have verified FAT16
+This is a functional model, not cycle-accurate silicon. The original KC02 build
+has the complete capture/viewer/printer regression. [Alternate-build status and
+controls](../README.md#alternate-builds) distinguish UI/selfie checks from the
+remaining Z-12 post-capture and alternate-printer work. We have verified FAT16
 mounting, metadata writes, photo capture and viewing across cold boots. Video
 recording, short CSI streaming line rings, USB device behaviour, full ISP
 processing and audible sound remain unsupported or unverified. JPGA supports

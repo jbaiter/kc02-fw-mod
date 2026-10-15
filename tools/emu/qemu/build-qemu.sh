@@ -12,7 +12,8 @@ set -eu
 
 VERSION=${QEMU_VERSION:-11.1.2}
 QEMU_SRC=${QEMU_SRC:-"$HOME/.src/qemu-$VERSION"}
-TARBALL=${QEMU_TARBALL:-/tmp/qemu-$VERSION.tar.xz}
+CACHE=${XDG_CACHE_HOME:-"$HOME/.cache"}/kc02-emulator
+TARBALL=${QEMU_TARBALL:-"$CACHE/qemu-$VERSION.tar.xz"}
 JOBS=${JOBS:-$(nproc 2>/dev/null || echo 4)}
 HERE=$(CDPATH= cd -- "$(dirname -- "$0")" && pwd)
 case ${QEMU_DISPLAY:-auto} in
@@ -26,7 +27,9 @@ PATCH_SHA=$(sha256sum "$HERE/0001-ax3292-machine.patch" | awk '{print $1}')
 if [ ! -d "$QEMU_SRC" ]; then
     if [ ! -f "$TARBALL" ]; then
         echo "fetching qemu-$VERSION.tar.xz"
-        curl -fSL -o "$TARBALL" "https://download.qemu.org/qemu-$VERSION.tar.xz"
+        mkdir -p "$(dirname -- "$TARBALL")"
+        curl -fSL -o "$TARBALL.part" "https://download.qemu.org/qemu-$VERSION.tar.xz"
+        mv "$TARBALL.part" "$TARBALL"
     fi
     mkdir -p "$QEMU_SRC"
     tar -xJf "$TARBALL" --strip-components=1 -C "$QEMU_SRC"

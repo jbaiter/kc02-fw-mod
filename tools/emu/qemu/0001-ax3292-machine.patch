@@ -1,6 +1,6 @@
---- a/hw/or1k/ax3292.c
+--- /dev/null
 +++ b/hw/or1k/ax3292.c
-@@ -0,0 +1,1767 @@
+@@ -0,0 +1,1888 @@
 +/*
 + * AX3292 (KC02-family camera) machine.
 + *
@@ -64,9 +64,14 @@
 +    uint8_t *ram_ptr;
 +
 +    uint32_t entry;
++    uint32_t stack_top, vbg_addr;
++    bool panel_ccw, sensor_3a, dual_sensor, key_trace;
++    unsigned key_channel;
++    unsigned key_adc[11];
 +    bool trace;
 +    unsigned long trace_limit;
 +    unsigned long trace_count;
++    uint32_t trace_min, trace_max;
 +    unsigned long tick_count;
 +    unsigned tick_irq;
 +
@@ -106,7 +111,7 @@
 +    unsigned i2c_phase[2];
 +    bool i2c_selected[2];
 +    uint8_t i2c_offset[2];
-+    uint8_t sensor_regs[256];
++    uint8_t sensor_regs[2][256];
 +    QemuConsole *console;
 +    QemuInputHandlerState *input;
 +    QEMUBH *display_bh;
@@ -160,6 +165,8 @@
 +    uint32_t spi_sadr;
 +    int spi_state;
 +    uint32_t spi_cmd;
++    unsigned spi_dummy;
++    uint8_t flash_id[3], flash_uid[8];
 +    uint32_t spi_pos;
 +    uint32_t spi_addr;
 +    bool spi_trace;
@@ -389,18 +396,37 @@
 +#define SPI_CMD_READ_DATA    0x03
 +#define SPI_CMD_FAST_READ    0x0B
 +#define SPI_CMD_READ_ID      0x9F
++#define SPI_CMD_READ_UID     0x4B
 +
 +enum {
 +    SPI_STATE_IDLE,
 +    SPI_STATE_ADDR,
 +    SPI_STATE_READ,
 +    SPI_STATE_ID,
++    SPI_STATE_DUMMY,
++    SPI_STATE_UID,
 +    SPI_STATE_STATUS,
 +    SPI_STATE_DONE,
 +};
 +
-+/*: A 4 MiB part; the firmware reads it for diagnostics. */
-+static const uint8_t ax3292_flash_id[3] = { 0xEF, 0x40, 0x16 };
++/* Flash identity is board hardware, supplied independently of guest RAM.
++ * Z-12 binds sensor/image resources to its GD25Q32 JEDEC ID and 64-bit UID. */
++static void ax3292_hex_identity(const char *name, uint8_t *dest, unsigned length)
++{
++    const char *text = getenv(name);
++    if (!text) { return; }
++    if (strlen(text) != length * 2) {
++        error_report("%s needs exactly %u hex digits", name, length * 2); exit(1);
++    }
++    for (unsigned i = 0; i < length; i++) {
++        int hi = g_ascii_xdigit_value(text[i * 2]);
++        int lo = g_ascii_xdigit_value(text[i * 2 + 1]);
++        if (hi < 0 || lo < 0) {
++            error_report("%s contains a non-hex digit", name); exit(1);
++        }
++        dest[i] = (hi << 4) | lo;
++    }
++}
 +
 +static bool ax3292_spi_enabled(Ax3292State *s)
 +{
@@ -467,6 +493,10 @@
 +        case SPI_CMD_READ_ID:
 +            s->spi_state = SPI_STATE_ID;
 +            break;
++        case SPI_CMD_READ_UID:
++            s->spi_dummy = 4;
++            s->spi_state = SPI_STATE_DUMMY;
++            break;
 +        case SPI_CMD_READ_STATUS:
 +            s->spi_state = SPI_STATE_STATUS;
 +            break;
@@ -480,8 +510,21 @@
 +        s->spi_addr = (s->spi_addr << 8) | out;
 +        if (++s->spi_pos == 3) {
 +            s->spi_pos = 0;
-+            s->spi_state = SPI_STATE_READ;
++            s->spi_dummy = s->spi_cmd == SPI_CMD_FAST_READ ? 1 : 0;
++            s->spi_state = s->spi_dummy ? SPI_STATE_DUMMY : SPI_STATE_READ;
 +        }
++        break;
++
++    case SPI_STATE_DUMMY:
++        if (--s->spi_dummy == 0) {
++            s->spi_pos = 0;
++            s->spi_state = s->spi_cmd == SPI_CMD_READ_UID ? SPI_STATE_UID : SPI_STATE_READ;
++        }
++        break;
++
++    case SPI_STATE_UID:
++        in = s->spi_pos < 8 ? s->flash_uid[s->spi_pos] : 0xff;
++        s->spi_pos++;
 +        break;
 +
 +    case SPI_STATE_READ:
@@ -490,7 +533,7 @@
 +        break;
 +
 +    case SPI_STATE_ID:
-+        in = s->spi_pos < 3 ? ax3292_flash_id[s->spi_pos] : 0;
++        in = s->spi_pos < 3 ? s->flash_id[s->spi_pos] : 0;
 +        s->spi_pos++;
 +        break;
 +
@@ -767,11 +810,13 @@
 +
 +    if (is_write) {
 +        handled = ax3292_reg_write(s, env, spr, *value);
-+        if (handled && s->trace && spr >= 0x8900 && spr < 0x8A00) {
++        if (handled && s->trace && spr >= s->trace_min && spr <= s->trace_max &&
++            s->trace_count < s->trace_limit && spr >= 0x8900 && spr < 0x8A00) {
 +            fprintf(stderr, "lcd W %04x %08x pc=%08x\n",
 +                    spr, *value, (uint32_t)env->pc);
 +        }
-+        if (handled && s->trace && s->trace_count < s->trace_limit) {
++        if (handled && s->trace && spr >= s->trace_min && spr <= s->trace_max &&
++            s->trace_count < s->trace_limit) {
 +            s->trace_count++;
 +            fprintf(stderr, "spr W %04x %08x pc=%08x\n",
 +                    spr, *value, (uint32_t)env->pc);
@@ -780,7 +825,8 @@
 +    }
 +
 +    handled = ax3292_reg_read(s, env, spr, value);
-+    if (handled && s->trace && s->trace_count < s->trace_limit) {
++    if (handled && s->trace && spr >= s->trace_min && spr <= s->trace_max &&
++        s->trace_count < s->trace_limit) {
 +        s->trace_count++;
 +        fprintf(stderr, "spr R %04x %08x pc=%08x\n",
 +                spr, *value, (uint32_t)env->pc);
@@ -1172,7 +1218,7 @@
 +            uint32_t ch = v & 0xf;
 +            uint32_t val = 0;
 +
-+            if (ch == AX3292_ADC_KEY_CH) {
++            if (ch == s->key_channel) {
 +                val = s->key_value;
 +                if (s->key_file != NULL) {
 +                    FILE *f = fopen(s->key_file, "r");
@@ -1185,9 +1231,13 @@
 +                    }
 +                }
 +                val = s->key_value;
++                if (s->key_trace && val != 1023) {
++                    fprintf(stderr, "adc-key: channel=%u value=%u\n", ch, val);
++                }
 +            } else {
-+                val = (ch == 9 || ch == 1) ? 700 : 512;
-+                /* Healthy supply on MVOUT / battery; bandgap reference 512. */
++                val = (ch == 9 || ch == 1) ? 700 : (ch == 11 ? 280 : 512);
++                /* Battery divider 700 and bandgap 280 at nominal 800 mV
++                 * correspond to 2 * 800 * 700 / 280 = 4000 mV. */
 +            }
 +            s->adc_dat = val;
 +            /*
@@ -1503,7 +1553,7 @@
 +
 +    cpu_reset(cs);
 +    cpu_set_pc(cs, entry);
-+    cpu_set_gpr(&cpu->env, 1, AX3292_STACK_TOP);
++    cpu_set_gpr(&cpu->env, 1, ax3292_current ? ax3292_current->stack_top : AX3292_STACK_TOP);
 +    /* The firmware runs with EVBAR 0 and SR[EPH] selecting the 0xf0000000 alias. */
 +    cpu->env.evbar = 0;
 +}
@@ -1517,7 +1567,18 @@
 +
 +    s->trace = false;
 +    s->trace_limit = 300000;
++    s->trace_max = 0xffff;
 +    s->entry = AX3292_ENTRY;
++    s->flash_id[0] = 0xef; s->flash_id[1] = 0x40; s->flash_id[2] = 0x16;
++    ax3292_hex_identity("AX3292_FLASH_ID", s->flash_id, 3);
++    ax3292_hex_identity("AX3292_FLASH_UID", s->flash_uid, 8);
++    s->stack_top = AX3292_STACK_TOP;
++    s->key_channel = AX3292_ADC_KEY_CH;
++    static const unsigned default_keys[] = {
++        657, 510, 252, 776, 386, 12, 386, 1024, 1024, 1024, 1024
++    };
++    memcpy(s->key_adc, default_keys, sizeof(default_keys));
++    s->vbg_addr = 0x222c;
 +    s->tick_ms = AX3292_TICK_MS_DEFAULT;
 +    s->tick_irq = AX3292_IRQ_TIMER0;
 +    ax3292_current = s;
@@ -1608,6 +1669,62 @@
 +    if (env != NULL) {
 +        s->watch_words = strtoul(env, NULL, 0);
 +    }
++    env = getenv("AX3292_SENSOR_3A");
++    s->sensor_3a = env && strcmp(env, "0");
++    env = getenv("AX3292_DUAL_SENSOR");
++    s->dual_sensor = env && strcmp(env, "0");
++    s->key_trace = getenv("AX3292_KEY_TRACE") != NULL;
++    env = getenv("AX3292_KEY_VALUES");
++    if (env != NULL) {
++        const char *q = env;
++        for (unsigned i = 0; i < 6; i++) {
++            char *end;
++            unsigned long value = strtoul(q, &end, 0);
++            if (end == q || value > 1023 || (i < 5 ? *end != ',' : *end != '\0')) {
++                error_report("AX3292_KEY_VALUES needs six ADC values (0..1023)"); exit(1);
++            }
++            s->key_adc[i] = value;
++            q = end + (i < 5);
++        }
++    }
++    env = getenv("AX3292_EXTRA_KEYS");
++    if (env != NULL) {
++        const char *q = env;
++        for (unsigned i = 6; i < 11; i++) {
++            char *end;
++            unsigned long value = strtoul(q, &end, 0);
++            if (end == q || value > 1024 || (i < 10 ? *end != ',' : *end != '\0')) {
++                error_report("AX3292_EXTRA_KEYS needs five ADC values (1024=unwired)"); exit(1);
++            }
++            s->key_adc[i] = value;
++            q = end + (i < 10);
++        }
++    }
++    env = getenv("AX3292_KEY_CHANNEL");
++    if (env != NULL) {
++        s->key_channel = strtoul(env, NULL, 0);
++        if (s->key_channel > 15) {
++            error_report("AX3292_KEY_CHANNEL must be 0..15"); exit(1);
++        }
++    }
++    env = getenv("AX3292_PANEL_ROTATION");
++    if (env != NULL) {
++        if (strcmp(env, "90") && strcmp(env, "270")) {
++            error_report("AX3292_PANEL_ROTATION must be 90 or 270");
++            exit(1);
++        }
++        s->panel_ccw = !strcmp(env, "270");
++    }
++    env = getenv("AX3292_STACK_TOP");
++    if (env != NULL) { s->stack_top = strtoul(env, NULL, 0); }
++    env = getenv("AX3292_VBG_ADDR");
++    if (env != NULL) {
++        s->vbg_addr = strtoul(env, NULL, 0);
++        if (s->vbg_addr > 0xfffc || (s->vbg_addr & 3)) {
++            error_report("AX3292_VBG_ADDR must be an aligned SRAM word");
++            exit(1);
++        }
++    }
 +    env = getenv("AX3292_ENTRY");
 +    if (env != NULL) {
 +        s->entry = strtoul(env, NULL, 0);
@@ -1616,6 +1733,10 @@
 +    if (env != NULL) {
 +        s->trace = atoi(env) != 0;
 +    }
++    env = getenv("AX3292_SPR_TRACE_MIN");
++    if (env) { s->trace_min = strtoul(env, NULL, 0); }
++    env = getenv("AX3292_SPR_TRACE_MAX");
++    if (env) { s->trace_max = strtoul(env, NULL, 0); }
 +    env = getenv("AX3292_SPR_TRACE_LIMIT");
 +    if (env != NULL) {
 +        s->trace_limit = strtoul(env, NULL, 0);
@@ -1677,7 +1798,7 @@
 +         * boot driver's vbg_param. Its firmware reader at 0x784 uses 0x222c.
 +         * We skip ROM bring-up, so supply the SDK's nominal 800 mV bandgap
 +         * calibration, not an application-state or instruction patch. */
-+        stl_le_p(s->ram_ptr + 0x222c, 800);
++        stl_le_p(s->ram_ptr + s->vbg_addr, 800);
 +        if (s->trace) {
 +            fprintf(stderr, "ax3292: low memory <- flash %#zx (%zu bytes)\n", src, n);
 +        }
@@ -1740,7 +1861,7 @@
 +
 +    if (s->trace) {
 +        fprintf(stderr, "ax3292: entry %#x stack %#x flash %zu bytes trace %lu\n",
-+                s->entry, AX3292_STACK_TOP, s->flash_size, s->trace_limit);
++                s->entry, s->stack_top, s->flash_size, s->trace_limit);
 +    }
 +}
 +
@@ -1768,9 +1889,9 @@
 +}
 +
 +type_init(ax3292_machine_register_types)
---- a/hw/or1k/ax3292-jpeg.h
+--- /dev/null
 +++ b/hw/or1k/ax3292-jpeg.h
-@@ -0,0 +1,331 @@
+@@ -0,0 +1,334 @@
 +/* AX3292 JPGA encode and JPGB decode / scale, semiplanar YUV420.
 + * SPDX-License-Identifier: GPL-2.0-or-later
 + * Register contract: SDK ax32xx_mjpegDecode{Input,Output,Size,Enable}.
@@ -1969,7 +2090,10 @@
 +    uint32_t size = s->sfr[0xb80c >> 2], source = s->sfr[0xb878 >> 2];
 +    unsigned w = size >> 16, h = size & 0xffff;
 +    unsigned sw = source >> 16, sh = source & 0xffff;
-+    uint32_t ybase = s->sfr[0xb820 >> 2], uvbase = s->sfr[0xb824 >> 2];
++    /* In automatic CSI mode the encoder consumes the I2J DMA, not the
++     * manual RAM-source registers. The SDK leaves B820/B824 zero in this mode. */
++    unsigned input = ctrl & 0x400 ? 0xb820 : 0xb050;
++    uint32_t ybase = s->sfr[input >> 2], uvbase = s->sfr[(input + 4) >> 2];
 +    uint32_t out = s->sfr[0xb810 >> 2];
 +    uint32_t end = s->sfr[0xb814 >> 2] & 0x0fffffff;
 +    unsigned mode = (ctrl >> 19) & 3;
@@ -2102,9 +2226,9 @@
 +    }
 +    ax3292_jpeg_a_irq(s);
 +}
---- a/hw/or1k/ax3292-display.h
+--- /dev/null
 +++ b/hw/or1k/ax3292-display.h
-@@ -0,0 +1,151 @@
+@@ -0,0 +1,167 @@
 +/* AX3292 DE scanout: YUV420 video and indexed RGB565/A5 OSD.
 + * SPDX-License-Identifier: GPL-2.0-or-later
 + * The KC02 panel scans 240x320 in portrait; its physical mounting is 90 CW.
@@ -2122,15 +2246,21 @@
 +    Ax3292State *s = AX3292_MACHINE(qdev_get_machine());
 +    unsigned value;
 +    switch (qemu_input_linux_to_qcode(evt->key.key)) {
-+    case Q_KEY_CODE_UP: value = 657; break;
-+    case Q_KEY_CODE_DOWN: value = 510; break;
-+    case Q_KEY_CODE_LEFT: value = 252; break;
-+    case Q_KEY_CODE_RIGHT: value = 776; break;
++    case Q_KEY_CODE_UP: value = s->key_adc[0]; break;
++    case Q_KEY_CODE_DOWN: value = s->key_adc[1]; break;
++    case Q_KEY_CODE_LEFT: value = s->key_adc[2]; break;
++    case Q_KEY_CODE_RIGHT: value = s->key_adc[3]; break;
 +    case Q_KEY_CODE_RET:
-+    case Q_KEY_CODE_KP_ENTER: value = 386; break;
-+    case Q_KEY_CODE_ESC: value = 12; break;
++    case Q_KEY_CODE_KP_ENTER: value = s->key_adc[4]; break;
++    case Q_KEY_CODE_ESC: value = s->key_adc[5]; break;
++    case Q_KEY_CODE_SPC: value = s->key_adc[6]; break;
++    case Q_KEY_CODE_P: value = s->key_adc[7]; break;
++    case Q_KEY_CODE_F: value = s->key_adc[8]; break;
++    case Q_KEY_CODE_TAB: value = s->key_adc[9]; break;
++    case Q_KEY_CODE_M: value = s->key_adc[10]; break;
 +    default: return;
 +    }
++    if (value > 1023) { return; } /* no corresponding button on this board */
 +    async_run_on_cpu(CPU(s->cpu), ax3292_key_on_cpu,
 +                     RUN_ON_CPU_HOST_INT(evt->key.down ? value : 1023));
 +}
@@ -2188,10 +2318,19 @@
 +        for (unsigned x = 0; x < w; x++) {
 +            uint8_t col[3] = { 0, 0, 0 };
 +            int px = (int)x - vx, py = (int)y - vy;
-+            uint64_t yo = (uint64_t)yaddr + py * (uint64_t)ys + px;
-+            uint64_t uvo = (uint64_t)uvaddr + (py / 2) * (uint64_t)uvs + (px & ~1);
++            unsigned scan = (enabled >> 8) & 7;
++            int dx = (scan == 2 || scan == 3 || scan == 4) ? -1 : 1;
++            int dy = (scan == 1 || scan == 3 || scan == 5) ? -1 : 1;
++            int sx = px, sy = py;
++            if (scan == 4 || scan == 5) { sx = py; sy = px; }
++            /* HAL supplies the first scanned pixel, already offset to the
++             * bottom/right for reverse scan (hal_lcdAddrCalculate). */
++            int64_t yo = (int64_t)yaddr + dy * (int64_t)sy * ys + dx * sx;
++            int64_t uvo = (int64_t)(uvaddr & ~1u) +
++                          dy * (int64_t)(sy / 2) * uvs + dx * (sx & ~1);
 +            if ((enabled & 1) && px >= 0 && py >= 0 &&
 +                px < vw && py < vh && yaddr && uvaddr &&
++                yo >= 0 && uvo >= 0 &&
 +                yo < AX3292_RAM_SIZE && uvo + 1 < AX3292_RAM_SIZE) {
 +                int lum = s->ram_ptr[yo];
 +                int u = s->ram_ptr[uvo] - 128, v = s->ram_ptr[uvo + 1] - 128;
@@ -2229,7 +2368,8 @@
 +                col[1] = (col[1] * (31 - alpha) + g * alpha) / 31;
 +                col[2] = (col[2] * (31 - alpha) + b * alpha) / 31;
 +            }
-+            memcpy(rgb + (x * h + h - y - 1) * 3, col, 3);
++            unsigned pixel = s->panel_ccw ? (w - x - 1) * h + y : x * h + h - y - 1;
++            memcpy(rgb + pixel * 3, col, 3);
 +        }
 +    }
 +    if (capture && s->fb_path) {
@@ -2256,15 +2396,23 @@
 +    s->screen_height = w;
 +    qemu_bh_schedule(s->display_bh);
 +}
---- a/hw/or1k/ax3292-sensor.h
+--- /dev/null
 +++ b/hw/or1k/ax3292-sensor.h
-@@ -0,0 +1,114 @@
-+/* Fake H63P + CSI LCD/JPEG DMA, not writes into application preview state.
+@@ -0,0 +1,148 @@
++/* Synthetic H63P/BF3A03 + CSI LCD/JPEG DMA, no application-state writes.
 + * SPDX-License-Identifier: GPL-2.0-or-later
 + */
++static unsigned ax3292_sensor_index(Ax3292State *s)
++{
++    /* Z-12 sensorInit (02047dd8): PE11 selects complementary camera power
++     * states; PE10 is toggled during reset. Never consult the UI's camera flag. */
++    return s->dual_sensor && !(s->sfr[0x8010 >> 2] & 0x800);
++}
++
 +static void ax3292_i2c_command(Ax3292State *s, unsigned bus, uint32_t v)
 +{
 +    unsigned base = bus ? 0x90cc : 0x9090;
++    unsigned camera = ax3292_sensor_index(s);
 +    uint8_t tx = s->sfr[(base + 12) >> 2];
 +    uint32_t status = s->sfr[(base + 20) >> 2];
 +    if (v & 1) { status &= ~1u; }
@@ -2272,7 +2420,8 @@
 +    if (v & 0x10) {
 +        switch (s->i2c_phase[bus]) {
 +        case 0:
-+            s->i2c_selected[bus] = s->sensor && ((tx & ~1u) == 0x40);
++            s->i2c_selected[bus] = s->sensor &&
++                ((tx & ~1u) == (s->sensor_3a ? 0xdc : 0x40));
 +            s->i2c_phase[bus] = (tx & 1) ? 2 : 1;
 +            break;
 +        case 1:
@@ -2281,7 +2430,7 @@
 +            break;
 +        default:
 +            if (s->i2c_selected[bus]) {
-+                s->sensor_regs[s->i2c_offset[bus]++] = tx;
++                s->sensor_regs[camera][s->i2c_offset[bus]++] = tx;
 +            }
 +            break;
 +        }
@@ -2290,7 +2439,8 @@
 +    if (v & 0x20) {
 +        unsigned reg = s->i2c_offset[bus]++;
 +        s->sfr[(base + 8) >> 2] = s->i2c_selected[bus] ?
-+                                  (reg == 0x0b ? 0x48 : s->sensor_regs[reg]) : 0xff;
++                (s->sensor_3a && reg == 0xfc ? 0x3a :
++                 !s->sensor_3a && reg == 0x0b ? 0x48 : s->sensor_regs[camera][reg]) : 0xff;
 +        status |= 1;
 +    }
 +    if (v & 0x40) { status |= 1; }
@@ -2306,25 +2456,42 @@
 +        {235,128,128}, {210,16,146}, {170,166,16}, {145,54,34},
 +        {106,202,222}, {81,90,240}, {41,240,110}, {16,128,128}
 +    };
++    unsigned camera = ax3292_sensor_index(s);
++    unsigned orientation = s->sensor_3a ? s->sensor_regs[camera][0x1e] : 0;
 +    unsigned mark;
 +
 +    if (!stride) { stride = w; }
 +    if (!ybase || !uvbase || w < 16 || w > 4096 || h < 2 || h > 4096 ||
-+        ((w | h) & 1) || stride < w || stride > 4096 ||
-+        (uint64_t)ybase + (uint64_t)stride * h > AX3292_RAM_SIZE ||
-+        (uint64_t)uvbase + (uint64_t)stride * h / 2 > AX3292_RAM_SIZE) {
++        ((w | h) & 1) || stride > 4096 ||
++        (uint64_t)ybase + (uint64_t)stride * (h - 1) + w > AX3292_RAM_SIZE ||
++        (uint64_t)uvbase + (uint64_t)stride * (h / 2 - 1) + w > AX3292_RAM_SIZE) {
 +        return false;
 +    }
++    /* Stride is a row-start increment, not an allocation size. Overlapping
++     * rows still transfer and complete in hardware (seen while Z-12 restores
++     * preview after capture). Bound the last actual write, including width. */
 +    mark = (s->tick_count / 5) % (w - 12);
 +    for (unsigned y = 0; y < h; y++) {
 +        for (unsigned x = 0; x < w; x++) {
-+            const uint8_t *bar = bars[x * 8 / w];
-+            uint8_t lum = y < h * 3 / 4 ? bar[0] : (x * 255 / (w - 1));
-+            if (y >= h - 20 && x >= mark && x < mark + 12) { lum = 255; }
++            unsigned sx = orientation & 0x20 ? w - 1 - x : x;
++            unsigned sy = orientation & 0x10 ? h - 1 - y : y;
++            const uint8_t *bar = bars[camera ? sy * 8 / h : sx * 8 / w];
++            bool gradient = camera ? sx >= w * 3 / 4 : sy >= h * 3 / 4;
++            uint8_t lum = gradient ? (camera ? sy * 255 / (h - 1) :
++                                               sx * 255 / (w - 1)) : bar[0];
++            if (((sy >= h - MIN(h, 20)) ||
++                 (sy >= h * 13 / 16 && sy < h * 14 / 16)) &&
++                sx >= mark && sx < mark + 12) {
++                lum = 255;
++            }
++            /* An asymmetric white patch distinguishes the selfie image even
++             * after guest-programmed sensor mirroring and panel rotation. */
++            if (camera && sx >= w / 8 && sx < w / 4 &&
++                sy >= h / 8 && sy < h / 4) { lum = 255; }
 +            s->ram_ptr[ybase + y * stride + x] = lum;
 +            if (!(y & 1) && !(x & 1)) {
-+                s->ram_ptr[uvbase + y / 2 * stride + x] = y < h * 3 / 4 ? bar[1] : 128;
-+                s->ram_ptr[uvbase + y / 2 * stride + x + 1] = y < h * 3 / 4 ? bar[2] : 128;
++                s->ram_ptr[uvbase + y / 2 * stride + x] = gradient ? 128 : bar[1];
++                s->ram_ptr[uvbase + y / 2 * stride + x + 1] = gradient ? 128 : bar[2];
 +            }
 +        }
 +    }
@@ -2340,7 +2507,14 @@
 +    uint32_t events = 0;
 +    if (!s->sensor) { return; }
 +
-+    if (dma & 0x40000) {
++    /* DVP frame/size events continue when individual output DMAs are gated.
++     * The SDK arms hal_mjpegStart from CSI_IRQ_SEN_STATE_INT; tying this
++     * event to LCD DMA deadlocks capture after a manual LCD frame finishes. */
++    if (s->sfr[0xb000 >> 2] & 1) {
++        events |= 0x08;
++        s->sfr[0xb078 >> 2] = s->sfr[0xb01c >> 2];
++    }
++    if ((s->sfr[0xb000 >> 2] & 1) && (dma & 0x40000)) {
 +        uint32_t size = s->sfr[0xb180 >> 2]; /* ISP_LS_SIZE */
 +        if (ax3292_sensor_fill(s, s->sfr[0xb060 >> 2], s->sfr[0xb064 >> 2],
 +                              size & 0xffff, size >> 16, s->sfr[0xb068 >> 2])) {
@@ -2373,7 +2547,7 @@
 +        s->cpu->env.picsr |= 1u << 14;
 +    }
 +}
---- a/hw/or1k/ax3292-sd.h
+--- /dev/null
 +++ b/hw/or1k/ax3292-sd.h
 @@ -0,0 +1,157 @@
 +/* AX3292 SD0 command controller and SDHC sector DMA.
@@ -2533,7 +2707,7 @@
 +    s->eng_sta |= 0x100000u;
 +    fprintf(stderr, "sd0: attached writable image %s (%" PRIu64 " bytes)\n", path, s->sd_size);
 +}
---- a/hw/or1k/ax3292-printer.h
+--- /dev/null
 +++ b/hw/or1k/ax3292-printer.h
 @@ -0,0 +1,169 @@
 +/* GPIO thermal head + platen; records firmware output, not source images.
@@ -2798,7 +2972,7 @@
      env->sr &= ~SR_TEE;
      env->pmr &= ~PMR_DME;
      env->pmr &= ~PMR_SME;
-@@ -83,14 +104,28 @@
+@@ -83,17 +104,28 @@
              [EXCP_TRAP]     = "TRAP",
          };
  
@@ -2814,6 +2988,9 @@
 -        if (env->cpucfgr & CPUCFGR_EVBARP) {
 -            vect_pc |= env->evbar;
 -        }
+-        if (env->sr & SR_EPH) {
+-            vect_pc |= 0xf0000000;
+-        }
 +        /*
 +         * AX3292 exception dispatch.  The vendor's reset.S defines the
 +         * .vector section as 16-byte slots at .org 0x0000, 0x0010, ... holding
@@ -2822,19 +2999,19 @@
 +         * with slot 5 named LP interrupt and slot 8 HP interrupt.  So the
 +         * stride is 16, not upstream's 0x100.
 +         *
-+         * The four-byte bias is a property of this image: the section's first
-+         * l.j sits at offset 4 (the assembler aligned to 8 from an unaligned
-+         * section start), which is verified against the jump table in the boot
-+         * SRAM.  EVBAR is 0 in the firmware; SR[EPH] moves the whole thing to
-+         * the 0xf0000000 alias as usual.
++         * The SDK names SR bit 14 intvct_sram/intvct_mask: it selects SRAM
++         * versus mask-ROM vectors, not the upstream high EPH address. Use
++         * EVBA in low memory. X8D's SRAM stubs call app ISRs with relative
++         * jal; dispatching at 0xf0000000 incorrectly jumps to 0xf202xxxx.
++         * ROM bring-up is skipped, so both selections use the loaded stubs.
 +         *
 +         * This QEMU build exists only for the AX3292, so this is unconditional.
 +         */
 +        hwaddr vect_pc = env->evbar + env->vec_bias + (exception << 4);
-         if (env->sr & SR_EPH) {
-             vect_pc |= 0xf0000000;
-         }
-@@ -123,7 +158,13 @@
+         env->pc = vect_pc;
+     } else {
+         cpu_abort(cs, "Unhandled exception 0x%x\n", exception);
+@@ -123,7 +155,13 @@
      if ((interrupt_request & CPU_INTERRUPT_HARD) && (env->sr & SR_IEE)) {
          idx = EXCP_INT;
      }

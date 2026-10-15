@@ -27,37 +27,23 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 from sfr_map import DEFAULT_TABLE, load_table  # noqa: E402
+from profiles import PROFILES, detect  # noqa: E402
 
 DEFAULT_QEMU = os.environ.get(
     "QEMU_OR1K", str(Path.home() / ".src/qemu-11.1.2/build/qemu-system-or1k")
 )
 
 #: Boot entry the boot code calls (see the trace of file 0x520..0x54c).
-DEFAULT_ENTRY = 0x0200046C
+DEFAULT_ENTRY = PROFILES["original"].entry
 
-#: Per-build application extent inside the flash image.
-#:   <name>: (file offset of the app image, app end == start of the asset table)
-LAYOUTS = {
-    "original": (0x2600, 0x0D3200),
-    "x8d": (0x2200, 0x07FA00),        # MYSTILUCK X8D
-    "z12": (0x2600, None),            # HMOLLIMT Z-12 (asset table unresolved)
-}
+# Retain these importable names; profiles are the boot-layout source of truth.
+LAYOUTS = {name: (p.app_offset, p.app_end) for name, p in PROFILES.items()}
 
 
 def guess_layout(image: Path) -> tuple[int, int | None]:
-    """Pick a layout by matching the dump against the known builds."""
-    import hashlib
-
-    digest = hashlib.sha256(image.read_bytes()).hexdigest()
-    known = {
-        "218c6cdf": "original",
-        "3ed8c0f1": "x8d",
-        "10da5dbf": "z12",
-    }
-    for prefix, name in known.items():
-        if digest.startswith(prefix):
-            return LAYOUTS[name]
-    return LAYOUTS["original"]
+    """Pick a layout by matching the complete dump hash."""
+    profile = detect(image)
+    return profile.app_offset, profile.app_end
 
 
 def find_asset_table(image: Path) -> int | None:
@@ -100,7 +86,9 @@ def main(argv: list[str] | None = None) -> int:
     ap.add_argument("--qemu", default=DEFAULT_QEMU, help="path to qemu-system-or1k")
     ap.add_argument("--app-offset", type=lambda s: int(s, 0), help="app file offset (default: detected)")
     ap.add_argument("--app-end", type=lambda s: int(s, 0), help="app end file offset (default: detected)")
-    ap.add_argument("--entry", type=lambda s: int(s, 0), default=DEFAULT_ENTRY)
+    ap.add_argument("--profile", choices=["auto", *PROFILES], default="auto",
+                    help="boot handoff profile; select explicitly for modified dumps")
+    ap.add_argument("--entry", type=lambda s: int(s, 0), help="override detected application entry")
     ap.add_argument("--trace-limit", type=int, default=300000)
     ap.add_argument("--timeout", type=float, default=60.0)
     ap.add_argument("--interactive", action="store_true",
@@ -137,7 +125,9 @@ def main(argv: list[str] | None = None) -> int:
         print(f"error: {args.qemu} not found; see tools/emu/qemu/README.md", file=sys.stderr)
         return 2
 
-    app_offset, app_end = guess_layout(args.image)
+    profile = detect(args.image) if args.profile == "auto" else PROFILES[args.profile]
+    entry = args.entry if args.entry is not None else profile.entry
+    app_offset, app_end = profile.app_offset, profile.app_end
     if args.app_offset is not None:
         app_offset = args.app_offset
     if args.app_end is not None:
@@ -151,14 +141,15 @@ def main(argv: list[str] | None = None) -> int:
     data = args.image.read_bytes()
     app = data[app_offset:app_end]
     print(f"app: file {app_offset:#x}..{app_end:#x} ({len(app)} bytes) -> 0x02000000, "
-          f"entry {args.entry:#x}")
+          f"entry {entry:#x} ({profile.name})")
 
     with tempfile.NamedTemporaryFile(prefix="ax3292-app-", suffix=".bin", delete=False) as tmp:
         tmp.write(app)
         app_path = tmp.name
 
     env = dict(os.environ)
-    env["AX3292_ENTRY"] = hex(args.entry)
+    env.update(profile.environment())
+    env["AX3292_ENTRY"] = hex(entry)
     env["AX3292_SPR_TRACE_LIMIT"] = str(args.trace_limit)
     env["AX3292_FLASH"] = str(args.image.resolve())
     if args.sd_card is not None:
@@ -181,7 +172,7 @@ def main(argv: list[str] | None = None) -> int:
     cmd = [
         args.qemu, "-M", "ax3292", "-m", "64M", "-nodefaults",
         "-accel", "tcg,thread=multi",
-        "-name", "KC02 - original firmware",
+        "-name", f"AX3292 - {profile.name} firmware",
         "-display", args.display or ("sdl" if args.interactive else "none"),
         "-monitor", "none", "-serial", "none",
         "-kernel", app_path,
@@ -195,6 +186,11 @@ def main(argv: list[str] | None = None) -> int:
     if args.interactive:
         print("Arrow keys: navigate; Enter: OK; Escape: back/power. Use short presses.\n"
               "Close the QEMU window or press Ctrl-C here to quit.", flush=True)
+        if profile.name != "original":
+            print("Space: shutter; P/F/Tab/M: native extra keys (see tools/emu/README.md).",
+                  flush=True)
+        if profile.dual_sensor:
+            print("In camera view, Tab (native Right) switches front/selfie sensors.", flush=True)
     try:
         with log.open("wb") as errf, uart_log.open("wb") as outf:
             proc = subprocess.run(cmd, env=env, stdout=outf, stderr=errf,
