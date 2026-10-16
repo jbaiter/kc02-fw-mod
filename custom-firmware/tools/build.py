@@ -55,7 +55,10 @@ def build(output, prefix):
         print(f'{board}: {record["size"]:,} bytes -> {raw}')
     return manifests
 
-BENCH_LENGTH = 0x140000   # 1.31 MiB: text+data+bss+stack for the original board
+# 1.44 MiB: text+data+bss+stack for the original board. The allocator hands out
+# 0x180000 (1.5 MiB), so 0x140000 left 256 KiB unused and the double-buffered
+# capture planes did not fit. Keep BENCH_SCRATCH (below) past this length.
+BENCH_LENGTH = 0x170000
 
 def bench_ld(base):
     """Linker script for the bounded hardware RAM run at an explicit base."""

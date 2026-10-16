@@ -124,8 +124,14 @@ def main():
             print(f'  allocator gave 0x{base:08X} ({size:,} bytes), writable', flush=True)
 
             # Scratch for the in-run CSI register snapshot: in the free tail of the
-            # allocated block, above the bench image's .bss.
-            scratch = base + 0x13C000
+            # allocated block, ABOVE the bench image (BENCH_LENGTH = 0x170000) and
+            # below the block end (0x180000). Must stay above the image or it will
+            # be inside .bss and be zeroed by the entry.
+            # Must be inside the transport's approved window, which is
+            # (base, record['extent']) -- extent is BENCH_LENGTH (0x170000), NOT the
+            # whole 0x180000 block. And above __bss_end (~0x14AE64) or the entry
+            # zeroes it.
+            scratch = base + 0x168000
             record = luma_build.build_bench(CORE / 'build', prefix, base)
             image = (CORE / 'build/original/luma.bench.bin').read_bytes()
             extent = record['extent']

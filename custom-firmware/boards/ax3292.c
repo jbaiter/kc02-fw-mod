@@ -32,8 +32,21 @@ static u8 bitmap[54+PIXELS*3];
 #define LCD_UVROWS (LCD_ROWS/2u)
 static u8 lcd_y[LCD_ROWS*LCD_PITCH] __attribute__((aligned(32)));
 static u8 lcd_uv[LCD_UVROWS*LCD_PITCH] __attribute__((aligned(32)));
-static u8 sensor_y[PIXELS] __attribute__((aligned(32)));
-static u8 sensor_uv[PIXELS/2] __attribute__((aligned(32)));
+/* Double buffered, as the vendor does (hal_lcdGetIdleBuffer picks from two free
+ * lists and hal_lcdPreviewStart takes one per frame). Luma used a SINGLE buffer
+ * for both the imager and the reader, so sensor_copy() read memory the CSI DMA was
+ * concurrently writing -- the vertically moving tear band seen on the panel.
+ *
+ * Sized exactly to the planes rather than PIXELS: the CSI writes 320x180 Y and
+ * 320x90 UV, so the old arrays were partly unused and a second full set would not
+ * have fit the allocated block. */
+#define SEN_Y_BYTES  (SENSOR_COLS * SENSOR_ROWS)        /* 57600 */
+#define SEN_UV_BYTES (SENSOR_COLS * SENSOR_ROWS / 2u)   /* 28800 */
+static u8 sensor_y[2][SEN_Y_BYTES] __attribute__((aligned(32)));
+static u8 sensor_uv[2][SEN_UV_BYTES] __attribute__((aligned(32)));
+/* csi_wr: the set the CSI is filling. csi_rd: the last set it finished, which is
+ * therefore safe to read. -1 until the first frame boundary. */
+static volatile int csi_wr, csi_rd = -1;
 static u8 dma[512] __attribute__((aligned(32)));
 volatile u32 luma_clock_delta;
 static SdHw sd;
@@ -131,10 +144,15 @@ static void sensor_copy(void)
              *
              * The imager gives 320x180; the panel view is 320x240, so the rows
              * past the capture are letterboxed with a neutral fill. */
-            int l = y < SENSOR_ROWS ? sensor_y[y*LW+x] : 16;
+            /* Read whichever set the CSI is NOT filling. Until the first frame
+             * boundary there is none, so fall back to set 0 -- the one being filled
+             * then, which is the best available answer. */
+            const u8 *sy = sensor_y[csi_rd < 0 ? 0 : csi_rd];
+            const u8 *su = sensor_uv[csi_rd < 0 ? 0 : csi_rd];
+            int l = y < SENSOR_ROWS ? sy[y*LW+x] : 16;
             unsigned uvrow = y/2;
-            int u = (y < SENSOR_ROWS ? sensor_uv[uvrow*LW+(x&~1u)] : 128) - 128;
-            int v = (y < SENSOR_ROWS ? sensor_uv[uvrow*LW+(x&~1u)+1] : 128) - 128;
+            int u = (y < SENSOR_ROWS ? su[uvrow*LW+(x&~1u)] : 128) - 128;
+            int v = (y < SENSOR_ROWS ? su[uvrow*LW+(x&~1u)+1] : 128) - 128;
             l = (l - 16) * 255 / 219;
             u = u * 255 / 224;
             v = v * 255 / 224;
@@ -239,6 +257,15 @@ static void csi_service(void)
      * CSI_INTR is an index enum, so the mask is (1 << bit). */
     if (events & 0x0002u) {
         u32 pip;
+        luma_csi_frame_ends++;
+        /* The frame that just finished is complete and safe to read; hand the CSI
+         * the other set. This is the vendor's per-frame buffer rotation
+         * (hal_lcdPreviewStart -> hal_lcdGetIdleBuffer -> ax32xx_csiLCDFrameSet),
+         * and it is what stops the reader racing the writer. */
+        csi_rd = csi_wr;
+        csi_wr ^= 1;
+        REG(0xb060) = (u32)sensor_y[csi_wr];
+        REG(0xb064) = (u32)sensor_uv[csi_wr];
         luma_csi_rearms++;
         REG(0xb018) &= ~0x40000u;
         pip = REG(0x8980);
@@ -575,8 +602,8 @@ static void hardware_init(void)
      * a neutral field at init, and the active pixels overwrite their part of it. */
     {
         unsigned k;
-        for (k=0; k<sizeof(sensor_y); k++) { sensor_y[k]=0x10; }
-        for (k=0; k<sizeof(sensor_uv); k++) { sensor_uv[k]=0x80; }
+        for (k=0; k<sizeof(sensor_y); k++)  { ((u8 *)sensor_y)[k]=0x10; }
+        for (k=0; k<sizeof(sensor_uv); k++) { ((u8 *)sensor_uv)[k]=0x80; }
         for (k=0; k<sizeof(lcd_y); k++)    { lcd_y[k]=0x10; }
         for (k=0; k<sizeof(lcd_uv); k++)   { lcd_uv[k]=0x80; }
     }
@@ -596,7 +623,8 @@ static void hardware_init(void)
      * events being generated at all: measured events_seen went 0x0000C00A ->
      * 0x00000000. The vendor's configuration is the working one; only the
      * destination is ours to choose. Two writes, nothing else. */
-    REG(0xb060)=(u32)sensor_y; REG(0xb064)=(u32)sensor_uv;
+    csi_wr = 0; csi_rd = -1;
+    REG(0xb060)=(u32)sensor_y[csi_wr]; REG(0xb064)=(u32)sensor_uv[csi_wr];
     /* Geometry override, applied before everything else settles. */
     if (luma_csi_size_override) { REG(0xb01c) = luma_csi_size_override; }
     lens(0);
@@ -647,8 +675,10 @@ static char *ov_hex(char *o, u32 v, int digits)
 static void overlay_refresh(void)
 {
     u32 i, yd = 0, ud = 0;
-    for (i = 0; i < 57600u; ++i) { u8 v = sensor_y[i]; if (v != 0x10u && v != 0u) { yd++; } }
-    for (i = 0; i < 28800u; ++i) { u8 v = sensor_uv[i]; if (v != 0x80u && v != 0u) { ud++; } }
+    const u8 *sy = sensor_y[csi_rd < 0 ? 0 : csi_rd];
+    const u8 *su = sensor_uv[csi_rd < 0 ? 0 : csi_rd];
+    for (i = 0; i < SEN_Y_BYTES; ++i)  { u8 v = sy[i]; if (v != 0x10u && v != 0u) { yd++; } }
+    for (i = 0; i < SEN_UV_BYTES; ++i) { u8 v = su[i]; if (v != 0x80u && v != 0u) { ud++; } }
     ov_ydata = yd;  ov_uvdata = ud;
     ov_seen = luma_csi_seen;   ov_calls  = luma_csi_calls;
     ov_rearms = luma_csi_rearms; ov_b018 = REG(0xb018);
@@ -884,6 +914,15 @@ void luma_bench_once(void *buffer)
             luma_clock_delta = ax_time_ms(&t,REG(0x9908)) - t0;
             if (luma_clock_delta >= 3000u) { break; }
         }
+    }
+    /* Copy the set that finished last into set 0. The harness reads the plane by
+     * SYMBOL address, which is set 0, and with double buffering the completed frame
+     * may be in set 1 -- so without this the host reads the buffer the CSI is
+     * filling and reports a flat plane while the in-run digest correctly reports a
+     * full one. */
+    if (csi_rd > 0) {
+        memcpy(sensor_y[0],  sensor_y[csi_rd],  SEN_Y_BYTES);
+        memcpy(sensor_uv[0], sensor_uv[csi_rd], SEN_UV_BYTES);
     }
     luma_beacon[28]=luma_csi_seen;       /* OR of every b00c value seen      */
     luma_beacon[29]=luma_csi_calls;      /* polls that found events          */
