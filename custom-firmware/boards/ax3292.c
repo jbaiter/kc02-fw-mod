@@ -623,18 +623,24 @@ static void overlay_refresh(void)
 static void overlay_draw(u16 *f)
 {
     char b[96], *o;
-    int y = 3;
-    box(f, 0, 0, LW, 66, RGB(0, 0, 0));
-    o = b; o = ov_str(o, "Y ");  o = ov_dec(o, ov_ydata);
-    o = ov_str(o, " UV ");       o = ov_dec(o, ov_uvdata); *o = 0;
+    int y = 2;
+    /* SMALL glyphs, and a compact strip. This is opt-in (packet word 11 /
+     * --overlay) and must NOT cover the viewfinder: an earlier large-font version
+     * took the top 118 of 240 rows and hid half the sensor image, which is the one
+     * thing the panel is there to show. The numbers are also available from a
+     * bounded run now that it is representative, so the panel copy is a fallback,
+     * not the primary instrument. */
+    box(f, 0, 0, LW, 62, RGB(0, 0, 0));
+    o = b; o = ov_str(o, "Y");  o = ov_dec(o, ov_ydata);
+    o = ov_str(o, " U");        o = ov_dec(o, ov_uvdata); *o = 0;
     ui_text(f, 3, y, b, RGB(255,255,0), 0); y += 15;
-    o = b; o = ov_str(o, "EV "); o = ov_hex(o, ov_seen, 8);
-    o = ov_str(o, " B018 ");     o = ov_hex(o, ov_b018, 6); *o = 0;
+    o = b; o = ov_str(o, "EV"); o = ov_hex(o, ov_seen, 4);
+    o = ov_str(o, " B");        o = ov_hex(o, ov_b018, 6); *o = 0;
     ui_text(f, 3, y, b, RGB(255,255,0), 0); y += 15;
-    o = b; o = ov_str(o, "FE "); o = ov_dec(o, luma_csi_frame_ends);
-    o = ov_str(o, " REAR ");    o = ov_dec(o, ov_rearms); *o = 0;
+    o = b; o = ov_str(o, "FE"); o = ov_dec(o, luma_csi_frame_ends);
+    o = ov_str(o, " R");        o = ov_dec(o, ov_rearms); *o = 0;
     ui_text(f, 3, y, b, RGB(255,255,0), 0); y += 15;
-    o = b; o = ov_str(o, "FRAME "); o = ov_dec(o, ov_frames); *o = 0;
+    o = b; o = ov_str(o, "F");  o = ov_dec(o, ov_frames); *o = 0;
     ui_text(f, 3, y, b, RGB(255,255,0), 0);
 }
 
