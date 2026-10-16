@@ -211,6 +211,12 @@ or scaler reprogram is not complete until it is raised.
 needs an explicit re-kick. Measured working value `b018 = 0x00240000` = LDMAMANEN
 | LCDEN, i.e. manual mode with the output enabled.
 
+Audit, 2026-10-16: the normal frame callback at `0x0203a2f0` rewrites both
+Y/UV addresses before calling `csiLCDDmaKick` (OR LCDEN). It does not clear
+LCDEN or reset PIP on normal completion. The earlier automatic-mode experiment
+wrote `0x20000` without LCDEN, so its empty output does **not** establish that
+manual mode is required. See `lcd_frame_callback.c`.
+
 ## CSI_INTR (0xb00c) event bits -- `CSI_IRQ_*`
 
 This is an INDEX enum, so bit N is (1<<N).
@@ -245,10 +251,16 @@ The frame-end event is bit **1 (`0x0002`, `CSI_IRQ_LCD_FRAME_END`)** -- and it w
 present in EVERY event set measured: 0x000A, 0x001A, 0xC00A, 0xC00A. The correct
 per-frame trigger is therefore `events & 0x0002`, not `events & 0x0010`.
 
-## Measured working configuration, at a glance
+## Historical configuration (produced an image but did not establish safe DMA bounds)
+
+The later capture audit found pixel data in scalars following the capture arrays.
+In this snapshot LCDCROP and LSEN are off. Do not copy it as a safe capture recipe.
+The guarded run in `docs/hw/2026-10-16-capture-audit.md` instead calls the actual
+stock scaler: b004 becomes **0x42ffff**, b184/b188 become **0x80000**, and its
+45-frame bounded test leaves DMA guards intact. Live panel verification is pending.
 
 ```
-b000 = 0x0440062D   CSI mode: YUVR422, DVP, enabled
+b000 = 0x0440062D   CSI enabled; FORMAT bits 7:6 = 0 (raw), not YUVR422
 b004 = 0x0000FFFF   ISP: BLC..AWB_STAT enabled; LCDCROP and LSEN OFF
 b00c = 0x00000000   no event pending at snapshot time
 b014 = 0x800EF87B   interrupt enable+mask; bit 31 SET

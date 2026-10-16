@@ -3,6 +3,15 @@
  * Decompiled from firmware/original.bin. See README.md for provenance and for the
  * traps this file documents. The frame interrupt is the important part: it is the
  * servicing Luma was missing, and it explains why capture was intermittent.
+ *
+ * AUDIT 2026-10-16: historical explanations below conflate ERROR recovery with
+ * normal frame completion. See lcd_frame_callback.c: normal event 1 dispatches
+ * hal_lcdSwitchFrame2 (0x0203a2f0), which writes Y/UV addresses even on reuse,
+ * then calls csiLCDDmaKick (OR LCDEN only). No normal-frame PIP reset. The
+ * automatic-mode test omitted LCDEN, so it does not prove manual mode mandatory.
+ * See docs/hw/2026-10-16-capture-audit.md for the later memory-corruption finding:
+ * b004=0xffff left scaling OFF. Calling csiLCDScaler produced b004=0x42ffff and
+ * 45 bounded frames with intact DMA guards. Live panel verdict still pending.
  */
 #include <stdint.h>
 
@@ -20,7 +29,7 @@ enum {
     CSI_TYPE_RAW10      = 1,
     CSI_TYPE_RAW12      = 2,
     CSI_TYPE_YUV422     = 3,
-    CSI_TYPE_YUVR422    = 4,     /* YUV 4:2:2, VIDEO range. What the H63P uses. */
+    CSI_TYPE_YUVR422    = 4,     /* YUV 4:2:2 input, VIDEO range. Not b000=0x0440062d. */
     CSI_TYPE_COLOR_BAR  = 0xff,
 };
 
@@ -32,8 +41,9 @@ enum {
  * Clears both the FORMAT and DATA_BW fields, then puts types 0..2 in DATA_BW
  * (the raw data widths) and types >= 3 in FORMAT as (type-1)&3.
  *
- * Decoding the measured stock value b000 = 0x0440062d therefore gives bits 7:6
- * = 3, so (type-1)&3 == 3 and the type is 4 = CSI_TYPE_YUVR422.
+ * Decoding b000 = 0x0440062d gives FORMAT bits 7:6 = 0 and DATA_BW bits
+ * 11:10 = 1, consistent with RAW10. An earlier transcription incorrectly
+ * claimed bits 7:6 were 3. This describes sensor input, not ISP output layout.
  * Y 16..235, chroma 16..240. Treating that as full-range 4:2:0 is what made the
  * captured picture both displaced and washed out.             VERIFIED by decode
  */
@@ -105,7 +115,7 @@ void ax32xx_csiLCDDmaEnable(u8 en)
 {
     if (en == 0) {
         REG(0xb018) &= ~0x40000u;
-        REG(0xb014) &= ~0x8008005au;
+        REG(0xb014) &= ~0x00080042u; /* exact stock mask: preserve global enable */
         REG(0xb00c) = 0x8005au;
     } else {
         REG(0xb00c) = 0x5au;
@@ -115,8 +125,8 @@ void ax32xx_csiLCDDmaEnable(u8 en)
 }
 
 /* 0x020349b4  ax32xx_csiLCDDmaKick()
- * Setting the bit alone does NOT restart a finished transfer -- see the handler
- * below, which clears it first and resets the pip counter in between. */
+ * This IS the normal per-frame kick. hal_lcdSwitchFrame2 restores destination
+ * addresses first, then calls this. The ISR's clear/reset/set is error recovery. */
 void ax32xx_csiLCDDmaKick(void)
 {
     if (REG(0xb018) & 0x200000u) { REG(0xb018) |= 0x40000u; }

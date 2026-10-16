@@ -1,5 +1,61 @@
 # HANDOVER: KC02 capture (CSI) — for the incoming agent
 
+> **Latest result: read `docs/hw/2026-10-16-capture-audit.md` first.**
+> The DE ownership check caught pixel data (`0x5d5d5e5d`) in the display-buffer
+> index, immediately after the old capture arrays. ISPMODE was `0xffff`, with
+> scaling off. The guarded build now calls the actual stock scaler, enables its
+> crop/scale path, keeps DMA disabled until setup completes, and separates guarded
+> DMA destinations from CPU snapshots. A bounded run completed **45 frames** with
+> **zero capture faults and zero DE ownership failures**, ISPMODE `0x42ffff`, and
+> a coherent full-frame Jira-board PNG. The moving bar is **not yet panel-verified**.
+> The earlier callback and exposure-only trials both left it unchanged.
+>
+> The current bench requests **3 MiB** and links within **0x2c0000** for diagnostic
+> spill arenas. The original instructions below use outdated allocation sizes and
+> overstate what was ruled out. No flash or SD installation has occurred.
+>
+> **Audit correction, 2026-10-16, incoming agent:** treat the original analysis
+> below as session history, not established constraints. The user still reports
+> the rolling gray bar. The claim that polling latency must cause it is unproven.
+>
+> - The automatic-mode test wrote `b018=0x20000` without `LCDEN=0x40000`.
+>   No output was enabled. It did not rule out automatic capture.
+> - Normal frame completion uses `hal_lcdSwitchFrame2` at **0x0203a2f0**, registered
+>   for event 1 by `lcd_panel_init`. This callback was missing from the Ghidra
+>   function inventory. Its body is now in
+>   `docs/firmware-reference/lcd_frame_callback.c`. It writes Y and UV addresses
+>   even when reusing a buffer, then calls `csiLCDDmaKick`: **OR LCDEN only**.
+>   The clear/PIP-reset/set sequence is sensor-error recovery, not this path.
+> - `b000=0x0440062d` has FORMAT bits 7:6 equal to zero, not YUVR422.
+>   `ax32xx_csiTypeSet` at 0x02034600 confirms the encoding. The callback computes
+>   UV offsets with `y/2`; the alleged 4:2:2-output/4:2:0-reader mismatch is not
+>   established. Do not change the output layout on that premise.
+> - `hal_csiRegister` only stores pointers; it does not configure the ISP. The
+>   earlier description that sensor_init supplies a complete CSI setup is wrong.
+> - Do not enable the stock CSI ISR without auditing its registered callbacks:
+>   the normal callback manages stock buffers and display state.
+> - `show_luma.py` now reads CPU snapshot set 1 and checks repeated readbacks for
+>   equality. Earlier PNGs read the live set 0 and selected by chroma population.
+>   Those PNGs cannot establish a rolling seam's position or cause.
+>
+> Callback-sequence trial: acknowledge before callback work; copy to snapshot;
+> restore destination addresses; OR LCDEN. No normal-frame PIP reset. Bounded
+> readback is stable, but **the user confirms the bar persists** on the panel,
+> including after pointing away from the monitor. Evidence:
+> `~/kc02-hw/2026-10-16/capture-audit/{baseline,callback,callback-panel}`.
+>
+> Further parity bugs found: takeover never applied packet exposure/gain at all;
+> only the bounded entry did. Both now call `bench_apply_exposure` after bring-up
+> and `bench_read_options` before it. The size override comes from host word 13,
+> not 12. Previous size-override results are therefore not reliable. The parity
+> fix builds and has offline regression tests; the user confirmed that this trial
+> also left the bar unchanged.
+>
+> The static-bars A/B also does not rule out scanout tearing with changing pixels:
+> `present()` still writes the active DE plane. Do not treat display ownership
+> as solved. The UVC webcam no longer points at the panel; do not use the old
+> setup instructions without asking the user to reposition it first.
+>
 Written 2026-10-16 at the end of a long session. Read this before touching
 anything; most of it is "here is what is already ruled out and why", because this
 subsystem has consumed two full sessions in a row on the same class of mistake.

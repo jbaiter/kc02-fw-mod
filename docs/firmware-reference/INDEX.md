@@ -28,6 +28,7 @@ called wrongly or a vendor driver whose call sequence we had guessed.
 |---|---|---|
 | Sensor bus (bit-banged I2C), autodetect, init, exposure | FIRMWARE | `sensor_iic.c` |
 | CSI type/mode/enable, LCD plane, scaler, DMA, **frame interrupt** | FIRMWARE | `csi.c` |
+| Normal CSI completed-frame callback (0x0203a2f0); destination rewrite and kick | FIRMWARE | `lcd_frame_callback.c` (2026-10-16 audit; corrects the error-recovery/per-frame conflation) |
 | CSI/ISP HAL layer | SDK | `hal/src/hal_csi.c`, `hal/src/hal_usensor.c`, `ax32xx/src/ax32xx_isp.c` |
 | MJPEG capture | SDK | `hal/src/hal_mjpeg.c`, `hal/src/hal_mjpegB.c`, `hal/src/hal_stream.c` |
 | Rotation engine | FIRMWARE + SDK | `rotate_pip.c` and `ax32xx/src/ax32xx_rotate.c`, `hal/src/hal_rotate.c` |

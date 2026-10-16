@@ -4,6 +4,12 @@
  * (ax32xx/osd/ax32xx_osd.c, ax32xx/lcd/ax32xx_lcd.c); what is recorded here is the
  * wrapper the firmware actually uses plus the register contract as MEASURED on
  * hardware, because the measured values are what any port has to match.
+ *
+ * Ownership audit, 2026-10-16: DE commits latch register addresses, not pixel
+ * contents. A CPU must finish drawing into an inactive buffer before staging it,
+ * and must not reuse the previous buffer until commit clear + active c87c match.
+ * Static colour bars cannot rule out a scanout race with changing pixels.
+ * Luma now double-buffers DE Y/UV and places its diagnostic marks before commit.
  */
 #include <stdint.h>
 

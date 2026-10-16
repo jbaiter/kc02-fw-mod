@@ -11,6 +11,7 @@
 #include "sd_hw.h"
 #include "ax_time.h"
 #include "ax_sensor.h"
+#include "ax_csi_capture.h"
 #include "ax_cam_power.h"
 #include "ax_iic_soft.h"
 #include "h63p_init.h"
@@ -30,28 +31,28 @@ static u8 bitmap[54+PIXELS*3];
 #define LCD_PITCH 256u
 #define LCD_ROWS  320u
 #define LCD_UVROWS (LCD_ROWS/2u)
-static u8 lcd_y[LCD_ROWS*LCD_PITCH] __attribute__((aligned(32)));
-static u8 lcd_uv[LCD_UVROWS*LCD_PITCH] __attribute__((aligned(32)));
-/* Double buffered, as the vendor does (hal_lcdGetIdleBuffer picks from two free
- * lists and hal_lcdPreviewStart takes one per frame). Luma used a SINGLE buffer
- * for both the imager and the reader, so sensor_copy() read memory the CSI DMA was
- * concurrently writing -- the vertically moving tear band seen on the panel.
- *
- * Sized exactly to the planes rather than PIXELS: the CSI writes 320x180 Y and
- * 320x90 UV, so the old arrays were partly unused and a second full set would not
- * have fit the allocated block. */
-#define SEN_Y_BYTES  (SENSOR_COLS * SENSOR_ROWS)        /* 57600 */
-#define SEN_UV_BYTES (SENSOR_COLS * SENSOR_ROWS / 2u)   /* 28800 */
-static u8 sensor_y[2][SEN_Y_BYTES] __attribute__((aligned(32)));
-static u8 sensor_uv[2][SEN_UV_BYTES] __attribute__((aligned(32)));
-/* csi_wr: the set the CSI is filling. csi_rd: the last set it finished, which is
- * therefore safe to read. -1 until the first frame boundary. */
-static volatile int csi_wr, csi_rd = -1;
-/* CSI servicing counters. Declared here, not with the telemetry block further
- * down, because csi_release() near the top of the file increments them. */
+/* The DE scans one pair while present() fills the other. Do not reuse a
+ * submitted pair until c800's commit clears AND c87c confirms its active Y. */
+static u8 lcd_y[2][LCD_ROWS*LCD_PITCH] __attribute__((aligned(32)));
+static u8 lcd_uv[2][LCD_UVROWS*LCD_PITCH] __attribute__((aligned(32)));
+static unsigned lcd_submitted;
+static int lcd_diagnostics;
+static u32 lcd_key_level;
+volatile u32 luma_de_timeouts;
+/* DMA targets have guards immediately after the expected frame, plus bench-only
+ * spill space. CPU snapshots have no hardware writer and remain stable over USB.
+ * This separation matters: with LSEN off, CSI wrote image bytes over scalars
+ * following the old arrays (hardware evidence in capture-audit). */
+#define SEN_Y_BYTES AX_CSI_Y_BYTES
+#define SEN_UV_BYTES AX_CSI_UV_BYTES
+static AxCsiY sensor_dma_y __attribute__((aligned(32)));
+static AxCsiUv sensor_dma_uv __attribute__((aligned(32)));
+static u8 sensor_y[SEN_Y_BYTES] __attribute__((aligned(32)));
+static u8 sensor_uv[SEN_UV_BYTES] __attribute__((aligned(32)));
+volatile u32 luma_csi_fault;
+/* CSI servicing counters, available to the bounded entry and panel overlay. */
 volatile u32 luma_csi_seen, luma_csi_calls, luma_csi_rearms, luma_csi_rearm_armed;
 volatile u32 luma_csi_frame_ends;
-static volatile int csi_frame_ready;
 static u8 dma[512] __attribute__((aligned(32)));
 volatile u32 luma_clock_delta;
 static SdHw sd;
@@ -120,19 +121,14 @@ static u8 clip(int v) { return v<0 ? 0 : v>255 ? 255 : v; }
  * path are sound and any defect is in the capture format; if they arrive grey,
  * the chroma is being lost between present() and the panel. */
 volatile u32 luma_test_pattern;
-/* Packet word 12: override CSI_IMAGE_SIZE (b01c) after the bring-up, so the
+/* Packet word 13: override CSI_IMAGE_SIZE (b01c) after the bring-up, so the
  * geometry the CSI expects can be swept from the host instead of rebuilt. The
  * capture occupies only the bottom third of the frame, which is what a mismatch
  * between the imager's real output height and this register would look like. */
 volatile u32 luma_csi_size_override;
 
-/* Defined below sensor_copy(), which now calls it to keep the re-arm tight. */
-static void csi_service(void);
-
-/* Copy the completed capture aside, with the imager stopped so nothing races.
- * Called once per rendered frame, not per frame event: the copy is ~86 KB and
- * running it on every event would both waste time and stretch the loop, which is
- * what let the capture phase drift. */
+/* Convert the CPU-owned capture snapshot; csi_service() updates it before this
+ * function runs. The test pattern bypasses capture conversion, not CSI service. */
 
 static void sensor_copy(void)
 {
@@ -148,20 +144,14 @@ static void sensor_copy(void)
     }
     for (y=0; y<LH; y++) {
         for (x=0; x<LW; x++) {
-            /* The CSI input format is CSI_TYPE_YUVR422 (type 4, decoded from
-             * b000 bits 7:6 against the SDK enum): 4:2:2 in VIDEO range, i.e.
-             * Y 16..235 and chroma 16..240. Treating those as full range both
-             * crushes contrast and throws away most of the saturation, which is
-             * what made the picture look nearly monochrome. Expand to 0..255
-             * before the matrix.
-             *
-             * The imager gives 320x180; the panel view is 320x240, so the rows
-             * past the capture are letterboxed with a neutral fill. */
-            /* Read whichever set the CSI is NOT filling. Until the first frame
-             * boundary there is none, so fall back to set 0 -- the one being filled
-             * then, which is the best available answer. */
-            const u8 *sy = sensor_y[csi_rd < 0 ? 0 : csi_rd];
-            const u8 *su = sensor_uv[csi_rd < 0 ? 0 : csi_rd];
+            /* This is the ISP's planar output, not the sensor's input format.
+             * CSIMODE 0x0440062d has FORMAT=0 (raw), not YUVR422; see the actual
+             * ax32xx_csiTypeSet at 0x02034600. Stock hal_lcdSwitchFrame2 computes
+             * its UV offset with y/2, consistent with the 4:2:0 layout used here.
+             * Keep the existing limited-range conversion pending ISP calibration
+             * verification. Rows below the 320x180 capture are letterboxed. */
+            const u8 *sy = sensor_y;
+            const u8 *su = sensor_uv;
             int l = y < SENSOR_ROWS ? sy[y*LW+x] : 16;
             unsigned uvrow = y/2;
             int u = (y < SENSOR_ROWS ? su[uvrow*LW+(x&~1u)] : 128) - 128;
@@ -202,103 +192,88 @@ static void lcd_service(void)
     REG(0xa800)|=2;                     /* frame kick */
 }
 
-/* Service CSI frame events. B00C is a write-one-to-clear event register; the
- * stock firmware clears it from its CSI interrupt and re-arms the capture path.
- * Luma has no ISR, so without this the pipeline delivers one frame and stops,
- * which would leave the viewport frozen on the first capture. */
-/* CSI servicing telemetry. The re-arm guard below requires event 0x10 AND the
- * arm bit still set -- but the arm bit SELF-CLEARS when a transfer completes, so
- * a finished transfer can never be restarted by that path. These counters say
- * which events actually arrive, which is the fact we have been guessing at. */
+/* Poll the normal frame-completion path, not the ISR's sensor-error recovery.
+ *
+ * The actual frame callback is hal_lcdSwitchFrame2 (0x0203a2f0), registered by
+ * lcd_panel_init with CSI event 1. Even when it reuses the current buffer it
+ * calls csiLCDFrameSet(Y, UV), then csiLCDDmaKick (0x020349b4): OR LCDEN, with no
+ * clear and no PIP reset. The clear/reset/set sequence in csiIRQHandler is only
+ * for a SENSOR_SIZE_ERR while LCDEN is still set, not normal frame completion.
+ * Luma retains a CPU snapshot so the reader never needs the live destination.
+ */
 static void csi_service(void)
 {
-    u32 events = REG(0xb00c);
-    /* Deliberately no early return: the re-arm below must run every pass, even
-     * when no event is pending. Returning here would recreate the frozen-frame
-     * bug the moment events stop arriving. */
-    if (events) {
-        luma_csi_seen |= events;
-        luma_csi_calls++;
+    u32 fault = ax_csi_capture_faults(&sensor_dma_y, &sensor_dma_uv);
+    if (fault || luma_csi_fault) {
+        luma_csi_fault |= fault;
+        REG(0xb018) &= ~0x40000u;
+        REG(0xb000) &= ~1u;
+        return;
     }
+    u32 events = REG(0xb00c);
+    if (!events) { return; }
+    luma_csi_seen |= events;
+    luma_csi_calls++;
+    /* Acknowledge before starting the next transfer, as the stock ISR does
+     * before invoking its frame callback. Do not clear a new frame's event. */
+    REG(0xb00c) = events;
 
-    /* Per-frame mode toggle, from the stock handler: on event 0x10 it clears
-     * bits 27:26 of b000 and sets bit 26. */
     if (events & 0x10u) {
         REG(0xb000) = (REG(0xb000) & 0xf3ffffffu) | 0x04000000u;
     }
-
-    /* Re-arm the LCD transfer exactly as ax32xx_csiIRQHandler does. Luma used to
-     * only set the bit, which does not restart a completed transfer: the stock
-     * sequence is clear, reset the pip counter, then set.
-     *   b018 &= ~0x40000;  ax32xx_pipCounterReset(1);  b018 |= 0x40000;
-     * and ax32xx_pipCounterReset (0x020329d4) is, decompiled:
-     *   v = REG(0x8980); if (1 == (((v>>1)&1)^1)) REG(0x8980) = v | 4;
-     */
-    /* Re-arm on the frame event, WITHOUT requiring the arm bit to still be set.
-     *
-     * The stock handler guards this with `b018 & 0x40000` because it runs from the
-     * interrupt, i.e. while the transfer is still in flight. A POLLING loop never
-     * sees that moment: by the time b00c is read, the transfer has completed and
-     * the arm bit has self-cleared, so the guard can never pass. The result was a
-     * capture that ran exactly once and then froze -- a static, never-updating
-     * viewfinder. Under takeover there is no fallback either, because Luma sets
-     * PICMR=0, so the stock ISR that would normally do this is not running.
-     *
-     * luma_csi_rearm_armed records how often the bit was still set, so we can see
-     * whether the old condition ever held at all. */
-    /* Re-arm ONCE PER FRAME, on CSI_IRQ_LCD_FRAME_END.
-     *
-     * Three conditions have now been measured on hardware, and only this one is
-     * both satisfiable and correct:
-     *
-     *   1. b018 bit 0x40000 (the stock guard): never true while polling. LCDEN
-     *      self-clears on completion, so a poller never sees it set -- measured
-     *      rearms 0 over 45 polls.
-     *   2. events bit 0x10: wrong event AND unstable. Bit 4 is
-     *      CSI_IRQ_SEN_STATE_ERR, a sensor ERROR bit rather than a frame event, and
-     *      it appears in some runs and not others (measured 0x1A versus 0xC00A).
-     *   3. unconditional-when-idle: the right event, but it fires constantly. The
-     *      on-panel telemetry measured B018 = 0x00200000 with REAR 121 == POLL 121,
-     *      i.e. the transfer was restarted on EVERY poll, mid-frame. The panel
-     *      showed two moving patterned bars and only part of the scene, because the
-     *      frame was being torn apart and never completed.
-     *
-     * Bit 1 (0x0002, CSI_IRQ_LCD_FRAME_END) is the per-frame event, and it was
-     * present in every event set measured: 0x000A, 0x001A, 0xC00A, 0xC01A.
-     * CSI_INTR is an index enum, so the mask is (1 << bit). */
     if (events & 0x0002u) {
-        u32 pip;
         luma_csi_frame_ends++;
-        memcpy(sensor_y[1],  sensor_y[0],  SEN_Y_BYTES);
-        memcpy(sensor_uv[1], sensor_uv[0], SEN_UV_BYTES);
-        csi_rd = 1;
-        REG(0xb018) &= ~0x40000u;
-        pip = REG(0x8980);
-        if (1u == (((pip >> 1) & 1u) ^ 1u)) { REG(0x8980) = pip | 4u; }
+        memcpy(sensor_y, sensor_dma_y.data, SEN_Y_BYTES);
+        memcpy(sensor_uv, sensor_dma_uv.data, SEN_UV_BYTES);
+        /* Re-establish the frame's base addresses before the manual kick. */
+        REG(0xb060) = (u32)sensor_dma_y.data;
+        REG(0xb064) = (u32)sensor_dma_uv.data;
         REG(0xb018) |= 0x40000u;
         luma_csi_rearms++;
     }
-
-    /* Clear every event this pass handled, as the stock handler ends with
-     * b00c = events. */
-    if (events) { REG(0xb00c) = events; }
 }
 
 static void present(const u16 *f)
 {
-    unsigned x,y;
+    unsigned x,y,next,guard;
+    if (lcd_submitted > 1u) { luma_de_timeouts++; return; }
+    u32 expected = (u32)lcd_y[lcd_submitted] & 0xffffffu;
+    /* Stock videoGetYAddr (0x0203367c) reads c87c & 0xffffff. A cleared
+     * request alone is not proof that the expected buffer is now active. */
+    for (guard=0; guard<200000u; ++guard) {
+        if (!(REG(0xc800) & 2u) &&
+            (REG(0xc87c) & 0xffffffu) == expected) { break; }
+        lcd_service();
+    }
+    if (guard == 200000u) { luma_de_timeouts++; return; }
+    next = lcd_submitted ^ 1u;
     for (y=0; y<320; y++) {
         for (x=0; x<240; x++) {
             u16 c=BOARD_ID==1 ? f[(239-x)*LW+y] : f[x*LW+319-y];
             int r=(c>>11)*255/31, g=((c>>5)&63)*255/63, b=(c&31)*255/31;
-            lcd_y[y*LCD_PITCH+x]=(77*r+150*g+29*b)>>8;
+            lcd_y[next][y*LCD_PITCH+x]=(77*r+150*g+29*b)>>8;
             if (!(x&1) && !(y&1)) {
-                lcd_uv[(y/2)*LCD_PITCH+x]=clip(128+((-43*r-85*g+128*b)>>8));
-                lcd_uv[(y/2)*LCD_PITCH+x+1]=clip(128+((128*r-107*g-21*b)>>8));
+                lcd_uv[next][(y/2)*LCD_PITCH+x]=clip(128+((-43*r-85*g+128*b)>>8));
+                lcd_uv[next][(y/2)*LCD_PITCH+x+1]=clip(128+((128*r-107*g-21*b)>>8));
             }
         }
     }
-    REG(0xc800)=1|2;   /* request the buffer commit at the next frame boundary */
+    /* Diagnostics also belong in the inactive buffer, BEFORE submission. */
+    if (lcd_diagnostics) {
+        unsigned mark = (unsigned)((luma_frames + 1u) % 240u);
+        unsigned bar = lcd_key_level == 0xffffffffu ? 0u : lcd_key_level / 4u;
+        if (bar > 240u) { bar = 240u; }
+        for (x=0; x<240; ++x) {
+            lcd_y[next][5u*LCD_PITCH+x] = x == mark ? 255u : 0u;
+            lcd_y[next][8u*LCD_PITCH+x] = x < bar ? 200u : 0u;
+        }
+    }
+    /* Stock videoSetAddr (0x020336dc), then deUpdate. The addresses are staged;
+     * the active plane remains untouched until the frame-boundary latch. */
+    REG(0xc828) = (u32)lcd_y[next];
+    REG(0xc830) = (u32)lcd_uv[next];
+    REG(0xc800) |= 3u;
+    lcd_submitted = next;
     /* Advance the panel. Measured on hardware: ax32xx_lcdKick() at 0x02035814 is
      * exactly `LCD_CON |= 2`, and the stock firmware raises it from its LCD frame
      * interrupt. Luma has no ISR and polls instead, so it must kick the frame
@@ -488,6 +463,14 @@ static int sensor_bringup(void)
 static void hardware_init(void)
 {
     REG(0x4800)=0;
+    /* Stop the inherited capture BEFORE changing its buffers or geometry. The
+     * output is armed only after sensor, scaler and guards are ready below. */
+    REG(0xb018) &= ~0x40000u;
+    REG(0xb000) &= ~1u;
+    /* Initialise both display buffers before asking the DE to scan either. */
+    memset(lcd_y, 0x10, sizeof(lcd_y));
+    memset(lcd_uv, 0x80, sizeof(lcd_uv));
+    lcd_submitted = 0;
     REG(0x9800)=1; /* Enable the periodic peripheral-event model. */
     /* TT is disabled in the stock USB handoff, not a free-running us clock.
      * SDK sequence, measured on original KC02; other boards remain QEMU-only. */
@@ -504,38 +487,14 @@ static void hardware_init(void)
     REG(0xc818)|=1; /* YUV video plane; preserve the rest of the stock value. */
     REG(0xc820)=((320-1)<<16)|(240-1);
     REG(0xc824)=0;
-    REG(0xc828)=(u32)lcd_y; REG(0xc82c)=LCD_PITCH/4;
-    REG(0xc830)=(u32)lcd_uv; REG(0xc834)=LCD_PITCH/4;
+    REG(0xc828)=(u32)lcd_y[0]; REG(0xc82c)=LCD_PITCH/4;
+    REG(0xc830)=(u32)lcd_uv[0]; REG(0xc834)=LCD_PITCH/4;
     /* Commit the video registers once. Measured on original KC02: a staged
      * c828 does not become the active address c87c until DE_FRAME_CTRL bit 1
      * is raised, and the change completes at a frame boundary (bit 1 then
      * self-clears). Without this the first framebuffer never takes effect.
      * This is the SDK's ax32xx_deUpdate. */
     REG(0xc800)=1|2;
-    /* CSI output geometry, from the measured stock preview contract. The imager
-     * delivers 320x180, not Luma's 320x240 panel shape: b180 is (rows<<16)|cols
-     * and stock reads back 0x00b40140, i.e. 180 rows of 320. b068 is a byte
-     * stride here, unlike the DE stride which is in words. */
-    REG(0xb060)=(u32)sensor_y; REG(0xb064)=(u32)sensor_uv;
-    REG(0xb068)=SENSOR_COLS;
-    REG(0xb180)=(SENSOR_ROWS<<16)|SENSOR_COLS;   /* ISP_LS_SIZE: scaler target */
-    /* ISP_LS_HSTP / ISP_LS_VSTP -- the line scaler's step, which Luma never set.
-     *
-     * These are the values the vendor's own ax32xx_csiLCDScaler (0x020349f8)
-     * computes, and Luma bypassed that function by writing b180 directly:
-     *
-     *     b184 = (ex - sx) * 0x10000 / (tar_w >> 1) = 1280 * 65536 / 160 = 0x80000
-     *     b188 = (ey - sy) * 0x10000 / (tar_h >> 1) =  720 * 65536 /  90 = 0x80000
-     *
-     * Measured live with them left at zero: the capture carried an image in only
-     * the BOTTOM THIRD of the plane, rows 0-119 flat at ~126. A scaler with a zero
-     * step cannot scale, which is what that looks like.
-     *
-     * NOTE: an earlier attempt added these together with clearing b014 bit 31,
-     * which stopped event generation and broke capture outright. They were blamed
-     * for that and reverted. The blame was wrong -- b014 was the culprit. */
-    REG(0xb184)=0x80000u;
-    REG(0xb188)=0x80000u;
     /* Luma draws straight into its own DE plane, so every OTHER writer into the
      * display path has to be off. Measured on real hardware, the stock firmware
      * leaves the rotate engine enabled with its target on the DE video plane
@@ -543,59 +502,15 @@ static void hardware_init(void)
      * configured. Either one keeps writing into the plane Luma is displaying,
      * which shows up as a bright block rolling across the UI. */
     REG(0x898c)=0;   /* rotate engine off: Luma does not compose through it */
-    /* Capture path, set to the measured stock preview values rather than guessed.
-     * b000 is the CSI mode word (DVP/data width/polarity), b014 the interrupt
-     * enable and mask, b01c the sensor size, b030/b034/b078 the scaler taps.
-     *
-     * REVERTED 2026-10-16. This block deliberately runs BEFORE sensor_bringup(),
-     * and that order is load-bearing: sensor_bringup() calls the vendor
-     * sensor_init, which calls hal_csiRegister and configures the capture path
-     * properly, for the imager it actually detected. Luma's values here are a
-     * reconstruction from 13 captured registers. Letting them win instead
-     * produced a blank, event-free capture where the vendor's own configuration
-     * had been delivering real frames. Do not move this block after
-     * sensor_bringup() again without hardware evidence. */
-    /* Enable the CSI module clock. ax32xx_csiInit (0x02034420) is csiIOConfig()
-     * plus this gate.
-     *
-     * csiIOConfig was tried here additively on 2026-10-16 and made capture WORSE:
-     * the plane went from carrying real Y data to being completely untouched, so
-     * whatever it remaps conflicts with the vendor's own configuration. The gate
-     * alone is kept. If a pin-mux problem is ever proven, revisit with evidence. */
+    /* Configure input with LCD DMA disabled. Starting it here, before sensor
+     * bring-up and scaler enable, allowed unscaled frames to overwrite Luma RAM.
+     * Keep the measured input mode/size; csiLCDScaler sets the output below. */
     REG(0x8840) &= ~(1u << 27);
-    REG(0xb000)=0x0440062du;
+    REG(0xb000)=0x0440062cu;  /* CSI_ENABLE clear */
     REG(0xb014)=0x800ef87bu;
-    /* CSI_DMA_MODE = LDMAMANEN | LCDEN (manual mode, output enabled), the vendor's
-     * value. The alternative -- RELOAD set, LDMAMANEN clear, no software re-arm --
-     * was tried on 2026-10-16 and killed capture outright: the frame-end event never
-     * fires (events_seen lost bit 1 entirely) and the plane stays at the fill. So
-     * manual mode with a per-frame re-arm is required, and the re-arm timing is
-     * therefore load-bearing. */
-    REG(0xb018)=0x00240000u;
+    REG(0xb018)=0x00200000u;  /* manual mode, LCDEN clear */
     REG(0xb01c)=0x02cf04ffu;
-    REG(0xb030)=0x05000000u;
-    REG(0xb034)=0x02d00000u;
     REG(0xb078)=0x02d00500u;
-    REG(0xb008)=1u<<19;      /* ISP_CTRL_LS_KS: kickstart the line-scaler load */
-    /* WAIT for the kickstart to COMPLETE before arming the LCD DMA.
-     *
-     * ax32xx_csiScalerCheck (0x02034e80) is (REG(0xb008) >> 19 ^ 1) & 1, so it
-     * returns 1 once ISP_CTRL_LS_KS has SELF-CLEARED. The vendor's
-     * hal_lcdPreviewStart (0x02039f9c) spins on exactly this between
-     * ax32xx_csiLCDFrameSet and ax32xx_csiLCDDmaEnable(1):
-     *
-     *     iVar2 = 0x100000;
-     *     do { iVar3 = ax32xx_csiScalerCheck(); if (iVar3 != 0) break; } while (--iVar2);
-     *     ax32xx_csiLCDDmaEnable(1);
-     *
-     * Luma raised the kickstart and armed the DMA in the very next instruction, so
-     * it began transferring from a scaler that had not finished loading. Same bound. */
-    { u32 g; for (g = 0; g < 0x100000u && ((REG(0xb008) >> 19) & 1u); ++g) { } }
-    /* csiLCDDmaEnable(1) also writes b00c = 0x5a, which is CSI_INTR's event mask
-     * (bits 1,3,4,6). Luma never set it, so it was relying on whatever the block
-     * held. Set it as the vendor does. */
-    REG(0xb00c)=0x5au;
-    REG(0xb000)=0x0440062du; /* enable after the latch */
     /* Prove the millisecond clock advances, here rather than in the main loop so
      * the bounded bench entry measures it too. If it does not advance, the render
      * gate can only ever draw one frame, which looks exactly like a dead UI. */
@@ -606,39 +521,51 @@ static void hardware_init(void)
         u32 t1=ax_time_ms(&probe,REG(0x9908));
         luma_clock_delta=t1-t0;
     }
-    /* Zeroed chroma is not neutral. sensor_copy() and the DE both subtract 128,
-     * so all-zero U/V becomes (-128,-128) and renders as saturated green. That is
-     * the green rectangle in the viewport and the green garbage at the edge of
-     * the plane: with a 256-byte pitch and 240 active columns the padding columns
-     * are never written by present(), so they stay .bss zero. Fill every plane to
-     * a neutral field at init, and the active pixels overwrite their part of it. */
-    {
-        unsigned k;
-        for (k=0; k<sizeof(sensor_y); k++)  { ((u8 *)sensor_y)[k]=0x10; }
-        for (k=0; k<sizeof(sensor_uv); k++) { ((u8 *)sensor_uv)[k]=0x80; }
-        for (k=0; k<sizeof(lcd_y); k++)    { lcd_y[k]=0x10; }
-        for (k=0; k<sizeof(lcd_uv); k++)   { lcd_uv[k]=0x80; }
-    }
-    /* Bounded, read-only bus probe; captures the ID when the imager answers.
-     * Absence is not fatal yet: the display path works without the sensor.
-     *
-     * ORDER MATTERS: this runs AFTER the CSI block above on purpose. The vendor
-     * sensor_init inside it is what finally configures the capture path. */
-    (void)sensor_bringup();
+    memset(sensor_y, 0x10, sizeof(sensor_y));
+    memset(sensor_uv, 0x80, sizeof(sensor_uv));
+    memset(sensor_dma_y.data, 0x10, sizeof(sensor_dma_y.data));
+    memset(sensor_dma_uv.data, 0x80, sizeof(sensor_dma_uv.data));
+#ifdef LUMA_BENCH_RUN
+    memset(sensor_dma_y.spill, 0xa5, sizeof(sensor_dma_y.spill));
+    memset(sensor_dma_uv.spill, 0xa5, sizeof(sensor_dma_uv.spill));
+#endif
+    ax_csi_guards_init(&sensor_dma_y, &sensor_dma_uv);
+    if (!sensor_bringup()) { luma_csi_fault = 0x1000u; return; }
 
-    /* Re-point ONLY the two plane addresses, and nothing else.
-     *
-     * The vendor sensor_init just ran and left the capture path fully configured
-     * for the imager it detected -- but its hal_csiRegister pointed b060/b064 at
-     * the STOCK's buffers. Overriding the whole register set (as attempted on
-     * 2026-10-16) blanked the capture and, with b014 bit 31 cleared, stopped
-     * events being generated at all: measured events_seen went 0x0000C00A ->
-     * 0x00000000. The vendor's configuration is the working one; only the
-     * destination is ours to choose. Two writes, nothing else. */
-    csi_wr = 0; csi_rd = -1;   /* CSI always fills set 0; set 1 is the snapshot */
-    REG(0xb060)=(u32)sensor_y[0]; REG(0xb064)=(u32)sensor_uv[0];
-    /* Geometry override, applied before everything else settles. */
+    /* sensor_init only registers the sensor; it does NOT enable the line scaler.
+     * Call the actual stock recipe (0x020349f8), as hal_lcdPreviewStart does.
+     * It enables LCDCROP and LSEN, installs the panel's coefficient table, sets
+     * target/ratios/stride and kicks LS_KS. Merely setting the size registers
+     * while b004 remained 0xffff left scaling OFF and overflowed our buffers. */
+    {
+        typedef void (*scaler_fn)(u16,u16,u16,u16,u16,u16,u16,u16,u16,u32 *);
+        u32 panel = *(volatile u32 *)0x020ce980u;
+        if (panel < 0x02000000u || panel > 0x027ffe00u) {
+            luma_csi_fault = 0x100u;
+            return;
+        }
+        ((scaler_fn)0x020349f8u)(1280,720,SENSOR_COLS,SENSOR_ROWS,
+                                0,0,1280,720,SENSOR_COLS,(u32 *)(panel + 0xd0u));
+    }
+    REG(0xb060)=(u32)sensor_dma_y.data;
+    REG(0xb064)=(u32)sensor_dma_uv.data;
     if (luma_csi_size_override) { REG(0xb01c) = luma_csi_size_override; }
+    /* Core frame clocks let the scaler latch; output DMA is still disabled. */
+    REG(0xb000) |= 1u;
+    {
+        u32 g;
+        for (g=0; g<0x400000u && (REG(0xb008) & 0x80000u); ++g) { }
+        if (REG(0xb008) & 0x80000u) { luma_csi_fault = 0x200u; return; }
+    }
+    if ((REG(0xb004) & 0x420000u) != 0x420000u ||
+        REG(0xb180) != ((SENSOR_ROWS<<16)|SENSOR_COLS) ||
+        REG(0xb068) != SENSOR_COLS) {
+        luma_csi_fault = 0x400u;
+        return;
+    }
+    REG(0xb00c)=0x5au;
+    REG(0xb014) |= 0x8008005au;
+    REG(0xb018) |= 0x40000u;
     lens(0);
 }
 
@@ -687,8 +614,8 @@ static char *ov_hex(char *o, u32 v, int digits)
 static void overlay_refresh(void)
 {
     u32 i, yd = 0, ud = 0;
-    const u8 *sy = sensor_y[csi_rd < 0 ? 0 : csi_rd];
-    const u8 *su = sensor_uv[csi_rd < 0 ? 0 : csi_rd];
+    const u8 *sy = sensor_y;
+    const u8 *su = sensor_uv;
     for (i = 0; i < SEN_Y_BYTES; ++i)  { u8 v = sy[i]; if (v != 0x10u && v != 0u) { yd++; } }
     for (i = 0; i < SEN_UV_BYTES; ++i) { u8 v = su[i]; if (v != 0x80u && v != 0u) { ud++; } }
 
@@ -728,20 +655,32 @@ static void overlay_draw(u16 *f)
  * was requested. The harness always places the 2048-byte packet at 0x020D8800 and
  * its input words at +1792 (tools/toolchain_tests/payloads/common.h). */
 #define BENCH_PACKET_IN ((volatile u32 *)0x020D8F00u)
+
+/* show_luma.py reserves word 12 and puts the size override in word 13. */
+static void bench_read_options(const volatile u32 *in)
+{
+    luma_test_pattern = in[7];
+    luma_overlay_on = in[11];
+    luma_csi_size_override = in[13];
+}
+
+/* sensor_init populates this pointer. Apply exposure after hardware_init in
+ * BOTH entry paths: bounded captures must use the same settings as takeover. */
+static void bench_apply_exposure(const volatile u32 *in)
+{
+    u32 exp = in[5], gain = in[6];
+    if (exp) {
+        void (*wr)(u32, u32) = *(void (**)(u32, u32))(0x020e32a0u + 0xc70u);
+        if (wr) { wr(exp, gain ? gain : 0x100u); }
+    }
+}
 #endif
 
 void firmware_main(void)
 {
     App *a=(App *)&luma_app;
 #ifdef LUMA_BENCH_RUN
-    /* Read EVERY packet word the bench entry reads.
-     *
-     * luma_test_pattern was only ever set in luma_bench_once, which a TAKEOVER does
-     * not call -- so `--test-pattern` silently did nothing on the panel and the
-     * A/B test that was meant to split capture from display measured nothing. */
-    luma_test_pattern = BENCH_PACKET_IN[7];
-    luma_overlay_on = BENCH_PACKET_IN[11];
-    luma_csi_size_override = BENCH_PACKET_IN[12];
+    bench_read_options(BENCH_PACKET_IN);
 #endif
     Input input={0};
     AxTime clock={0,0,0};
@@ -749,6 +688,9 @@ void firmware_main(void)
     u32 last=~0u, capacity;
     unsigned n;
     hardware_init();
+#ifdef LUMA_BENCH_RUN
+    bench_apply_exposure(BENCH_PACKET_IN);
+#endif
     app_init(a,&platform,ax_time_ms(&clock,REG(0x9908)));
 #ifdef LUMA_BENCH_RUN
     /* Start on the CAMERA screen with the boot animation disabled, exactly as the
@@ -798,21 +740,11 @@ ows,
             if ((luma_frames % 120u) == 0u) { overlay_refresh(); }
             overlay_draw(frame);
         }
+        /* present() draws the marker/key diagnostics before its buffer swap. */
+        lcd_diagnostics = 1;
+        lcd_key_level = key_sample();
         present(frame);
         luma_frames++;
-        /* On-panel diagnostics. A takeover has no USB readback, so the panel is
-         * the only channel: row 5 carries a marker that moves once per frame, and
-         * row 8 a bar whose length is the raw keypad ladder. A frozen marker means
-         * the loop or the display has stopped; a short bar means a button is down
-         * (idle reads ~1023, a press ~12..780). */
-        {
-            unsigned mark = (unsigned)(luma_frames % 240u), i;
-            for (i = 0; i < 240u; ++i) { lcd_y[5u*LCD_PITCH+i] = (i == mark) ? 255u : 0u; }
-            u32 ks = key_sample();
-            unsigned bar = (ks == 0xFFFFFFFFu) ? 0u : (unsigned)(ks / 4u);
-            if (bar > 240u) { bar = 240u; }
-            for (i = 0; i < 240u; ++i) { lcd_y[8u*LCD_PITCH+i] = (i < bar) ? 200u : 0u; }
-        }
     }
 }
 
@@ -837,18 +769,10 @@ void luma_bench_once(void *buffer)
     App *a=(App *)&luma_app;
     u32 i;
     for (i=0;i<38;i++) { luma_beacon[i]=0; }
-    /* Exposure and gain are sweepable from the host so a value can be tried
-     * without a rebuild: the frame was arriving saturated, which is an exposure
-     * problem rather than a capture problem. The writer is the ops struct's own
-     * fp_exp_gain_wr at ops+0xc70. */
-    {
-        /* Packet input words start at offset 1792 (the harness ABI). */
-        volatile u32 *in = (volatile u32 *)((u8 *)buffer + 1792u);
-        luma_test_pattern = in[7];
-        luma_overlay_on = in[11];
-        luma_csi_size_override = in[12];
-    }
-    hardware_init();   /* this now runs the software-IIC sensor bring-up */
+    /* Packet input starts at +1792, the same ABI as takeover's fixed address. */
+    const volatile u32 *in = (const volatile u32 *)((u8 *)buffer + 1792u);
+    bench_read_options(in);
+    hardware_init();   /* populates fp_exp_gain_wr in the stock sensor ops */
 
     /* Exposure and gain are applied HERE, after the bring-up.
      *
@@ -863,14 +787,7 @@ void luma_bench_once(void *buffer)
      *
      * The ops struct at 0x020e32a0 is populated by sensor_init via sensor_bringup,
      * so by this point ops+0xc70 is the real fp_exp_gain_wr. */
-    {
-        volatile u32 *in = (volatile u32 *)((u8 *)buffer + 1792u);
-        u32 exp = in[5], gain = in[6];
-        if (exp) {
-            void (*wr)(u32, u32) = *(void (**)(u32, u32))(0x020e32a0u + 0xc70u);
-            if (wr) { wr(exp, gain ? gain : 0x100u); }
-        }
-    }
+    bench_apply_exposure(in);
     /* Let the new exposure take effect before the frame is read. */
     for (volatile unsigned s = 0; s < 200000u; ++s) { lcd_service(); csi_service(); }
     /* Which branch did the VENDOR autodetect take? sensor_autocheck (0x02058170)
@@ -946,21 +863,13 @@ void luma_bench_once(void *buffer)
             if (luma_clock_delta >= 3000u) { break; }
         }
     }
-    /* Copy the set that finished last into set 0. The harness reads the plane by
-     * SYMBOL address, which is set 0, and with double buffering the completed frame
-     * may be in set 1 -- so without this the host reads the buffer the CSI is
-     * filling and reports a flat plane while the in-run digest correctly reports a
-     * full one. */
-    if (csi_rd > 0) {
-        memcpy(sensor_y[0],  sensor_y[csi_rd],  SEN_Y_BYTES);
-        memcpy(sensor_uv[0], sensor_uv[csi_rd], SEN_UV_BYTES);
-    }
+    /* sensor_y / sensor_uv are CPU snapshots, never live DMA destinations. */
     /* Count the OTHER set as well. If the buffer swap does not take effect, one set
      * is never written and the panel alternates between a fresh frame and a stale
      * one -- blinking, which a single snapshot of the readable set cannot show. */
     {
         u32 o = 0, k2;
-        const u8 *so = sensor_y[csi_rd == 1 ? 0 : 1];   /* the live write buffer */
+        const u8 *so = sensor_dma_y.data;   /* the live write buffer */
         for (k2 = 0; k2 < SEN_Y_BYTES; ++k2) {
             u8 v = so[k2];
             if (v != 0x10u && v != 0u) { o++; }
@@ -974,14 +883,15 @@ void luma_bench_once(void *buffer)
      * If that field is zero or nonsense the imager never outputs pixels, the DVP
      * input idles, and the ISP dithers it -- a static grey field, which is what
      * the captured plane shows. 0x884c bits 12:8 are the divider that resulted. */
-    luma_beacon[35]=*(volatile u32 *)(0x020e32a0u + 0x04u);   /* ops->mclk    */
+    luma_beacon[35]=luma_csi_fault;                          /* bounds/setup faults */
     luma_beacon[36]=REG(0x884c);                              /* MCLK divider */
     sensor_copy();
     app_render(a,frame,camera,photo,0,0,0);
     present(frame);
+    luma_beacon[34]=luma_de_timeouts;           /* presenter ownership failures */
     luma_beacon[0]=0x4C554D42u;                 /* 'LUMB' */
-    luma_beacon[1]=(u32)lcd_y;
-    luma_beacon[2]=(u32)lcd_uv;
+    luma_beacon[1]=(u32)lcd_y[lcd_submitted < 2u ? lcd_submitted : 0u];
+    luma_beacon[2]=(u32)lcd_uv[lcd_submitted < 2u ? lcd_submitted : 0u];
     luma_beacon[3]=REG(0xc800);                 /* DE frame control */
     luma_beacon[4]=REG(0xc828);                 /* DE video Y */
     luma_beacon[5]=REG(0xc830);                 /* DE video UV */

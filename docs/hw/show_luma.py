@@ -43,13 +43,50 @@ _spec.loader.exec_module(luma_build)
 
 CORE = REPO / 'custom-firmware'
 
+# Canonical original.bin bodies, independently read from the Ghidra image.
+# Read-only approvals here do not authorise uploads to any of these addresses.
+LUMA_STOCK_SITES = (
+    (0x0203e5c4, bytes.fromhex(
+        'fc4fe1d7f40fe1d7f817e1d7f0ff219c001801d496ffff0700008ba800006184000004bc26000010c0ff409c3f00639c'), 'allocator'),
+    (0x020583f0, bytes.fromhex(
+        '0e0240180000609c203242a8fc4fe1d7ec0fe1d7f477e1d7f897e1d7001802d80d024018ecff219c811e42a80100609c'), 'sensor init'),
+    (0x02058b78, bytes.fromhex(
+        'fc4fe1d7f417e1d7f877e1d7f00fe1d7000044a8d0ff219c080280180400a09c804984a80000c3a90400619cc37d0004'), 'H63P exposure writer'),
+    (0x020349f8, bytes.fromhex(
+        'e417e1d7ec97e1d7f0a7e1d7f4b7e1d7f8c7e1d7fc4fe1d7e00fe1d7e877e1d7e0ff219cffffe7a420008194ffffc5a6'), 'CSI LCD scaler'),
+)
+
+
+class LumaRamTransport(rri.RamTransport):
+    def _approved_read(self, buffer, length):
+        if any((buffer, length) == (a, len(b)) for a, b, _ in LUMA_STOCK_SITES):
+            return buffer
+        return super()._approved_read(buffer, length)
+
+    def check_firmware(self):
+        super().check_firmware()
+        for address, expected, name in LUMA_STOCK_SITES:
+            if self.read_region(address, len(expected)) != expected:
+                self.firmware_ok = False
+                raise dump.DumpError(f'Unsupported firmware: {name} signature differs')
+
+
+def capture_scratch(record, size=512):
+    """Reserve aligned scratch above BSS, below the 16 KiB stack reserve."""
+    base, extent = record['base'], record['extent']
+    address = (record['bss_end'] + 31) & ~31
+    limit = min(base + extent, record['stack_top'] - 16384)
+    if size <= 0 or not base <= address or address + size > limit:
+        raise dump.DumpError('no safe CSI snapshot scratch between BSS and stack')
+    return address
+
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--payload-dir', type=Path, required=True,
                     help='directory containing ramalloc.bin and lumarun.bin')
     ap.add_argument('--output', type=Path, required=True)
-    ap.add_argument('--block-bytes', type=lambda v: int(v, 0), default=0x180000)
+    ap.add_argument('--block-bytes', type=lambda v: int(v, 0), default=0x300000)
     ap.add_argument('--hold-frames', type=int, default=40)
     ap.add_argument('--exp', type=lambda v: int(v, 0), default=0,
                     help='exposure to program via the sensor fp_exp_gain_wr, 0 to skip')
@@ -97,22 +134,16 @@ def main():
         report['device'] = dump.device_label(dev)
         # Placeholder window: only needs to clear the harness regions. It is set
         # to the real allocated block as soon as the allocator names it.
-        with rri.RamTransport(usb, dev, 5000, window=(0x02104000, 0x1000)) as t:
+        with LumaRamTransport(usb, dev, 5000, window=(0x02104000, 0x1000)) as t:
             t.check_firmware()
             print('  firmware signatures verified', flush=True)
             if t.hoist_active:
                 raise dump.DumpError('a RAM hoist is active; power-cycle to stock first')
 
-            # Release any block a previous run left allocated. The pool is only
-            # ~6.98 MB and a 1.5 MB block per run exhausts it in about a dozen
-            # runs, after which every allocation fails.
-            free_code = (a.payload_dir / 'ramfree.bin').read_bytes()
-            (a.output / 'ramfree.bin').write_bytes(free_code)
-            for prior in (0x0235A200, 0x024DA200, 0x0215A200):
-                try:
-                    hw.execute_verified(t, free_code, hw.build_packet(words=[prior]))
-                except Exception:
-                    pass
+            # Do not free guessed addresses from older runs: after a reset those
+            # addresses may belong to stock firmware, and CSI may still target a
+            # prior allocation. Keep this run's allocation until a pinhole reset.
+            # If the pool is exhausted, reset rather than reclaim unknown owners.
 
             reply = hw.execute_verified(t, alloc_code, alloc_packet)
             parsed = hw.parse_reply(reply)
@@ -123,18 +154,13 @@ def main():
                 raise dump.DumpError('allocator refused or the block is not writable')
             print(f'  allocator gave 0x{base:08X} ({size:,} bytes), writable', flush=True)
 
-            # Scratch for the in-run CSI register snapshot: in the free tail of the
-            # allocated block, ABOVE the bench image (BENCH_LENGTH = 0x170000) and
-            # below the block end (0x180000). Must stay above the image or it will
-            # be inside .bss and be zeroed by the entry.
-            # Must be inside the transport's approved window, which is
-            # (base, record['extent']) -- extent is BENCH_LENGTH (0x170000), NOT the
-            # whole 0x180000 block. And above __bss_end (~0x14AE64) or the entry
-            # zeroes it.
-            scratch = base + 0x168000
             record = luma_build.build_bench(CORE / 'build', prefix, base)
             image = (CORE / 'build/original/luma.bench.bin').read_bytes()
             extent = record['extent']
+            # Display double buffering grew BSS past the old fixed 0x168000
+            # scratch offset. Derive it from this build and guard the stack.
+            scratch = capture_scratch(record)
+            report['capture_scratch'] = scratch
             if base + extent > base + size:
                 raise dump.DumpError('bench image does not fit the allocated block')
             report['bench'] = record
@@ -191,6 +217,28 @@ def main():
                                   display_registers_restored=out[12] == 1,
                                   commit_guard_polls=guard_polls)
             report['luma']['clock_ms_across_spin'] = out[25]
+            de_timeouts = int.from_bytes(t.read_region(record['beacon'] + 34 * 4, 4), 'little')
+            capture_fault = int.from_bytes(t.read_region(record['beacon'] + 35 * 4, 4), 'little')
+            report['luma']['de_present_timeouts'] = de_timeouts
+            report['luma']['capture_fault'] = capture_fault
+            # Preserve configuration even on a refused panel trial.
+            regs = t.read_region(scratch, 512)
+            (a.output / 'csi-regs.bin').write_bytes(regs)
+            values = [int.from_bytes(regs[k:k+4], 'little') for k in range(0, 512, 4)]
+            report['luma']['scaler'] = {
+                hex(addr): values[(addr - 0xb000) // 4]
+                for addr in (0xb004, 0xb008, 0xb068, 0xb180, 0xb184, 0xb188)}
+            print('  scaler:', {k: hex(v) for k, v in report['luma']['scaler'].items()}, flush=True)
+            print(f'  DE buffer-ownership timeouts: {de_timeouts}; '
+                  f'CSI bounds/setup fault: 0x{capture_fault:x}', flush=True)
+            if capture_fault:
+                for key, size, filename in (
+                        ('capture_y_dma', 320 * 180, 'y-guard-spill.bin'),
+                        ('capture_uv_dma', 320 * 90, 'uv-guard-spill.bin')):
+                    (a.output / filename).write_bytes(t.read_region(record[key] + size, 256))
+                raise dump.DumpError(f'CSI guard/setup failure 0x{capture_fault:x}; no panel trial')
+            if de_timeouts:
+                raise dump.DumpError('presenter could not confirm its submitted buffer became active')
             ladder = out[24]
             report['luma']['keypad_ladder'] = dict(low=ladder >> 16, high=ladder & 0xffff)
             # All of these are measured INSIDE the payload, before it returns and
@@ -231,32 +279,22 @@ def main():
             if a.hold_frames:
                 print(f'  waited for {a.hold_frames} commit(s); {guard_polls}', flush=True)
 
-            # Hand the block back so the next run starts from a clean pool.
-            block = report['alloc']['base']
-            # POST-RUN read, kept only as a cross-check. A bounded entry leaves
-            # interrupts enabled, so by the time this runs the stock firmware has
-            # resumed and re-owns these blocks -- this is the STOCK's state, not
-            # Luma's. The in-run digest printed above is the measurement that
-            # counts.
-            # Sample twice. The LCD transfer writes Y and UV as separate
-            # transfers, so a read that lands between them shows Y populated and
-            # UV not -- which is what the "intermittent chroma" symptom looks
-            # like. Keep whichever sample has the more populated chroma plane.
+            # These symbols now name separate CPU-owned snapshots, not members
+            # of an adjacent DMA/snapshot array. Refuse an older image layout.
+            if record.get('capture_layout') != 'guarded-dma-separate-cpu-snapshot-v1':
+                raise dump.DumpError('unsupported capture layout')
             sy, suv = record['sensor_y'], record['sensor_uv']
-            best = None
-            for sample in range(3):
-                cy = t.read_region(sy, 320 * 180)
-                cuv = t.read_region(suv, 320 * 90)
-                filled = sum(1 for b in cuv if b != 0x80)
-                print(f'    sample {sample+1}: chroma bytes differing from 128 = {filled}', flush=True)
-                if best is None or filled > best[0]:
-                    best = (filled, cy, cuv)
-            _, raw_y, raw_uv = best
+            raw_y = t.read_region(sy, 320 * 180)
+            raw_uv = t.read_region(suv, 320 * 90)
+            stable = (t.read_region(sy, 320 * 180) == raw_y and
+                      t.read_region(suv, 320 * 90) == raw_uv)
+            report['luma']['capture_readback'] = dict(
+                source='separate CPU snapshot', y=sy, uv=suv, stable=stable)
+            if not stable:
+                raise dump.DumpError('CPU snapshot changed during readback; capture is untrustworthy')
             (a.output / 'csi-raw.y.bin').write_bytes(raw_y)
             (a.output / 'csi-raw.uv.bin').write_bytes(raw_uv)
             if scratch:
-                regs = t.read_region(scratch, 512)
-                (a.output / 'csi-regs.bin').write_bytes(regs)
                 import struct as _s
                 vals = _s.unpack('<128I', regs)
                 nz = [(0xb000 + 4 * k, v) for k, v in enumerate(vals) if v]

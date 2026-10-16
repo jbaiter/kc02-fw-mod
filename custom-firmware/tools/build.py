@@ -55,10 +55,10 @@ def build(output, prefix):
         print(f'{board}: {record["size"]:,} bytes -> {raw}')
     return manifests
 
-# 1.44 MiB: text+data+bss+stack for the original board. The allocator hands out
-# 0x180000 (1.5 MiB), so 0x140000 left 256 KiB unused and the double-buffered
-# capture planes did not fit. Keep BENCH_SCRATCH (below) past this length.
-BENCH_LENGTH = 0x170000
+# 2.75 MiB: guarded DMA arenas include bench-only spill space for an unscaled
+# 1280x720 frame. show_luma allocates 3 MiB and places scratch above actual BSS,
+# below the stack reserve. Cold/standalone images retain their 2 MiB linker budget.
+BENCH_LENGTH = 0x2c0000
 
 def bench_ld(base):
     """Linker script for the bounded hardware RAM run at an explicit base."""
@@ -100,7 +100,8 @@ def build_bench(output, prefix, base):
     subprocess.run(cmd, check=True)
     subprocess.run([objcopy, '-O', 'binary', str(elf), str(raw)], check=True)
     wanted = ('_start', 'luma_bench_once', '__bss_start', '__bss_end', '__stack_top',
-              'luma_beacon', 'sensor_y', 'sensor_uv', 'lcd_y', 'lcd_uv')
+              'luma_beacon', 'sensor_y', 'sensor_uv', 'sensor_dma_y', 'sensor_dma_uv',
+              'lcd_y', 'lcd_uv')
     out = subprocess.run([nm, '-n', str(elf)], check=True, capture_output=True, text=True).stdout
     symbols = {}
     for line in out.splitlines():
@@ -121,6 +122,9 @@ def build_bench(output, prefix, base):
                   extent=BENCH_LENGTH, entry=symbols['luma_bench_once'],
                   start=symbols['_start'],
                   sensor_y=symbols['sensor_y'], sensor_uv=symbols['sensor_uv'],
+                  capture_layout='guarded-dma-separate-cpu-snapshot-v1',
+                  capture_y_dma=symbols['sensor_dma_y'],
+                  capture_uv_dma=symbols['sensor_dma_uv'],
                   beacon=symbols['luma_beacon'], bss_start=symbols['__bss_start'],
                   bss_end=symbols['__bss_end'], stack_top=symbols['__stack_top'],
                   size=raw.stat().st_size, sha256=sha(raw), elf_sha256=sha(elf), command=cmd)
