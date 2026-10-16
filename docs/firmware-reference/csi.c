@@ -465,3 +465,45 @@ void ax32xx_csiIRQHandler(void)
  * hal_dispframeVideoCfg (and the struct at DAT_ram_020ce980, whose +0x38..+0x3e
  * are width/height and +0xd0 the scaler table) rather than sweeping registers.
  * ======================================================================== */
+
+/* ===========================================================================
+ * FOUND 2026-10-16: the frame-buffer descriptor (hal_dispframeVideoCfg)
+ *
+ *   0x02044ce0  hal_dispframeVideoCfg(disp_frame_t *f, u16 posX, u16 posY,
+ *                                     u16 width, u16 height)
+ *   0x02044f64  hal_dispframeMalloc(u8 frame_type) -> disp_frame_t *
+ *   0x02039f5c  hal_lcdGetIdleBuffer() = hal_dispframeMalloc(DAT_ram_020ce961 == 0)
+ *   0x02044ff8  hal_dispframeFree(disp_frame_t *)
+ *
+ * disp_frame_t layout, from the non-rotated branch of hal_dispframeVideoCfg:
+ *
+ *   +0x04  Y plane address
+ *   +0x08  UV plane address   = Y + stride * height
+ *   +0x0c  rotated Y address
+ *   +0x10  rotated UV address
+ *   +0x18  total size         = stride * height * 3 / 2
+ *   +0x20  width     +0x22  height
+ *   +0x24  posX      +0x26  posY
+ *   +0x28  STRIDE             = (width + 0x1F) & ~0x1F
+ *   +0x2a  rotation   +0x2e  type
+ *
+ * THE STRIDE RULE, confirmed twice over: stride is the width rounded UP to a
+ * 32-byte multiple. For a 320-wide plane that is 320 exactly, so Luma's CSI
+ * stride is right. For the stock's 240-wide DE plane it is 256 -- which is the
+ * long-standing puzzle of why the panel pitch is 256 and not 240. It is not a
+ * special case; it is this formula.
+ *
+ * DOUBLE BUFFERING. hal_lcdGetIdleBuffer picks from one of TWO free lists
+ * (hal_dispframeMalloc indexes them by frame_type, `+ frame_type * 0x98`), and
+ * the type comes from DAT_ram_020ce961. So the vendor has two frame buffers and
+ * alternates. Luma points the CSI at a single buffer and then READS THAT SAME
+ * MEMORY in sensor_copy(), unsynchronised -- which is the vertically moving tear
+ * band seen on the panel: the imager writing while the reader reads. That is the
+ * next thing to fix, and it is also the leading suspect for the remaining
+ * geometry defect, because a read racing the writer can straddle two frames.
+ *
+ * Also note the video WINDOW is positioned: hal_dispframeVideoCfg takes posX/posY
+ * from DAT_ram_020ce980 + 0x38/+0x3a, and width/height from +0x3c/+0x3e. The
+ * fallback stock preview window is 180 wide at x=30 on the 240-wide panel, with
+ * stride 192 = round_up(180,32).
+ * ======================================================================== */

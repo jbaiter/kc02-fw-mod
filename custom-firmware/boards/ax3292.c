@@ -485,7 +485,24 @@ static void hardware_init(void)
      * stride here, unlike the DE stride which is in words. */
     REG(0xb060)=(u32)sensor_y; REG(0xb064)=(u32)sensor_uv;
     REG(0xb068)=SENSOR_COLS;
-    REG(0xb180)=(SENSOR_ROWS<<16)|SENSOR_COLS;
+    REG(0xb180)=(SENSOR_ROWS<<16)|SENSOR_COLS;   /* ISP_LS_SIZE: scaler target */
+    /* ISP_LS_HSTP / ISP_LS_VSTP -- the line scaler's step, which Luma never set.
+     *
+     * These are the values the vendor's own ax32xx_csiLCDScaler (0x020349f8)
+     * computes, and Luma bypassed that function by writing b180 directly:
+     *
+     *     b184 = (ex - sx) * 0x10000 / (tar_w >> 1) = 1280 * 65536 / 160 = 0x80000
+     *     b188 = (ey - sy) * 0x10000 / (tar_h >> 1) =  720 * 65536 /  90 = 0x80000
+     *
+     * Measured live with them left at zero: the capture carried an image in only
+     * the BOTTOM THIRD of the plane, rows 0-119 flat at ~126. A scaler with a zero
+     * step cannot scale, which is what that looks like.
+     *
+     * NOTE: an earlier attempt added these together with clearing b014 bit 31,
+     * which stopped event generation and broke capture outright. They were blamed
+     * for that and reverted. The blame was wrong -- b014 was the culprit. */
+    REG(0xb184)=0x80000u;
+    REG(0xb188)=0x80000u;
     /* Luma draws straight into its own DE plane, so every OTHER writer into the
      * display path has to be off. Measured on real hardware, the stock firmware
      * leaves the rotate engine enabled with its target on the DE video plane
