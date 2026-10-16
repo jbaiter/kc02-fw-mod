@@ -152,7 +152,7 @@ void test_entry(void *buffer, u32 length, u32 parameter)
     out[35] = *(volatile u32 *)(beacon + 124u);
     out[36] = *(volatile u32 *)(beacon + 128u);
     out[37] = *(volatile u32 *)(beacon + 132u);
-    out[38] = *(volatile u32 *)(beacon + 140u);   /* ops->mclk                       */
+    out[38] = *(volatile u32 *)(beacon + 148u);   /* data bytes in the OTHER set     */
     out[39] = *(volatile u32 *)(beacon + 144u);   /* MCLK divider register 0x884c    */
 
     /* Frame-gated commit: wait for real commits so the panel actually shows

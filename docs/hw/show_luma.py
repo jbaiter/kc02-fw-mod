@@ -215,12 +215,10 @@ def main():
             report['luma']['csi_service'] = dict(seen=out[32], polls=out[33], rearms=out[34])
             print(f'  IN-RUN CSI service: events_seen=0x{out[32]:08X} polls={out[33]} '
                   f'rearms={out[34]}', flush=True)
-            mclk_hz = 288000000 // max(1, ((out[39] >> 8) & 0x1f) + 1)
-            report['luma']['mclk'] = dict(ops_mclk_field=out[38], reg_884c=out[39],
-                                          divider=(out[39] >> 8) & 0x1f,
-                                          implied_hz=mclk_hz)
-            print(f'  IN-RUN MCLK: ops->mclk={out[38]} (0x{out[38]:X})  0x884c=0x{out[39]:08X} '
-                  f'divider={(out[39] >> 8) & 0x1f} -> ~{mclk_hz/1e6:.1f} MHz', flush=True)
+            print(f'  IN-RUN buffers: readable set Y data={out[28]}/57600, '
+                  f'OTHER set Y data={out[38]}/57600 '
+                  f'{"(both written - swap OK)" if out[38] > 50000 else "(ONE SET STALE - swap not taking effect)"}',
+                  flush=True)
             ident = {0x020e4ba0: 'H63P (real)', 0x02083cb0: 'FALLBACK test pattern'}.get(
                 out[35], f'0x{out[35]:08X}')
             report['luma']['vendor_autodetect'] = dict(ident=out[35], adapter=out[36],

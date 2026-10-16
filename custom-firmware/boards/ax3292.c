@@ -256,21 +256,31 @@ static void csi_service(void)
      * present in every event set measured: 0x000A, 0x001A, 0xC00A, 0xC01A.
      * CSI_INTR is an index enum, so the mask is (1 << bit). */
     if (events & 0x0002u) {
-        u32 pip;
+        u32 pip, g;
         luma_csi_frame_ends++;
-        /* The frame that just finished is complete and safe to read; hand the CSI
-         * the other set. This is the vendor's per-frame buffer rotation
-         * (hal_lcdPreviewStart -> hal_lcdGetIdleBuffer -> ax32xx_csiLCDFrameSet),
-         * and it is what stops the reader racing the writer. */
+        /* Hand the CSI the other buffer, reproducing the vendor's per-frame
+         * sequence from hal_lcdPreviewStart (0x02039f9c) rather than just poking
+         * the two address registers:
+         *
+         *     ax32xx_csiLCDFrameSet(y, uv);            // new buffer
+         *     iVar2 = 0x100000;
+         *     do { iVar3 = ax32xx_csiScalerCheck(); if (iVar3 != 0) break; } while (--iVar2);
+         *     ax32xx_csiLCDDmaEnable(1);               // arm
+         *
+         * Setting the addresses and re-arming without the scaler-ready wait left
+         * the swap not taking effect, so one of the two buffers was never written
+         * and the panel alternated between a fresh frame and a stale one -- the
+         * blinking the user saw. */
         csi_rd = csi_wr;
         csi_wr ^= 1;
+        REG(0xb018) &= ~0x40000u;                     /* drop CSI_OUTPUT_LCDEN */
         REG(0xb060) = (u32)sensor_y[csi_wr];
         REG(0xb064) = (u32)sensor_uv[csi_wr];
-        luma_csi_rearms++;
-        REG(0xb018) &= ~0x40000u;
         pip = REG(0x8980);
         if (1u == (((pip >> 1) & 1u) ^ 1u)) { REG(0x8980) = pip | 4u; }
-        REG(0xb018) |= 0x40000u;
+        for (g = 0; g < 0x100000u && ((REG(0xb008) >> 19) & 1u); ++g) { }
+        REG(0xb018) |= 0x40000u;                      /* arm the new buffer */
+        luma_csi_rearms++;
     }
 
     /* Clear every event this pass handled, as the stock handler ends with
@@ -679,6 +689,7 @@ static void overlay_refresh(void)
     const u8 *su = sensor_uv[csi_rd < 0 ? 0 : csi_rd];
     for (i = 0; i < SEN_Y_BYTES; ++i)  { u8 v = sy[i]; if (v != 0x10u && v != 0u) { yd++; } }
     for (i = 0; i < SEN_UV_BYTES; ++i) { u8 v = su[i]; if (v != 0x80u && v != 0u) { ud++; } }
+
     ov_ydata = yd;  ov_uvdata = ud;
     ov_seen = luma_csi_seen;   ov_calls  = luma_csi_calls;
     ov_rearms = luma_csi_rearms; ov_b018 = REG(0xb018);
@@ -731,6 +742,18 @@ void firmware_main(void)
     unsigned n;
     hardware_init();
     app_init(a,&platform,ax_time_ms(&clock,REG(0x9908)));
+#ifdef LUMA_BENCH_RUN
+    /* Start on the CAMERA screen with the boot animation disabled, exactly as the
+     * bounded entry does.
+     *
+     * app_init leaves booting=1, and the boot screen is rendered from theme_boot,
+     * which is read off the SD card. A takeover run has no card and no theme, so
+     * the panel came up PURE BLACK -- the capture was fine underneath, but there
+     * was nothing on screen to see it through. The bounded entry has cleared this
+     * since the beginning (see the note there); the main loop never did. */
+    a->booting = 0;
+    a->screen = CAMERA;
+#endif
     /* Draw before touching storage. sd_hw_init can block on a card the host
 ows,
      * and a first frame that only appears after storage succeeds is a first frame
@@ -799,13 +822,13 @@ ows,
  * Deliberately skips sd_hw_init/fat_mount: the stock firmware owns the card
  * over USB while this runs, and a bounded display check does not need storage.
  */
-volatile u32 luma_beacon[37] __attribute__((used, section(".data.bench")));
+volatile u32 luma_beacon[38] __attribute__((used, section(".data.bench")));
 __attribute__((used, noinline, section(".text.bench")))
 void luma_bench_once(void *buffer)
 {
     App *a=(App *)&luma_app;
     u32 i;
-    for (i=0;i<37;i++) { luma_beacon[i]=0; }
+    for (i=0;i<38;i++) { luma_beacon[i]=0; }
     /* Exposure and gain are sweepable from the host so a value can be tried
      * without a rebuild: the frame was arriving saturated, which is an exposure
      * problem rather than a capture problem. The writer is the ops struct's own
@@ -923,6 +946,18 @@ void luma_bench_once(void *buffer)
     if (csi_rd > 0) {
         memcpy(sensor_y[0],  sensor_y[csi_rd],  SEN_Y_BYTES);
         memcpy(sensor_uv[0], sensor_uv[csi_rd], SEN_UV_BYTES);
+    }
+    /* Count the OTHER set as well. If the buffer swap does not take effect, one set
+     * is never written and the panel alternates between a fresh frame and a stale
+     * one -- blinking, which a single snapshot of the readable set cannot show. */
+    {
+        u32 o = 0, k2;
+        const u8 *so = sensor_y[csi_rd < 0 ? 1 : (csi_rd ^ 1)];
+        for (k2 = 0; k2 < SEN_Y_BYTES; ++k2) {
+            u8 v = so[k2];
+            if (v != 0x10u && v != 0u) { o++; }
+        }
+        luma_beacon[37] = o;
     }
     luma_beacon[28]=luma_csi_seen;       /* OR of every b00c value seen      */
     luma_beacon[29]=luma_csi_calls;      /* polls that found events          */
