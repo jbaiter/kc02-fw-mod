@@ -397,3 +397,71 @@ void ax32xx_csiIRQHandler(void)
  * capture, so the earlier hypothesis that omitting them caused shearing was
  * wrong. And csiIOConfig, added on its own, made capture worse (plane untouched).
  * ======================================================================== */
+
+/* ===========================================================================
+ * FOUND 2026-10-16: hal_lcdPreviewStart -- the CALLER we never looked at
+ *
+ * We had transcribed every CALLEE in this file (csiLCDScaler, csiLCDDmaEnable,
+ * csiSizeSet, csiLCDFrameSet, csiIRQHandler, csiInit) and still could not answer
+ * "what geometry does the stock use, and how does it avoid tearing". The answer
+ * was one `references` query away, in the function that CALLS them with real
+ * arguments. Lesson: decompiling the leaf functions tells you the mechanics, not
+ * the values. Always go up one level to the caller.
+ *
+ *   0x02039f9c  hal_lcdPreviewStart(u16 width, u16 height)     [SDK: hal_lcd.h]
+ *   0x02039dc8  hal_lcdPreviewStop(void)
+ *
+ * Decompiled body, in order:
+ *
+ *   DAT_ram_020ce97c = hal_lcdGetIdleBuffer();          // a BUFFER, not an address
+ *   hal_dispframeVideoCfg(DAT_ram_020ce97c,
+ *       *(u16 *)(DAT_ram_020ce980 + 0x38),              // width
+ *       *(u16 *)(DAT_ram_020ce980 + 0x3a),              // height
+ *       *(u16 *)(DAT_ram_020ce980 + 0x3c),
+ *       *(u16 *)(DAT_ram_020ce980 + 0x3e));
+ *   ax32xx_csiLCDScaler(width, height,
+ *       *(u16 *)(*(int *)(DAT_ram_020ce968 + 0xc) + 10),  // target width
+ *       *(u16 *)(*(int *)(DAT_ram_020ce968 + 0xc) +  8),  // target height
+ *       DAT_ram_020ce984, DAT_ram_020ce988,               // sx, sy
+ *       DAT_ram_020ce986, DAT_ram_020ce98a,               // ex, ey
+ *       *(u16 *)(puVar1 + 0x28),                          // STRIDE from the buffer
+ *       (uint *)(DAT_ram_020ce980 + 0xd0));               // anti-lsawtooth table
+ *   ax32xx_csiOutputSet(0x20000, 0);                     // clear CSI_OUTPUT_RELOAD
+ *   ax32xx_csiOutputSet(0x200000, 1);                    // set CSI_OUTPUT_LDMAMANEN
+ *   ax32xx_csiLCDFrameSet(*(uint *)(puVar1 + 4),         // Y address, from the buffer
+ *                         *(uint *)(puVar1 + 8));        // UV address, from the buffer
+ *   iVar2 = 0x100000;
+ *   do { iVar3 = ax32xx_csiScalerCheck(); if (iVar3 != 0) break; } while (--iVar2);
+ *   ax32xx_csiLCDDmaEnable(1);
+ *
+ * THREE THINGS THIS REVEALS THAT WERE NOT KNOWN BEFORE
+ *
+ * 1. DOUBLE BUFFERING. The plane comes from hal_lcdGetIdleBuffer(), a frame
+ *    buffer manager with idle/active buffers, and Y, UV and STRIDE all come out
+ *    of that descriptor. The stock is not pointing the CSI at a fixed address.
+ *    Luma points the CSI at one buffer and then reads that same memory in
+ *    sensor_copy(), unsynchronised -- which is the vertically moving tear band
+ *    the user sees on the panel: the imager writing while the reader reads.
+ *
+ * 2. A SYNC STEP WE SKIPPED. ax32xx_csiScalerCheck (0x02034e80) is
+ *    (REG(0xb008) >> 19 ^ 1) & 1 -- it returns 1 once ISP_CTRL_LS_KS has
+ *    SELF-CLEARED. The stock spins on that between csiLCDFrameSet and
+ *    csiLCDDmaEnable(1), i.e. it does not arm the DMA until the line-scaler
+ *    kickstart has finished. Luma armed it in the next instruction. Added.
+ *
+ * 3. THE EVENT MASK. ax32xx_csiLCDDmaEnable(1) also writes b00c = 0x5a, which is
+ *    CSI_INTR's enable mask (bits 1,3,4,6 -- including bit 1,
+ *    CSI_IRQ_LCD_FRAME_END, the correct re-arm trigger). Luma never set it and
+ *    was relying on whatever the block held. Added.
+ *
+ * Those two additions are correct against the vendor code and are in, but they did
+ * NOT change the geometry: measured after, rows 0-119 still flat at ~126 with
+ * within-row stdev 2.6, and rows 120-179 still carrying the content. So the
+ * picture occupying only the bottom third is NOT the missing sync.
+ *
+ * NEXT: the buffer manager is now the prime suspect for both remaining defects,
+ * because the buffer descriptor carries the stride and the geometry, and its
+ * idle/active swap is the double buffering. Read hal_lcdGetIdleBuffer and
+ * hal_dispframeVideoCfg (and the struct at DAT_ram_020ce980, whose +0x38..+0x3e
+ * are width/height and +0xd0 the scaler table) rather than sweeping registers.
+ * ======================================================================== */

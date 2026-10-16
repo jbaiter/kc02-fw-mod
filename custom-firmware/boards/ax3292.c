@@ -520,7 +520,25 @@ static void hardware_init(void)
     REG(0xb030)=0x05000000u;
     REG(0xb034)=0x02d00000u;
     REG(0xb078)=0x02d00500u;
-    REG(0xb008)=1u<<19;      /* latch the scaler configuration */
+    REG(0xb008)=1u<<19;      /* ISP_CTRL_LS_KS: kickstart the line-scaler load */
+    /* WAIT for the kickstart to COMPLETE before arming the LCD DMA.
+     *
+     * ax32xx_csiScalerCheck (0x02034e80) is (REG(0xb008) >> 19 ^ 1) & 1, so it
+     * returns 1 once ISP_CTRL_LS_KS has SELF-CLEARED. The vendor's
+     * hal_lcdPreviewStart (0x02039f9c) spins on exactly this between
+     * ax32xx_csiLCDFrameSet and ax32xx_csiLCDDmaEnable(1):
+     *
+     *     iVar2 = 0x100000;
+     *     do { iVar3 = ax32xx_csiScalerCheck(); if (iVar3 != 0) break; } while (--iVar2);
+     *     ax32xx_csiLCDDmaEnable(1);
+     *
+     * Luma raised the kickstart and armed the DMA in the very next instruction, so
+     * it began transferring from a scaler that had not finished loading. Same bound. */
+    { u32 g; for (g = 0; g < 0x100000u && ((REG(0xb008) >> 19) & 1u); ++g) { } }
+    /* csiLCDDmaEnable(1) also writes b00c = 0x5a, which is CSI_INTR's event mask
+     * (bits 1,3,4,6). Luma never set it, so it was relying on whatever the block
+     * held. Set it as the vendor does. */
+    REG(0xb00c)=0x5au;
     REG(0xb000)=0x0440062du; /* enable after the latch */
     /* Prove the millisecond clock advances, here rather than in the main loop so
      * the bounded bench entry measures it too. If it does not advance, the render
