@@ -122,6 +122,7 @@ So the division is: **the manifest is the map, these files are the bodies.**
 | `rotate_pip.c` | rotation engine, pip counter | complete |
 | `printer.c` | thermal printer, end to end | **complete.** 15 of 18 bodies written out; `kc02_print_layout`, `kc02_load_print_image` and `kc02_print_image` are summaries; `kc02_print_file` + the 2 UI tasks not yet read |
 | `usb_bot.c` | BOT/MSC service and the manifest discrepancy | service path complete |
+| `isp_csi_registers.md` | **the SDK's own name and bit meaning for all 124 registers in 0xb000-0xb1E8**, plus the measured working values | complete, SDK-sourced |
 
 ## Still to transcribe (the work list)
 

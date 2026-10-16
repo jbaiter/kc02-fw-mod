@@ -203,6 +203,38 @@ void ax32xx_csiIRQHandler(void)
     REG(0xb00c) = events;
 }
 
+
+/* ---------------------------------------------------------------------------
+ * REGISTER NAMES -- see isp_csi_registers.md
+ *
+ * The whole 0xb000-0xb1E8 block is the SDK's SPRGROUP_SFR6 group, and
+ * ax32xx/inc/ax329x.h names all 124 of its registers. Use those names.
+ *
+ *   b000 CSIMODE            b004 ISPMODE           b008 ISPCTRL
+ *   b00c CSI_INTR           b014 CSI_INTEN         b018 CSI_DMA_MODE
+ *   b01c CSI_IMAGE_SIZE     b030 CSI_I2L_HCROP     b034 CSI_I2L_VCROP
+ *   b060 CSI_I2L_YBADR      b064 CSI_I2L_UVBADR    b068 CSI_I2L_STRD
+ *   b180 ISP_LS_SIZE        b184 ISP_LS_HSTP       b188 ISP_LS_VSTP
+ *   b18c ISP_LS_HTAB0..     b1cc ISP_LS_VTAB0..
+ *
+ * "LS" is the LINE SCALER, not lens shading, so b180/b184/b188 really are the
+ * scaler target and steps and b18c+ really is the anti-lsawtooth table -- as the
+ * text below says. That is worth stating because the "LS = lens shading" reading
+ * is plausible enough that it nearly caused this file to be "corrected" into being
+ * wrong.
+ *
+ * Two bit names matter more than the rest:
+ *   b018 bit 0x40000  = CSI_OUTPUT_LCDEN    -- the bit called "arm" here
+ *   b018 bit 0x200000 = CSI_OUTPUT_LDMAMANEN-- manual mode, why a kick is needed
+ *   b008 bit 19       = ISP_CTRL_LS_KS      -- the bit called "latch" here
+ *   b00c bit 1        = CSI_IRQ_LCD_FRAME_END  -- the correct per-frame trigger
+ *   b00c bit 4        = CSI_IRQ_SEN_STATE_ERR  -- what the stock guard uses
+ *
+ * The last two are the reason the stock re-arm condition is misleading: the
+ * vendor re-arms on SENSOR STATE ERROR as error recovery, not on frame end. See
+ * isp_csi_registers.md for the full argument and the measurements.
+ * ------------------------------------------------------------------------ */
+
 /* ===========================================================================
  * GAPS BETWEEN LUMA'S CSI SETUP AND THE SDK'S OWN SCALER RECIPE
  *
