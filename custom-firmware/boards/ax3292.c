@@ -269,19 +269,10 @@ static void csi_service(void)
     if (events & 0x0002u) {
         u32 pip;
         luma_csi_frame_ends++;
-        /* Snapshot the completed frame, with the imager stopped so nothing races,
-         * then re-arm. This configuration is the one MEASURED to produce a real
-         * image (within-row stdev 14-25, coherent scene); three later attempts to
-         * also remove the residual rolling seam each destroyed the image instead,
-         * so this is restored as the known-good state. */
-        /* NO pause here. Dropping LCDEN on its own is not a valid stop -- a real
-         * disable (ax32xx_csiLCDDmaEnable(0)) also clears b014 and writes b00c, so
-         * a partial pause leaves the block unable to restart and the capture dies
-         * outright (measured: plane left at the untouched fill). Tried, measured,
-         * reverted. */
         memcpy(sensor_y[1],  sensor_y[0],  SEN_Y_BYTES);
         memcpy(sensor_uv[1], sensor_uv[0], SEN_UV_BYTES);
         csi_rd = 1;
+        REG(0xb018) &= ~0x40000u;
         pip = REG(0x8980);
         if (1u == (((pip >> 1) & 1u) ^ 1u)) { REG(0x8980) = pip | 4u; }
         REG(0xb018) |= 0x40000u;
@@ -574,6 +565,12 @@ static void hardware_init(void)
     REG(0x8840) &= ~(1u << 27);
     REG(0xb000)=0x0440062du;
     REG(0xb014)=0x800ef87bu;
+    /* CSI_DMA_MODE = LDMAMANEN | LCDEN (manual mode, output enabled), the vendor's
+     * value. The alternative -- RELOAD set, LDMAMANEN clear, no software re-arm --
+     * was tried on 2026-10-16 and killed capture outright: the frame-end event never
+     * fires (events_seen lost bit 1 entirely) and the plane stays at the fill. So
+     * manual mode with a per-frame re-arm is required, and the re-arm timing is
+     * therefore load-bearing. */
     REG(0xb018)=0x00240000u;
     REG(0xb01c)=0x02cf04ffu;
     REG(0xb030)=0x05000000u;
