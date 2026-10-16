@@ -121,6 +121,12 @@ static void text(u16 *f, int x, int y, const char *s, u16 color, int large)
         x += g->advance;
     }
 }
+/* Exported for the on-panel capture telemetry in boards/ax3292.c. A takeover run
+ * never returns to the host, so the panel is the only channel left. */
+void ui_text(u16 *f, int x, int y, const char *s, u16 color, int large)
+{
+    text(f, x, y, s, color, large);
+}
 static void digits(char *out, unsigned n)
 {
     out[0] = '0' + n/10%10; out[1] = '0'+n%10; out[2] = 0;

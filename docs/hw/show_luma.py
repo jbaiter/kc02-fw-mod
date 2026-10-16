@@ -56,6 +56,13 @@ def main():
     ap.add_argument('--gain', type=lambda v: int(v, 0), default=0x100)
     ap.add_argument('--test-pattern', action='store_true',
                     help='draw colour bars instead of the imager, to judge the display path alone')
+    ap.add_argument('--size', type=lambda v: int(v, 0), default=0,
+                    help='override CSI_IMAGE_SIZE (b01c) after the bring-up, as '
+                         '(h-1)<<16|(w-1). 0x02CF04FF is 1280x720.')
+    ap.add_argument('--overlay', action='store_true',
+                    help='draw the capture telemetry on the panel (packet word 11). '
+                         'Needed because a takeover run never returns, so the panel is '
+                         'the only channel that reports the steady state.')
     ap.add_argument('--takeover', action='store_true',
                     help='jump to Luma\'s real _start and never return. This is the only way '
                          'the panel can show Luma: the bench entry leaves interrupts enabled, '
@@ -131,7 +138,8 @@ def main():
             words = [record['entry'], record['beacon'], record['bss_start'],
                      record['bss_end'], a.hold_frames, a.exp, a.gain,
                      1 if a.test_pattern else 0,
-                     record['sensor_y'], record['sensor_uv'], scratch]
+                     record['sensor_y'], record['sensor_uv'], scratch,
+                     1 if a.overlay else 0, 0, a.size]
             packet = hw.build_packet(words=words)
             (a.output / 'run-input.bin').write_bytes(packet)
             t.blobs[base] = image
@@ -147,7 +155,8 @@ def main():
                 words = [record['start'], record['beacon'], record['bss_start'],
                          record['bss_end'], 0, a.exp, a.gain,
                          1 if a.test_pattern else 0,
-                         record['sensor_y'], record['sensor_uv'], scratch]
+                         record['sensor_y'], record['sensor_uv'], scratch,
+                         1 if a.overlay else 0, 0, a.size]
                 packet = hw.build_packet(words=words)
                 (a.output / 'takeover-input.bin').write_bytes(packet)
                 print('  >>> jumping to Luma _start; the panel should now show Luma <<<', flush=True)

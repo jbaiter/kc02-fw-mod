@@ -55,6 +55,7 @@ unsigned bmp_write(const u16 *pixels, u8 *out, unsigned cap);
 void app_init(App *a, const Platform *p, u32 now);
 void app_event(App *a, const Platform *p, Key key, int held, u32 now,
                const u16 *camera, u16 *photo);
+void ui_text(u16 *f, int x, int y, const char *s, u16 color, int large);
 void app_render(App *a, u16 *frame, const u16 *camera, const u16 *photo,
                 const u16 *background, const u16 *boot, u32 now);
 void app_notice(App *a, const char *text, u32 now);

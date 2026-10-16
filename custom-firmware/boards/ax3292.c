@@ -5,6 +5,7 @@
  * USB controller and exception/interrupt entry. Do not flash this RAM image.
  */
 #include "luma.h"
+#include "paint.h"
 #include "storage.h"
 #include "input.h"
 #include "sd_hw.h"
@@ -101,6 +102,11 @@ static u8 clip(int v) { return v<0 ? 0 : v>255 ? 255 : v; }
  * path are sound and any defect is in the capture format; if they arrive grey,
  * the chroma is being lost between present() and the panel. */
 volatile u32 luma_test_pattern;
+/* Packet word 12: override CSI_IMAGE_SIZE (b01c) after the bring-up, so the
+ * geometry the CSI expects can be swept from the host instead of rebuilt. The
+ * capture occupies only the bottom third of the frame, which is what a mismatch
+ * between the imager's real output height and this register would look like. */
+volatile u32 luma_csi_size_override;
 
 static void sensor_copy(void)
 {
@@ -174,6 +180,7 @@ static void lcd_service(void)
  * a finished transfer can never be restarted by that path. These counters say
  * which events actually arrive, which is the fact we have been guessing at. */
 volatile u32 luma_csi_seen, luma_csi_calls, luma_csi_rearms, luma_csi_rearm_armed;
+volatile u32 luma_csi_frame_ends;
 static void csi_service(void)
 {
     u32 events = REG(0xb00c);
@@ -210,19 +217,27 @@ static void csi_service(void)
      *
      * luma_csi_rearm_armed records how often the bit was still set, so we can see
      * whether the old condition ever held at all. */
-    /* ALWAYS re-arm; do not wait for a specific event bit.
+    /* Re-arm ONCE PER FRAME, on CSI_IRQ_LCD_FRAME_END.
      *
-     * The arm bit (b018 0x40000) self-clears when a transfer completes, so a
-     * POLLING consumer must restart the transfer itself. Two conditions were tried
-     * and both failed on hardware:
-     *   - the stock's `b018 & 0x40000` guard: unsatisfiable after completion
-     *     (measured rearms = 0 with the guard, over 45 polls)
-     *   - gating on event 0x10: the event set is not stable. Measured 0x1A in one
-     *     run (bit 4 present) and 0xC00A in another (bit 4 ABSENT), so the re-arm
-     *     silently did nothing whenever 0x10 happened to be missing.
-     * Unconditional is the only form that cannot be defeated by either. This is
-     * what makes the viewfinder update instead of freezing on its first frame. */
-    if (!(REG(0xb018) & 0x40000u)) {
+     * Three conditions have now been measured on hardware, and only this one is
+     * both satisfiable and correct:
+     *
+     *   1. b018 bit 0x40000 (the stock guard): never true while polling. LCDEN
+     *      self-clears on completion, so a poller never sees it set -- measured
+     *      rearms 0 over 45 polls.
+     *   2. events bit 0x10: wrong event AND unstable. Bit 4 is
+     *      CSI_IRQ_SEN_STATE_ERR, a sensor ERROR bit rather than a frame event, and
+     *      it appears in some runs and not others (measured 0x1A versus 0xC00A).
+     *   3. unconditional-when-idle: the right event, but it fires constantly. The
+     *      on-panel telemetry measured B018 = 0x00200000 with REAR 121 == POLL 121,
+     *      i.e. the transfer was restarted on EVERY poll, mid-frame. The panel
+     *      showed two moving patterned bars and only part of the scene, because the
+     *      frame was being torn apart and never completed.
+     *
+     * Bit 1 (0x0002, CSI_IRQ_LCD_FRAME_END) is the per-frame event, and it was
+     * present in every event set measured: 0x000A, 0x001A, 0xC00A, 0xC01A.
+     * CSI_INTR is an index enum, so the mask is (1 << bit). */
+    if (events & 0x0002u) {
         u32 pip;
         luma_csi_rearms++;
         REG(0xb018) &= ~0x40000u;
@@ -547,11 +562,97 @@ static void hardware_init(void)
      * 0x00000000. The vendor's configuration is the working one; only the
      * destination is ours to choose. Two writes, nothing else. */
     REG(0xb060)=(u32)sensor_y; REG(0xb064)=(u32)sensor_uv;
+    /* Geometry override, applied before everything else settles. */
+    if (luma_csi_size_override) { REG(0xb01c) = luma_csi_size_override; }
     lens(0);
 }
+
+/* ---------------------------------------------------------------------------
+ * ON-PANEL CAPTURE TELEMETRY
+ *
+ * Why this exists: a takeover run never returns to the host, so there is no USB
+ * readback and the beacon is unreachable. That would not matter if the bounded-run
+ * digest could be trusted, but it provably cannot -- it reported two flat fields
+ * while the panel showed a live scene, and three separate conclusions (all-zero
+ * planes, untouched planes, the row-120 height theory) were drawn from it and were
+ * all wrong. The panel is the only channel that reports the steady state, so the
+ * numbers have to go on the screen.
+ *
+ *   Y / UV  bytes carrying real data: neither the init fill (0x10 / 0x80) nor zero
+ *   EV      OR of every CSI_INTR (b00c) value seen -- which events actually fire
+ *   B018    CSI_DMA_MODE; bit 19 (0x40000) is CSI_OUTPUT_LCDEN, the "arm" bit
+ *   POLL    polls that found an event
+ *   REAR    re-arms performed
+ *   FRAME   frames rendered by this loop
+ *
+ * Gated on packet word 11 so it can be switched on for a measurement run without
+ * covering the viewfinder the rest of the time.
+ */
+volatile u32 luma_overlay_on;
+static u32 ov_ydata, ov_uvdata, ov_seen, ov_calls, ov_rearms, ov_b018, ov_frames;
+
+static char *ov_str(char *o, const char *s) { while (*s) { *o++ = *s++; } return o; }
+static char *ov_dec(char *o, u32 v)
+{
+    char t[12]; int n = 0;
+    if (!v) { *o++ = '0'; return o; }
+    while (v) { t[n++] = (char)('0' + (int)(v % 10u)); v /= 10u; }
+    while (n) { *o++ = t[--n]; }
+    return o;
+}
+static char *ov_hex(char *o, u32 v, int digits)
+{
+    static const char h[] = "0123456789ABCDEF";
+    int i;
+    for (i = digits - 1; i >= 0; --i) { *o++ = h[(v >> (4 * i)) & 0xfu]; }
+    return o;
+}
+
+/* Recounts ~86 KB of planes, so it runs every 120 frames rather than per frame. */
+static void overlay_refresh(void)
+{
+    u32 i, yd = 0, ud = 0;
+    for (i = 0; i < 57600u; ++i) { u8 v = sensor_y[i]; if (v != 0x10u && v != 0u) { yd++; } }
+    for (i = 0; i < 28800u; ++i) { u8 v = sensor_uv[i]; if (v != 0x80u && v != 0u) { ud++; } }
+    ov_ydata = yd;  ov_uvdata = ud;
+    ov_seen = luma_csi_seen;   ov_calls  = luma_csi_calls;
+    ov_rearms = luma_csi_rearms; ov_b018 = REG(0xb018);
+    ov_frames = luma_frames;
+}
+
+static void overlay_draw(u16 *f)
+{
+    char b[96], *o;
+    int y = 3;
+    box(f, 0, 0, LW, 66, RGB(0, 0, 0));
+    o = b; o = ov_str(o, "Y ");  o = ov_dec(o, ov_ydata);
+    o = ov_str(o, " UV ");       o = ov_dec(o, ov_uvdata); *o = 0;
+    ui_text(f, 3, y, b, RGB(255,255,0), 0); y += 15;
+    o = b; o = ov_str(o, "EV "); o = ov_hex(o, ov_seen, 8);
+    o = ov_str(o, " B018 ");     o = ov_hex(o, ov_b018, 6); *o = 0;
+    ui_text(f, 3, y, b, RGB(255,255,0), 0); y += 15;
+    o = b; o = ov_str(o, "FE "); o = ov_dec(o, luma_csi_frame_ends);
+    o = ov_str(o, " REAR ");    o = ov_dec(o, ov_rearms); *o = 0;
+    ui_text(f, 3, y, b, RGB(255,255,0), 0); y += 15;
+    o = b; o = ov_str(o, "FRAME "); o = ov_dec(o, ov_frames); *o = 0;
+    ui_text(f, 3, y, b, RGB(255,255,0), 0);
+}
+
+#ifdef LUMA_BENCH_RUN
+/* _start calls firmware_main() with no arguments, so in a TAKEOVER run -- where the
+ * bench entry never executes -- this is the only way the loop learns that telemetry
+ * was requested. The harness always places the 2048-byte packet at 0x020D8800 and
+ * its input words at +1792 (tools/toolchain_tests/payloads/common.h). */
+#define BENCH_PACKET_IN ((volatile u32 *)0x020D8F00u)
+#endif
+
 void firmware_main(void)
 {
     App *a=(App *)&luma_app;
+#ifdef LUMA_BENCH_RUN
+    luma_overlay_on = BENCH_PACKET_IN[11];
+    luma_csi_size_override = BENCH_PACKET_IN[12];
+#endif
     Input input={0};
     AxTime clock={0,0,0};
     int have_bg=0, have_boot=0;
@@ -591,6 +692,10 @@ ows,
         last=now;
         if (a->screen==CAMERA) { sensor_copy(); }
         app_render(a,frame,camera,photo,have_bg ? theme_bg : 0,have_boot ? theme_boot : 0,now);
+        if (luma_overlay_on) {
+            if ((luma_frames % 120u) == 0u) { overlay_refresh(); }
+            overlay_draw(frame);
+        }
         present(frame);
         luma_frames++;
         /* On-panel diagnostics. A takeover has no USB readback, so the panel is
@@ -638,6 +743,8 @@ void luma_bench_once(void *buffer)
         /* Packet input words start at offset 1792 (the harness ABI). */
         volatile u32 *in = (volatile u32 *)((u8 *)buffer + 1792u);
         luma_test_pattern = in[7];
+        luma_overlay_on = in[11];
+        luma_csi_size_override = in[12];
     }
     hardware_init();   /* this now runs the software-IIC sensor bring-up */
 
