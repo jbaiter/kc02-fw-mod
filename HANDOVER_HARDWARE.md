@@ -15,9 +15,11 @@ buffers DE scanout. The bounded run completed 45 frames with zero capture/DE
 faults; live evidence is `~/kc02-hw/2026-10-16/capture-audit/guarded-panel-150413/`.
 400 tests pass; no flash writes/erases or SD installation occurred.
 
-Remaining: low FPS (measure before optimizing), and a static bottom-quarter black
-band from fitting 320x180 capture data into a 320x240 camera buffer. Those are not
-an unresolved moving bar. The camera is currently in RAM takeover; do not reset
+Remaining: low FPS (measure before optimizing). The static bottom-quarter black
+band came from sampling padding in the 320x240 RGB camera buffer. The requested
+full-width 320x180 UI is now implemented/native-tested (403 tests pass), with
+black above/below and the header/footer retained; its RAM panel trial is pending.
+Capture/DMA setup is unchanged. Those layout changes do not reopen the gray-bar fix. The camera is currently in RAM takeover; do not reset
 or replace the working image without a reason. Bench requests 3 MiB; scratch
 follows actual BSS with a stack exclusion. Older allocation sizes and the earlier
 claims that auto mode is impossible or that output is 4:2:2 are not reliable.

@@ -184,6 +184,55 @@ def test_render_state_and_shared_print_policy(native):
     assert list(guarded[:8])==[0x55aa]*8 and list(guarded[-8:])==[0x55aa]*8
 
 
+def test_live_viewport_uses_full_width_and_only_valid_sensor_rows(native):
+    a=App(); p=Platform()
+    native.app_init(C.byref(a),C.byref(p),0)
+    a.booting=0
+    a.theme.bg=0x1234  # Letterbox must be black, not a theme-dependent margin.
+    camera=(U16*(320*240))()
+    for y in range(180):
+        for x in range(320):
+            camera[y*320+x]=(y*197+x*3)&0xffff
+    for i in range(180*320,240*320):
+        camera[i]=0xf81f  # Invalid/padded rows must never enter the live viewport.
+    guarded=(U16*(320*240+16))(*([0x55aa]*(320*240+16)))
+    target=C.cast(C.byref(guarded,16),C.POINTER(U16))
+    native.app_render(C.byref(a),target,camera,camera,None,None,1500)
+    # Avoid the intentional corner/HUD overlays; both horizontal edges and
+    # the first/last valid source rows must retain their exact pixels.
+    for y in (0,90,179):
+        assert [target[(36+y)*320+x] for x in range(320)]==list(camera[y*320:(y+1)*320])
+    for y in (34,35,216,217,218):
+        assert [target[y*320+x] for x in range(320)]==[0]*320
+    assert list(guarded[:8])==[0x55aa]*8 and list(guarded[-8:])==[0x55aa]*8
+
+
+def test_full_width_camera_change_keeps_stored_gallery_aspect(native):
+    a=App(); p=Platform()
+    native.app_init(C.byref(a),C.byref(p),0)
+    a.booting=0; a.screen=1; a.count=1
+    photo=(U16*(320*240))(*([0x3456]*(320*240)))
+    target=(U16*(320*240))()
+    native.app_render(C.byref(a),target,photo,photo,None,None,1500)
+    assert target[126*320+39]==a.theme.bg
+    assert target[126*320+40]==0x3456
+    assert target[126*320+279]==0x3456
+    assert target[126*320+280]==a.theme.bg
+
+
+def test_shutter_flash_covers_the_full_width_live_viewport(native):
+    a=App(); p=Platform()
+    native.app_init(C.byref(a),C.byref(p),0)
+    a.booting=0; a.shutter=1; a.shutter_at=1000; a.theme.shutter_ms=256
+    camera=(U16*(320*240))(*([0xf800]*(320*240)))
+    target=(U16*(320*240))()
+    native.app_render(C.byref(a),target,camera,camera,None,None,1128)
+    for y in range(36,216):
+        assert target[y*320]==a.theme.text
+        assert target[y*320+319]==a.theme.text
+    assert target[35*320]==0 and target[216*320]==0
+
+
 def test_shape_antialiasing_symmetry_and_no_blur(native):
     pixels=(U16*(320*240))()
     native.ring(pixels,80,80,12,2,0xffff)

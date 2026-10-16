@@ -155,18 +155,23 @@ void app_render(App *a, u16 *f, const u16 *camera, const u16 *photo,
         box(f,120,201,(int)(progress*80/255),2,t->accent);
         return;
     }
-    if (a->screen == CAMERA || (a->screen == GALLERY && a->count)) {
-        const u16 *src = a->screen == CAMERA ? camera : photo;
-        /* Letterboxed photograph: preserve 4:3, never stretch into HUD. */
+    if (a->screen == CAMERA) {
+        /* Full-width 16:9 preview between the existing header/footer. Sample
+         * only the valid 180 rows, not the 60 black storage-padding rows. */
+        box(f,0,34,LW,185,0);
+        for (row = 0; row < CAMERA_ROWS; row++) {
+            unsigned x;
+            for (x = 0; x < LW; x++) { f[(row+36)*LW+x] = camera[row*LW+x]; }
+        }
+        for (i = 0; i < 4; i++) {
+            int x = i&1 ? LW-13 : 6, y = i&2 ? 201 : 42;
+            box(f,x,y,7,1,t->text); box(f,i&1 ? x+6 : x,y,1,7,t->text);
+        }
+    } else if (a->screen == GALLERY && a->count) {
+        /* Stored-photo ABI remains 320x240; keep its 4:3 gallery mapping. */
         for (row = 0; row < 180; row++) {
             unsigned x;
-            for (x = 0; x < 240; x++) { f[(row+36)*LW+x+40] = src[(row*LH/180)*LW+x*LW/240]; }
-        }
-        if (a->screen == CAMERA) {
-            for (i = 0; i < 4; i++) {
-                int x = i&1 ? 267 : 46, y = i&2 ? 201 : 42;
-                box(f,x,y,7,1,t->text); box(f,i&1 ? x+6 : x,y,1,7,t->text);
-            }
+            for (x = 0; x < 240; x++) { f[(row+36)*LW+x+40] = photo[(row*LH/180)*LW+x*LW/240]; }
         }
     } else if (a->screen == SETTINGS) {
         const char *const items[] = {"Print mode","USB storage","SD firmware update","About Luma"};
@@ -210,8 +215,8 @@ void app_render(App *a, u16 *f, const u16 *camera, const u16 *photo,
     if (a->shutter) {
         unsigned phase = (now-a->shutter_at)*512/t->shutter_ms;
         unsigned cover = phase < 256 ? phase : 512-phase;
-        int h = cover*92/256;
-        box(f,40,36,240,h,t->bg); box(f,40,216-h,240,h,t->bg);
-        if (phase > 230 && phase < 280) { box(f,40,36,240,180,t->text); }
+        int h = cover*CAMERA_ROWS/(2*256);
+        box(f,0,36,LW,h,t->bg); box(f,0,36+CAMERA_ROWS-h,LW,h,t->bg);
+        if (phase > 230 && phase < 280) { box(f,0,36,LW,CAMERA_ROWS,t->text); }
     }
 }

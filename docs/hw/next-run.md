@@ -26,9 +26,16 @@ The first 180 rows of `camera[320x240]` contain the 320x180 sensor image; the la
 60 are black. `app_render()` samples the full 240 rows into its 240x180 viewport.
 That explains the **static black bottom quarter** reported by the user.
 
-Preserve aspect ratio with centered letterboxing, or center-crop to fill the 4:3
-viewport. Do not stretch 16:9 to 4:3. Keep capture initialization and buffer
-ownership unchanged during a layout-only fix. Account for saved-photo layout too.
+The user requested full-width 16:9. The UI-only change is now implemented:
+320x180 at x=0, y=36, black above/below the image between the existing header and
+footer, full-width shutter animation and corner markers near the display edges.
+Capture initialization and buffer ownership are unchanged. Stored 320x240 photos
+and gallery mapping are unchanged. 403 tests pass; native preview:
+`~/kc02-hw/2026-10-16/capture-audit/viewport-fullwidth.png`.
+
+**Next hardware check:** after the user resets, RAM-run this layout-only build and
+confirm full width, complete image height, no gray bar and continued live colour.
+Do not describe the new layout as hardware-verified until that check succeeds.
 
 ### 2. Frame rate
 

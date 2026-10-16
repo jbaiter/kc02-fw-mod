@@ -11,6 +11,9 @@ typedef signed int i32;
 #define LW 320
 #define LH 240
 #define PIXELS (LW * LH)
+/* Valid live-image rows at the start of the RGB camera buffer: 320x180, 16:9.
+ * The buffer remains PIXELS long for the existing snapshot/storage ABI. */
+#define CAMERA_ROWS 180
 #define GALLERY_MAX 64
 #define THEME_MAX 4096
 #define RGB(r,g,b) ((u16)((((r)&248)<<8)|(((g)&252)<<3)|(((b)&255)>>3)))

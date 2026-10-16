@@ -9,8 +9,11 @@
 > **zero capture faults and zero DE ownership failures**, ISPMODE `0x42ffff`, and
 > a coherent full-frame Jira-board PNG. **Live trial `guarded-panel-150413` is now
 > user-confirmed: colour present, image updating, no shrinking gray bar.** Frame
-> rate is low. The static bottom-quarter black band comes from mapping a 320x180
-> capture into a 320x240 camera buffer and sampling all 240 rows; layout is next.
+> rate is low. The static bottom-quarter black band came from sampling the 60
+> padding rows in a 320x240 RGB buffer. Per the user's request, a full-width
+> 320x180 viewport is now implemented and native-tested (403 tests pass), with
+> black above/below the image and header/footer retained. This UI-only change
+> awaits a RAM panel trial; capture and DMA setup are unchanged.
 > The earlier callback and exposure-only trials both left the moving bar unchanged.
 >
 > The current bench requests **3 MiB** and links within **0x2c0000** for diagnostic

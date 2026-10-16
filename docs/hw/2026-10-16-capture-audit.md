@@ -123,9 +123,16 @@ that combined result does not isolate either change as the sole cause of the bar
 `sensor_copy()` fills the first 180 rows of the 320x240 RGB camera buffer and
 writes black to the last 60. `app_render()` samples all 240 source rows into its
 240x180 viewport. Thus **60/240 = 25%** of the viewport is black at the bottom.
-A future layout fix should preserve 16:9 with centered letterboxing, or use a
-center crop to fill 4:3; stretching the image would distort geometry. No layout
-change has been applied to the verified working build.
+The user requested full display width with black above/below as needed. The UI
+now copies those 320x180 valid rows at native size into x=0..319, y=36..215,
+between the existing navigation header and footer. Black fills the remaining
+content rows. Corner markers and shutter animation follow the new full width.
+Stored 320x240 photo data and its 4:3 gallery mapping remain unchanged.
+
+Native pixel tests verify full-width first/last/middle rows, black letterbox
+rows, shutter coverage and unchanged gallery mapping. The native render of the
+saved capture is `viewport-fullwidth.png`; all 403 tests pass. This layout-only
+change does not alter capture/DMA setup and **awaits its RAM panel trial**.
 
 The user reports low FPS. The bounded settle observed 45 capture completions in
 3 seconds, but that does not measure steady-state UI FPS. Measure capture and
