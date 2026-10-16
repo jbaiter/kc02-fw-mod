@@ -3,8 +3,12 @@
 ## Status
 
 RAM only. No flash writes/erases or updater use. Camera SD volume remains
-unmounted. The guarded bounded run passed; the live panel trial is pending.
-Do not report the moving gray bar as fixed until the user checks it.
+unmounted. Both the guarded bounded test and live panel trial passed.
+
+**User-confirmed on `guarded-panel-150413/`: colour is present, the image updates,
+and the shrinking gray bar is gone.** Frame rate remains low. A static black band
+occupies the bottom quarter of the viewfinder; its source is the current layout,
+not an unresolved capture overrun. Firmware revision: `90ac6b6`.
 
 Evidence directory: `~/kc02-hw/2026-10-16/capture-audit/`.
 
@@ -108,9 +112,24 @@ Run: `guarded-bounded-144138/`; log: `guarded-bounded.log`.
 | Y mean / standard deviation | 94.2 / 35.4 |
 | Y distinct byte values | 180 |
 
-The PNG shows a coherent full-frame Jira board. This verifies a bounded capture
-and removes the observed corruption in that run. It does **not** verify live motion
-or the absence of the moving bar. A fresh-reset takeover remains the next check.
+The PNG shows a coherent full-frame Jira board. After a fresh reset, takeover
+`guarded-panel-150413/` passed firmware signature checks, canary execution and image
+readback. The user then confirmed colour, live updates and no shrinking gray bar.
+Both scaler setup and display ownership changed before this successful trial;
+that combined result does not isolate either change as the sole cause of the bar.
+
+## Remaining layout and performance issues
+
+`sensor_copy()` fills the first 180 rows of the 320x240 RGB camera buffer and
+writes black to the last 60. `app_render()` samples all 240 source rows into its
+240x180 viewport. Thus **60/240 = 25%** of the viewport is black at the bottom.
+A future layout fix should preserve 16:9 with centered letterboxing, or use a
+center crop to fill 4:3; stretching the image would distort geometry. No layout
+change has been applied to the verified working build.
+
+The user reports low FPS. The bounded settle observed 45 capture completions in
+3 seconds, but that does not measure steady-state UI FPS. Measure capture and
+presentation rates separately before changing capture timing or optimizing copies.
 
 ## Offline checks
 

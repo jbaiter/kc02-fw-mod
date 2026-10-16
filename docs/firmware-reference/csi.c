@@ -11,7 +11,8 @@
  * automatic-mode test omitted LCDEN, so it does not prove manual mode mandatory.
  * See docs/hw/2026-10-16-capture-audit.md for the later memory-corruption finding:
  * b004=0xffff left scaling OFF. Calling csiLCDScaler produced b004=0x42ffff and
- * 45 bounded frames with intact DMA guards. Live panel verdict still pending.
+ * 45 bounded frames with intact DMA guards. The user then confirmed live colour
+ * capture without the shrinking bar (guarded-panel-150413). FPS/layout remain.
  */
 #include <stdint.h>
 

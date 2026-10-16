@@ -3,6 +3,25 @@
 This is the authoritative handover for the **Luma / bring-up / USB / update**
 workstream, and for the **hardware session** that is about to start.
 
+## Latest result — 2026-10-16, capture audit
+
+**Supersedes older status and experiment instructions below.** Revision `90ac6b6`
+runs from RAM with **user-confirmed live colour capture and no shrinking gray bar**.
+Read `docs/hw/2026-10-16-capture-audit.md` and the correction at the top of
+`HANDOVER_CAPTURE.md`. A guarded DE swap exposed pixel data in scalars after the
+old capture arrays. The current setup calls the actual stock scaler, enables
+LCDCROP/LSEN, guards DMA destinations, uses separate CPU snapshots and double-
+buffers DE scanout. The bounded run completed 45 frames with zero capture/DE
+faults; live evidence is `~/kc02-hw/2026-10-16/capture-audit/guarded-panel-150413/`.
+400 tests pass; no flash writes/erases or SD installation occurred.
+
+Remaining: low FPS (measure before optimizing), and a static bottom-quarter black
+band from fitting 320x180 capture data into a 320x240 camera buffer. Those are not
+an unresolved moving bar. The camera is currently in RAM takeover; do not reset
+or replace the working image without a reason. Bench requests 3 MiB; scratch
+follows actual BSS with a stack exclusion. Older allocation sizes and the earlier
+claims that auto mode is impossible or that output is 4:2:2 are not reliable.
+
 ## Latest bench handoff — 2026-10-15, 21:27
 
 **This update supersedes older status/next-step text below. Hardware experiments

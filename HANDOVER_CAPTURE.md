@@ -7,16 +7,20 @@
 > crop/scale path, keeps DMA disabled until setup completes, and separates guarded
 > DMA destinations from CPU snapshots. A bounded run completed **45 frames** with
 > **zero capture faults and zero DE ownership failures**, ISPMODE `0x42ffff`, and
-> a coherent full-frame Jira-board PNG. The moving bar is **not yet panel-verified**.
-> The earlier callback and exposure-only trials both left it unchanged.
+> a coherent full-frame Jira-board PNG. **Live trial `guarded-panel-150413` is now
+> user-confirmed: colour present, image updating, no shrinking gray bar.** Frame
+> rate is low. The static bottom-quarter black band comes from mapping a 320x180
+> capture into a 320x240 camera buffer and sampling all 240 rows; layout is next.
+> The earlier callback and exposure-only trials both left the moving bar unchanged.
 >
 > The current bench requests **3 MiB** and links within **0x2c0000** for diagnostic
 > spill arenas. The original instructions below use outdated allocation sizes and
 > overstate what was ruled out. No flash or SD installation has occurred.
 >
 > **Audit correction, 2026-10-16, incoming agent:** treat the original analysis
-> below as session history, not established constraints. The user still reports
-> the rolling gray bar. The claim that polling latency must cause it is unproven.
+> below as session history, not established constraints. These corrections began
+> before the successful guarded/scaler-enabled trial. The claim that polling
+> latency must cause the bar was never established.
 >
 > - The automatic-mode test wrote `b018=0x20000` without `LCDEN=0x40000`.
 >   No output was enabled. It did not rule out automatic capture.
@@ -34,8 +38,8 @@
 >   earlier description that sensor_init supplies a complete CSI setup is wrong.
 > - Do not enable the stock CSI ISR without auditing its registered callbacks:
 >   the normal callback manages stock buffers and display state.
-> - `show_luma.py` now reads CPU snapshot set 1 and checks repeated readbacks for
->   equality. Earlier PNGs read the live set 0 and selected by chroma population.
+> - `show_luma.py` now reads separate CPU snapshots and checks repeated readbacks
+>   for equality. Earlier PNGs read live DMA memory and selected by chroma population.
 >   Those PNGs cannot establish a rolling seam's position or cause.
 >
 > Callback-sequence trial: acknowledge before callback work; copy to snapshot;
@@ -51,9 +55,10 @@
 > fix builds and has offline regression tests; the user confirmed that this trial
 > also left the bar unchanged.
 >
-> The static-bars A/B also does not rule out scanout tearing with changing pixels:
-> `present()` still writes the active DE plane. Do not treat display ownership
-> as solved. The UVC webcam no longer points at the panel; do not use the old
+> The static-bars A/B did not rule out scanout tearing with changing pixels.
+> That old `present()` wrote the active plane; the current version double-buffers
+> DE and verifies ownership before reuse. The UVC webcam no longer points at the
+> panel; do not use the old
 > setup instructions without asking the user to reposition it first.
 >
 Written 2026-10-16 at the end of a long session. Read this before touching

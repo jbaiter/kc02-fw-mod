@@ -257,7 +257,8 @@ The later capture audit found pixel data in scalars following the capture arrays
 In this snapshot LCDCROP and LSEN are off. Do not copy it as a safe capture recipe.
 The guarded run in `docs/hw/2026-10-16-capture-audit.md` instead calls the actual
 stock scaler: b004 becomes **0x42ffff**, b184/b188 become **0x80000**, and its
-45-frame bounded test leaves DMA guards intact. Live panel verification is pending.
+45-frame bounded test leaves DMA guards intact. The user confirmed live colour
+capture without the shrinking bar in `guarded-panel-150413`; see the audit log.
 
 ```
 b000 = 0x0440062D   CSI enabled; FORMAT bits 7:6 = 0 (raw), not YUVR422
