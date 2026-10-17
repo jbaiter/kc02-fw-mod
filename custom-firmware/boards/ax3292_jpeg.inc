@@ -54,12 +54,37 @@ static void jpeg_restore_preview(void)
     REG(0xb018)|=0x40000u;
 }
 
+/* A bounded run still has the stock interrupt handlers installed, and this trial
+ * reconfigures the CSI underneath them: csihv_tomjp_dma_cfg even ORs more sources
+ * into the CSI enable register. Taking a CSI or JPEG interrupt in the middle of
+ * that is how a run dies without ever answering USB again, so those three vectors
+ * are masked at PICMR for the duration and restored afterwards. Polling is
+ * unaffected: the status bits are read directly. USB and the tick stay enabled. */
+#define JPEG_IRQ_MASK ((1u<<14)|(1u<<16)|(1u<<22))   /* CSI, JPGA, JPGB */
+
+static u32 jpeg_irq_saved, jpeg_irq_active;
+
+static void jpeg_irq_hold(void)
+{
+    if (jpeg_irq_active) { return; }
+    jpeg_irq_saved=REG(0x4800);
+    REG(0x4800)=jpeg_irq_saved&~JPEG_IRQ_MASK;
+    jpeg_irq_active=1;
+}
+static void jpeg_irq_release(void)
+{
+    if (!jpeg_irq_active) { return; }
+    REG(0x4800)=jpeg_irq_saved;
+    jpeg_irq_active=0;
+}
+
 static int jpeg_encode_once(u32 scratch)
 {
     AxTime t={0,0,0};
     unsigned guard;
     u32 now=ax_time_ms(&t,REG(0x9908));
     if (luma_csi_fault) { return 0; }
+    jpeg_irq_hold();
     luma_jpeg_owned=1;
     if (ax_jpeg_start(&luma_jpeg_state,&jpeg_ops,&luma_jpeg_output,
                       sensor_dma_y.data,sizeof(sensor_dma_y),sensor_dma_y.tail,
@@ -91,6 +116,7 @@ static int jpeg_encode_once(u32 scratch)
         lcd_service(); csi_service();
         if (ax_time_ms(&t,REG(0x9908))-now>=300u) break;
     }
+    jpeg_irq_release();
     return luma_jpeg_state.state==AX_JPEG_DONE;
 }
 
@@ -131,6 +157,8 @@ static int jpeg_view_to_yuv(const u8 *jpeg,unsigned length)
     AxTime t={0,0,0};
     unsigned guard;
     u32 now=ax_time_ms(&t,REG(0x9908));
+    int ok;
+    jpeg_irq_hold();
     unsigned w=0,h=0;
     if (!ax_jpeg_frame_info(jpeg,length,&length,&w,&h)) return 0;
     luma_decode_geom=(w<<16)|(h&0xffffu);
@@ -147,7 +175,9 @@ static int jpeg_view_to_yuv(const u8 *jpeg,unsigned length)
     }
     if (luma_decode_state.state==AX_DECODE_RUNNING)
         ax_decode_poll(&luma_decode_state,now+2001u);
-    return luma_decode_state.state==AX_DECODE_DONE;
+    ok=luma_decode_state.state==AX_DECODE_DONE;
+    jpeg_irq_release();
+    return ok;
 }
 static const StockPhotoDecode jpeg_view={jpeg_view_to_yuv};
 
@@ -176,13 +206,18 @@ static int jpeg_photo_selftest(App *a,u32 *loaded_size,unsigned *file_count)
     int ret;
     if (loaded_size) { *loaded_size=0; }
     if (file_count) { *file_count=before; }
+    jpeg_irq_hold();
     ret=stock_photo_save_jpeg(luma_jpeg_output.bytes,luma_jpeg_state.length);
-    if (ret!=PHOTO_QUEUED) { return 2; }
-    for (guard=0;guard<200000u;guard++) {
-        lcd_service();
-        stock_photo_poll(a,ax_time_ms(&t,REG(0x9908)),1);
-        fs=stock_photo_state();
-        if (!fs->kind || fs->last_error) break;
+    if (ret!=PHOTO_QUEUED) { jpeg_irq_release(); return 2; }
+    {
+        u32 deadline=ax_time_ms(&t,REG(0x9908))+30000u;
+        for (guard=0;guard<200000u;guard++) {
+            lcd_service();
+            stock_photo_poll(a,ax_time_ms(&t,REG(0x9908)),1);
+            fs=stock_photo_state();
+            if (!fs->kind || fs->last_error) break;
+            if (ax_time_ms(&t,REG(0x9908))>deadline) { jpeg_irq_release(); return 3; }
+        }
     }
     fs=stock_photo_state();
     if (fs->last_error || fs->count==before) { return 3; }
@@ -191,13 +226,18 @@ static int jpeg_photo_selftest(App *a,u32 *loaded_size,unsigned *file_count)
     a->screen=GALLERY;
     a->photo=fs->count-1;
     a->photo_rows=0;
-    if (!stock_photo_load(a->photo,(u16 *)frame)) { return 4; }
-    for (guard=0;guard<200000u;guard++) {
-        lcd_service();
-        stock_photo_poll(a,ax_time_ms(&t,REG(0x9908)),1);
-        fs=stock_photo_state();
-        if ((!fs->kind && a->photo_rows) || fs->last_error) break;
+    if (!stock_photo_load(a->photo,(u16 *)frame)) { jpeg_irq_release(); return 4; }
+    {
+        u32 deadline=ax_time_ms(&t,REG(0x9908))+10000u;
+        for (guard=0;guard<200000u;guard++) {
+            lcd_service();
+            stock_photo_poll(a,ax_time_ms(&t,REG(0x9908)),1);
+            fs=stock_photo_state();
+            if ((!fs->kind && a->photo_rows) || fs->last_error) break;
+            if (ax_time_ms(&t,REG(0x9908))>deadline) { break; }
+        }
     }
+    jpeg_irq_release();
     fs=stock_photo_state();
     a->screen=CAMERA;
     if (fs->last_error || a->photo_rows!=AX_DECODE_H) { return 4; }

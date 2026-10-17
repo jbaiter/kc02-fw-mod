@@ -825,13 +825,13 @@ ows,
  * Deliberately skips sd_hw_init/fat_mount: the stock firmware owns the card
  * over USB while this runs, and a bounded display check does not need storage.
  */
-volatile u32 luma_beacon[56] __attribute__((used, section(".data.bench")));
+volatile u32 luma_beacon[60] __attribute__((used, section(".data.bench")));
 __attribute__((used, noinline, section(".text.bench")))
 void luma_bench_once(void *buffer)
 {
     App *a=(App *)&luma_app;
     u32 i;
-    for (i=0;i<56;i++) { luma_beacon[i]=0; }
+    for (i=0;i<60;i++) { luma_beacon[i]=0; }
     /* Packet input starts at +1792, the same ABI as takeover's fixed address. */
     const volatile u32 *in = (const volatile u32 *)((u8 *)buffer + 1792u);
     bench_read_options(in);
@@ -938,7 +938,9 @@ void luma_bench_once(void *buffer)
         }
     }
     if (luma_jpeg_check && (luma_jpeg_phases & AX_JPEG_PHASE_ENCODE)) {
+        luma_beacon[56]=REG(0x4800);   /* interrupt mask before the trial */
         jpeg_encode_once(in[10]);
+        luma_beacon[57]=REG(0x4800);   /* must be identical again afterwards */
         luma_beacon[42]=luma_jpeg_state.state;
         luma_beacon[43]=luma_jpeg_state.fault;
         luma_beacon[44]=luma_jpeg_state.length;

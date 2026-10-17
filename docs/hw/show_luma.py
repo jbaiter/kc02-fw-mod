@@ -157,15 +157,20 @@ JPEG_MAX_BYTES = 0x80000
 JPEG_STOCK_BAND = (0x10000, 0x40000)
 
 
-def check_jpeg_result(jpeg, capacity=JPEG_MAX_BYTES):
+def check_jpeg_result(jpeg, capacity=JPEG_MAX_BYTES, bounded=False):
     """Validate the beacon's encoder words; return a note for the report."""
     if jpeg['state'] != 3:
         raise dump.DumpError(f'hardware JPEG did not finish: {jpeg}')
     if jpeg['fault']:
         raise dump.DumpError(f'hardware JPEG fault {jpeg["fault"]}: {jpeg}')
-    if jpeg['picmr']:
-        # The trial must not re-point the stock interrupt mask (PICMR at 0x4800).
+    if not bounded and jpeg['picmr']:
+        # A takeover owns PICMR and it must stay zero; a bounded run has the stock
+        # handlers live, so there the mask is compared before/after instead.
         raise dump.DumpError(f'hardware JPEG disturbed the interrupt mask: {jpeg}')
+    if bounded and jpeg.get('picmr_before') != jpeg['picmr']:
+        raise dump.DumpError(
+            'hardware JPEG left the interrupt mask changed: '
+            f"before=0x{jpeg.get('picmr_before', 0):08X} after=0x{jpeg['picmr']:08X}")
     if not 0 < jpeg['length'] <= capacity:
         raise dump.DumpError(f'hardware JPEG length outside its buffer: {jpeg}')
     low, high = JPEG_STOCK_BAND
@@ -348,7 +353,10 @@ def main():
                 (a.output/'jpeg-regs.bin').write_bytes(t.read_region(scratch+512,512))
                 (a.output/'jpeg-csi-regs.bin').write_bytes(t.read_region(scratch+1024,512))
                 print(f'  hardware JPEG: {report["jpeg"]}',flush=True)
-                note = check_jpeg_result(report['jpeg'], record['jpeg_capacity'])
+                before = t.read_region(record['beacon']+56*4, 4)
+                report['jpeg']['picmr_before'] = int.from_bytes(before, 'little')
+                note = check_jpeg_result(report['jpeg'], record['jpeg_capacity'],
+                                         bounded=not a.takeover)
                 if note:
                     report['jpeg']['note'] = note
                     print(f'  NOTE: {note}', flush=True)

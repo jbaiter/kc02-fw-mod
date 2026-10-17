@@ -165,3 +165,13 @@ def test_jpeg_result_size_outside_the_stock_band_is_reported_not_fatal():
     assert 'band' in note and '16,384' in note
     note = show.check_jpeg_result(jpeg_words(length=0x50000))
     assert 'band' in note
+
+
+def test_bounded_trial_compares_the_mask_before_and_after():
+    """A bounded run has the stock handlers live, so nonzero is fine - unchanged is not."""
+    live = 1 << 14 | 1 << 8
+    assert show.check_jpeg_result(
+        jpeg_words(picmr=live, picmr_before=live), bounded=True) == ''
+    with pytest.raises(show.dump.DumpError, match='left the interrupt mask changed'):
+        show.check_jpeg_result(jpeg_words(picmr=live, picmr_before=live & ~(1 << 14)),
+                               bounded=True)
