@@ -50,6 +50,8 @@ What to read from the result:
 | `jpeg.length` | encoded bytes, must be > 0 and <= 0x80000 |
 | `sensor-fullres.jpg` | the frame; the harness decodes it and refuses anything that is not 1280x720 |
 | `jpeg-csi-regs.bin` / `jpeg-regs.bin` | the CSI/ISP and encoder register blocks as left by the trial |
+| `jpeg.picmr` | must be 0: the trial may not re-point the stock interrupt mask |
+| `jpeg.note` | set when the encoded size is outside the 64..256 KiB band stock budgets for a still this wide (0x1e000..0x23000 in `hal_mjpegEncodeResolutionImage`) |
 
 Fault 9 means the CSI never reported bit 0x200: the I2W path is not signalling
 frame completion and the trigger has to move to a different event. Fault 7 means

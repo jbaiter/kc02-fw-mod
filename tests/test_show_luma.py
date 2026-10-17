@@ -118,3 +118,46 @@ def test_bounded_jpeg_trial_cannot_be_combined_with_takeover():
                             '--output', '/nonexistent', '--jpeg-check', '--takeover']):
         with pytest.raises(SystemExit):
             show.main()
+
+
+def jpeg_words(**kw):
+    words = dict(state=3, fault=0, length=0x21000, csi_events=0x200,
+                 jpeg_events=0x40, picmr=0)
+    words.update(kw)
+    return words
+
+
+def test_completed_jpeg_result_is_accepted():
+    assert show.check_jpeg_result(jpeg_words()) == ''
+    assert show.check_jpeg_result(jpeg_words(length=0x10000)) == ''
+    # A full 512 KiB buffer is legal for the encoder but far above stock's own
+    # budget for this width, so it must be reported rather than silently passed.
+    assert 'band' in show.check_jpeg_result(jpeg_words(length=0x80000))
+
+
+def test_incomplete_or_faulted_jpeg_result_is_refused():
+    with pytest.raises(show.dump.DumpError, match='did not finish'):
+        show.check_jpeg_result(jpeg_words(state=2))
+    for fault in (1, 3, 4, 5, 7, 8, 9):
+        with pytest.raises(show.dump.DumpError, match=f'fault {fault}'):
+            show.check_jpeg_result(jpeg_words(fault=fault))
+
+
+def test_jpeg_result_must_not_touch_the_interrupt_mask():
+    # ax32xx_mjpegDecodeEnable-style code would unmask IRQ 0x16 here.
+    with pytest.raises(show.dump.DumpError, match='interrupt mask'):
+        show.check_jpeg_result(jpeg_words(picmr=1 << 22))
+
+
+def test_jpeg_result_length_must_fit_its_buffer():
+    with pytest.raises(show.dump.DumpError, match='outside its buffer'):
+        show.check_jpeg_result(jpeg_words(length=0))
+    with pytest.raises(show.dump.DumpError, match='outside its buffer'):
+        show.check_jpeg_result(jpeg_words(length=0x80001))
+
+
+def test_jpeg_result_size_outside_the_stock_band_is_reported_not_fatal():
+    note = show.check_jpeg_result(jpeg_words(length=0x4000))
+    assert 'band' in note and '16,384' in note
+    note = show.check_jpeg_result(jpeg_words(length=0x50000))
+    assert 'band' in note

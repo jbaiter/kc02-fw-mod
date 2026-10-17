@@ -146,6 +146,32 @@ def require_photo_preflight(parsed, health):
             health['photo_fs']['error']):
         raise dump.DumpError(f'photo preflight refused takeover: {health}')
 
+# Stock's own budget for a still at 1280 wide and above is 0x1e000..0x23000
+# (hal_mjpegEncodeResolutionImage and the streaming Qadj bounds). Anything near
+# those numbers is a sane 1280x720 frame; far outside means the encoder produced
+# something pathological even though it reported success.
+JPEG_MIN_BYTES = 0x2000
+JPEG_MAX_BYTES = 0x80000
+JPEG_STOCK_BAND = (0x10000, 0x40000)
+
+
+def check_jpeg_result(jpeg, capacity=JPEG_MAX_BYTES):
+    """Validate the beacon's encoder words; return a note for the report."""
+    if jpeg['state'] != 3:
+        raise dump.DumpError(f'hardware JPEG did not finish: {jpeg}')
+    if jpeg['fault']:
+        raise dump.DumpError(f'hardware JPEG fault {jpeg["fault"]}: {jpeg}')
+    if jpeg['picmr']:
+        # The trial must not re-point the stock interrupt mask (PICMR at 0x4800).
+        raise dump.DumpError(f'hardware JPEG disturbed the interrupt mask: {jpeg}')
+    if not 0 < jpeg['length'] <= capacity:
+        raise dump.DumpError(f'hardware JPEG length outside its buffer: {jpeg}')
+    low, high = JPEG_STOCK_BAND
+    if low <= jpeg['length'] <= high:
+        return ''
+    return (f'encoded {jpeg["length"]:,} B is outside the {low:,}..{high:,} B band '
+            f'stock budgets for a still of this width')
+
 
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
@@ -312,8 +338,10 @@ def main():
                 (a.output/'jpeg-regs.bin').write_bytes(t.read_region(scratch+512,512))
                 (a.output/'jpeg-csi-regs.bin').write_bytes(t.read_region(scratch+1024,512))
                 print(f'  hardware JPEG: {report["jpeg"]}',flush=True)
-                if jw[0]!=3 or jw[1] or jw[5] or not 0<jw[2]<=record['jpeg_capacity']:
-                    raise dump.DumpError(f'hardware JPEG test failed: {report["jpeg"]}')
+                note = check_jpeg_result(report['jpeg'], record['jpeg_capacity'])
+                if note:
+                    report['jpeg']['note'] = note
+                    print(f'  NOTE: {note}', flush=True)
                 jpeg=t.read_region(record['jpeg_buffer'],jw[2])
                 (a.output/'sensor-fullres.jpg').write_bytes(jpeg)
                 image=Image.open(io.BytesIO(jpeg))
