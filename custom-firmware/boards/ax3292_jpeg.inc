@@ -160,3 +160,47 @@ static int luma_capture_photo(void)
     if (!jpeg_encode_once(0)) { return 0; }
     return stock_photo_save_jpeg(luma_jpeg_output.bytes,luma_jpeg_state.length);
 }
+
+/* End-to-end photo self-test for the bounded trial: the frame that was just
+ * encoded is saved as a create-only LUMnnnnn.JPG through the stock FatFs, then
+ * read back and decoded again. Every step is the same code the shutter and the
+ * gallery use, so one bounded run proves the whole loop without a panel verdict.
+ *
+ * Returns: 1 saved and read back, 2 save refused, 3 save failed, 4 readback failed.
+ */
+static int jpeg_photo_selftest(App *a,u32 *loaded_size,unsigned *file_count)
+{
+    AxTime t={0,0,0};
+    unsigned guard,before=stock_photo_count();
+    const StockFs *fs;
+    int ret;
+    if (loaded_size) { *loaded_size=0; }
+    if (file_count) { *file_count=before; }
+    ret=stock_photo_save_jpeg(luma_jpeg_output.bytes,luma_jpeg_state.length);
+    if (ret!=PHOTO_QUEUED) { return 2; }
+    for (guard=0;guard<200000u;guard++) {
+        lcd_service();
+        stock_photo_poll(a,ax_time_ms(&t,REG(0x9908)),1);
+        fs=stock_photo_state();
+        if (!fs->kind || fs->last_error) break;
+    }
+    fs=stock_photo_state();
+    if (fs->last_error || fs->count==before) { return 3; }
+    if (file_count) { *file_count=fs->count; }
+    /* Read the file back and let the gallery decode it, exactly as a viewer would. */
+    a->screen=GALLERY;
+    a->photo=fs->count-1;
+    a->photo_rows=0;
+    if (!stock_photo_load(a->photo,(u16 *)frame)) { return 4; }
+    for (guard=0;guard<200000u;guard++) {
+        lcd_service();
+        stock_photo_poll(a,ax_time_ms(&t,REG(0x9908)),1);
+        fs=stock_photo_state();
+        if ((!fs->kind && a->photo_rows) || fs->last_error) break;
+    }
+    fs=stock_photo_state();
+    a->screen=CAMERA;
+    if (fs->last_error || a->photo_rows!=AX_DECODE_H) { return 4; }
+    if (loaded_size) { *loaded_size=fs->loaded_size; }
+    return 1;
+}

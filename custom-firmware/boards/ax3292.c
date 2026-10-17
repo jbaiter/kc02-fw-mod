@@ -955,6 +955,15 @@ void luma_bench_once(void *buffer)
         luma_beacon[49]=luma_decode_state.fault;
         luma_beacon[50]=luma_decode_state.status;
         luma_beacon[51]=luma_decode_geom;
+        /* With --photos, also store the frame and read it back. This is the one
+         * place a bounded run touches the card, and it is create-only. */
+        if (luma_photos_enabled && luma_jpeg_state.state==AX_JPEG_DONE &&
+            luma_jpeg_state.length) {
+            u32 stored=0; unsigned count=0;
+            luma_beacon[52]=(u32)jpeg_photo_selftest(a,&stored,&count);
+            luma_beacon[53]=stored;
+            luma_beacon[55]=count;
+        }
         if (in[10]) {
             volatile u32 *r=(volatile u32 *)(in[10]+512u);
             for (i=0;i<128;i++) r[i]=REG(0xb800u+4u*i);

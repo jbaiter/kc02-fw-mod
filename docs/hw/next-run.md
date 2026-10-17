@@ -52,6 +52,20 @@ What to read from the result:
 | `jpeg-csi-regs.bin` / `jpeg-regs.bin` | the CSI/ISP and encoder register blocks as left by the trial |
 | `jpeg.picmr` | must be 0: the trial may not re-point the stock interrupt mask |
 | `jpeg.note` | set when the encoded size is outside the 64..256 KiB band stock budgets for a still this wide (0x1e000..0x23000 in `hal_mjpegEncodeResolutionImage`) |
+| `jpeg.decode_state` / `decode_fault` | second phase: the same frame decoded back to 320x180 by the hardware decoder (3 = done) |
+| `jpeg.frame_geometry` | `(w<<16)|h` as the decoder's own header parse read it; expect `0x050002D0` |
+| `jpeg.photo_selftest` | with `--photos`: 1 saved and read back, 2 refused, 3 save failed, 4 readback failed |
+| `jpeg.stored_bytes` / `jpeg.files` | size of the file as re-read, and the photo count afterwards |
+
+Add `--photos` to the same command to make that one run also:
+
+1. encode one 1280x720 still and decode it back (phase two above),
+2. save it as a **new** `LUMnnnnn.JPG` through the stock FatFs, create-only,
+3. close, stop, reopen, re-read and compare byte for byte,
+4. load it back through the gallery path and decode it again.
+
+That is the whole photo pipeline in one bounded, read-only-except-one-file run. It
+writes exactly one new file and never overwrites, renames or deletes anything.
 
 Fault 9 means the CSI never reported bit 0x200: the I2W path is not signalling
 frame completion and the trigger has to move to a different event. Fault 7 means

@@ -333,6 +333,12 @@ def main():
                 jw = [int.from_bytes(raw[k:k+4],'little') for k in range(0,24,4)]
                 report['jpeg'] = dict(state=jw[0],fault=jw[1],length=jw[2],
                                       csi_events=jw[3],jpeg_events=jw[4],picmr=jw[5])
+                tail = t.read_region(record['beacon']+48*4,32)
+                tw = [int.from_bytes(tail[k:k+4],'little') for k in range(0,32,4)]
+                report['jpeg'].update(decode_state=tw[0],decode_fault=tw[1],
+                                      decode_status=tw[2],frame_geometry=tw[3],
+                                      photo_selftest=tw[4],stored_bytes=tw[5],
+                                      files=tw[7])
                 (a.output/'jpeg-regs.bin').write_bytes(t.read_region(scratch+512,512))
                 (a.output/'jpeg-csi-regs.bin').write_bytes(t.read_region(scratch+1024,512))
                 print(f'  hardware JPEG: {report["jpeg"]}',flush=True)
@@ -340,6 +346,11 @@ def main():
                 if note:
                     report['jpeg']['note'] = note
                     print(f'  NOTE: {note}', flush=True)
+                if a.photos and report['jpeg']['photo_selftest'] != 1:
+                    raise dump.DumpError(
+                        'photo self-test did not save and read back a still: '
+                        f'{report["jpeg"]} (1=saved, 2=refused, 3=save failed, '
+                        '4=readback failed)')
                 jpeg=t.read_region(record['jpeg_buffer'],jw[2])
                 (a.output/'sensor-fullres.jpg').write_bytes(jpeg)
                 image=Image.open(io.BytesIO(jpeg))
