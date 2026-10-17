@@ -313,6 +313,46 @@ in a different dispatcher's table.
   nine combinations, none makes the handler return; the boot/jal mismatch is real
   and is handled by `CALLFIX`.
 
+## The JPEG blocks are already modelled (do not write them again)
+
+`tools/emu/qemu/ax3292/ax3292-jpeg.h` already implements both hardware blocks with
+libjpeg behind them, and it is more complete than the 2026-10-16 still-capture work
+assumed:
+
+* **JPGA encode** honours the guest's own quantization and Huffman tables (read from
+  the decoder table RAM the guest filled at `0x66400`), the source and target sizes
+  in `0xb878` / `0xb80c`, quality from `PRE_JPCON1` bits 23..26, the inline buffer at
+  `0xb820`/`0xb824`, the output window from `0xb810`, the AVI prefix when info mode
+  is 1, and manual mode: `ax3292_jpeg_a_tick` holds the encoder back while
+  `0xb8a4 < (0xb878 & 0xffff)`, so `ax32xx_mjpeg_manual_on`'s 800-line trigger is
+  what releases it. It publishes `0xb81c = out + length` and raises `0xb840` bit
+  0x40 (or 0x48 on failure).
+* **JPGB decode** searches the guest's bitstream for the JPEG SOI, honours the
+  manual-stride bit in `0xc0c0`, scales to the programmed target with a 4:2:0 box
+  filter (documented approximation), and reports completion in `0xc040`.
+* Both raise their interrupt only when the guest's own mask enables it, so a ROM
+  image that leaves `PICMR` alone is not disturbed.
+
+So the "emulator JPEG model" is not missing work. What is missing is a way to run
+*Luma's* RAM image inside the emulated machine, which is a different feature:
+
+1. a machine property (or a `-device loader`) that places Luma's bench binary at a
+   fixed base in guest RAM and a 2048-byte harness packet at `0x020d8800`;
+2. a way to enter it *after* the stock firmware has booted, because `hardware_init`
+   calls stock routines that expect the stock init to have run (PLL, SDRAM, heap);
+3. `r3 = 0x020d8800` on entry, since `luma_bench_once` reads its options from
+   `buffer + 1792`.
+
+There is no PC-write path in the machine today (`-M ax3292` exposes wiring and boot
+handoff, and key injection via `key-file`, but nothing that transfers control to a
+second image). That is a QEMU-side change with its own interrupt/lock questions, and
+it should be designed as such rather than bolted onto a test.
+
+Until then the honest statement is: the emulator can prove the *stock* photo path
+and can exercise these blocks through stock code, but it cannot yet exercise
+`ax_jpeg_capture.c`, `ax_jpeg_decode.c` or the FatFs adapters, whose current
+evidence is native unit tests plus one pending bounded hardware trial.
+
 ## Repo artifacts added by this workstream
 
 * `tools/emu/sfr_map.py` + `sfr_map.tsv` — SPR number ↔ name (1065), with
