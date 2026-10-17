@@ -196,12 +196,13 @@ def execute_verified(t, code, packet, upload_only=False):
 
 def build_packet(seed=0, mode=None, param=0, read_addr=0, words=None):
     pkt = bytearray(cases.PAD)
+    # Inputs end at HEADER, not OUTPUT: 16 words, with omitted options zeroed.
+    # Padding bytes must never become implicit feature/write permissions.
+    pkt[INPUT:HEADER] = bytes(HEADER-INPUT)
     if words is not None:
-        # The input region runs from INPUT to OUTPUT, so at most 24 words. It used
-        # to be capped at 8, which silently dropped anything a payload expected
-        # beyond in[7]: the words simply were not written, and the payload then
-        # dereferenced whatever happened to be in the buffer.
-        for i, w in enumerate(words[:24]):
+        if len(words) > (HEADER-INPUT)//4:
+            raise ValueError('payload input would overlap its reply header')
+        for i, w in enumerate(words):
             struct.pack_into('<I', pkt, INPUT + 4 * i, w)
     else:
         struct.pack_into('<III', pkt, INPUT, seed, param, read_addr)

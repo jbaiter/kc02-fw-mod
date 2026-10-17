@@ -12,6 +12,8 @@
 #include "ax_time.h"
 #include "ax_sensor.h"
 #include "ax_csi_capture.h"
+#include "stock_photo.h"
+#include "ax_jpeg_capture.h"
 #include "ax_cam_power.h"
 #include "ax_iic_soft.h"
 #include "h63p_init.h"
@@ -22,6 +24,12 @@
 static u16 frame[PIXELS], camera[PIXELS], photo[PIXELS];
 static u16 theme_bg[PIXELS], theme_boot[PIXELS];
 static u8 bitmap[54+PIXELS*3];
+#ifdef LUMA_BENCH_RUN
+static u32 luma_photos_enabled, luma_jpeg_check;
+static int luma_jpeg_owned;
+AxJpegOutput luma_jpeg_output __attribute__((aligned(32)));
+static AxJpeg luma_jpeg_state;
+#endif
 /* Panel geometry, measured on the original KC02 in stock USB mode: the DE video
  * plane is 240x320 with a 256-byte pitch (stride register 0x40 words), not the
  * 240-byte pitch a straight 240-wide plane would suggest. Using 240 was never
@@ -53,11 +61,13 @@ volatile u32 luma_csi_fault;
 /* CSI servicing counters, available to the bounded entry and panel overlay. */
 volatile u32 luma_csi_seen, luma_csi_calls, luma_csi_rearms, luma_csi_rearm_armed;
 volatile u32 luma_csi_frame_ends;
+#ifndef LUMA_BENCH_RUN
 static u8 dma[512] __attribute__((aligned(32)));
-volatile u32 luma_clock_delta;
 static SdHw sd;
 static Fat fs;
 static unsigned photo_ids[GALLERY_MAX], count;
+#endif
+volatile u32 luma_clock_delta;
 /* GDB observation points; application state is never supplied by the host. */
 volatile App luma_app;
 volatile u32 luma_frames;
@@ -74,26 +84,46 @@ void *memset(void *dest, int v, size_t n)
     while (n--) { *d++=(u8)v; }
     return dest;
 }
+#ifndef LUMA_BENCH_RUN
 static int read_sector(u32 lba, u8 *out) { return sd_hw_read(&sd, lba, out); }
 static int write_sector(u32 lba, const u8 *in) { return sd_hw_write(&sd, lba, in); }
+#endif
 static int read_file(const char *name, u8 *out, unsigned cap, unsigned *n)
 {
+#ifdef LUMA_BENCH_RUN
+    /* Preserve the verified RAM-run theme; stock SD access is photo-only. */
+    (void)name; (void)out; (void)cap; (void)n;
+    return 0;
+#else
     return fat_read(&fs,name,out,cap,n);
+#endif
 }
 static unsigned photo_count(void)
 {
+#ifdef LUMA_BENCH_RUN
+    return stock_photo_count();
+#else
     count=fat_photos(&fs,photo_ids,GALLERY_MAX);
     return count;
+#endif
 }
 static int load_photo(unsigned index, u16 *out)
 {
+#ifdef LUMA_BENCH_RUN
+    return stock_photo_load(index,out);
+#else
     char name[13]; unsigned n;
     if (index>=count) { return 0; }
     photo_name(name,photo_ids[index]);
-    return read_file(name,bitmap,sizeof(bitmap),&n) && bmp_read(bitmap,n,out);
+    if (!read_file(name,bitmap,sizeof(bitmap),&n)) { return 0; }
+    return (int)photo_bmp_read(bitmap,n,out);
+#endif
 }
 static int save_photo(const u16 *pixels)
 {
+#ifdef LUMA_BENCH_RUN
+    return stock_photo_save(pixels);
+#else
     char name[13];
     unsigned id=1, i, n;
     photo_count();
@@ -101,8 +131,9 @@ static int save_photo(const u16 *pixels)
     for (i=0; i<count; i++) { if (id<=photo_ids[i]) { id=photo_ids[i]+1; } }
     if (id>99999) { return 0; }
     photo_name(name,id);
-    n=bmp_write(pixels,bitmap,sizeof(bitmap));
+    n=photo_bmp_write(pixels,bitmap,sizeof(bitmap));
     return n && fat_create(&fs,name,bitmap,n);
+#endif
 }
 static void lens(int selfie)
 {
@@ -203,6 +234,9 @@ static void lcd_service(void)
  */
 static void csi_service(void)
 {
+#ifdef LUMA_BENCH_RUN
+    if (luma_jpeg_owned) { return; }
+#endif
     u32 fault = ax_csi_capture_faults(&sensor_dma_y, &sensor_dma_uv);
     if (fault || luma_csi_fault) {
         luma_csi_fault |= fault;
@@ -569,6 +603,10 @@ static void hardware_init(void)
     lens(0);
 }
 
+#ifdef LUMA_BENCH_RUN
+#include "ax3292_jpeg.inc"
+#endif
+
 /* ---------------------------------------------------------------------------
  * ON-PANEL CAPTURE TELEMETRY
  *
@@ -662,6 +700,8 @@ static void bench_read_options(const volatile u32 *in)
     luma_test_pattern = in[7];
     luma_overlay_on = in[11];
     luma_csi_size_override = in[13];
+    luma_photos_enabled = in[14] == STOCK_PHOTO_WRITE_TOKEN;
+    luma_jpeg_check = in[15] == AX_JPEG_CHECK_TOKEN;
 }
 
 /* sensor_init populates this pointer. Apply exposure after hardware_init in
@@ -685,11 +725,12 @@ void firmware_main(void)
     Input input={0};
     AxTime clock={0,0,0};
     int have_bg=0, have_boot=0;
-    u32 last=~0u, capacity;
+    u32 last=~0u;
     unsigned n;
     hardware_init();
 #ifdef LUMA_BENCH_RUN
     bench_apply_exposure(BENCH_PACKET_IN);
+    stock_photo_init((int)luma_photos_enabled,bitmap,sizeof(bitmap),0);
 #endif
     app_init(a,&platform,ax_time_ms(&clock,REG(0x9908)));
 #ifdef LUMA_BENCH_RUN
@@ -713,8 +754,10 @@ ows,
      * storage rendered correctly. */
     app_render(a,frame,camera,photo,0,0,0);
     present(frame);
-    capacity=sd_hw_init(&sd,dma);
+#ifndef LUMA_BENCH_RUN
+    u32 capacity=sd_hw_init(&sd,dma);
     if (capacity) { fat_mount(&fs,read_sector,write_sector,capacity); }
+#endif
     if (a->theme.background[0] && read_file(a->theme.background,bitmap,sizeof(bitmap),&n)) { have_bg=bmp_read(bitmap,n,theme_bg); }
     if (a->theme.boot[0] && read_file(a->theme.boot,bitmap,sizeof(bitmap),&n)) { have_boot=bmp_read(bitmap,n,theme_boot); }
     int dirty=1;
@@ -731,7 +774,12 @@ ows,
         if (key!=KEY_NONE) { app_event(a,&platform,key,held,now,camera,photo); dirty=1; }
         /* Render on input as well as on the tick, so a stall in the clock cannot
          * make the UI look dead. */
-        if (!dirty && now-last < 40) { continue; }
+        if (!dirty && now-last < 40) {
+#ifdef LUMA_BENCH_RUN
+            if (stock_photo_poll(a,now,!(REG(0xc800)&2u))) { dirty=1; }
+#endif
+            continue;
+        }
         dirty=0;
         last=now;
         if (a->screen==CAMERA) { sensor_copy(); }
@@ -745,6 +793,9 @@ ows,
         lcd_key_level = key_sample();
         present(frame);
         luma_frames++;
+#ifdef LUMA_BENCH_RUN
+        if (stock_photo_poll(a,now,!(REG(0xc800)&2u))) { dirty=1; }
+#endif
     }
 }
 
@@ -762,13 +813,13 @@ ows,
  * Deliberately skips sd_hw_init/fat_mount: the stock firmware owns the card
  * over USB while this runs, and a bounded display check does not need storage.
  */
-volatile u32 luma_beacon[38] __attribute__((used, section(".data.bench")));
+volatile u32 luma_beacon[48] __attribute__((used, section(".data.bench")));
 __attribute__((used, noinline, section(".text.bench")))
 void luma_bench_once(void *buffer)
 {
     App *a=(App *)&luma_app;
     u32 i;
-    for (i=0;i<38;i++) { luma_beacon[i]=0; }
+    for (i=0;i<48;i++) { luma_beacon[i]=0; }
     /* Packet input starts at +1792, the same ABI as takeover's fixed address. */
     const volatile u32 *in = (const volatile u32 *)((u8 *)buffer + 1792u);
     bench_read_options(in);
@@ -788,6 +839,14 @@ void luma_bench_once(void *buffer)
      * The ops struct at 0x020e32a0 is populated by sensor_init via sensor_bringup,
      * so by this point ops+0xc70 is the real fp_exp_gain_wr. */
     bench_apply_exposure(in);
+    stock_photo_init((int)luma_photos_enabled,bitmap,sizeof(bitmap),0);
+    {
+        const StockFs *s=stock_photo_state();
+        luma_beacon[38]=(u32)s->ready;
+        luma_beacon[39]=s->count;
+        luma_beacon[40]=(u32)s->last_error;
+        luma_beacon[41]=(u32)s->writable;
+    }
     /* Let the new exposure take effect before the frame is read. */
     for (volatile unsigned s = 0; s < 200000u; ++s) { lcd_service(); csi_service(); }
     /* Which branch did the VENDOR autodetect take? sensor_autocheck (0x02058170)
@@ -861,6 +920,19 @@ void luma_bench_once(void *buffer)
             csi_service();
             luma_clock_delta = ax_time_ms(&t,REG(0x9908)) - t0;
             if (luma_clock_delta >= 3000u) { break; }
+        }
+    }
+    if (luma_jpeg_check) {
+        jpeg_ram_check(in[10]);
+        luma_beacon[42]=luma_jpeg_state.state;
+        luma_beacon[43]=luma_jpeg_state.fault;
+        luma_beacon[44]=luma_jpeg_state.length;
+        luma_beacon[45]=luma_jpeg_state.csi_events;
+        luma_beacon[46]=luma_jpeg_state.jpeg_events;
+        luma_beacon[47]=REG(0x4800);
+        if (in[10]) {
+            volatile u32 *r=(volatile u32 *)(in[10]+512u);
+            for (i=0;i<128;i++) r[i]=REG(0xb800u+4u*i);
         }
     }
     /* sensor_y / sensor_uv are CPU snapshots, never live DMA destinations. */

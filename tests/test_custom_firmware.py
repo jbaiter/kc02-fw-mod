@@ -34,7 +34,7 @@ class Fat(C.Structure):
 
 class App(C.Structure):
     _fields_ = [(n,C.c_uint) for n in ('screen','ink','setting','photo','count','boot_at','shutter_at','notice_until',
-                                    'booting','shutter','lens')] + [('notice',C.c_char*40),('theme',Theme)]
+                                    'booting','shutter','lens')] + [('notice',C.c_char*40),('theme',Theme),('photo_rows',C.c_uint)]
 
 class Platform(C.Structure):
     # NULL callbacks deliberately exercise unavailable devices.
@@ -60,6 +60,8 @@ def native(tmp_path_factory):
     lib.theme_parse.argtypes=[C.POINTER(Theme),C.c_void_p,C.c_uint]
     lib.bmp_read.argtypes=[C.c_void_p,C.c_uint,C.POINTER(U16)]
     lib.bmp_write.argtypes=[C.POINTER(U16),C.c_void_p,C.c_uint]
+    lib.photo_bmp_write.argtypes=lib.bmp_write.argtypes
+    lib.photo_bmp_read.argtypes=lib.bmp_read.argtypes
     lib.input_poll.argtypes=[C.POINTER(Input),C.c_int,U32,C.POINTER(C.c_int)]
     lib.fat_mount.argtypes=[C.POINTER(Fat),Read,Write,U32]
     lib.fat_read.argtypes=[C.POINTER(Fat),C.c_char_p,C.c_void_p,C.c_uint,C.POINTER(C.c_uint)]
@@ -138,22 +140,32 @@ def test_bmp_roundtrip_and_corrupt_headers(native):
     assert not native.bmp_write(pixels,out,len(blob)-1)
 
 
-def test_input_debounce_and_hold_no_shutter(native):
+def test_input_emits_on_press_not_release_or_hold(native):
     i=Input(); held=C.c_int()
     poll=lambda raw,t:native.input_poll(C.byref(i),raw,t,C.byref(held))
     assert poll(3,0)==0
-    assert poll(0,10)==0  # bounce
-    assert poll(3,20)==0
-    assert poll(3,50)==0
-    assert poll(3,699)==0
-    assert poll(3,700)==3 and held.value==1
+    assert poll(0,5)==0  # bounce
+    assert poll(3,10)==0
+    assert poll(3,21)==0
+    assert poll(3,22)==3 and held.value==0  # 12 ms, no wait for release
+    assert poll(3,700)==0 and held.value==0
     assert poll(3,900)==0
     assert poll(0,950)==0
-    assert poll(0,980)==0  # release consumed, no shutter
+    assert poll(0,962)==0  # release never repeats an action
     assert poll(3,1000)==0
-    assert poll(3,1030)==0
+    assert poll(3,1012)==3 and held.value==0
     assert poll(0,1110)==0
-    assert poll(0,1140)==3 and held.value==0
+    assert poll(0,1122)==0
+
+
+@pytest.mark.parametrize('key',[1,2,3,4,5,6])
+def test_each_button_acts_once_on_debounced_press(native,key):
+    i=Input(); held=C.c_int()
+    assert native.input_poll(C.byref(i),key,100,C.byref(held))==0
+    assert native.input_poll(C.byref(i),key,112,C.byref(held))==key
+    assert native.input_poll(C.byref(i),key,1000,C.byref(held))==0
+    assert native.input_poll(C.byref(i),0,1010,C.byref(held))==0
+    assert native.input_poll(C.byref(i),0,1022,C.byref(held))==0
 
 
 def test_render_state_and_shared_print_policy(native):
@@ -170,7 +182,7 @@ def test_render_state_and_shared_print_policy(native):
     assert a.ink==1
     native.app_event(C.byref(a),C.byref(p),4,0,1700,pixels,pixels)
     assert a.screen==1 and a.ink==1
-    native.app_event(C.byref(a),C.byref(p),3,1,2400,pixels,pixels)
+    native.app_event(C.byref(a),C.byref(p),5,0,2400,pixels,pixels)
     assert a.ink==2 and not a.shutter
     native.app_event(C.byref(a),C.byref(p),4,0,2500,pixels,pixels)
     assert a.screen==2

@@ -77,17 +77,25 @@ def test_shared_options_use_host_size_word_13(tmp_path):
     source = '''
 #include <stdint.h>
 #include <assert.h>
-typedef uint32_t u32;
-static u32 luma_test_pattern, luma_overlay_on, luma_csi_size_override;
+#include "stock_photo.h"
+#include "ax_jpeg_capture.h"
+static u32 luma_test_pattern, luma_overlay_on, luma_csi_size_override, luma_photos_enabled, luma_jpeg_check;
 ''' + board[start:end] + '''
 int main(void) {
-    u32 in[14] = {0};
+    u32 in[16] = {0};
     in[7] = 1; in[11] = 1;
     in[12] = 0xdeadbeef;  /* reserved host word must not supply the size */
     in[13] = 0x02cf04ff;
     bench_read_options(in);
     assert(luma_test_pattern == 1 && luma_overlay_on == 1);
     assert(luma_csi_size_override == 0x02cf04ff);
+    assert(!luma_photos_enabled);
+    in[14] = 1; bench_read_options(in); assert(!luma_photos_enabled);
+    in[14] = 0xa5a5a5a5; bench_read_options(in); assert(!luma_photos_enabled);
+    in[14] = STOCK_PHOTO_WRITE_TOKEN; bench_read_options(in); assert(luma_photos_enabled);
+    assert(!luma_jpeg_check);
+    in[15]=0xa5a5a5a5; bench_read_options(in); assert(!luma_jpeg_check);
+    in[15]=AX_JPEG_CHECK_TOKEN; bench_read_options(in); assert(luma_jpeg_check);
     return 0;
 }
 '''
@@ -95,6 +103,7 @@ int main(void) {
     file.write_text(source)
     binary = tmp_path / 'options'
     subprocess.run([cc, '-std=c99', '-Wall', '-Wextra', '-Werror',
+                    '-I', str(ROOT / 'custom-firmware/include'),
                     str(file), '-o', str(binary)], check=True)
     subprocess.run([str(binary)], check=True)
 

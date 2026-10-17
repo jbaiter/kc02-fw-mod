@@ -19,12 +19,16 @@ static void ink_next(App *a, int direction)
 {
     a->ink = (Ink)((a->ink + (direction > 0 ? 1 : 2)) % 3);
 }
-static int gallery_load(App *a, const Platform *p, u16 *photo)
+static int gallery_load(App *a, const Platform *p, u16 *photo, u32 now)
 {
     unsigned i;
+    int result;
     /* A damaged/missing photo must not silently display the preceding one. */
-    for (i=0; i<PIXELS; i++) { photo[i]=a->theme.bg; }
-    return p->load_photo && p->load_photo(a->photo,photo);
+    for (i=0; i<PIXELS; i++) { photo[i]=0; }
+    result = p->load_photo ? p->load_photo(a->photo,photo) : 0;
+    if (result == PHOTO_QUEUED) { app_notice(a,"Loading...",now); }
+    else if (result) { a->photo_rows = result == CAMERA_ROWS ? CAMERA_ROWS : LH; }
+    return result;
 }
 void app_init(App *a, const Platform *p, u32 now)
 {
@@ -35,6 +39,7 @@ void app_init(App *a, const Platform *p, u32 now)
     a->ink = INK_OFF; /* Never expend paper at first boot. */
     a->boot_at = now;
     a->booting = 1;
+    a->photo_rows = LH;
     if (p->read_file && p->read_file("THEME.INI",config,sizeof(config),&n)) {
         if (!theme_parse(&a->theme,config,n)) { app_notice(a,"Invalid theme - using defaults",now+1800); }
     }
@@ -44,17 +49,17 @@ void app_event(App *a, const Platform *p, Key key, int held, u32 now,
                const u16 *camera, u16 *photo)
 {
     unsigned i;
-    if (a->booting || a->shutter) { return; }
+    if (a->booting) { return; }
     if (key == KEY_BACK) {
         a->screen = (Screen)((a->screen+1)%3);
         a->setting = 0;
         a->notice[0] = 0;
-        if (a->screen == GALLERY && a->count && !gallery_load(a,p,photo)) {
+        if (a->screen == GALLERY && a->count && !gallery_load(a,p,photo,now)) {
             app_notice(a,"Photo unavailable",now);
         }
         return;
     }
-    if (key == KEY_INK || (key == KEY_OK && held && a->screen != SETTINGS)) { ink_next(a,1); return; }
+    if (key == KEY_INK) { ink_next(a,1); return; }
     if (held) { return; }
     if (key == KEY_LENS && a->screen == CAMERA && p->lens) {
         a->lens = !a->lens; p->lens(a->lens); return;
@@ -76,21 +81,28 @@ void app_event(App *a, const Platform *p, Key key, int held, u32 now,
         if (key == KEY_PREV) { ink_next(a,-1); }
         if (key == KEY_NEXT) { ink_next(a,1); }
         if (key == KEY_OK) {
+            if (a->shutter) { return; }  /* no repeat capture during one flash */
+            int result;
             for (i = 0; i < PIXELS; i++) { photo[i] = camera[i]; }
+            a->photo_rows = CAMERA_ROWS;
             a->shutter = 1; a->shutter_at = now;
-            if (p->save_photo && p->save_photo(photo)) {
-                a->count = p->photo_count();
+            result = p->save_photo ? p->save_photo(photo) : 0;
+            if (result == PHOTO_SAVED) {
+                a->count = p->photo_count ? p->photo_count() : a->count+1;
                 a->photo = a->count ? a->count-1 : 0;
                 app_notice(a,"Photo saved",now);
                 if (a->ink != INK_OFF && (!p->print_photo || !p->print_photo(photo,a->ink))) {
                     app_notice(a,"Saved - printer not ready",now);
                 }
-            } else { app_notice(a,"Not saved - check SD card",now); }
+            } else if (result == PHOTO_QUEUED) { app_notice(a,"Saving...",now); }
+            else if (result == PHOTO_BUSY) { app_notice(a,"Photo I/O busy",now); }
+            else if (result == PHOTO_FULL) { app_notice(a,"Gallery full",now); }
+            else { app_notice(a,"Not saved - check SD card",now); }
         }
     } else {
         if ((key == KEY_PREV || key == KEY_NEXT) && a->count) {
             a->photo = (a->photo + (key == KEY_NEXT ? 1 : a->count-1)) % a->count;
-            if (!gallery_load(a,p,photo)) { app_notice(a,"Photo unavailable",now); }
+            if (!gallery_load(a,p,photo,now)) { app_notice(a,"Photo unavailable",now); }
         }
         if (key == KEY_OK && a->count) {
             if (a->ink == INK_OFF) { app_notice(a,"No print - hold OK to change",now); }
@@ -155,17 +167,20 @@ void app_render(App *a, u16 *f, const u16 *camera, const u16 *photo,
         box(f,120,201,(int)(progress*80/255),2,t->accent);
         return;
     }
-    if (a->screen == CAMERA) {
-        /* Full-width 16:9 preview between the existing header/footer. Sample
-         * only the valid 180 rows, not the 60 black storage-padding rows. */
+    if (a->screen == CAMERA ||
+        (a->screen == GALLERY && a->count && a->photo_rows == CAMERA_ROWS)) {
+        const u16 *src = a->screen == CAMERA ? camera : photo;
+        /* Native 16:9 captures use full width in both the live view and gallery. */
         box(f,0,34,LW,185,0);
         for (row = 0; row < CAMERA_ROWS; row++) {
             unsigned x;
-            for (x = 0; x < LW; x++) { f[(row+36)*LW+x] = camera[row*LW+x]; }
+            for (x = 0; x < LW; x++) { f[(row+36)*LW+x] = src[row*LW+x]; }
         }
-        for (i = 0; i < 4; i++) {
-            int x = i&1 ? LW-13 : 6, y = i&2 ? 201 : 42;
-            box(f,x,y,7,1,t->text); box(f,i&1 ? x+6 : x,y,1,7,t->text);
+        if (a->screen == CAMERA) {
+            for (i = 0; i < 4; i++) {
+                int x = i&1 ? LW-13 : 6, y = i&2 ? 201 : 42;
+                box(f,x,y,7,1,t->text); box(f,i&1 ? x+6 : x,y,1,7,t->text);
+            }
         }
     } else if (a->screen == GALLERY && a->count) {
         /* Stored-photo ABI remains 320x240; keep its 4:3 gallery mapping. */
@@ -208,11 +223,11 @@ void app_render(App *a, u16 *f, const u16 *camera, const u16 *photo,
         }
     }
     box(f,0,219,LW,21,t->bg);
-    text(f,14,222,a->screen == SETTINGS ? "ARROWS: select   OK: change" : "HOLD OK: ink   BACK: screens",t->muted,0);
+    text(f,14,222,a->screen == SETTINGS ? "ARROWS: select   OK: change" : "OK: photo   INK: mode   BACK: screens",t->muted,0);
     if (a->notice[0] && (i32)(a->notice_until-now) > 0) {
         round_box(f,19,181,282,30,7,t->panel); text(f,30,188,a->notice,t->text,0);
     }
-    if (a->shutter) {
+    if (a->shutter && a->screen == CAMERA) {
         unsigned phase = (now-a->shutter_at)*512/t->shutter_ms;
         unsigned cover = phase < 256 ? phase : 512-phase;
         int h = cover*CAMERA_ROWS/(2*256);

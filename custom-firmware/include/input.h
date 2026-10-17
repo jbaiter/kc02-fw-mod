@@ -7,6 +7,7 @@ typedef struct {
     u32 changed_at, down_at;
     int held;
 } Input;
-/* Debounce 30 ms; hold OK for 650 ms emits one ink event, never a shutter. */
+/* Debounce 12 ms, emit once on press. Release/hold emit nothing; *held is zero.
+ * The retained Input layout keeps existing observation/debug ABIs stable. */
 Key input_poll(Input *in, Key raw, u32 now, int *held);
 #endif

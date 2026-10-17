@@ -125,32 +125,44 @@ int bmp_check(const u8 *b, unsigned size)
     if (le32(b+2) && le32(b+2) != size) { return 0; }
     return 1;
 }
-int bmp_read(const u8 *b, unsigned size, u16 *out)
+static unsigned bmp_decode(const u8 *b, unsigned size, u16 *out, int photo)
 {
-    unsigned x, y, start;
+    unsigned x, y, start, rows;
     i32 height;
     if (size < 54 || b[0] != 'B' || b[1] != 'M' || le32(b+14) != 40 ||
         le32(b+18) != LW || le16(b+26) != 1 || le16(b+28) != 24 || le32(b+30)) { return 0; }
     height = (i32)le32(b+22);
+    if (height == LH || height == -LH) { rows = LH; }
+    else if (photo && (height == CAMERA_ROWS || height == -CAMERA_ROWS)) { rows = CAMERA_ROWS; }
+    else { return 0; }
     start = le32(b+10);
-    if ((height != LH && height != -LH) || start < 54 || start > size ||
-        LW*LH*3u > size-start) { return 0; }
-    for (y = 0; y < LH; y++) {
-        const u8 *row = b + start + (height > 0 ? LH-1-y : y)*LW*3;
+    if (start < 54 || start > size || LW*rows*3u > size-start ||
+        (le32(b+2) && le32(b+2) != size)) { return 0; }
+    for (y = 0; y < rows; y++) {
+        const u8 *row = b + start + (height > 0 ? rows-1-y : y)*LW*3;
         for (x = 0; x < LW; x++) { out[y*LW+x] = RGB(row[x*3+2],row[x*3+1],row[x*3]); }
     }
-    return 1;
+    for (y = rows*LW; y < PIXELS; y++) { out[y] = 0; }
+    return rows;
 }
-unsigned bmp_write(const u16 *pixels, u8 *out, unsigned cap)
+int bmp_read(const u8 *b, unsigned size, u16 *out)
 {
-    unsigned i, x, y, size = 54 + LW*LH*3;
+    return bmp_decode(b,size,out,0) != 0;
+}
+unsigned photo_bmp_read(const u8 *b, unsigned size, u16 *out)
+{
+    return bmp_decode(b,size,out,1);
+}
+static unsigned bmp_encode(const u16 *pixels, u8 *out, unsigned cap, unsigned rows)
+{
+    unsigned i, x, y, size = 54 + LW*rows*3;
     if (cap < size) { return 0; }
     for (i = 0; i < 54; i++) { out[i] = 0; }
     out[0] = 'B'; out[1] = 'M'; put32(out+2,size); put32(out+10,54);
-    put32(out+14,40); put32(out+18,LW); put32(out+22,LH);
-    put16(out+26,1); put16(out+28,24); put32(out+34,LW*LH*3);
-    for (y = 0; y < LH; y++) {
-        u8 *row = out + 54 + (LH-1-y)*LW*3;
+    put32(out+14,40); put32(out+18,LW); put32(out+22,rows);
+    put16(out+26,1); put16(out+28,24); put32(out+34,LW*rows*3);
+    for (y = 0; y < rows; y++) {
+        u8 *row = out + 54 + (rows-1-y)*LW*3;
         for (x = 0; x < LW; x++) {
             u16 c = pixels[y*LW+x];
             row[x*3] = (c&31)*255/31;
@@ -159,6 +171,14 @@ unsigned bmp_write(const u16 *pixels, u8 *out, unsigned cap)
         }
     }
     return size;
+}
+unsigned bmp_write(const u16 *pixels, u8 *out, unsigned cap)
+{
+    return bmp_encode(pixels,out,cap,LH);
+}
+unsigned photo_bmp_write(const u16 *pixels, u8 *out, unsigned cap)
+{
+    return bmp_encode(pixels,out,cap,CAMERA_ROWS);
 }
 void print_row(const u16 *image, unsigned y, Ink ink, u8 dots[384])
 {

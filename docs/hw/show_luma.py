@@ -33,6 +33,7 @@ sys.path.insert(0, str(HERE))
 import execute_payload as hw
 import dump_firmware as dump
 import run_ram_image as rri
+from sd_safety import require_unmounted
 
 # Loaded by path: a top-level tools/build.py exists and would shadow this module
 # if it were imported by name after execute_payload puts REPO/tools on sys.path.
@@ -42,10 +43,34 @@ luma_build = importlib.util.module_from_spec(_spec)
 _spec.loader.exec_module(luma_build)
 
 CORE = REPO / 'custom-firmware'
+PHOTO_WRITE_TOKEN = 0x53445048
+JPEG_CHECK_TOKEN = 0x4a504743
 
 # Canonical original.bin bodies, independently read from the Ghidra image.
 # Read-only approvals here do not authorise uploads to any of these addresses.
 LUMA_STOCK_SITES = (
+    (0x02070f7c, bytes.fromhex(
+        'f097e1d7fc4fe1d7e40fe1d7e817e1d7ec77e1d7f4a7e1d7f8b7e1d78cff219c000003bc042001d4ff0045a60900609d'), 'FatFs open'),
+    (0x02071440, bytes.fromhex(
+        'd817e1d7e097e1d7e4a7e1d7e8b7e1d7fc4fe1d7d40fe1d7dc77e1d7ecc7e1d7f0d7e1d7f4e7e1d7f8f7e1d7000084aa'), 'FatFs read'),
+    (0x0207174c, bytes.fromhex(
+        'd817e1d7e097e1d7e4a7e1d7e8b7e1d7fc4fe1d7d40fe1d7dc77e1d7ecc7e1d7f0d7e1d7f4e7e1d7f8f7e1d7000084aa'), 'FatFs write'),
+    (0x02071d58, bytes.fromhex(
+        'f817e1d7fc4fe1d7f40fe1d7f0ff219c000043a85cffff0700002bbc07000010000062a8000081a882edff0700002bbc'), 'FatFs close'),
+    (0x020723a0, bytes.fromhex(
+        'fc4fe1d7f40fe1d7f817e1d7ecff219c000003bc002001d40900809c3f000010000043a80400819c000061a80000a09c'), 'FatFs opendir'),
+    (0x0207250c, bytes.fromhex(
+        'f017e1d7f477e1d7f897e1d7fc4fe1d7ec0fe1d7e8ff219c000044aa000081a80000c3a996ebff0700002bbc00004ba8'), 'FatFs readdir'),
+    (0x020724d0, bytes.fromhex(
+        'f817e1d7fc4fe1d7f40fe1d7f0ff219c000043a8000081a8a8ebff0700002bbc02000010005802d41000219cfcff2185'), 'FatFs closedir'),
+    (0x0203d05c, bytes.fromhex(
+        'f017e1d7f477e1d7f897e1d7fc4fe1d7ec0fe1d70000c3a9ecff219c002045e2000044a8009022e40e00000c00006ea8'), 'SD read'),
+    (0x0203cf8c, bytes.fromhex(
+        'ec17e1d7f077e1d7f497e1d7f8a7e1d7fc4fe1d7e80fe1d7000045aae8ff219c0000c3a9002085e2000044a800a022e4'), 'SD write'),
+    (0x0203c6e8, bytes.fromhex(
+        'f877e1d70c02c019f417e1d720eccea9fc4fe1d702006e8cf00fe1d7030003bcf0ff219c0000409c100000100c00609c'), 'SD stop'),
+    (0x0203cf44, bytes.fromhex(
+        '0c026018fc0fe1d720ec63a8fcff219c040063850400219cfcff218400480044'), 'SD capacity'),
     (0x0203e5c4, bytes.fromhex(
         'fc4fe1d7f40fe1d7f817e1d7f0ff219c001801d496ffff0700008ba800006184000004bc26000010c0ff409c3f00639c'), 'allocator'),
     (0x020583f0, bytes.fromhex(
@@ -54,6 +79,17 @@ LUMA_STOCK_SITES = (
         'fc4fe1d7f417e1d7f877e1d7f00fe1d7000044a8d0ff219c080280180400a09c804984a80000c3a90400619cc37d0004'), 'H63P exposure writer'),
     (0x020349f8, bytes.fromhex(
         'e417e1d7ec97e1d7f0a7e1d7f4b7e1d7f8c7e1d7fc4fe1d7e00fe1d7e877e1d7e0ff219cffffe7a420008194ffffc5a6'), 'CSI LCD scaler'),
+    (0x02036964, bytes.fromhex('f417e1d7ff0043a40100609cfc4fe1d7f877e1d7f00fe1d7ff00c4a5f0ff219c'), 'JPEG encode init'),
+    (0x02034bcc, bytes.fromhex('dc17e1d7e077e1d7e497e1d7e8a7e1d7ecb7e1d7f0c7e1d7f4d7e1d7f8e7e1d7'), 'CSI JPEG crop'),
+    (0x02034260, bytes.fromhex('1f00c69cff07e5a44500c6b8fc17e1d7f80fe1d70633a5e00500a5b85838c0c2'), 'CSI JPEG frame'),
+    (0x02036948, bytes.fromhex('fc0fe1d72018e0c2fcff219c2420e0c20400219cfcff218400480044f417e1d7'), 'JPEG inline input'),
+    (0x020366fc, bytes.fromhex('fc0fe1d70028a3e4fcff219c02000010000065a80030a4e402000010000086a8'), 'JPEG geometry'),
+    (0x020367a4, bytes.fromhex('00b880a8fc17e1d7f80fe1d77ff840180000a4b4ffff42a80f0063a40310a5e0'), 'JPEG quality'),
+    (0x020368e4, bytes.fromhex('00b880a8fc17e1d7f80fe1d7e7ff40180000a4b4ffff42a8030063a40310a5e0'), 'JPEG info mode'),
+    (0x020364d0, bytes.fromhex('fc4fe1d7f417e1d7f877e1d7f00fe1d7000044a8f0ff219c021884e00000c3a9'), 'JPEG output bounds'),
+    (0x02036b9c, bytes.fromhex('a4b860a8fc17e1d70000409cf80fe1d700b8a0a8001003c0f8ff219c000085b4'), 'JPEG manual start'),
+    (0x0202b0d4, bytes.fromhex('fc17e1d7fbff4018f80fe1d700c042a8f8ff219c0010a3e0fb7f4018ffbf42a8001045e412000010000024bc1000000c0010a4bc0000c4a8020000100010c09cf0ff409c0018e6e00310a3e0023084e00228a7e0ffffa59c4400a5b81c2860c0141860c0000067a8f0ffff030800219cf8ff2184fcff418400480044fc17e1d7'), 'DMA cache flush'),
+    (0x0202b150, bytes.fromhex('fc17e1d7fbff4018f80fe1d700c042a8f8ff219c0010a3e0fb7f4018ffbf42a8001045e412000010000024bc1000000c0010a4bc0000c4a8020000100010c09cf0ff409c0018e6e00310a3e0023084e00228a7e0ffffa59c4400a5b81c2860c0041860c0000067a8f0ffff030800219cf8ff2184fcff418400480044fc17e1d7'), 'DMA cache invalidate'),
 )
 
 
@@ -71,6 +107,16 @@ class LumaRamTransport(rri.RamTransport):
                 raise dump.DumpError(f'Unsupported firmware: {name} signature differs')
 
 
+def run_words(record, args, takeover=False):
+    """One packet layout for both entry paths; no implicit permission from padding."""
+    return [record['start' if takeover else 'entry'], record['beacon'],
+            record['bss_start'], record['bss_end'], 0 if takeover else args.hold_frames,
+            args.exp, args.gain, int(args.test_pattern), record['sensor_y'],
+            record['sensor_uv'], args.scratch, int(args.overlay), 0, args.size,
+            PHOTO_WRITE_TOKEN if args.photos else 0,
+            JPEG_CHECK_TOKEN if getattr(args,'jpeg_check',False) else 0]
+
+
 def capture_scratch(record, size=512):
     """Reserve aligned scratch above BSS, below the 16 KiB stack reserve."""
     base, extent = record['base'], record['extent']
@@ -81,12 +127,34 @@ def capture_scratch(record, size=512):
     return address
 
 
+def read_run_health(t, record):
+    raw = t.read_region(record['beacon'] + 34 * 4, 32)
+    words = [int.from_bytes(raw[i:i+4], 'little') for i in range(0, 32, 4)]
+    return dict(de_timeouts=words[0], capture_fault=words[1],
+                photo_fs=dict(ready=words[4], count=words[5],
+                              error=words[6], writable=words[7]))
+
+
+def require_photo_preflight(parsed, health):
+    out = parsed['output']
+    if (not parsed['magic_ok'] or len(out) <= 34 or out[0] != 1 or out[1] != 0x4c554d42 or
+            health['de_timeouts'] or health['capture_fault'] or
+            not health['photo_fs']['ready'] or not health['photo_fs']['writable'] or
+            health['photo_fs']['error'] or out[34] == 0):
+        raise dump.DumpError(f'photo preflight refused takeover: {health}')
+
+
 def main():
     ap = argparse.ArgumentParser(description=__doc__)
     ap.add_argument('--payload-dir', type=Path, required=True,
                     help='directory containing ramalloc.bin and lumarun.bin')
     ap.add_argument('--output', type=Path, required=True)
-    ap.add_argument('--block-bytes', type=lambda v: int(v, 0), default=0x300000)
+    ap.add_argument('--block-bytes', type=lambda v: int(v, 0), default=0x380000)
+    ap.add_argument('--photos', action='store_true',
+                    help='enable create-only SD photo files; refuses a host-mounted card. '
+                         'A takeover first runs a read-only filesystem/capture preflight.')
+    ap.add_argument('--jpeg-check', action='store_true',
+                    help='bounded RAM-only 1280x720 hardware-JPEG test; no photo-file writes')
     ap.add_argument('--hold-frames', type=int, default=40)
     ap.add_argument('--exp', type=lambda v: int(v, 0), default=0,
                     help='exposure to program via the sensor fp_exp_gain_wr, 0 to skip')
@@ -109,6 +177,10 @@ def main():
                          'The camera needs a pinhole reset afterwards; nothing is flashed, so '
                          'that is expected and reversible.')
     a = ap.parse_args()
+    if a.photos:
+        ap.error('SD saves are gated until the full-resolution JPEG job replaces the preview-BMP prototype')
+    if a.jpeg_check and a.takeover:
+        ap.error('--jpeg-check is a bounded RAM-only test, not a takeover option')
     if not 0 <= a.hold_frames <= 64:
         raise SystemExit('--hold-frames must be 0..64')
 
@@ -132,9 +204,11 @@ def main():
         cams, webcams = dump.find_cameras(usb, backend)
         dev = dump.select_camera(cams, webcams, 1)
         report['device'] = dump.device_label(dev)
+        require_unmounted(dev)
+        report['photo_writes_enabled'] = bool(a.photos)
         # Placeholder window: only needs to clear the harness regions. It is set
         # to the real allocated block as soon as the allocator names it.
-        with LumaRamTransport(usb, dev, 5000, window=(0x02104000, 0x1000)) as t:
+        with LumaRamTransport(usb, dev, 20000 if a.jpeg_check else 5000, window=(0x02104000, 0x1000)) as t:
             t.check_firmware()
             print('  firmware signatures verified', flush=True)
             if t.hoist_active:
@@ -159,7 +233,7 @@ def main():
             extent = record['extent']
             # Display double buffering grew BSS past the old fixed 0x168000
             # scratch offset. Derive it from this build and guard the stack.
-            scratch = capture_scratch(record)
+            scratch = capture_scratch(record,1536 if a.jpeg_check else 512)
             report['capture_scratch'] = scratch
             if base + extent > base + size:
                 raise dump.DumpError('bench image does not fit the allocated block')
@@ -167,11 +241,8 @@ def main():
             report['luma_image_sha256'] = record['sha256']
             t.window = (base, extent)
 
-            words = [record['entry'], record['beacon'], record['bss_start'],
-                     record['bss_end'], a.hold_frames, a.exp, a.gain,
-                     1 if a.test_pattern else 0,
-                     record['sensor_y'], record['sensor_uv'], scratch,
-                     1 if a.overlay else 0, 0, a.size]
+            a.scratch = scratch
+            words = run_words(record,a)
             packet = hw.build_packet(words=words)
             (a.output / 'run-input.bin').write_bytes(packet)
             t.blobs[base] = image
@@ -179,16 +250,23 @@ def main():
             print(f'  uploaded + verified {len(image):,} B @ 0x{base:08X}', flush=True)
 
             if a.takeover:
+                if a.photos:
+                    # Only directory reads and capture occur in the bounded
+                    # entry. No save is queued until a physical shutter press.
+                    print('  read-only photo/capture preflight before takeover', flush=True)
+                    check = hw.execute_verified(t, run_code, packet)
+                    (a.output / 'preflight-reply.bin').write_bytes(check)
+                    parsed_check = hw.parse_reply(check)
+                    health = read_run_health(t,record)
+                    report['photo_preflight'] = health
+                    require_photo_preflight(parsed_check,health)
+                    print(f'  photo preflight passed: {health}', flush=True)
                 # Jump to Luma's own entry. It disables interrupts, zeroes its own
                 # bss, sets its own stack and runs its main loop forever, so this
                 # call never returns: the stock firmware stops owning the display
                 # and the panel shows Luma. The resulting USB timeout is the
                 # expected outcome, not a failure, so it must not be retried.
-                words = [record['start'], record['beacon'], record['bss_start'],
-                         record['bss_end'], 0, a.exp, a.gain,
-                         1 if a.test_pattern else 0,
-                         record['sensor_y'], record['sensor_uv'], scratch,
-                         1 if a.overlay else 0, 0, a.size]
+                words = run_words(record,a,takeover=True)
                 packet = hw.build_packet(words=words)
                 (a.output / 'takeover-input.bin').write_bytes(packet)
                 print('  >>> jumping to Luma _start; the panel should now show Luma <<<', flush=True)
@@ -217,8 +295,32 @@ def main():
                                   display_registers_restored=out[12] == 1,
                                   commit_guard_polls=guard_polls)
             report['luma']['clock_ms_across_spin'] = out[25]
-            de_timeouts = int.from_bytes(t.read_region(record['beacon'] + 34 * 4, 4), 'little')
-            capture_fault = int.from_bytes(t.read_region(record['beacon'] + 35 * 4, 4), 'little')
+            health = read_run_health(t,record)
+            de_timeouts, capture_fault = health['de_timeouts'], health['capture_fault']
+            report['luma']['photo_fs'] = health['photo_fs']
+            print(f'  stock photo filesystem: {health["photo_fs"]}', flush=True)
+            if a.jpeg_check:
+                import io
+                from PIL import Image
+                raw = t.read_region(record['beacon']+42*4,24)
+                jw = [int.from_bytes(raw[k:k+4],'little') for k in range(0,24,4)]
+                report['jpeg'] = dict(state=jw[0],fault=jw[1],length=jw[2],
+                                      csi_events=jw[3],jpeg_events=jw[4],picmr=jw[5])
+                (a.output/'jpeg-regs.bin').write_bytes(t.read_region(scratch+512,512))
+                (a.output/'jpeg-csi-regs.bin').write_bytes(t.read_region(scratch+1024,512))
+                print(f'  hardware JPEG: {report["jpeg"]}',flush=True)
+                if jw[0]!=3 or jw[1] or jw[5] or not 0<jw[2]<=record['jpeg_capacity']:
+                    raise dump.DumpError(f'hardware JPEG test failed: {report["jpeg"]}')
+                jpeg=t.read_region(record['jpeg_buffer'],jw[2])
+                (a.output/'sensor-fullres.jpg').write_bytes(jpeg)
+                image=Image.open(io.BytesIO(jpeg))
+                if image.size!=(1280,720):
+                    raise dump.DumpError(f'wrong JPEG resolution: {image.size}')
+                image.load()  # marker checks alone do not prove a decodable photo
+                report['jpeg'].update(decoded_size=list(image.size),
+                                      sha256=hashlib.sha256(jpeg).hexdigest())
+                image.thumbnail((640,360))
+                image.save(a.output/'sensor-fullres-preview.png')
             report['luma']['de_present_timeouts'] = de_timeouts
             report['luma']['capture_fault'] = capture_fault
             # Preserve configuration even on a refused panel trial.

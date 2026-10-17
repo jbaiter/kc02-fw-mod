@@ -28,7 +28,8 @@ def build(output, prefix):
              '-fdata-sections', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables',
              '-Wall', '-Wextra', '-Werror', '-I'+str(ROOT/'include')]
     sources = [ROOT/'boards/start.S', ROOT/'boards/ax3292.c',
-               *(ROOT/'src'/n for n in ('ui.c','paint.c','theme.c','input.c','storage.c','sd_hw.c','crc.c'))]
+               *(ROOT/'src'/n for n in ('ui.c','paint.c','theme.c','input.c','storage.c',
+                                      'sd_hw.c','stock_fs.c','stock_photo.c','ax_jpeg_capture.c','crc.c'))]
     manifests = {}
     for board_id, board in enumerate(BOARDS):
         folder = output/board
@@ -55,10 +56,10 @@ def build(output, prefix):
         print(f'{board}: {record["size"]:,} bytes -> {raw}')
     return manifests
 
-# 2.75 MiB: guarded DMA arenas include bench-only spill space for an unscaled
-# 1280x720 frame. show_luma allocates 3 MiB and places scratch above actual BSS,
-# below the stack reserve. Cold/standalone images retain their 2 MiB linker budget.
-BENCH_LENGTH = 0x2c0000
+# 3 MiB: guarded DMA spill arenas plus a separate immutable encoded-photo
+# buffer for cooperative SD writes. show_luma allocates 0x340000 and places
+# scratch above actual BSS, below the 16 KiB stack reserve. Cold images keep 2 MiB.
+BENCH_LENGTH = 0x340000
 
 def bench_ld(base):
     """Linker script for the bounded hardware RAM run at an explicit base."""
@@ -93,7 +94,8 @@ def build_bench(output, prefix, base):
              '-fdata-sections', '-fno-unwind-tables', '-fno-asynchronous-unwind-tables',
              '-Wall', '-Wextra', '-Werror', '-I'+str(ROOT/'include'), '-DLUMA_BENCH_RUN']
     sources = [ROOT/'boards/start.S', ROOT/'boards/ax3292.c',
-               *(ROOT/'src'/n for n in ('ui.c','paint.c','theme.c','input.c','storage.c','sd_hw.c','crc.c'))]
+               *(ROOT/'src'/n for n in ('ui.c','paint.c','theme.c','input.c','storage.c',
+                                      'sd_hw.c','stock_fs.c','stock_photo.c','ax_jpeg_capture.c','crc.c'))]
     elf, raw = folder/'luma.bench.elf', folder/'luma.bench.bin'
     cmd = [cc, *flags, '-DBOARD_ID=0', '-nostdlib', '-Wl,--gc-sections', '-Wl,-e,_start',
            '-Wl,-Map,'+str(folder/'luma.bench.map'), '-T', str(ld), *map(str, sources), '-o', str(elf)]
@@ -101,7 +103,7 @@ def build_bench(output, prefix, base):
     subprocess.run([objcopy, '-O', 'binary', str(elf), str(raw)], check=True)
     wanted = ('_start', 'luma_bench_once', '__bss_start', '__bss_end', '__stack_top',
               'luma_beacon', 'sensor_y', 'sensor_uv', 'sensor_dma_y', 'sensor_dma_uv',
-              'lcd_y', 'lcd_uv')
+              'lcd_y', 'lcd_uv', 'luma_jpeg_output')
     out = subprocess.run([nm, '-n', str(elf)], check=True, capture_output=True, text=True).stdout
     symbols = {}
     for line in out.splitlines():
@@ -125,6 +127,7 @@ def build_bench(output, prefix, base):
                   capture_layout='guarded-dma-separate-cpu-snapshot-v1',
                   capture_y_dma=symbols['sensor_dma_y'],
                   capture_uv_dma=symbols['sensor_dma_uv'],
+                  jpeg_buffer=symbols['luma_jpeg_output']+32, jpeg_capacity=0x80000,
                   beacon=symbols['luma_beacon'], bss_start=symbols['__bss_start'],
                   bss_end=symbols['__bss_end'], stack_top=symbols['__stack_top'],
                   size=raw.stat().st_size, sha256=sha(raw), elf_sha256=sha(elf), command=cmd)

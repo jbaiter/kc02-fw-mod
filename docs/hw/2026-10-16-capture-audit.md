@@ -151,3 +151,43 @@ These tests do not model silicon timing or prove physical display quality.
 The Logitech webcam no longer points at the panel. Do not rely on the old handover
 instructions. An unintended short capture was deleted; original webcam controls
 were restored. Ask the user to reposition it before using it for panel evidence.
+
+## Still capture at sensor resolution (2026-10-16, implemented, not yet run)
+
+Saving the 320x180 preview is not a photo. The sensor delivers 1280x720, and the
+hardware JPEG encoder can produce that without a software resample, because the
+stock manual-encode still branch feeds the encoder from the two Y/UV planes the ISP
+DMA has just written:
+
+- `ax32xx_csihv_tomjp_dma_cfg` (0x02034308) points the I2W frame DMA at the planes
+  and `CSI_OUTPUT_WIFIEN` (0x100000) starts it. `CSI_OUTPUT_MJPGEN` (0x80000)
+  belongs to the *other* still branch, which streams through a rolling
+  `HAL_CFG_MJPEG_HEIGHT`-line buffer and needs the ISR-driven ring.
+- `jpeg_csi_frame_callback` (0x0204062c), registered at CSI status bit 0x200, does
+  one hardware action: `ax32xx_mjpeg_manual_on` (0x02036b9c) writes
+  `PRE_JPELINECNT` and sets `JERUN`. A polled image can wait for that bit and make
+  the same call instead of installing the handler.
+- `ax32xx_hvScaler` only accepts 2:1, 4:1, 3:2 and 3:1, so a 1:1 capture cannot use
+  it; its body still documents the no-scale register state (`CSI_I2W_HCROP/VCROP`
+  with zero steps).
+
+`custom-firmware/src/ax_jpeg_capture.c` runs that branch polled: arm, wait for
+0x200, check the capture-plane tail guards, flush the planes, trigger, then require
+`PRE_JPFLG` frame end, an output length inside the 512 KiB window, and exactly one
+complete baseline JPEG whose SOF says 1280x720. It then restores the preview
+exactly as `hardware_init` established it.
+
+The frame never passes through the CPU and no extra full frame is allocated: the
+planes are the existing `sensor_dma_*` spill arenas, which were already sized for
+an unscaled frame so that a bad scaler configuration trips a guard. Only the
+512 KiB encoder window is new BSS.
+
+Open questions only a hardware run answers: whether the I2W crop registers suffice
+without toggling `ISP_MODE_SDEN`, whether the UV plane is 1280-wide × 360 rows or
+tightly packed 640-wide, whether bit 0x200 is really the I2W completion signal on
+this sensor configuration, and the encoded size at quality 4.
+
+Software checks: 11 new native tests execute the production capture state machine
+against fake registers and a synthetic baseline JPEG (arming order, trigger gating,
+timeout, guards, output error/pause, non-JPEG refusal, precondition refusal), and
+the full suite is `433 passed, 5 skipped`.

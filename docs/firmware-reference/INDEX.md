@@ -31,6 +31,7 @@ called wrongly or a vendor driver whose call sequence we had guessed.
 | Normal CSI completed-frame callback (0x0203a2f0); destination rewrite and kick | FIRMWARE | `lcd_frame_callback.c` (2026-10-16 audit; corrects the error-recovery/per-frame conflation) |
 | CSI/ISP HAL layer | SDK | `hal/src/hal_csi.c`, `hal/src/hal_usensor.c`, `ax32xx/src/ax32xx_isp.c` |
 | MJPEG capture | SDK | `hal/src/hal_mjpeg.c`, `hal/src/hal_mjpegB.c`, `hal/src/hal_stream.c` |
+| **Full-resolution still**: the two still branches, the I2W frame DMA, the manual encode trigger, encoder registers | FIRMWARE | `jpeg_capture.c` |
 | Rotation engine | FIRMWARE + SDK | `rotate_pip.c` and `ax32xx/src/ax32xx_rotate.c`, `hal/src/hal_rotate.c` |
 | Sensor register tables | FIRMWARE | `../table/h63p-init.json` (extracted, 100 pairs) |
 

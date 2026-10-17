@@ -29,6 +29,7 @@ its exact sequence.
 | `power_clock_gpio.c` | LDO rails, module clock gates, GPIO pin muxing |
 | `adc_keypad.c` | the ADC used for the button ladder |
 | `rotate_pip.c` | the hardware rotation engine and the pip counter |
+| `jpeg_capture.c` | the still-photo path: manual vs streaming encode, the I2W frame DMA, and the encoder register contract |
 
 ## Traps found the hard way
 

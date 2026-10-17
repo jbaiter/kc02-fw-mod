@@ -34,7 +34,10 @@ typedef struct {
     int booting, shutter, lens;
     char notice[40];
     Theme theme;
+    unsigned photo_rows; /* 180 for new 16:9 captures, 240 for legacy photos */
 } App;
+
+enum { PHOTO_SAVED=1, PHOTO_QUEUED=2, PHOTO_BUSY=3, PHOTO_FULL=4 };
 
 /* Board operations fail explicitly. A return value of 0 means unavailable. */
 typedef struct {
@@ -52,6 +55,10 @@ extern const char *const ink_names[3];
 void theme_default(Theme *t);
 int theme_parse(Theme *out, const u8 *bytes, unsigned size);
 int bmp_read(const u8 *bytes, unsigned size, u16 *out);
+/* Photos accept 320x180 or legacy 320x240; returns valid row count or zero.
+ * The RGB allocation stays PIXELS long; rows beyond the image become black. */
+unsigned photo_bmp_read(const u8 *bytes, unsigned size, u16 *out);
+unsigned photo_bmp_write(const u16 *pixels, u8 *out, unsigned cap);
 /* Validates a BMP header and declared length without decoding any pixels. */
 int bmp_check(const u8 *bytes, unsigned size);
 unsigned bmp_write(const u16 *pixels, u8 *out, unsigned cap);

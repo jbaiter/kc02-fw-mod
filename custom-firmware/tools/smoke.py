@@ -116,16 +116,16 @@ def exercise(board,build,qemu,output,nm,theme):
                 q.key('ret')
                 wait(proc,lambda:state(16)==3,'native shutter persisted a BMP')
                 wait(proc,lambda:state(36)==0,'shutter animation completed')
-                q.key('ret',.8)
-                wait(proc,lambda:state(4)==2,'hold OK selects grayscale')
-                assert state(16)==3, 'hold must not take a second photo'
+                q.key('p')
+                wait(proc,lambda:state(4)==2,'ink key selects grayscale')
+                assert state(16)==3, 'ink key must not take a second photo'
                 q.key('esc')
                 wait(proc,lambda:state(0)==1,'gallery')
                 save('04-gallery-capture')
                 q.key('left')
                 wait(proc,lambda:state(12)==1,'previous photo')
                 save('05-gallery-fixture')
-                q.key('ret',.8)
+                q.key('p')
                 wait(proc,lambda:state(4)==0,'gallery selects no print')
                 q.key('esc')
                 wait(proc,lambda:state(0)==2,'list settings')
@@ -160,7 +160,7 @@ def exercise(board,build,qemu,output,nm,theme):
     with FAT16(card) as fat:
         payload=fat.read_file('LUM00003.BMP')
         im=Image.open(io.BytesIO(payload))
-        assert im.size==(320,240) and im.format=='BMP'
+        assert im.size==(320,180) and im.format=='BMP'
         theme=hashlib.sha256(fat.read_file('THEME.INI')).hexdigest()
     report=dict(board=board,status='pass',captures=captures,photo_sha256=hashlib.sha256(payload).hexdigest(),
                 theme_sha256=theme,scope='QEMU RAM app; USB/physical boot/printer/updater not implemented')

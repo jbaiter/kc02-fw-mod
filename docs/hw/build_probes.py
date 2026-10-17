@@ -22,7 +22,8 @@ IDS = {'echo': 0xEC401000, 'sensorprobe': 0x53454E53, 'sprprobe': 0x53505231,
        'displayprobe': 0x44535031, 'sensoridprobe': 0x53494431,
        'sensorclkprobe': 0x53434C31, 'sensorbusprobe': 0x53425231,
        'iic1probe': 0x49494331, 'lumarun': 0x4C554D31,
-       'ramalloc': 0x52414C31, 'sensortable': 0x534E5431, 'softiicprobe': 0x534F4631, 'gpiomapprobe': 0x474D5031, 'ramfree': 0x52465231}
+       'ramalloc': 0x52414C31, 'sensortable': 0x534E5431, 'softiicprobe': 0x534F4631, 'gpiomapprobe': 0x474D5031, 'ramfree': 0x52465231,
+       'sdreadprobe': 0x53445231}
 SPR_POLICY = {
     'adcprobe': ((0x9170, 0x9174, 0x9178), ()),
     'timerprobe': ((0x9900, 0x9904, 0x9908), (0x9900, 0x9904, 0x9908)),
@@ -74,6 +75,7 @@ def main():
     # the probe's own save/restore list are the documentation for that review.
     SPR_POLICY['ramalloc'] = ((), ())   # no SPR access: allocator call only
     SPR_POLICY['ramfree'] = ((), ())    # no SPR access: allocator call only
+    SPR_POLICY['sdreadprobe'] = ((), ())  # stock SD read/stop/capacity only
     # Calls stock routines only; any SPR traffic happens inside them.
     SPR_POLICY['sensortable'] = ((), ())
     # Software IIC: GPIO data/dir/map/plu/dgl/drv on port 3, plus SR for the
