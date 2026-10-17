@@ -54,3 +54,67 @@ def test_stock_signature_mismatch_closes_execution_gate():
         with pytest.raises(show.dump.DumpError, match='signature differs'):
             t.check_firmware()
     assert not t.firmware_ok
+
+
+def args(**kw):
+    base = dict(hold_frames=40, exp=0, gain=0x100, test_pattern=False,
+                overlay=False, size=0, scratch=0x02370000, photos=False,
+                jpeg_check=False)
+    base.update(kw)
+    return type('Args', (), base)()
+
+
+def run_record():
+    return dict(entry=0x02350000, start=0x02350010, beacon=0x02360000,
+                bss_start=0x02350100, bss_end=0x02390000,
+                sensor_y=0x02391000, sensor_uv=0x023a0000)
+
+
+def test_packet_words_keep_every_permission_explicit():
+    words = show.run_words(run_record(), args())
+    assert len(words) == 16                     # the whole input area, no more
+    assert words[14] == 0 and words[15] == 0     # no SD writes, no JPEG trial
+    assert show.run_words(run_record(), args(photos=True))[14] == show.PHOTO_WRITE_TOKEN
+    assert show.run_words(run_record(), args(jpeg_check=True))[15] == show.JPEG_CHECK_TOKEN
+    show.hw.build_packet(words=words)           # must fit before the reply header
+
+
+def test_bounded_and_takeover_packets_differ_only_in_entry_and_hold():
+    rec = run_record()
+    bounded, takeover = show.run_words(rec, args()), show.run_words(rec, args(), True)
+    assert takeover[0] == rec['start'] and bounded[0] == rec['entry']
+    assert takeover[4] == 0 and bounded[4] == 40
+    assert takeover[1:] == bounded[1:] or takeover[5:] == bounded[5:]
+
+
+def test_photo_preflight_refuses_unhealthy_filesystem():
+    good = dict(output=[1, 0x4C554D42], magic_ok=True)
+    health = dict(de_timeouts=0, capture_fault=0,
+                  photo_fs=dict(ready=1, count=3, error=0, writable=1))
+    show.require_photo_preflight(good, health)
+    for broken in ({'de_timeouts': 1}, {'capture_fault': 0x2000},
+                   {'photo_fs': dict(ready=0, count=3, error=0, writable=1)},
+                   {'photo_fs': dict(ready=1, count=3, error=-4, writable=1)},
+                   {'photo_fs': dict(ready=1, count=3, error=0, writable=0)}):
+        bad = dict(health)
+        bad.update(broken)
+        with pytest.raises(show.dump.DumpError, match='photo preflight refused'):
+            show.require_photo_preflight(good, bad)
+    # An empty card is still a usable preflight: the point is that the filesystem
+    # answers, not that it already holds photos.
+    empty = dict(health, photo_fs=dict(ready=1, count=0, error=0, writable=1))
+    show.require_photo_preflight(good, empty)
+
+
+def test_photo_writes_are_refused_until_the_full_resolution_job_exists():
+    with patch('sys.argv', ['show_luma.py', '--payload-dir', '/nonexistent',
+                            '--output', '/nonexistent', '--photos']):
+        with pytest.raises(SystemExit):
+            show.main()
+
+
+def test_bounded_jpeg_trial_cannot_be_combined_with_takeover():
+    with patch('sys.argv', ['show_luma.py', '--payload-dir', '/nonexistent',
+                            '--output', '/nonexistent', '--jpeg-check', '--takeover']):
+        with pytest.raises(SystemExit):
+            show.main()

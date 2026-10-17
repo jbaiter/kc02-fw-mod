@@ -137,10 +137,13 @@ def read_run_health(t, record):
 
 def require_photo_preflight(parsed, health):
     out = parsed['output']
-    if (not parsed['magic_ok'] or len(out) <= 34 or out[0] != 1 or out[1] != 0x4c554d42 or
+    # Filesystem health comes from the beacon (words 38..41), not the reply: an
+    # empty card is fine here, an unreadable or read-only one is not. Nothing is
+    # written by this preflight; it only proves the stock FatFs can be driven.
+    if (not parsed['magic_ok'] or len(out) < 2 or out[0] != 1 or out[1] != 0x4c554d42 or
             health['de_timeouts'] or health['capture_fault'] or
             not health['photo_fs']['ready'] or not health['photo_fs']['writable'] or
-            health['photo_fs']['error'] or out[34] == 0):
+            health['photo_fs']['error']):
         raise dump.DumpError(f'photo preflight refused takeover: {health}')
 
 
