@@ -44,7 +44,7 @@ _spec.loader.exec_module(luma_build)
 
 CORE = REPO / 'custom-firmware'
 PHOTO_WRITE_TOKEN = 0x53445048
-JPEG_CHECK_TOKEN = 0x4a504743
+JPEG_CHECK_TOKEN = 0x4a504700
 
 # Canonical original.bin bodies, independently read from the Ghidra image.
 # Read-only approvals here do not authorise uploads to any of these addresses.
@@ -114,7 +114,9 @@ def run_words(record, args, takeover=False):
             args.exp, args.gain, int(args.test_pattern), record['sensor_y'],
             record['sensor_uv'], args.scratch, int(args.overlay), 0, args.size,
             PHOTO_WRITE_TOKEN if args.photos else 0,
-            JPEG_CHECK_TOKEN if getattr(args,'jpeg_check',False) else 0]
+            ((JPEG_CHECK_TOKEN | getattr(args,'jpeg_phases',3) |
+              (4 if getattr(args,'photos',False) else 0))
+             if getattr(args,'jpeg_check',False) else 0)]
 
 
 def capture_scratch(record, size=512):
@@ -184,6 +186,10 @@ def main():
                          'first runs a read-only filesystem/capture preflight.')
     ap.add_argument('--jpeg-check', action='store_true',
                     help='bounded RAM-only 1280x720 hardware-JPEG test; no photo-file writes')
+    ap.add_argument('--jpeg-phases', type=int, default=3,
+                    help='bounded trial phases: 1 encode only, 2 decode the frame '
+                         'back, +4 save and read back (implied by --photos). Run '
+                         'them one at a time if a phase hangs.')
     ap.add_argument('--hold-frames', type=int, default=40)
     ap.add_argument('--exp', type=lambda v: int(v, 0), default=0,
                     help='exposure to program via the sensor fp_exp_gain_wr, 0 to skip')

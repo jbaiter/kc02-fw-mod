@@ -25,7 +25,7 @@ static u16 frame[PIXELS], camera[PIXELS], photo[PIXELS];
 static u16 theme_bg[PIXELS], theme_boot[PIXELS];
 static u8 bitmap[54+PIXELS*3];
 #ifdef LUMA_BENCH_RUN
-static u32 luma_photos_enabled, luma_jpeg_check, luma_jpeg_view_ok;
+static u32 luma_photos_enabled, luma_jpeg_check, luma_jpeg_view_ok, luma_jpeg_phases;
 /* Defined by the RAM-only JPEG probe include, far below, but the shutter's save
  * hook sits above it. */
 static int luma_capture_photo(void);
@@ -708,7 +708,9 @@ static void bench_read_options(const volatile u32 *in)
     luma_overlay_on = in[11];
     luma_csi_size_override = in[13];
     luma_photos_enabled = in[14] == STOCK_PHOTO_WRITE_TOKEN;
-    luma_jpeg_check = in[15] == AX_JPEG_CHECK_TOKEN;
+    luma_jpeg_check = (in[15] & 0xffffff00u) == AX_JPEG_CHECK_TOKEN;
+    luma_jpeg_phases = in[15] & 0xffu;
+    if (luma_jpeg_check && !luma_jpeg_phases) { luma_jpeg_phases = 3; }
 }
 
 /* sensor_init populates this pointer. Apply exposure after hardware_init in
@@ -935,7 +937,7 @@ void luma_bench_once(void *buffer)
             if (luma_clock_delta >= 3000u) { break; }
         }
     }
-    if (luma_jpeg_check) {
+    if (luma_jpeg_check && (luma_jpeg_phases & AX_JPEG_PHASE_ENCODE)) {
         jpeg_encode_once(in[10]);
         luma_beacon[42]=luma_jpeg_state.state;
         luma_beacon[43]=luma_jpeg_state.fault;
@@ -946,7 +948,8 @@ void luma_bench_once(void *buffer)
         /* Phase two: decode the frame we just encoded back to 320x180. This is
          * the whole still loop minus the file write, and it is what proves the
          * gallery can show a sensor-resolution photo at all. */
-        if (luma_jpeg_state.state==AX_JPEG_DONE && luma_jpeg_state.length &&
+        if ((luma_jpeg_phases & AX_JPEG_PHASE_DECODE) &&
+            luma_jpeg_state.state==AX_JPEG_DONE && luma_jpeg_state.length &&
             jpeg_view_to_yuv(luma_jpeg_output.bytes,luma_jpeg_state.length)) {
             luma_beacon[54]=1;
             luma_jpeg_view_ok=1;
@@ -957,8 +960,8 @@ void luma_bench_once(void *buffer)
         luma_beacon[51]=luma_decode_geom;
         /* With --photos, also store the frame and read it back. This is the one
          * place a bounded run touches the card, and it is create-only. */
-        if (luma_photos_enabled && luma_jpeg_state.state==AX_JPEG_DONE &&
-            luma_jpeg_state.length) {
+        if (luma_photos_enabled && (luma_jpeg_phases & AX_JPEG_PHASE_STORE) &&
+            luma_jpeg_state.state==AX_JPEG_DONE && luma_jpeg_state.length) {
             u32 stored=0; unsigned count=0;
             luma_beacon[52]=(u32)jpeg_photo_selftest(a,&stored,&count);
             luma_beacon[53]=stored;

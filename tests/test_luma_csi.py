@@ -79,7 +79,7 @@ def test_shared_options_use_host_size_word_13(tmp_path):
 #include <assert.h>
 #include "stock_photo.h"
 #include "ax_jpeg_capture.h"
-static u32 luma_test_pattern, luma_overlay_on, luma_csi_size_override, luma_photos_enabled, luma_jpeg_check;
+static u32 luma_test_pattern, luma_overlay_on, luma_csi_size_override, luma_photos_enabled, luma_jpeg_check, luma_jpeg_phases;
 ''' + board[start:end] + '''
 int main(void) {
     u32 in[16] = {0};
@@ -96,6 +96,9 @@ int main(void) {
     assert(!luma_jpeg_check);
     in[15]=0xa5a5a5a5; bench_read_options(in); assert(!luma_jpeg_check);
     in[15]=AX_JPEG_CHECK_TOKEN; bench_read_options(in); assert(luma_jpeg_check);
+    assert(luma_jpeg_phases==3);            /* default: encode + decode */
+    in[15]=AX_JPEG_CHECK_TOKEN|1; bench_read_options(in); assert(luma_jpeg_phases==1);
+    in[15]=AX_JPEG_CHECK_TOKEN|0x1000; bench_read_options(in); assert(!luma_jpeg_check);
     return 0;
 }
 '''

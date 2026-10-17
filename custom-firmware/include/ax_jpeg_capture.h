@@ -26,7 +26,13 @@
 #define AX_JPEG_H 720u
 #define AX_JPEG_CAPACITY 0x80000u   /* same 512 KiB output buffer as stock stills */
 #define AX_JPEG_GUARD 0x4a504547u
-#define AX_JPEG_CHECK_TOKEN 0x4a504743u
+/* Packet word 15: the upper 24 bits authorise the trial, the low byte selects the
+ * phases (1 encode, 2 decode the frame back, 4 save/read-back self-test). Phases
+ * are separable so a run that hangs localises itself: the previous one did not. */
+#define AX_JPEG_CHECK_TOKEN 0x4a504700u
+#define AX_JPEG_PHASE_ENCODE 1u
+#define AX_JPEG_PHASE_DECODE 2u
+#define AX_JPEG_PHASE_STORE  4u
 
 /* Full-frame Y/UV capture planes with guards. A full-resolution DMA write
  * legitimately runs past the preview-sized guard, so only the tails are proof. */

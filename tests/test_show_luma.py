@@ -76,7 +76,7 @@ def test_packet_words_keep_every_permission_explicit():
     assert len(words) == 16                     # the whole input area, no more
     assert words[14] == 0 and words[15] == 0     # no SD writes, no JPEG trial
     assert show.run_words(run_record(), args(photos=True))[14] == show.PHOTO_WRITE_TOKEN
-    assert show.run_words(run_record(), args(jpeg_check=True))[15] == show.JPEG_CHECK_TOKEN
+    assert show.run_words(run_record(), args(jpeg_check=True))[15] == (show.JPEG_CHECK_TOKEN | 3)
     show.hw.build_packet(words=words)           # must fit before the reply header
 
 
