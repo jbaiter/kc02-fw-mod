@@ -153,3 +153,63 @@ not run yet, so these remain open:
 - whether status bit 0x200 is the frame-completed signal for the I2W path on
   this sensor configuration, or only a frame-start enable;
 - the real encoded size at quality 4 for a scene like the panel's.
+
+## Showing a saved photo: the decoder side (decompiled, not yet driven)
+
+The gallery has to display a 1280x720 JPEG in a 320x180 viewport, so the
+downscaling belongs in the decoder rather than in a software resample. The
+hardware supports it, and the stock firmware's own decode entry is small enough to
+call.
+
+Addresses read from `original.bin`:
+
+| function | address |
+|---|---|
+| `hal_mjpegDecodeInit` (const-propagated clone; stride fixed at 0) | `0x02041d64` |
+| `mjpeg_parse_image_header` (fills the decode control block) | `0x02041864` |
+| `hal_mjpegDecodeOneFrame_Fast` | `0x02042498` |
+| `hal_mjpegDecodeOneFrame_Ext` | `0x020423a4` |
+| `ax32xx_mjpegDecodeInit` / `DCTimeSet` / `SetSize` | `0x02036fd8` / `0x020371dc` / `0x02036cd8` |
+| `ax32xx_mjpegDecodeOutputSet` / `InputSet` / `DriSet` / `CompressSet` | `0x02036efc` / `0x02036f18` / `0x02036f50` / `0x02036f68` |
+| `ax32xx_mjpegDecodeQDTCfg` / `Enable` / `Stop` | `0x02037490` / `0x0203727c` / `0x02037350` |
+| `mjpeg_decode_wait_done` (the firmware's own polled wait) | `0x02037ffc` |
+
+Status is `0xc040`: bit `0x40` is decode end, `0x3120` are the error bits, and
+`0x30000` means busy (`ax32xx_mjpegDecodeStatus`). `mjpeg_decode_wait_done` spins up
+to `0xfffff` iterations on exactly those bits, then calls
+`ax32xx_mjpegDecodeStop`, so a polled caller has a known-good model to copy instead
+of inventing one.
+
+`ax32xx_mjpegDecodeSetSize(src_w, src_h, dst_w, dst_h, stride)` accepts a source
+width below `0x1201` and configures the scaler for a different target size; when
+`src_w / 4 == dst_w` it takes the 4:1 fast path. 1280 -> 320 is exactly that case,
+so a full-resolution still can be decoded straight into the 320x180 viewport with
+no intermediate buffer.
+
+The decode control block lives at `0x020d5e84` and its field map is readable from
+the two callers: `+0x00` height, `+0x02` width, `+0x04` sampling index, `+0x05`
+vertical sampling of Y, `+0x06` yuv format (0 = 420, 1 = 422), `+0x07..+0x0f` per
+component quantiser and Huffman table ids, `+0x10` DRI restart interval, `+0x12`
+bitstream offset, `+0x14`/`+0x?` quantiser table offsets, `+0x2c` bitstream
+pointer. The word written to `PRE_JPCOM` is assembled from those fields with four
+constant sampling bits, `0x902400`.
+
+`mjpeg_parse_image_header` also materialises the Huffman and quantiser tables the
+decoder reads from a fixed RAM block at `0x66400` (796 bytes, laid out as quantiser
+tables at `+0x000`, minicode at `+0x100`, value pointers at `+0x180`, Huffman
+tables at `+0x1c0`), using `halSysMemLineCache + 1024` as scratch. Reproducing that
+table layout by hand is the part worth *not* doing: call the stock parser and let
+it build the tables, then drive the registers.
+
+**One trap.** `ax32xx_mjpegDecodeEnable(1)` is `PRE_JPCON1 |= 0x20000063` *plus*
+`ax32xx_intEnable(0x16, 1)`, i.e. it unmasks the JPEG-decoder interrupt in the stock
+PICMR. In a RAM image that must not happen: the stock vector for IRQ 0x16 would run
+with our decode in progress. The register effect is a single write, so the kick
+should be inlined the way the encoder's stop path already inlines
+`ax32xx_mjpegEncodeEnable(0)`, and the interrupt mask left alone.
+
+Not established: whether the const-propagated init clone's fixed `stride = 0`
+produces the tightly packed 320-wide output the viewport needs, and whether
+`mjpeg_parse_image_header`'s use of the line-cache scratch is safe while the live
+preview is running. Both are one bounded hardware trial each, and neither can be
+answered from the binary alone.

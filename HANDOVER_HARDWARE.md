@@ -16,13 +16,21 @@ faults; live evidence is `~/kc02-hw/2026-10-16/capture-audit/guarded-panel-15041
 400 tests pass; no flash writes/erases or SD installation occurred.
 
 Remaining: low FPS (measure before optimizing). The static bottom-quarter black
-band came from sampling padding in the 320x240 RGB camera buffer. The requested
-full-width 320x180 UI is now implemented/native-tested (403 tests pass), with
-black above/below and the header/footer retained; its RAM panel trial is pending.
-Capture/DMA setup is unchanged. Those layout changes do not reopen the gray-bar fix. The camera is currently in RAM takeover; do not reset
-or replace the working image without a reason. Bench requests 3 MiB; scratch
-follows actual BSS with a stack exclusion. Older allocation sizes and the earlier
-claims that auto mode is impossible or that output is 4:2:2 are not reliable.
+band came from sampling padding in the 320x240 RGB camera buffer. The full-width
+320x180 UI is implemented, native-tested and **user-confirmed on the panel**
+(trial `fullwidth-panel-151400`), with black above/below and the header/footer
+retained. Capture/DMA setup is unchanged by it. Do not reset or replace the
+working image without a reason; the camera needs a pinhole reset only after a
+takeover.
+
+Still capture now targets the sensor's own **1280x720** through the hardware JPEG
+encoder, driven entirely from the stock manual-encode branch
+(`docs/firmware-reference/jpeg_capture.c`). Bench requests **3.5 MiB** and links
+within **0x340000**: the spill arenas hold one unscaled frame and the encoder
+window is 512 KiB. Scratch follows actual BSS with a stack exclusion. The
+`--jpeg-check` trial has not run on hardware, and no SD photo file has been
+written. Older allocation sizes, the earlier claims that auto mode is impossible
+or that output is 4:2:2, and the preview-BMP save design are not reliable.
 
 ## Latest bench handoff — 2026-10-15, 21:27
 

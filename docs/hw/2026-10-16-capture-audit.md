@@ -131,8 +131,12 @@ Stored 320x240 photo data and its 4:3 gallery mapping remain unchanged.
 
 Native pixel tests verify full-width first/last/middle rows, black letterbox
 rows, shutter coverage and unchanged gallery mapping. The native render of the
-saved capture is `viewport-fullwidth.png`; all 403 tests pass. This layout-only
-change does not alter capture/DMA setup and **awaits its RAM panel trial**.
+saved capture is `viewport-fullwidth.png`.
+
+This layout-only change did not alter capture/DMA setup, and it is **confirmed on
+the panel**: trial `fullwidth-panel-151400`, evidence
+`~/kc02-hw/2026-10-16/capture-audit/fullwidth-panel-151400/`. The user's verdict
+was "working great, full width, all looking great."
 
 The user reports low FPS. The bounded settle observed 45 capture completions in
 3 seconds, but that does not measure steady-state UI FPS. Measure capture and

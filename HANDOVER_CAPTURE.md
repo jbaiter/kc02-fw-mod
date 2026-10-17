@@ -10,15 +10,24 @@
 > a coherent full-frame Jira-board PNG. **Live trial `guarded-panel-150413` is now
 > user-confirmed: colour present, image updating, no shrinking gray bar.** Frame
 > rate is low. The static bottom-quarter black band came from sampling the 60
-> padding rows in a 320x240 RGB buffer. Per the user's request, a full-width
-> 320x180 viewport is now implemented and native-tested (403 tests pass), with
-> black above/below the image and header/footer retained. This UI-only change
-> awaits a RAM panel trial; capture and DMA setup are unchanged.
+> padding rows in a 320x240 RGB buffer. The full-width 320x180 viewport (x=0,
+> y=36, black above/below, header/footer retained) is **user-confirmed on the
+> panel**, trial `fullwidth-panel-151400`: "working great, full width, all
+> looking great." Capture and DMA setup were unchanged by it.
+>
+> **Still capture now targets the sensor's own 1280x720**, not the preview size:
+> see `docs/firmware-reference/jpeg_capture.c`. The stock manual-encode still
+> branch writes one full YUV frame through the I2W DMA and lets the hardware
+> JPEG encoder read those planes directly, so a photo costs no extra frame
+> buffer. Implemented and software-tested; the bounded `--jpeg-check` trial has
+> **not run on hardware yet**. No SD photo file has been written.
 > The earlier callback and exposure-only trials both left the moving bar unchanged.
 >
-> The current bench requests **3 MiB** and links within **0x2c0000** for diagnostic
-> spill arenas. The original instructions below use outdated allocation sizes and
-> overstate what was ruled out. No flash or SD installation has occurred.
+> The current bench requests **3.5 MiB** and links within **0x340000**; the
+> diagnostic spill arenas hold one unscaled 1280x720 frame and the encoder's
+> 512 KiB output window. The original instructions below use outdated allocation
+> sizes and overstate what was ruled out. No flash or SD installation has
+> occurred, and no photo file has been written.
 >
 > **Audit correction, 2026-10-16, incoming agent:** treat the original analysis
 > below as session history, not established constraints. These corrections began
@@ -299,9 +308,12 @@ hardware auto-reload, no re-arm  -> no frame events at all
 And the last experiment established the constraint that closes the easy way out:
 **auto-reload does not work, so manual mode and a per-frame re-arm are mandatory.**
 
-## 7. The best next step (not yet attempted)
+## 7. An avenue that was considered and abandoned
 
-**Let the stock's CSI interrupt do the re-arming.**
+**Letting the stock's CSI interrupt do the re-arming.** It remains untried and it
+is listed here only so it is not tried again by accident. (Kept for its reasoning,
+not as a recommendation: the capture path is now correct and user-verified, so a
+speculative re-arm change is not the next step.)
 
 `ax32xx_csiIRQHandler` (0x0203404c) is still installed in memory and does exactly
 this, at exactly the right moment, at zero latency. A takeover disables interrupts
