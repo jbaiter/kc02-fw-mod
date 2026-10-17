@@ -9,6 +9,11 @@
 #define MAX_SCAN 4096u
 #define PHOTO_SIZE (54u + LW*CAMERA_ROWS*3u)
 #define LEGACY_SIZE (54u + PIXELS*3u)
+/* A 1280x720 still lands near 0x1e000..0x23000 in stock's own budget. The band is
+ * deliberately wide: it only rejects files that cannot be a still at all, and the
+ * decoder rejects bad content when the photo is actually opened. */
+#define JPEG_MIN 0x1000u
+#define JPEG_MAX 0x80000u
 enum { SAVE_OPEN=1, SAVE_WRITE, SAVE_CLOSE, SAVE_STOP, SAVE_REOPEN,
        SAVE_VERIFY, SAVE_EOF, SAVE_VERIFY_CLOSE, SAVE_VERIFY_STOP,
        LOAD_OPEN, LOAD_READ, LOAD_EOF, LOAD_CLOSE, LOAD_STOP,
@@ -31,7 +36,8 @@ static u32 le32(const u8 *p)
     return p[0] | (u32)p[1]<<8 | (u32)p[2]<<16 | (u32)p[3]<<24;
 }
 static char upper(char c) { return c>='a' && c<='z' ? c-'a'+'A' : c; }
-static unsigned photo_id(const char *p)
+/* Returns the ID for LUMnnnnn.BMP (format 0) or LUMnnnnn.JPG (format 1). */
+static unsigned photo_id(const char *p, unsigned *format)
 {
     unsigned i,id=0;
     if (upper(p[0])!='L' || upper(p[1])!='U' || upper(p[2])!='M') return 0;
@@ -39,17 +45,28 @@ static unsigned photo_id(const char *p)
         if (p[i]<'0' || p[i]>'9') return 0;
         id=id*10u+(unsigned)(p[i]-'0');
     }
-    if (p[8]!='.' || upper(p[9])!='B' || upper(p[10])!='M' ||
-        upper(p[11])!='P' || p[12]) return 0;
+    if (p[8]!='.' || p[12]) return 0;   /* exactly LUMnnnnn.XXX */
+    if (upper(p[9])=='B' && upper(p[10])=='M' && upper(p[11])=='P') *format=STOCK_FS_BMP;
+    else if (upper(p[9])=='J' && upper(p[10])=='P' && upper(p[11])=='G') *format=STOCK_FS_JPEG;
+    else return 0;
     return id;
 }
-static void path_for(char out[16], unsigned id)
+static void path_for(char out[16], unsigned id, unsigned format)
 {
     unsigned i;
     out[0]='0'; out[1]=':'; out[2]='/';
     out[3]='L'; out[4]='U'; out[5]='M';
     for (i=11; i>6; ) { --i; out[i]='0'+id%10; id/=10; }
-    out[11]='.'; out[12]='B'; out[13]='M'; out[14]='P'; out[15]=0;
+    out[11]='.';
+    if (format==STOCK_FS_JPEG) { out[12]='J'; out[13]='P'; out[14]='G'; }
+    else { out[12]='B'; out[13]='M'; out[14]='P'; }
+    out[15]=0;
+}
+/* A file is only listed if its size could be a still this camera writes. */
+static int size_ok(unsigned size, unsigned format)
+{
+    if (format==STOCK_FS_JPEG) return size>=JPEG_MIN && size<=JPEG_MAX;
+    return size==PHOTO_SIZE || size==LEGACY_SIZE;
 }
 static int route_ok(StockFs *f)
 {
@@ -70,24 +87,24 @@ int stock_fs_init(StockFs *f, const StockFsOps *ops, int allow_writes)
     if (ret || !object_ok(&dir)) { f->last_error=ret ? ret : 100; return 0; }
     for (i=0; i<MAX_SCAN; ++i) {
         const u8 *b;
-        unsigned id,size;
+        unsigned id,size,format=STOCK_FS_BMP;
         object_init(&info);
         ret=ops->readdir(dir.words,info.words);
         if (ret || !object_ok(&dir) || !object_ok(&info)) break;
         b=(const u8 *)info.words;
         if (!b[INFO_NAME]) { ended=1; break; }
-        id=photo_id((const char *)b+INFO_NAME);
+        id=photo_id((const char *)b+INFO_NAME,&format);
         if (!id) continue;
         if (id>max_id) max_id=id;  /* reserve IDs of incomplete/invalid files too */
         size=le32(b);
-        if (le32(b+4) || (b[INFO_ATTR]&0x18u) ||
-            (size!=PHOTO_SIZE && size!=LEGACY_SIZE)) continue;
+        if (le32(b+4) || (b[INFO_ATTR]&0x18u) || !size_ok(size,format)) continue;
         if (f->count<GALLERY_MAX) {
             unsigned j=f->count++;
             while (j && f->ids[j-1]>id) {
-                f->ids[j]=f->ids[j-1]; f->sizes[j]=f->sizes[j-1]; --j;
+                f->ids[j]=f->ids[j-1]; f->sizes[j]=f->sizes[j-1];
+                f->formats[j]=f->formats[j-1]; --j;
             }
-            f->ids[j]=id; f->sizes[j]=size;
+            f->ids[j]=id; f->sizes[j]=size; f->formats[j]=format;
         }
     }
     if (route_ok(f)) {
@@ -102,14 +119,16 @@ int stock_fs_init(StockFs *f, const StockFsOps *ops, int allow_writes)
     f->writable=allow_writes!=0;
     return 1;
 }
-int stock_fs_save(StockFs *f, const u8 *bytes, unsigned size)
+int stock_fs_save(StockFs *f, const u8 *bytes, unsigned size, unsigned format)
 {
     if (f->kind) return PHOTO_BUSY;
-    if (!f->ready || !f->writable || !bytes || size!=PHOTO_SIZE || !route_ok(f)) return 0;
+    if (!f->ready || !f->writable || !bytes || !size_ok(size,format) ||
+        !route_ok(f)) return 0;
     if (f->count>=GALLERY_MAX || f->next_id>99999u) return PHOTO_FULL;
     f->save_bytes=bytes; f->size=size; f->at=0;
+    f->loaded_format=format;
     f->saved_id=f->next_id++;
-    path_for(f->path,f->saved_id);
+    path_for(f->path,f->saved_id,format);
     f->kind=1; f->phase=SAVE_OPEN; f->last_error=0;
     return PHOTO_QUEUED;
 }
@@ -147,7 +166,7 @@ int stock_fs_step(StockFs *f)
         f->size=f->sizes[f->active_index];
         if (f->size>f->pending_capacity) return failed(f,102);
         f->at=0; f->kind=2; f->phase=LOAD_OPEN;
-        path_for(f->path,f->ids[f->active_index]);
+        path_for(f->path,f->ids[f->active_index],f->formats[f->active_index]);
         f->pending_load=-1;
     }
     if (!f->kind) return STOCK_FS_NONE;
@@ -221,12 +240,14 @@ int stock_fs_step(StockFs *f)
         if (ret) return failed(f,ret);
         if (f->phase==SAVE_VERIFY_STOP) {
             f->ids[f->count]=f->saved_id;
-            f->sizes[f->count++]=f->size;
+            f->sizes[f->count]=f->size;
+            f->formats[f->count++]=f->loaded_format;
             f->kind=0; f->phase=0;
             return STOCK_FS_SAVED;
         }
         if (f->phase==LOAD_STOP) {
             f->loaded_size=f->size;
+            f->loaded_format=f->formats[f->active_index];
             f->kind=0; f->phase=0;
             return STOCK_FS_LOADED;
         }

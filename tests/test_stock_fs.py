@@ -23,9 +23,10 @@ def harness(tmp_path_factory):
     return binary
 
 
-@pytest.mark.parametrize('mode',range(1,10),ids=[
+@pytest.mark.parametrize('mode',range(1,12),ids=[
     'verified-roundtrip','short-write','readback-mismatch','wrong-medium-route',
     'read-only','new-viewer-selection','close-failure','opaque-object-guard',
-    'press-shutter-save-viewer-and-reinitialize'])
+    'press-shutter-save-viewer-and-reinitialize','only-real-stills-are-listed',
+    'undecodable-still-is-not-shown'])
 def test_photo_file_job(harness,mode):
     subprocess.run([str(harness),str(mode)],check=True)

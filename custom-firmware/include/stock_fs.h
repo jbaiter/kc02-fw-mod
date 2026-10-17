@@ -28,12 +28,14 @@ typedef struct {
 } StockFsOps;
 
 enum { STOCK_FS_NONE=0, STOCK_FS_SAVED=1, STOCK_FS_LOADED=2, STOCK_FS_FAILED=-1 };
+enum { STOCK_FS_BMP=0, STOCK_FS_JPEG=1 };
 
 typedef struct {
     const StockFsOps *ops;
     StockFsObject file;
-    unsigned ids[GALLERY_MAX], sizes[GALLERY_MAX], count, next_id;
-    unsigned phase, kind, at, size, active_index, saved_id, loaded_size;
+    unsigned ids[GALLERY_MAX], sizes[GALLERY_MAX], formats[GALLERY_MAX];
+    unsigned count, next_id;
+    unsigned phase, kind, at, size, active_index, saved_id, loaded_size, loaded_format;
     int ready, writable, opened, last_error, pending_load;
     const u8 *save_bytes;
     u8 *load_bytes, *pending_bytes;
@@ -41,11 +43,13 @@ typedef struct {
     char path[16]; /* "0:/LUM00001.BMP" + NUL */
 } StockFs;
 
-/* Read-only scan of root LUMnnnnn.BMP files. Requires a verified SD route. */
+/* Read-only scan of root LUMnnnnn.BMP / LUMnnnnn.JPG files. Requires a verified
+ * SD route. BMP entries are the legacy 320-row stills; JPEG entries are the
+ * sensor-resolution stills the hardware encoder produces. */
 int stock_fs_init(StockFs *fs, const StockFsOps *ops, int allow_writes);
 /* Queue only: these return before any file I/O. Encoded save bytes must stay
  * immutable until the completion event. Read destinations must stay allocated. */
-int stock_fs_save(StockFs *fs, const u8 *bytes, unsigned size);
+int stock_fs_save(StockFs *fs, const u8 *bytes, unsigned size, unsigned format);
 int stock_fs_load(StockFs *fs, unsigned index, u8 *bytes, unsigned capacity);
 /* One small I/O step; call between input polls and display service. A save is
  * reported only after close/SD-stop and a complete byte-for-byte readback. */

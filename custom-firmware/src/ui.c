@@ -105,7 +105,7 @@ void app_event(App *a, const Platform *p, Key key, int held, u32 now,
             if (!gallery_load(a,p,photo,now)) { app_notice(a,"Photo unavailable",now); }
         }
         if (key == KEY_OK && a->count) {
-            if (a->ink == INK_OFF) { app_notice(a,"No print - hold OK to change",now); }
+            if (a->ink == INK_OFF) { app_notice(a,"No print - use the ink key",now); }
             else { app_notice(a,p->print_photo && p->print_photo(photo,a->ink) ? "Printing" : "Printer not ready",now); }
         }
     }

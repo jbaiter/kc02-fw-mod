@@ -1,6 +1,7 @@
 """Offline guards for the live RAM-run harness; no camera access."""
 import importlib.util
 from pathlib import Path
+from pathlib import Path
 from unittest.mock import patch
 
 import pytest
@@ -106,11 +107,14 @@ def test_photo_preflight_refuses_unhealthy_filesystem():
     show.require_photo_preflight(good, empty)
 
 
-def test_photo_writes_are_refused_until_the_full_resolution_job_exists():
-    with patch('sys.argv', ['show_luma.py', '--payload-dir', '/nonexistent',
-                            '--output', '/nonexistent', '--photos']):
-        with pytest.raises(SystemExit):
-            show.main()
+def test_photo_writes_now_use_the_full_resolution_encoder_path():
+    """--photos is allowed again, but it must still be an explicit word and the
+    takeover must still be gated behind the read-only preflight."""
+    words = show.run_words(run_record(), args(photos=True))
+    assert words[14] == show.PHOTO_WRITE_TOKEN
+    assert words[15] == 0            # enabling writes must not start a JPEG trial
+    source = Path(show.__file__).read_text()
+    assert 'require_photo_preflight(parsed_check,health)' in source
 
 
 def test_bounded_jpeg_trial_cannot_be_combined_with_takeover():

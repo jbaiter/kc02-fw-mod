@@ -54,12 +54,12 @@ static void jpeg_restore_preview(void)
     REG(0xb018)|=0x40000u;
 }
 
-static void jpeg_ram_check(u32 scratch)
+static int jpeg_encode_once(u32 scratch)
 {
     AxTime t={0,0,0};
     unsigned guard;
     u32 now=ax_time_ms(&t,REG(0x9908));
-    if (luma_csi_fault) { return; }
+    if (luma_csi_fault) { return 0; }
     luma_jpeg_owned=1;
     if (ax_jpeg_start(&luma_jpeg_state,&jpeg_ops,&luma_jpeg_output,
                       sensor_dma_y.data,sizeof(sensor_dma_y),sensor_dma_y.tail,
@@ -91,4 +91,72 @@ static void jpeg_ram_check(u32 scratch)
         lcd_service(); csi_service();
         if (ax_time_ms(&t,REG(0x9908))-now>=300u) break;
     }
+    return luma_jpeg_state.state==AX_JPEG_DONE;
+}
+
+/* ---------------------------------------------------------------------------
+ * DECODE: 1280x720 still -> 320x180 view
+ *
+ * Used by the gallery when a photo is opened, and by the bounded trial to prove
+ * the whole loop end to end. Stock surface is parse + arm + size + stop; the
+ * enable is inlined because ax32xx_mjpegDecodeEnable would unmask IRQ 0x16 in
+ * the stock PICMR (see include/ax_jpeg_decode.h).
+ * --------------------------------------------------------------------------- */
+static AxDecode luma_decode_state;
+static u32 luma_decode_geom;
+
+static int jpeg_alloc_ready(void)
+{
+    /* mjpeg_parse_image_header mallocs 1 KiB of scratch without checking the
+     * result, so the only safe thing is to confirm the pool can serve it first. */
+    void *p=(void *)0;
+    p=(void *)((void *(*)(u32,u32))0x0203e5c4u)(0x400u,0x20u);
+    if (!p) { return 0; }
+    ((void (*)(void *))0x0203e694u)(p);
+    return 1;
+}
+static const AxDecodeOps jpeg_decode_ops={
+    jpeg_reg_read,jpeg_reg_write,jpeg_alloc_ready,
+    (void (*)(const void *,unsigned))0x0202b0d4u,
+    (int (*)(const u8 *))0x02041864u,                        /* parse header */
+    (int (*)(const u8 *,u8 *,u8 *,u16,u16))0x02041d64u,      /* arm decoder  */
+    (void (*)(u32,u32,u32,u32,u32))0x02036cd8u,              /* size+stride  */
+    (void (*)(void))0x02037350u                              /* stop         */
+};
+
+/* Decode one still into the viewer's YUV planes. Services the panel while it
+ * waits: the decoder is bounded but not instant. */
+static int jpeg_view_to_yuv(const u8 *jpeg,unsigned length)
+{
+    AxTime t={0,0,0};
+    unsigned guard;
+    u32 now=ax_time_ms(&t,REG(0x9908));
+    unsigned w=0,h=0;
+    if (!ax_jpeg_frame_info(jpeg,length,&length,&w,&h)) return 0;
+    luma_decode_geom=(w<<16)|(h&0xffffu);
+    if (!ax_decode_start(&luma_decode_state,&jpeg_decode_ops,jpeg,length,
+                         stock_photo_view_y(),AX_DECODE_Y_BYTES,
+                         stock_photo_view_y_guard(),
+                         stock_photo_view_uv(),AX_DECODE_UV_BYTES,
+                         stock_photo_view_uv_guard(),now)) return 0;
+    for (guard=0;guard<0x8000000u;guard++) {
+        lcd_service();
+        ax_decode_poll(&luma_decode_state,ax_time_ms(&t,REG(0x9908)));
+        if (luma_decode_state.state==AX_DECODE_DONE ||
+            luma_decode_state.state==AX_DECODE_FAILED) break;
+    }
+    if (luma_decode_state.state==AX_DECODE_RUNNING)
+        ax_decode_poll(&luma_decode_state,now+2001u);
+    return luma_decode_state.state==AX_DECODE_DONE;
+}
+static const StockPhotoDecode jpeg_view={jpeg_view_to_yuv};
+
+/* One still at the sensor's own resolution, offered to the photo store. Called
+ * from the shutter path, so it must leave the preview exactly as it found it and
+ * must not queue a second save while one is still in flight. */
+static int luma_capture_photo(void)
+{
+    if (!luma_photos_enabled) { return 0; }
+    if (!jpeg_encode_once(0)) { return 0; }
+    return stock_photo_save_jpeg(luma_jpeg_output.bytes,luma_jpeg_state.length);
 }

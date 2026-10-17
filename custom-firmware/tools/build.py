@@ -29,7 +29,7 @@ def build(output, prefix):
              '-Wall', '-Wextra', '-Werror', '-I'+str(ROOT/'include')]
     sources = [ROOT/'boards/start.S', ROOT/'boards/ax3292.c',
                *(ROOT/'src'/n for n in ('ui.c','paint.c','theme.c','input.c','storage.c',
-                                      'sd_hw.c','stock_fs.c','stock_photo.c','ax_jpeg_capture.c','crc.c'))]
+                                      'sd_hw.c','stock_fs.c','stock_photo.c','ax_jpeg_capture.c','ax_jpeg_decode.c','crc.c'))]
     manifests = {}
     for board_id, board in enumerate(BOARDS):
         folder = output/board
@@ -95,7 +95,7 @@ def build_bench(output, prefix, base):
              '-Wall', '-Wextra', '-Werror', '-I'+str(ROOT/'include'), '-DLUMA_BENCH_RUN']
     sources = [ROOT/'boards/start.S', ROOT/'boards/ax3292.c',
                *(ROOT/'src'/n for n in ('ui.c','paint.c','theme.c','input.c','storage.c',
-                                      'sd_hw.c','stock_fs.c','stock_photo.c','ax_jpeg_capture.c','crc.c'))]
+                                      'sd_hw.c','stock_fs.c','stock_photo.c','ax_jpeg_capture.c','ax_jpeg_decode.c','crc.c'))]
     elf, raw = folder/'luma.bench.elf', folder/'luma.bench.bin'
     cmd = [cc, *flags, '-DBOARD_ID=0', '-nostdlib', '-Wl,--gc-sections', '-Wl,-e,_start',
            '-Wl,-Map,'+str(folder/'luma.bench.map'), '-T', str(ld), *map(str, sources), '-o', str(elf)]

@@ -25,7 +25,10 @@ static u16 frame[PIXELS], camera[PIXELS], photo[PIXELS];
 static u16 theme_bg[PIXELS], theme_boot[PIXELS];
 static u8 bitmap[54+PIXELS*3];
 #ifdef LUMA_BENCH_RUN
-static u32 luma_photos_enabled, luma_jpeg_check;
+static u32 luma_photos_enabled, luma_jpeg_check, luma_jpeg_view_ok;
+/* Defined by the RAM-only JPEG probe include, far below, but the shutter's save
+ * hook sits above it. */
+static int luma_capture_photo(void);
 static int luma_jpeg_owned;
 AxJpegOutput luma_jpeg_output __attribute__((aligned(32)));
 static AxJpeg luma_jpeg_state;
@@ -122,7 +125,11 @@ static int load_photo(unsigned index, u16 *out)
 static int save_photo(const u16 *pixels)
 {
 #ifdef LUMA_BENCH_RUN
-    return stock_photo_save(pixels);
+    /* A photo is the sensor's own 1280x720, not the 320x180 preview on screen, so
+     * the framebuffer is not the source: encode a still with the hardware JPEG
+     * encoder and queue those bytes. `pixels` is unused on purpose. */
+    (void)pixels;
+    return luma_capture_photo();
 #else
     char name[13];
     unsigned id=1, i, n;
@@ -730,7 +737,10 @@ void firmware_main(void)
     hardware_init();
 #ifdef LUMA_BENCH_RUN
     bench_apply_exposure(BENCH_PACKET_IN);
-    stock_photo_init((int)luma_photos_enabled,bitmap,sizeof(bitmap),0);
+    /* The encoder's output window doubles as the file staging buffer: a save and
+     * a gallery load can never overlap, so one 512 KiB block serves both. */
+    stock_photo_init((int)luma_photos_enabled,luma_jpeg_output.bytes,AX_JPEG_CAPACITY,
+                     0,&jpeg_view);
 #endif
     app_init(a,&platform,ax_time_ms(&clock,REG(0x9908)));
 #ifdef LUMA_BENCH_RUN
@@ -813,13 +823,13 @@ ows,
  * Deliberately skips sd_hw_init/fat_mount: the stock firmware owns the card
  * over USB while this runs, and a bounded display check does not need storage.
  */
-volatile u32 luma_beacon[48] __attribute__((used, section(".data.bench")));
+volatile u32 luma_beacon[56] __attribute__((used, section(".data.bench")));
 __attribute__((used, noinline, section(".text.bench")))
 void luma_bench_once(void *buffer)
 {
     App *a=(App *)&luma_app;
     u32 i;
-    for (i=0;i<48;i++) { luma_beacon[i]=0; }
+    for (i=0;i<56;i++) { luma_beacon[i]=0; }
     /* Packet input starts at +1792, the same ABI as takeover's fixed address. */
     const volatile u32 *in = (const volatile u32 *)((u8 *)buffer + 1792u);
     bench_read_options(in);
@@ -839,7 +849,10 @@ void luma_bench_once(void *buffer)
      * The ops struct at 0x020e32a0 is populated by sensor_init via sensor_bringup,
      * so by this point ops+0xc70 is the real fp_exp_gain_wr. */
     bench_apply_exposure(in);
-    stock_photo_init((int)luma_photos_enabled,bitmap,sizeof(bitmap),0);
+    /* The encoder's output window doubles as the file staging buffer: a save and
+     * a gallery load can never overlap, so one 512 KiB block serves both. */
+    stock_photo_init((int)luma_photos_enabled,luma_jpeg_output.bytes,AX_JPEG_CAPACITY,
+                     0,&jpeg_view);
     {
         const StockFs *s=stock_photo_state();
         luma_beacon[38]=(u32)s->ready;
@@ -923,13 +936,25 @@ void luma_bench_once(void *buffer)
         }
     }
     if (luma_jpeg_check) {
-        jpeg_ram_check(in[10]);
+        jpeg_encode_once(in[10]);
         luma_beacon[42]=luma_jpeg_state.state;
         luma_beacon[43]=luma_jpeg_state.fault;
         luma_beacon[44]=luma_jpeg_state.length;
         luma_beacon[45]=luma_jpeg_state.csi_events;
         luma_beacon[46]=luma_jpeg_state.jpeg_events;
         luma_beacon[47]=REG(0x4800);
+        /* Phase two: decode the frame we just encoded back to 320x180. This is
+         * the whole still loop minus the file write, and it is what proves the
+         * gallery can show a sensor-resolution photo at all. */
+        if (luma_jpeg_state.state==AX_JPEG_DONE && luma_jpeg_state.length &&
+            jpeg_view_to_yuv(luma_jpeg_output.bytes,luma_jpeg_state.length)) {
+            luma_beacon[54]=1;
+            luma_jpeg_view_ok=1;
+        }
+        luma_beacon[48]=luma_decode_state.state;
+        luma_beacon[49]=luma_decode_state.fault;
+        luma_beacon[50]=luma_decode_state.status;
+        luma_beacon[51]=luma_decode_geom;
         if (in[10]) {
             volatile u32 *r=(volatile u32 *)(in[10]+512u);
             for (i=0;i<128;i++) r[i]=REG(0xb800u+4u*i);
@@ -958,6 +983,12 @@ void luma_bench_once(void *buffer)
     luma_beacon[35]=luma_csi_fault;                          /* bounds/setup faults */
     luma_beacon[36]=REG(0x884c);                              /* MCLK divider */
     sensor_copy();
+    if (luma_jpeg_view_ok) {
+        /* Show what the decoder produced, not the live preview: a panel verdict on
+         * this frame is a verdict on the still pipeline. */
+        memcpy(sensor_y,stock_photo_view_y(),AX_DECODE_Y_BYTES);
+        memcpy(sensor_uv,stock_photo_view_uv(),AX_DECODE_UV_BYTES);
+    }
     app_render(a,frame,camera,photo,0,0,0);
     present(frame);
     luma_beacon[34]=luma_de_timeouts;           /* presenter ownership failures */

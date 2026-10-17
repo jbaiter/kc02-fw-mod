@@ -154,7 +154,7 @@ not run yet, so these remain open:
   this sensor configuration, or only a frame-start enable;
 - the real encoded size at quality 4 for a scene like the panel's.
 
-## Showing a saved photo: the decoder side (decompiled, not yet driven)
+## Showing a saved photo: the decoder side (implemented, not yet run)
 
 The gallery has to display a 1280x720 JPEG in a 320x180 viewport, so the
 downscaling belongs in the decoder rather than in a software resample. The
@@ -208,8 +208,36 @@ with our decode in progress. The register effect is a single write, so the kick
 should be inlined the way the encoder's stop path already inlines
 `ax32xx_mjpegEncodeEnable(0)`, and the interrupt mask left alone.
 
-Not established: whether the const-propagated init clone's fixed `stride = 0`
-produces the tightly packed 320-wide output the viewport needs, and whether
-`mjpeg_parse_image_header`'s use of the line-cache scratch is safe while the live
-preview is running. Both are one bounded hardware trial each, and neither can be
-answered from the binary alone.
+## What Luma actually does
+
+`custom-firmware/src/ax_jpeg_decode.c`, four stock entry points plus two inlined
+register writes:
+
+1. `mjpeg_parse_image_header` (0x02041864). It builds the decoder tables into its own
+   0x400 scratch block and copies 796 bytes of them into the fixed table RAM at
+   0x66400. It also memsets the decode control block at 0x020d5e84 and records the
+   bitstream and quantiser-table offsets.
+2. `hal_mjpegDecodeInit`'s const-propagated clone (0x02041d64). Programs PRE_JPCON1
+   for the parsed format, the DC timing, the output/input pointers, the restart
+   interval and the component table word.
+3. `ax32xx_mjpegDecodeSetSize` (0x02036cd8), called again with the real stride,
+   because the clone has its stride argument fixed at 0.
+4. `PRE_JPCON1 |= 0x20000063` inlined, then poll `0xc040` for 0x40 / 0x3120.
+5. `ax32xx_mjpegDecodeStop` (0x02037350).
+
+Two deliberate omissions. `ax32xx_mjpegDecodeQDTCfg` is skipped: the parser already
+put the quantiser tables in 0x66400, and QDTCfg would only re-copy the same bytes
+from the same offsets. And nothing calls `ax32xx_mjpegDecodeEnable` or
+`hal_mjpegDecodeOneFrame_Ext`, because both end in `ax32xx_intEnable(0x16, 1)`.
+
+One guard that is not obvious from the decompile: `mjpeg_parse_image_header` calls
+`hal_sysMemMalloc(0x400, 0x20)` and stores `p0 + 0x40` and friends into globals
+*before* checking the result, so a failed allocation would send later table writes
+through a NULL pointer. `ax_jpeg_decode.c` therefore asks the board for a 1 KiB
+probe allocation and free first, and refuses to decode if the pool cannot serve it.
+
+Not established: whether the clone's fixed `stride = 0` (before the corrective call)
+disturbs anything, whether the parser's use of the stock line-cache scratch is safe
+beside a live preview, and whether 0x66400 lands in memory the decoder actually
+reads given that `ax32xx_mjpegDecodeInitTable` write-backs 0x6671c..0x66a38 instead
+of the range it just filled. All three need the camera.

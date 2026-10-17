@@ -180,8 +180,8 @@ def main():
     ap.add_argument('--output', type=Path, required=True)
     ap.add_argument('--block-bytes', type=lambda v: int(v, 0), default=0x380000)
     ap.add_argument('--photos', action='store_true',
-                    help='enable create-only SD photo files; refuses a host-mounted card. '
-                         'A takeover first runs a read-only filesystem/capture preflight.')
+                    help='enable create-only LUMnnnnn.JPG saves at 1280x720 through the hardware JPEG encoder; refuses a host-mounted card. A takeover '
+                         'first runs a read-only filesystem/capture preflight.')
     ap.add_argument('--jpeg-check', action='store_true',
                     help='bounded RAM-only 1280x720 hardware-JPEG test; no photo-file writes')
     ap.add_argument('--hold-frames', type=int, default=40)
@@ -206,8 +206,6 @@ def main():
                          'The camera needs a pinhole reset afterwards; nothing is flashed, so '
                          'that is expected and reversible.')
     a = ap.parse_args()
-    if a.photos:
-        ap.error('SD saves are gated until the full-resolution JPEG job replaces the preview-BMP prototype')
     if a.jpeg_check and a.takeover:
         ap.error('--jpeg-check is a bounded RAM-only test, not a takeover option')
     if not 0 <= a.hold_frames <= 64:

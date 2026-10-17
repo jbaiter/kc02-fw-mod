@@ -61,15 +61,29 @@ wider than the preview pitch suggests.
 The trial is bounded and returns; it does not need a pinhole reset unless the
 camera stops enumerating.
 
-## Then: photo files, gallery, print
+## Then: photo files and gallery
 
-The uncommitted `stock_fs.c` / `stock_photo.c` work implements create-only
-`LUMnnnnn.BMP` saves through the stock FatFs, a gallery reader and a queued
-(cooperative) I/O state machine, all gated on `LUMA_BENCH_RUN`. Its codec is
-still the 320x180 preview BMP, so it cannot be enabled as-is: the save path has to
-write the encoder's JPEG (or a JPEG-decoded BMP) at 1280x720 and the gallery has to
-decode that back into the viewer at a downscaled size. `--photos` refuses to run
-until that replacement exists.
+`stock_fs.c` / `stock_photo.c` now store what the encoder produces:
+
+- A shutter press encodes one 1280x720 still (`luma_capture_photo`), then queues a
+  create-only `LUMnnnnn.JPG` save through the stock FatFs. The framebuffer is never
+  the source, so a "photo" can no longer be a 320x180 preview by accident.
+- The save is cooperative (512-byte steps), reports only after close/SD-stop and a
+  byte-for-byte readback, and fails closed: a failed or partial file is left in
+  place, never deleted or overwritten.
+- The gallery reads the file back into the encoder's 512 KiB window and decodes it
+  with the hardware decoder straight to 320x180 (`ax_jpeg_decode.c`), so display
+  downscaling costs no frame buffer. Legacy `LUMnnnnn.BMP` files still list and
+  open through their old path.
+- The scanner lists a file only if its size could be a still (JPEG 4 KiB..512 KiB,
+  BMP exactly 320x180 or 320x240 rows), and the decoder rejects anything that is
+  not one complete 1280x720 baseline frame.
+
+`--photos` is enabled again, and still requires the read-only preflight and an
+unmounted card before takeover.
+
+**Not yet run on hardware.** The JPG, the gallery decode and the file readback all
+depend on the encoder and decoder behaving as decompiled.
 
 ## Still open
 
