@@ -64,3 +64,47 @@ TCG memory and device DMA are coherent, so the model does not implement
 cache-line invalidate/writeback semantics. The registers are a read/write
 backing store with a `TODO(approximation)` marker; do not read them as proof
 that cache behaviour is emulated.
+
+## Device-side USB (in progress)
+
+`-M ax3292,...,usb-host=on` presents a host on the device port. Default is
+**off**, so boot/UI behaviour is unchanged (verified by `tools/emu/smoke.py`).
+
+What the firmware actually tests, traced end to end:
+
+| stage | code | what it reads |
+|---|---|---|
+| per-frame / 10-tick task | `usb_sense_task` `0x0200d2c0` → `tick_usb_charger` `0x0200c8d0` | `boardIoctrl(dev 0 = "usb", 0x20000002, &out)` |
+| device ioctl | `board_usb_ioctrl` `0x02003208` (dev list `0x020c259c`, entry 0) | `ax32xx_WKI1Read()` |
+| pin | `ax32xx_WKI1Read` `0x0202e41c` | **RTC control `0x88E0` bit 21** (WKUP1) |
+| session detect | `hal_usbdCheck` `0x02031e60` | `USB20CON0` (`0x9840`) bits 30/31 |
+
+Note: the `0x20000002` in the symbol notes is a **`boardIoctrl` command code, not
+a memory address**; there is no register at that address. `usb-host=on` therefore
+(a) sets RTC `0x88E0` bit 21 on read, and (b) asserts `USB20CON0` bits 30/31 on
+write. With that, `usb_sense_state` (`0x020d416e`) leaves 0 and becomes 1.
+
+The DUSB register file lives in `ax3292-usb.h` (74 SPRs, matched by explicit
+lookup, never by range — a contiguous range hook swallowed `LCDSTA` and broke the
+menu). Still missing for full enumeration: EP0 control-transfer DMA, raising
+`IRQ_USB20` (15), and a host-side driver; the 1 -> 2 transition additionally needs
+`dusb_ready()` and host BOT traffic, which is what unlocks UI mode 10.
+
+### EP0 host injection (implemented, controller status still missing)
+
+`-M ax3292,...,usb-fifo=/path/to/fifo` consumes a byte stream from a FIFO and
+appends device responses to `<fifo>.out`:
+
+| bytes | meaning |
+|---|---|
+| `'S'` + 8 | EP0 SETUP packet: copied to guest memory at `USB20E0ADR`, `CSR0` bit 0 (RxRdy) set, `IRQ_USB20` (15) raised |
+| device -> host | whenever the guest writes `CSR0` with bit 1 (TxRdy), `USB20CON1 & 0x1fff` bytes are copied out of `USB20E0ADR` to `<fifo>.out` and TxRdy/DataEnd are retired |
+
+Current blocker: with `usb-host=on` and the stack started, the firmware spins
+reading `USB20_IntrUSB` (0xA028) and `USB20_IntrInl` (0xA008) — the controller
+status the DUSB init/ISR waits on. The handler at `0x02031c2c` tests IntrUSB
+**bit 2** first, then bits 0/1. Until the model reports the awaited cause, the
+stack never finishes initialising: `usb_sense_state` stays 1 (it does reach 1),
+`app_context.b2` stays 0, and injected SETUPs are never dispatched. Next step is
+decoding the rest of that handler (or the caller that spins) and asserting the
+right IntrUSB bits.

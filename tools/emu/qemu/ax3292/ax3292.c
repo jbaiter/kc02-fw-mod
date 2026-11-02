@@ -45,6 +45,7 @@
 #include "ax3292-adc.h"
 #include "ax3292-timer.h"
 #include "ax3292-de.h"
+#include "ax3292-usb.h"
 
 #define TYPE_AX3292_MACHINE MACHINE_TYPE_NAME("ax3292")
 OBJECT_DECLARE_SIMPLE_TYPE(Ax3292State, AX3292_MACHINE)
@@ -259,6 +260,27 @@ struct Ax3292State {
     char *flash_path, *sd_path;
     char *printer_directory, *printer_phases_str;
     bool printer_no_paper;
+
+    /* Device-side USB (DUSB).  Registers are SPRs; see ax3292-usb.h.  The
+     * model is currently a plain register file so the firmware's USB code can
+     * be traced without changing behaviour in non-USB modes. */
+    Ax3292Usb usb;
+
+    /* USB PHY / attach status page.  The firmware's sense state machine polls
+     * a byte at 0x20000002, which is outside SDRAM; unmapped it reads 0 and
+     * USB never connects.  Only meaningful when usb_host is set. */
+    bool usb_host;
+    MemoryRegion usbphy;
+    uint8_t usbphy_regs[0x40];
+
+    /* Host-side injection: AX3292_USB_FIFO=<path> is a byte stream of 9-byte
+     * SETUP commands ('S' + 8 bytes).  Device responses (EP0 IN data) are
+     * appended to <path>.out. */
+    char *usb_fifo_path;
+    int usb_fifo_fd;
+    uint8_t usb_in[16];
+    uint32_t usb_in_len;
+    bool usb_reset_sent;
 };
 
 /* --- register numbers ----------------------------------------------------- */
@@ -715,6 +737,62 @@ static void ax3292_irq_update(Ax3292State *s)
     }
 }
 
+/*
+ * Device-side USB: pull host commands from the FIFO and hand them to the
+ * controller model.  Only EP0 SETUP is needed to start enumeration.
+ */
+static void ax3292_usb_service(Ax3292State *s)
+{
+    uint8_t buf[64];
+    ssize_t n;
+
+    if (false && s->usb_host && !s->usb_reset_sent &&
+        s->ram_ptr[0x020d416e] == 1) {     /* disabled: premature reset aborts the stack */
+        /* The DUSB init waits for a bus reset: IntrUSB bit 2 (0x4) drives the
+         * reset handler at 0x020318b8 (see the cause decode at 0x02031c2c). */
+        s->usb.reg[ax3292_usb_index(AXU_USB20_INTRUSB)] |= 0x04;
+        s->usb_reset_sent = true;
+        s->cpu->env.picsr |= 1u << 15;
+        ax3292_irq_update(s);
+    }
+    if (s->usb_fifo_path == NULL) {
+        return;
+    }
+    if (s->usb_fifo_fd < 0) {
+        s->usb_fifo_fd = open(s->usb_fifo_path, O_RDONLY | O_NONBLOCK);
+        if (s->usb_fifo_fd < 0) {
+            return;
+        }
+    }
+    while ((n = read(s->usb_fifo_fd, buf, sizeof(buf))) > 0) {
+        for (ssize_t i = 0; i < n; i++) {
+            if (s->usb_in_len < sizeof(s->usb_in)) {
+                s->usb_in[s->usb_in_len++] = buf[i];
+            }
+        }
+    }
+    while (s->usb_in_len >= 9 && s->usb_in[0] == 'S') {
+        uint32_t adr = s->usb.reg[ax3292_usb_index(AXU_USB20E0ADR)];
+        int csr0 = ax3292_usb_index(AXU_USB20_CSR0);
+
+        if (adr < AX3292_RAM_SIZE) {
+            memcpy(s->ram_ptr + adr, s->usb_in + 1, 8);
+            /* RxRdy: the firmware's EP0 ISR drains ep0_buf on this bit. */
+            s->usb.reg[csr0] |= 0x01;
+            /* Interrupt cause.  The handler at 0x02031c2c reads IntrUSB
+             * (0xA028) and IntrInl (0xA008) to decide what happened; a SETUP
+             * is the EP0 event, so set the low cause bits plus the EP0 bit in
+             * IntrInl.  Narrowed once the decode is complete. */
+            s->usb.reg[ax3292_usb_index(AXU_USB20_INTRUSB)] |= 0x07;
+            s->usb.reg[ax3292_usb_index(AXU_USB20_INTRINL)] |= 0x01;
+            s->cpu->env.picsr |= (1u << 15) | (1u << 29);  /* IRQ_USB20 + IRQ_USB11 */
+            ax3292_irq_update(s);
+        }
+        memmove(s->usb_in, s->usb_in + 9, s->usb_in_len - 9);
+        s->usb_in_len -= 9;
+    }
+}
+
 static void ax3292_tick_cpu(CPUState *cs, run_on_cpu_data data)
 {
     Ax3292State *s = data.host_ptr;
@@ -723,6 +801,8 @@ static void ax3292_tick_cpu(CPUState *cs, run_on_cpu_data data)
     if (!s->tick_running) {
         return;
     }
+
+    ax3292_usb_service(s);
 
     s->tmr_pnd |= AX3292_TMR_PND_BIT;
     if (s->tick_irq == AX3292_IRQ_RTC) {
@@ -920,6 +1000,18 @@ static bool ax3292_spr_access(struct CPUArchState *env, void *opaque,
 static bool ax3292_reg_read(Ax3292State *s, CPUOpenRISCState *env,
                             uint32_t spr, uint32_t *value)
 {
+    {
+        int uidx = ax3292_usb_index(spr);
+        if (uidx >= 0) {
+            *value = s->usb.reg[uidx];
+            /* USB20_CSR0 doubles as the display frame-done flag (see the
+             * AX3292_USB_CSR0 case below); keep that bit visible. */
+            if (spr == AX3292_USB_CSR0) {
+                *value |= AX3292_FRAME_DONE;
+            }
+            return true;
+        }
+    }
     switch (spr) {
     case 0x1800:                       /* AX3292 DCCR (not upstream SPR layout) */
     case 0x2000:                       /* ICCR */
@@ -1026,6 +1118,12 @@ static bool ax3292_reg_read(Ax3292State *s, CPUOpenRISCState *env,
          * 0x0202df68); the rest is the driver's control value.
          */
         *value = s->rtc_con;
+        /* WKUP1 is the USB cable-detect pin and lives in RTC control bit 21:
+         * ax32xx_WKI1Read() returns exactly that bit, and board_usb_ioctrl()
+         * hands it to tick_usb_charger as the "cable attached" flag. */
+        if (s->usb_host) {
+            *value |= 1u << 21;
+        }
         return true;
     case AX3292_RTC_PND:
         *value = 0;
@@ -1152,6 +1250,34 @@ static bool ax3292_reg_read(Ax3292State *s, CPUOpenRISCState *env,
 static bool ax3292_reg_write(Ax3292State *s, CPUOpenRISCState *env,
                              uint32_t spr, uint32_t v)
 {
+    {
+        int uidx = ax3292_usb_index(spr);
+        if (uidx >= 0) {
+            /* With a host present the PHY reports VBUS/session in
+             * USB20CON0 bits 30/31; hal_usbdCheck() (0x02031e60) toggles the
+             * port and reads exactly those bits to detect the cable. */
+            if (spr == AXU_USB20CON0 && s->usb_host) {
+                v |= 0xC0000000u;
+            }
+            s->usb.reg[uidx] = v;
+            /* EP0 IN: the firmware queued a response (TxRdy|DataEnd).  Hand
+             * the bytes to the host and retire the request. */
+            if (spr == AXU_USB20_CSR0 && (v & 0x02) && s->usb_fifo_path) {
+                uint32_t adr = s->usb.reg[ax3292_usb_index(AXU_USB20E0ADR)];
+                uint32_t len = s->usb.reg[ax3292_usb_index(AXU_USB20CON1)] & 0x1fff;
+                if (adr < AX3292_RAM_SIZE && len <= 4096) {
+                    g_autofree char *out = g_strdup_printf("%s.out", s->usb_fifo_path);
+                    FILE *f = fopen(out, "ab");
+                    if (f != NULL) {
+                        fwrite(s->ram_ptr + adr, 1, len, f);
+                        fclose(f);
+                    }
+                }
+                s->usb.reg[uidx] &= ~0x0au;     /* clear TxRdy|DataEnd */
+            }
+            return true;
+        }
+    }
     switch (spr) {
     case 0x1800:                       /* DCCR */
     case 0x2000:                       /* ICCR */
@@ -1673,9 +1799,51 @@ static void ax3292_cpu_reset(void *opaque)
     cpu->env.evbar = 0;
 }
 
-static void ax3292_machine_init(MachineState *machine)
+/*
+ * USB PHY / attach-status page at 0x20000000.
+ *
+ * `usb_sense_mode_machine` (0x0200c8d0) polls a byte at 0x20000002 and treats a
+ * non-zero value as "cable attached":  state 0 -> 1, then `usb_select_mode(0)`
+ * (MSD 0219:3280) and event (2,1).  A second transition to 2 happens once the
+ * host drives BOT.  Without this page the access is unassigned, reads 0 and the
+ * device-side USB stack can never be entered.  Byte 3 reports the power source
+ * (0 = battery), which the same machine reads.
+ */
+#define AX3292_USBPHY_BASE 0x20000000u
+#define AX3292_USBPHY_SIZE 0x1000u
+
+static uint64_t ax3292_usbphy_read(void *opaque, hwaddr off, unsigned size)
 {
-    Ax3292State *s = AX3292_MACHINE(machine);
+    Ax3292State *s = opaque;
+    uint32_t v = 0;
+
+    if (off + size > sizeof(s->usbphy_regs)) {
+        return 0;
+    }
+    memcpy(&v, &s->usbphy_regs[off], size);
+    return v;
+}
+
+static void ax3292_usbphy_write(void *opaque, hwaddr off, uint64_t v,
+                                unsigned size)
+{
+    Ax3292State *s = opaque;
+
+    if (off + size <= sizeof(s->usbphy_regs)) {
+        memcpy(&s->usbphy_regs[off], &v, size);
+    }
+}
+
+static const MemoryRegionOps ax3292_usbphy_ops = {
+    .read = ax3292_usbphy_read,
+    .write = ax3292_usbphy_write,
+    .endianness = DEVICE_LITTLE_ENDIAN,
+    .valid.min_access_size = 1,
+    .valid.max_access_size = 4,
+};
+
+static void ax3292_machine_init(MachineState *machine)
+{    Ax3292State *s = AX3292_MACHINE(machine);
     OpenRISCCPU *cpu;
     const char *env;
     ssize_t size;
@@ -1871,6 +2039,13 @@ static void ax3292_machine_init(MachineState *machine)
                            machine->ram_size, &error_fatal);
     memory_region_add_subregion(get_system_memory(), 0, &s->ram);
     s->ram_ptr = memory_region_get_ram_ptr(&s->ram);
+
+    s->usbphy_regs[2] = s->usb_host ? 1 : 0;   /* 0x20000002: host present */
+    s->usbphy_regs[3] = 0;                     /* 0x20000003: power source */
+    memory_region_init_io(&s->usbphy, OBJECT(s), &ax3292_usbphy_ops, s,
+                          "ax3292.usbphy", AX3292_USBPHY_SIZE);
+    memory_region_add_subregion(get_system_memory(), AX3292_USBPHY_BASE,
+                                &s->usbphy);
 
     /*
      * The low 64 KiB is SRAM and holds the exception vectors.  The core also
@@ -2069,6 +2244,7 @@ static void ax3292_machine_instance_init(Object *obj)
     s->panel_rotation = 90;
     s->key_channel = AX3292_ADC_KEY_CH;
     s->key_value = 0x3ff;    /* no key pressed */
+    s->usb_fifo_fd = -1;
 }
 
 static void ax3292_machine_class_init(ObjectClass *oc, const void *data)
@@ -2100,6 +2276,8 @@ static void ax3292_machine_class_init(ObjectClass *oc, const void *data)
     AX3292_PROP_STR("printer-dir", printer_directory);
     AX3292_PROP_STR("printer-phases", printer_phases_str);
     AX3292_PROP_BOOL("printer-no-paper", printer_no_paper);
+    AX3292_PROP_BOOL("usb-host", usb_host);
+    AX3292_PROP_STR("usb-fifo", usb_fifo_path);
 }
 
 static const TypeInfo ax3292_machine_typeinfo = {
